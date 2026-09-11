@@ -1,0 +1,74 @@
+:root {
+  color-scheme: light;
+  --background: #f4f7fb;
+  --surface: #ffffff;
+  --text: #172033;
+  --muted: #4d5b73;
+  --primary: #164e86;
+  --primary-hover: #0d3b69;
+  --focus: #b54708;
+  --border: #718096;
+  --danger: #a12828;
+  --error-bg: #fff0f0;
+  --shadow: 0 0.25rem 1rem rgb(15 23 42 / 10%);
+}
+
+* { box-sizing: border-box; }
+html { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.5; }
+body { margin: 0; color: var(--text); background: var(--background); }
+.skip-link { position: absolute; left: 1rem; top: -5rem; z-index: 2; padding: .75rem 1rem; color: #fff; background: var(--primary); }
+.skip-link:focus { top: 1rem; }
+.site-header, main, footer { width: min(100% - 2rem, 70rem); margin-inline: auto; }
+.site-header { padding-block: 2rem 1rem; }
+.site-header h1 { margin: 0; font-size: clamp(2rem, 8vw, 3.25rem); line-height: 1.1; }
+.eyebrow { margin-block-end: .35rem; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+section { margin-block: 1.25rem; padding: clamp(1rem, 4vw, 2rem); border: 1px solid #c7d0df; border-radius: .75rem; background: var(--surface); box-shadow: var(--shadow); }
+h2 { margin-block-start: 0; }
+fieldset { min-width: 0; margin: 1rem 0; padding: 1rem; border: 1px solid #b5c0d0; border-radius: .5rem; }
+legend { padding-inline: .35rem; font-weight: 700; }
+.form-grid { display: grid; gap: 0 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.field { display: grid; align-content: start; gap: .35rem; margin-block: .75rem; }
+.field-wide { grid-column: 1 / -1; }
+label { font-weight: 650; }
+input, select, textarea, button { min-height: 2.75rem; font: inherit; }
+input, select, textarea { width: 100%; padding: .65rem .75rem; color: var(--text); border: 1px solid var(--border); border-radius: .35rem; background: #fff; }
+textarea { resize: vertical; }
+button { padding: .65rem 1rem; border: 2px solid var(--primary); border-radius: .35rem; color: #fff; background: var(--primary); cursor: pointer; font-weight: 700; }
+button:hover { background: var(--primary-hover); }
+button.secondary { color: var(--primary); background: #fff; }
+button.danger { color: var(--danger); border-color: var(--danger); }
+button:disabled { cursor: not-allowed; opacity: .55; }
+:where(a, button, input, select, textarea):focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.button-row { display: flex; flex-wrap: wrap; gap: .65rem; margin: 1rem 0 0; padding: 0; list-style: none; }
+.block-list { padding-inline-start: 1.75rem; }
+.block-list > li { margin-block: .75rem; padding: .8rem; border: 1px solid #b5c0d0; border-radius: .5rem; }
+.block-list article p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.block-list h4 { margin-block: 0 .25rem; }
+.block-actions { display: flex; flex-wrap: wrap; gap: .5rem; padding: 0; list-style: none; }
+.block-actions button { min-width: 2.75rem; }
+.error { min-height: 1.5em; padding-inline: .25rem; color: #8a1c1c; font-weight: 700; }
+.error:not(:empty) { background: var(--error-bg); }
+.status { padding: .85rem 1rem; border-inline-start: .35rem solid var(--primary); background: #e8f2fc; font-weight: 650; }
+.output-field textarea { min-height: 22rem; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .9rem; white-space: pre; }
+small, footer { color: var(--muted); }
+footer { padding-block: .5rem 2rem; }
+[hidden] { display: none !important; }
+
+@media (max-width: 38rem) {
+  .form-grid { grid-template-columns: 1fr; }
+  .field-wide { grid-column: auto; }
+  section { padding: 1rem; }
+  .button-row > li, .button-row button { width: 100%; }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root { color-scheme: dark; --background: #101827; --surface: #192438; --text: #f1f5f9; --muted: #c4cede; --primary: #76b9fa; --primary-hover: #a7d3ff; --focus: #ffb454; --border: #9aa8ba; --danger: #ff9b9b; --error-bg: #481f28; --shadow: none; }
+  input, select, textarea { background: #101827; }
+  button { color: #101827; }
+  button.secondary { background: #192438; }
+  .status { background: #173453; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}

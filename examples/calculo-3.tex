@@ -1,0 +1,50 @@
+\documentclass[11pt]{article}
+% fontenc genera PDF con caracteres latinos copiables.
+\usepackage[T1]{fontenc}
+% inputenc permite que el archivo fuente esté codificado en UTF-8.
+\usepackage[utf8]{inputenc}
+% babel adapta al español los nombres y la separación silábica.
+\usepackage[spanish]{babel}
+% amsmath proporciona los entornos matemáticos habituales.
+\usepackage{amsmath}
+% amsthm permite declarar teoremas y bloques relacionados.
+\usepackage{amsthm}
+\newtheorem{theorem}{Teorema}
+\newtheorem{definition}{Definición}
+\newtheorem{example}{Ejemplo}
+\newtheorem{exercise}{Ejercicio}
+\newenvironment{solution}{\par\noindent\textbf{Solución.} }{\hfill$\square$\par}
+
+\title{Notas de Cálculo III}
+\author{Ana Pérez \\ Cálculo III \\ Profesor: Dr. Ruiz}
+\date{2026-09-11}
+
+\begin{document}
+
+\maketitle
+
+\section{Integrales múltiples}
+
+\begin{definition}[Integral doble]
+Sea f: A → R. La integral sobre A se escribe en la ecuación siguiente.
+\end{definition}
+
+\[
+\iint_A f(x,y) \, dx \, dy
+\]
+
+\begin{example}[Rectángulo]
+Para f(x,y)=x+y en [0,1] \textbackslash{}times [0,2], calculamos el valor por iteración.
+
+Este bloque tiene dos párrafos y conserva el signo = como texto.
+\end{example}
+
+\begin{exercise}[Práctica \#1]
+Calcula el área de A = [0,2] \textbackslash{}times [0,3].
+\end{exercise}
+
+\begin{solution}
+El área es 2 \textbackslash{}times 3 = 6 unidades cuadradas.
+\end{solution}
+
+\end{document}

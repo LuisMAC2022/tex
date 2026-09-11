@@ -1,0 +1,10 @@
+{
+  "name": "notas-latex",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test && node tests/check-site.mjs",
+    "check:js": "node --check assets/js/app.js && node --check assets/js/latex-generator.js && node --check assets/js/file-download.js"
+  }
+}

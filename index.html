@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Editor accesible para crear y descargar notas en LaTeX.">
+    <title>Notas LaTeX</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
+    <header class="site-header">
+      <p class="eyebrow">Editor estático y local</p>
+      <h1>Notas LaTeX</h1>
+      <p>Crea una nota estructurada y descarga su código sin enviar datos a ningún servidor.</p>
+    </header>
+
+    <main id="contenido-principal">
+      <form id="document-form" novalidate>
+        <section aria-labelledby="datos-heading">
+          <h2 id="datos-heading">Datos del documento</h2>
+          <p>El título es el único dato obligatorio. Los borradores permanecen únicamente en este dispositivo.</p>
+          <fieldset class="form-grid">
+            <legend>Metadatos</legend>
+            <p class="field field-wide">
+              <label for="note-title">Título de la nota <span aria-hidden="true">*</span></label>
+              <input id="note-title" name="title" type="text" required aria-describedby="title-error" autocomplete="off">
+              <span id="title-error" class="error" aria-live="polite"></span>
+            </p>
+            <p class="field"><label for="author">Autor</label><input id="author" name="author" type="text" autocomplete="name"></p>
+            <p class="field"><label for="course">Curso</label><input id="course" name="course" type="text"></p>
+            <p class="field"><label for="teacher">Profesor</label><input id="teacher" name="teacher" type="text"></p>
+            <p class="field"><label for="date">Fecha</label><input id="date" name="date" type="date"></p>
+            <p class="field field-wide"><label for="topic">Tema o unidad</label><input id="topic" name="topic" type="text"></p>
+          </fieldset>
+          <menu class="button-row" aria-label="Acciones del borrador">
+            <li><button id="save-draft" type="button">Guardar borrador</button></li>
+            <li><button id="restore-draft" type="button">Restaurar borrador</button></li>
+            <li><button id="delete-draft" class="secondary danger" type="button">Borrar borrador</button></li>
+          </menu>
+        </section>
+
+        <section aria-labelledby="contenido-heading">
+          <h2 id="contenido-heading">Contenido</h2>
+          <p>Completa un bloque y usa «Añadir bloque». Las ecuaciones conservan exactamente la sintaxis LaTeX introducida.</p>
+          <fieldset>
+            <legend id="block-form-heading">Nuevo bloque</legend>
+            <input id="editing-index" type="hidden" value="">
+            <p class="field">
+              <label for="block-type">Tipo de bloque</label>
+              <select id="block-type" name="blockType">
+                <option value="text">Texto</option><option value="definition">Definición</option>
+                <option value="theorem">Teorema</option><option value="example">Ejemplo</option>
+                <option value="exercise">Ejercicio</option><option value="solution">Solución</option>
+                <option value="equation">Ecuación</option>
+              </select>
+            </p>
+            <p class="field"><label for="block-title">Título del bloque (opcional)</label><input id="block-title" name="blockTitle" type="text"></p>
+            <p class="field">
+              <label for="block-content">Contenido</label>
+              <textarea id="block-content" name="blockContent" rows="6" aria-describedby="block-help block-error"></textarea>
+              <small id="block-help">Se permiten párrafos separados por una línea vacía. Una ecuación no se escapa ni se interpreta.</small>
+              <span id="block-error" class="error" aria-live="polite"></span>
+            </p>
+            <menu class="button-row">
+              <li><button id="add-block" type="button">Añadir bloque</button></li>
+              <li><button id="cancel-edit" class="secondary" type="button" hidden>Cancelar edición</button></li>
+            </menu>
+          </fieldset>
+
+          <h3>Estructura actual</h3>
+          <p id="empty-blocks">Todavía no hay bloques.</p>
+          <ol id="block-list" class="block-list"></ol>
+        </section>
+
+        <section aria-labelledby="resultado-heading">
+          <h2 id="resultado-heading">Resultado</h2>
+          <p>Genera el documento después de modificar sus datos o bloques.</p>
+          <button id="generate" type="submit">Generar documento</button>
+          <p class="field output-field"><label for="latex-output">Código LaTeX</label><textarea id="latex-output" rows="22" readonly spellcheck="false"></textarea></p>
+          <menu class="button-row">
+            <li><button id="copy-code" type="button">Copiar código</button></li>
+            <li><button id="download-tex" type="button">Descargar .tex</button></li>
+          </menu>
+        </section>
+      </form>
+      <p id="app-status" class="status" aria-live="polite" aria-atomic="true">Editor listo.</p>
+    </main>
+    <footer><p>La primera versión no interpreta, valida ni compila matemáticas.</p></footer>
+    <script type="module" src="assets/js/app.js"></script>
+  </body>
+</html>
