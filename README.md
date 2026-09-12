@@ -34,6 +34,8 @@ El generador recibe un objeto con este contrato conceptual:
 - Los saltos CRLF y CR se normalizan a LF. Las líneas vacías de un bloque textual conservan los párrafos. Los bloques sin contenido no se emiten.
 - La plantilla `article` incluye solamente `fontenc` (salida latina copiable), `inputenc` (fuente UTF-8), `babel` (español), `amsmath` (matemáticas) y `amsthm` (entornos). El propio preámbulo documenta el motivo.
 - El resultado termina siempre con un salto de línea y es determinista: el mismo estado produce exactamente la misma cadena.
+- Antes del LaTeX visible se escribe un sobre de comentarios estable, `% TEX-NOTES:FORMAT:1`, con secciones `METADATA` y `BLOCK` cuyos datos JSON UTF-8 están codificados en Base64. La codificación evita que los datos puedan cerrar un marcador y los comentarios no afectan a la compilación.
+- El importador lee exclusivamente ese sobre y se detiene en `% TEX-NOTES:CONTENT:BEGIN`: no analiza comandos generales de TeX ni ejecuta el contenido. Por ello, un texto de usuario idéntico a un marcador —incluso dentro de una ecuación sin escapar— se conserva como dato codificado y cualquier apariencia de marcador en el LaTeX posterior se ignora.
 - El nombre sugerido se deriva del título: minúsculas, sin diacríticos, grupos no alfanuméricos convertidos en guiones y extensión `.tex`. Si queda vacío, se usa **`notas-calculo-3.tex`**.
 
 ### Ejemplo completo de entrada
@@ -58,60 +60,7 @@ El generador recibe un objeto con este contrato conceptual:
 }
 ```
 
-El archivo exacto producido es [`examples/calculo-3.tex`](examples/calculo-3.tex):
-
-```tex
-\documentclass[11pt]{article}
-% fontenc genera PDF con caracteres latinos copiables.
-\usepackage[T1]{fontenc}
-% inputenc permite que el archivo fuente esté codificado en UTF-8.
-\usepackage[utf8]{inputenc}
-% babel adapta al español los nombres y la separación silábica.
-\usepackage[spanish]{babel}
-% amsmath proporciona los entornos matemáticos habituales.
-\usepackage{amsmath}
-% amsthm permite declarar teoremas y bloques relacionados.
-\usepackage{amsthm}
-\newtheorem{theorem}{Teorema}
-\newtheorem{definition}{Definición}
-\newtheorem{example}{Ejemplo}
-\newtheorem{exercise}{Ejercicio}
-\newenvironment{solution}{\par\noindent\textbf{Solución.} }{\hfill$\square$\par}
-
-\title{Notas de Cálculo III}
-\author{Ana Pérez \\ Cálculo III \\ Profesor: Dr. Ruiz}
-\date{2026-09-11}
-
-\begin{document}
-
-\maketitle
-
-\section{Integrales múltiples}
-
-\begin{definition}[Integral doble]
-Sea f: A → R. La integral sobre A se escribe en la ecuación siguiente.
-\end{definition}
-
-\[
-\iint_A f(x,y) \, dx \, dy
-\]
-
-\begin{example}[Rectángulo]
-Para f(x,y)=x+y en [0,1] \textbackslash{}times [0,2], calculamos el valor por iteración.
-
-Este bloque tiene dos párrafos y conserva el signo = como texto.
-\end{example}
-
-\begin{exercise}[Práctica \#1]
-Calcula el área de A = [0,2] \textbackslash{}times [0,3].
-\end{exercise}
-
-\begin{solution}
-El área es 2 \textbackslash{}times 3 = 6 unidades cuadradas.
-\end{solution}
-
-\end{document}
-```
+El archivo exacto producido y comprobado byte a byte es [`examples/calculo-3.tex`](examples/calculo-3.tex). Se mantiene como archivo de referencia independiente para que cualquier cambio del formato versionado sea explícito en la revisión.
 
 ## Uso
 
@@ -120,6 +69,7 @@ El área es 2 \textbackslash{}times 3 = 6 unidades cuadradas.
 3. Pulsa **Generar documento**; la vista previa solo cambia entonces, no con cada pulsación.
 4. Copia o descarga el resultado. Si la API moderna del portapapeles no está disponible, se utiliza selección y copia del `textarea` como alternativa.
 5. **Guardar borrador** escribe bajo demanda `{ version: 1, metadata, blocks }` en `localStorage` con la clave `tex-notes:draft:v1`. Restaurar tolera datos ausentes o corruptos. Borrar pide confirmación y nunca borra el formulario abierto.
+6. **Importar un documento .tex** acepta inicialmente solo archivos exportados por la aplicación, de hasta 1 MB. Se valida y analiza localmente antes de tocar el editor; se anuncia título y número de bloques, y si el documento abierto no está vacío se solicita confirmación antes de reemplazarlo. Un error o una cancelación conserva todo el contenido abierto.
 
 ### Servidor HTTP local
 
@@ -155,6 +105,7 @@ El foco tiene contorno contrastado y no depende del color; los mensajes contiene
 - [ ] Usar `prefers-reduced-motion: reduce` y verificar que no aparece movimiento inesperado.
 - [ ] Guardar, recargar, restaurar y borrar un borrador; probar también una entrada corrupta en `localStorage`.
 - [ ] Denegar permiso del portapapeles y confirmar que un fallo conserva el resultado y comunica una alternativa.
+- [ ] Importar un `.tex` propio con y sin contenido abierto; comprobar resumen, confirmación, foco y anuncios con lector de pantalla.
 
 ## Pruebas automatizadas
 
@@ -165,7 +116,7 @@ npm test
 npm run check:js
 ```
 
-`npm test` comprueba estructura HTML esencial y asociaciones de etiquetas, rutas relativas e internas, caracteres reservados, títulos y bloques vacíos, varios párrafos, ecuaciones multilínea, nombres de archivo y equivalencia byte a byte con `examples/calculo-3.tex`. `npm run check:js` analiza la sintaxis de todos los módulos. La compilación de LaTeX queda deliberadamente fuera del flujo: se comparan cadenas `.tex`, no PDF compilados.
+`npm test` comprueba estructura HTML esencial y asociaciones de etiquetas, rutas relativas e internas, caracteres reservados, títulos y bloques vacíos, varios párrafos, ecuaciones multilínea, nombres de archivo, ida y vuelta de importación, UTF-8, CRLF, límites y errores de formato, además de la equivalencia byte a byte con `examples/calculo-3.tex`. `npm run check:js` analiza la sintaxis de todos los módulos. La compilación de LaTeX queda deliberadamente fuera del flujo: se comparan cadenas `.tex`, no PDF compilados.
 
 ## Hitos
 
@@ -204,4 +155,4 @@ Flujo oficial que prueba y publica el sitio estático desde `main`.
 
 El MVP está terminado cuando una persona puede, usando solamente el teclado, crear una nota con al menos dos tipos de bloque, revisar el código generado, copiarlo, descargarlo, recargar la página y recuperar el borrador.
 
-Quedan expresamente para iteraciones posteriores: plantillas múltiples, macros personalizadas, importación de `.tex`, vista previa matemática, historial de documentos y compilación.
+Quedan expresamente para iteraciones posteriores: plantillas múltiples, macros personalizadas, importación de `.tex` ajenos a la aplicación, vista previa matemática, historial de documentos y compilación.

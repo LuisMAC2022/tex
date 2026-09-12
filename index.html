@@ -38,6 +38,11 @@
             <li><button id="restore-draft" type="button">Restaurar borrador</button></li>
             <li><button id="delete-draft" class="secondary danger" type="button">Borrar borrador</button></li>
           </menu>
+          <p class="field field-wide">
+            <label for="import-tex">Importar un documento .tex</label>
+            <input id="import-tex" name="importTex" type="file" accept=".tex,text/x-tex" aria-describedby="import-help">
+            <small id="import-help">El archivo se procesa solo en este dispositivo. Inicialmente, solo se admiten documentos creados por esta aplicación.</small>
+          </p>
         </section>
 
         <section aria-labelledby="contenido-heading">

@@ -1,6 +1,25 @@
 /** Deterministic LaTeX generation. No function in this module mutates its input. */
 
 const ESCAPES = { "\\": "\\textbackslash{}", "#": "\\#", "$": "\\$", "%": "\\%", "&": "\\&", "_": "\\_", "{": "\\{", "}": "\\}", "~": "\\textasciitilde{}", "^": "\\textasciicircum{}" };
+export const TEX_FORMAT_VERSION = 1;
+
+function encodeData(value) {
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
+
+export function buildImportEnvelope(state = {}) {
+  const metadata = Object.fromEntries(["title", "author", "course", "teacher", "date", "topic"].map((key) => [key, typeof state.metadata?.[key] === "string" ? state.metadata[key] : ""]));
+  const blocks = Array.isArray(state.blocks) ? state.blocks : [];
+  return [
+    `% TEX-NOTES:FORMAT:${TEX_FORMAT_VERSION}`,
+    "% TEX-NOTES:METADATA:BEGIN", `% TEX-NOTES:DATA:${encodeData(metadata)}`, "% TEX-NOTES:METADATA:END",
+    ...blocks.flatMap((block) => ["% TEX-NOTES:BLOCK:BEGIN", `% TEX-NOTES:DATA:${encodeData(block)}`, "% TEX-NOTES:BLOCK:END"]),
+    "% TEX-NOTES:CONTENT:BEGIN",
+  ].join("\n");
+}
 
 export function normalizeLineBreaks(value = "") {
   return String(value).replace(/\r\n?/g, "\n");
@@ -69,5 +88,5 @@ export function buildBody(state = {}) {
 export function buildDocumentEnd() { return "\\end{document}"; }
 
 export function generateLatex(state = {}) {
-  return `${buildPreamble()}\n\n${buildMetadata(state.metadata)}\n\n${buildBody(state)}\n\n${buildDocumentEnd()}\n`;
+  return `${buildImportEnvelope(state)}\n${buildPreamble()}\n\n${buildMetadata(state.metadata)}\n\n${buildBody(state)}\n\n${buildDocumentEnd()}\n`;
 }
