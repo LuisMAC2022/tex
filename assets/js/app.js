@@ -1,5 +1,6 @@
 import { generateLatex } from "./latex-generator.js";
 import { downloadTex } from "./file-download.js";
+import { parseTexDocument, validateTexFile } from "./tex-import.js";
 
 const STORAGE_KEY = "tex-notes:draft:v1";
 const $ = (selector) => document.querySelector(selector);
@@ -72,6 +73,24 @@ $("#restore-draft").addEventListener("click", () => {
   try { const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY)); if (!parsed || parsed.version !== 1 || !parsed.metadata || !Array.isArray(parsed.blocks)) throw new Error(); setMetadata(parsed.metadata); blocks = parsed.blocks.filter((block) => block && typeof block.content === "string" && typeof block.type === "string").map((block) => ({ type: block.type, title: typeof block.title === "string" ? block.title : "", content: block.content })); resetBlockEditor(); renderBlocks(); $("#note-title").focus(); announce("Borrador restaurado."); } catch { $("#restore-draft").focus(); announce("No hay un borrador válido para restaurar."); }
 });
 $("#delete-draft").addEventListener("click", () => { if (!confirm("¿Borrar el borrador guardado en este dispositivo?")) { $("#delete-draft").focus(); announce("No se borró el borrador."); return; } localStorage.removeItem(STORAGE_KEY); $("#save-draft").focus(); announce("Borrador guardado eliminado; el contenido actual se conserva."); });
+$("#import-tex").addEventListener("change", async (event) => {
+  const input = event.currentTarget; const [file] = input.files;
+  if (!file) return;
+  try {
+    validateTexFile(file);
+    const imported = parseTexDocument(await file.text());
+    const summary = `Archivo válido: «${imported.metadata.title || "Sin título"}», ${imported.blocks.length} ${imported.blocks.length === 1 ? "bloque" : "bloques"}.`;
+    announce(summary);
+    await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+    const hasContent = Object.values(metadata()).some((value) => value.trim()) || blocks.length > 0;
+    if (hasContent && !confirm(`${summary} ¿Reemplazar el documento abierto?`)) { announce("Importación cancelada; el documento abierto se conserva."); return; }
+    setMetadata(imported.metadata); blocks = imported.blocks.map((block) => ({ ...block })); resetBlockEditor(); renderBlocks(); output.value = "";
+    $("#note-title").focus(); announce(`${summary} Documento importado.`);
+  } catch (error) {
+    announce(`No se pudo importar: ${error instanceof Error ? error.message : "error desconocido"} El documento abierto se conserva.`);
+    input.focus();
+  } finally { input.value = ""; }
+});
 $("#download-tex").addEventListener("click", () => { if (!output.value) { announce("Genera el documento antes de descargarlo."); $("#generate").focus(); return; } downloadTex(output.value, $("#note-title").value); announce("Descarga del archivo .tex iniciada."); });
 $("#copy-code").addEventListener("click", async () => {
   if (!output.value) { announce("Genera el documento antes de copiarlo."); $("#generate").focus(); return; }
