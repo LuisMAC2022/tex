@@ -19,19 +19,23 @@
    * Sustituye la selección —o inserta en el cursor si está plegada— y devuelve el
    * contenido resultante junto con la posición del cursor tras lo insertado.
    */
-  function insertAtSelection({ value = "", selectionStart, selectionEnd, insertion = "" } = {}) {
+  function insertAtSelection({ value = "", selectionStart, selectionEnd, insertion = "", before, after } = {}) {
     const text = String(value);
-    const inserted = String(insertion);
+    const wraps = before !== undefined || after !== undefined;
+    const prefix = String(before === undefined ? insertion : before);
+    const suffix = String(after === undefined ? "" : after);
     const length = text.length;
     let start = clampIndex(selectionStart, length, length);
     let end = clampIndex(selectionEnd, length, start);
     if (start > end) [start, end] = [end, start];
-    const cursor = start + inserted.length;
+    const selected = text.slice(start, end);
+    const inserted = wraps ? `${prefix}${selected}${suffix}` : prefix;
+    const cursor = start + prefix.length + (wraps && selected ? selected.length + suffix.length : 0);
     return {
       value: `${text.slice(0, start)}${inserted}${text.slice(end)}`,
       selectionStart: cursor,
       selectionEnd: cursor,
-      replaced: text.slice(start, end),
+      replaced: selected,
     };
   }
 
@@ -40,7 +44,8 @@
    * y deja el cursor después de lo insertado.
    */
   function insertIntoField(field, insertion) {
-    const result = insertAtSelection({ value: field.value, selectionStart: field.selectionStart, selectionEnd: field.selectionEnd, insertion });
+    const options = typeof insertion === "object" ? insertion : { insertion };
+    const result = insertAtSelection({ value: field.value, selectionStart: field.selectionStart, selectionEnd: field.selectionEnd, ...options });
     field.value = result.value;
     field.focus();
     field.setSelectionRange(result.selectionStart, result.selectionEnd);
