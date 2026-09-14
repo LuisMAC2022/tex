@@ -9,6 +9,7 @@ assert.match(html, /^<!doctype html>/i, "Falta doctype");
 assert.equal((html.match(/<main\b/g) || []).length, 1, "Debe existir un único main");
 assert.equal((html.match(/<h1\b/g) || []).length, 1, "Debe existir un único h1");
 assert.match(html, /href="#contenido-principal"/, "Falta el enlace de salto");
+assert.match(html, /<main id="contenido-principal" tabindex="-1">/, "El destino del enlace de salto debe poder recibir foco sin entrar en la secuencia de Tab");
 // Restricción file://: scripts clásicos en orden de dependencia, nunca módulos ES.
 assert.doesNotMatch(html, /<script[^>]+type="module"/, "los scripts no deben ser módulos ES");
 const scripts = [...html.matchAll(/<script src="(assets\/js\/[^"]+)"><\/script>/g)].map((match) => match[1]);
