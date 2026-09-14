@@ -9,7 +9,7 @@
   const TexNotes = global.TexNotes || (global.TexNotes = {});
 
   /**
-   * kind: "text" | "equation" | "theorem" | "list".
+   * kind: "text" | "equation" | "theorem" | "list" | "bibliography".
    * Los tipos "theorem" declaran un entorno amsthm; buildTheoremDefs() agrupa
    * sus \newtheorem por style para no repetir \theoremstyle.
    * Los tipos "equation" conservan el contenido literalmente y solo se
@@ -20,7 +20,8 @@
    * regla: la interfaz solo ofrece «Añadir dentro» en un tipo con container, y la
    * normalización del árbol sube a hermanos los hijos de un tipo sin él. Los dos
    * tipos "equation" no lo llevan porque cualquier bloque dentro de \[...\] o
-   * \(...\) produciría LaTeX inválido.
+   * \(...\) produciría LaTeX inválido. "bibliography" tampoco lo lleva: dentro
+   * de thebibliography solo deben aparecer sus propios \bibitem.
    *
    * Numeración: cada entorno declarado con \newtheorem lleva un contador propio,
    * independiente y continuo en todo el documento. "proposition" no comparte
@@ -37,6 +38,7 @@
     { id: "note", label: "Nota", kind: "theorem", environment: "note", heading: "Nota", style: "remark", container: true },
     { id: "itemize", label: "Lista con viñetas", kind: "list", listEnvironment: "itemize", container: true },
     { id: "enumerate", label: "Lista numerada", kind: "list", listEnvironment: "enumerate", container: true },
+    { id: "bibliography", label: "Bibliografía (IEEE)", kind: "bibliography", container: false },
   ];
 
   TexNotes.BLOCK_TYPES = BLOCK_TYPES;

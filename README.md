@@ -24,7 +24,7 @@ El generador recibe un objeto con este contrato conceptual:
   },
   blocks: [
     {
-      type: "text|equation|math-inline|definition|theorem|proposition|example|note|itemize|enumerate",
+      type: "text|equation|math-inline|definition|theorem|proposition|example|note|itemize|enumerate|bibliography",
       title: "opcional",
       content: "texto",
       children: [ /* bloques con la misma forma, sin profundidad máxima */ ]
@@ -40,6 +40,7 @@ El generador recibe un objeto con este contrato conceptual:
 - Los tipos de bloque viven en una sola tabla, [`assets/js/block-types.js`](assets/js/block-types.js). Los bloques `definition`, `theorem`, `proposition`, `example` y `note` se convierten en sus entornos homónimos; `text` es texto normal y, si tiene título, comienza con `\subsection`.
 - Hay **dos tipos de contenido matemático**, deliberadamente separados del texto: `equation` queda delimitado por `\[` y `\]` en líneas propias, y `math-inline` por `\(` y `\)` en una sola línea. Ambos conservan literalmente lo escrito y solo se diferencian por sus delimitadores en la tabla.
 - `itemize` y `enumerate` producen listas: **cada línea no vacía del contenido es un `\item`**, con su texto tal cual se escribió.
+- `bibliography` produce una **bibliografía manual con aspecto IEEE**: cada línea no vacía y recortada del contenido se conserva literalmente y se convierte en un `\bibitem{refN}` dentro de `thebibliography`. Este entorno del núcleo de LaTeX aporta por sí mismo la numeración entre corchetes, sin BibTeX, `natbib`, `IEEEtran` ni paquetes adicionales. El campo `title` no se usa, igual que en las listas. Las claves `ref1`, `ref2`, etc. son predecibles y únicas solo dentro de cada bloque; dos bloques de bibliografía repetirán claves y LaTeX mostrará una advertencia de etiqueta duplicada, una limitación aceptada porque la aplicación no genera `\cite{}`.
 - `buildTheoremDefs()` deriva las declaraciones `\newtheorem` de esa misma tabla y agrupa los entornos por `\theoremstyle`, de modo que el preámbulo no puede desincronizarse de los tipos disponibles: añadir un tipo es una entrada en la tabla y su `<option>` en `index.html`, y una prueba compara ambas listas.
 - **Regla de numeración:** cada entorno declarado con `\newtheorem` mantiene un contador propio, independiente y continuo en todo el documento. `proposition` comparte `\theoremstyle{plain}` con `theorem`, pero **no comparte contador** ni se reinicia por sección. Cambiar esa regla es editar una sola entrada de la tabla, y es un cambio de contrato que debe documentarse aquí.
 - **El contenido de un bloque llega al `.tex` tal cual se escribió.** La aplicación no inserta ningún carácter de escape en `content`: ni en prosa, ni en los entornos tipo teorema, ni en los elementos de lista, ni por supuesto en los bloques matemáticos. Escribir `\forall x \in \mathbb{R}` produce exactamente eso, y un fragmento de LaTeX pegado desde otro documento —un `align`, un `tabular`— llega intacto.
@@ -219,7 +220,7 @@ npm test
 npm run check:js
 ```
 
-`npm test` comprueba estructura HTML esencial y asociaciones de etiquetas, rutas relativas e internas, el orden de los scripts clásicos, el contenido literal de los bloques frente al escapado completo de metadatos y títulos, el duplicado y la copia profunda de ramas, títulos y bloques vacíos, varios párrafos, ecuaciones multilínea, nombres de archivo, CRLF, la correspondencia entre la tabla de tipos y las opciones de `index.html`, la derivación de `\newtheorem` sin `\theoremstyle` repetidos y la ausencia de sobre de reimportación, además de la equivalencia byte a byte con `examples/calculo-3.tex`. `npm run check:js` analiza la sintaxis de los siete archivos del navegador.
+`npm test` comprueba estructura HTML esencial y asociaciones de etiquetas, rutas relativas e internas, el orden de los scripts clásicos, el contenido literal de los bloques frente al escapado completo de metadatos y títulos, el duplicado y la copia profunda de ramas, títulos y bloques vacíos, varios párrafos, ecuaciones multilínea, nombres de archivo, CRLF, la correspondencia entre la tabla de tipos y las opciones de `index.html`, la derivación de `\newtheorem` sin `\theoremstyle` repetidos y la ausencia de sobre de reimportación, además de la equivalencia byte a byte con `examples/calculo-3.tex`. La bibliografía cubre varias referencias, una sola, contenido vacío, recorte de líneas, el ancho numérico para diez o más entradas y la paridad con `index.html`. `npm run check:js` analiza la sintaxis de los siete archivos del navegador.
 
 Sobre el **contenido literal**, [`tests/content-literal.test.js`](tests/content-literal.test.js) —que sustituye al antiguo `mixed-math.test.js`— cubre la conservación de `\`, `{` y `}` en todo tipo de prosa y en los elementos de lista; comandos con argumento, del tablero y llaves sueltas; los reservados `#`, `%`, `&`, `_`, `~` y `^` sin escapar; un `align` y un `tabular` pegados desde otro documento; `$…$`, `$$…$$`, `\$` y un delimitador sin pareja; los bloques matemáticos sin regresión; y el escapado completo que conservan metadatos y títulos, barra y llaves incluidas.
 
