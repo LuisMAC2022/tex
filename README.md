@@ -286,3 +286,37 @@ Siguiente en la secuencia: el **diccionario de macros** (`macros.js` y `validate
 Dentro de la entrada matemática quedan pendientes los alias personales (`imp` → `\Rightarrow`) y mover un bloque de un padre a otro: hoy **Subir** y **Bajar** solo reordenan entre hermanos, y cambiar de padre exige volver a crear el bloque.
 
 Quedan expresamente fuera por ahora: TeX en WASM, TikZ/PGFPlots, traducción de errores de TeX, paleta de comandos, buscar y reemplazar, historial de versiones, infraestructura de sincronización y cualquier ida y vuelta desde Overleaf a la aplicación.
+
+### Sistema de documentación, pendiente
+
+Las capas de documentación de diseño están instaladas —[`INVARIANTES.md`](INVARIANTES.md),
+[`decisiones/`](decisiones/), [`PROTOCOLO.md`](PROTOCOLO.md) y los bloques `@decision`—
+y el inventario de pruebas se deriva de la suite. Falta:
+
+- **Ampliar `tests/documentacion.test.js`.** Hoy solo vigila que `docs/pruebas.md`
+  esté al día. Le faltan dos aserciones: que ningún enlace relativo de ningún `.md`
+  apunte a un archivo inexistente, y que todo botón que la guía de uso nombre en
+  **negrita** exista todavía en `index.html`. Es lo que impide que las guías
+  envejezcan en silencio al renombrar un control.
+- **Escribir `docs/guia-de-desarrollo.md`**: mapa de los siete archivos del
+  navegador, el paso del estado al `.tex`, y las recetas —añadir un tipo de bloque,
+  añadir un símbolo, cambiar el preámbulo o el formato de salida, resolver un fallo
+  de ancla, declarar una invariante—.
+- **Repartir el README.** Sacar `### Revisión manual` a `docs/revision-manual.md`,
+  `## Hitos` a `docs/hitos.md`, sustituir los párrafos de `## Pruebas automatizadas`
+  por el enlace a [`docs/pruebas.md`](docs/pruebas.md) y dejar en
+  `### Por qué el contenido no se escapa` un enlace a
+  [DEC-004](decisiones/DEC-004-contenido-sin-escapar.md), conservando la tabla de
+  «se escribe / se obtiene», que sí es contrato vigente. El texto se mueve literal.
+  Se dejó para el final a propósito: hacerlo antes de que existan las guías obligaba
+  a mover el mismo texto dos veces.
+- **Registrar `DEC-008`** con la regla de qué documento se actualiza al cambiar qué,
+  una vez existan las dos guías.
+
+También está pendiente decidir si `## Pendiente` basta como capa prospectiva o hace
+falta una bitácora aparte. De momento basta.
+
+Otro pendiente menor: la huella de los bloques `@decision` colapsa los espacios pero
+no los elimina, así que un formateador automático (Prettier o similar) movería todas
+las anclas a la vez. Si algún día se adopta uno, hay que endurecer la normalización
+antes.
