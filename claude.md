@@ -20,3 +20,12 @@ El entregable de este paso sería un ejemplo versionado que incluya:
 - **Codex:** comprobar el encaje con el modelo de datos, detectar la brecha mínima de la interfaz/generador e implementar únicamente lo necesario después de acordarlo.
 
 Como primera cuestión, quisiera que revises si las referencias deben modelarse mediante un nuevo tipo de bloque o si, para este primer ejercicio, basta un bloque de texto con encabezado. Mi preferencia inicial es reutilizar el bloque de texto para no ampliar el formato versionado antes de validar la necesidad.
+
+## Acuerdo de roles para el incremento de datos prellenados
+
+Para atender la petición actual sin convertir este trabajo en la elaboración de apuntes o la resolución de tareas, propongo esta separación:
+
+- **Codex — implementación y pruebas:** incorporará únicamente los datos estables confirmados por el temario (curso y profesor) y la fecha indicada por el usuario, preservando la edición manual, la restauración de borradores y la importación de documentos. También añadirá la comprobación automatizada correspondiente.
+- **Claude — revisión funcional y académica:** verificará que los valores coincidan literalmente con el temario y que el cambio siga siendo una herramienta de creación de documentos `.tex`, sin introducir contenido académico ni resolver actividades.
+
+La razón de este reparto es mantener separadas la modificación técnica y la validación de contexto: una parte implementa y prueba; la otra cuestiona supuestos, alcance y fidelidad de los datos. Para esta ocasión, los valores acordados son **Cálculo III (1352)**, **Guzmán Fuentes Ricardo** y **2026-09-13**. Los campos permanecerán editables para no impedir reutilizar la aplicación en otro documento.
