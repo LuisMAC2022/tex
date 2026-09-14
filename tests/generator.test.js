@@ -1,17 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { blockToLatex, escapeLatexText, generateLatex, normalizeLineBreaks } from "../assets/js/latex-generator.js";
-import { sanitizeFilename } from "../assets/js/file-download.js";
-import { MAX_TEX_FILE_SIZE, normalizeTexLineBreaks, parseTexDocument, validateTexFile } from "../assets/js/tex-import.js";
+import { loadTexNotes } from "./load-app.mjs";
+import { exampleState as example } from "./example-state.mjs";
 
-const example = { metadata: { title: "Notas de Cálculo III", author: "Ana Pérez", course: "Cálculo III", teacher: "Dr. Ruiz", date: "2026-09-11", topic: "Integrales múltiples" }, blocks: [
-  { type: "definition", title: "Integral doble", content: "Sea f: A → R. La integral sobre A se escribe en la ecuación siguiente." },
-  { type: "equation", title: "", content: "\\iint_A f(x,y) \\, dx \\, dy" },
-  { type: "example", title: "Rectángulo", content: "Para f(x,y)=x+y en [0,1] \\times [0,2], calculamos el valor por iteración.\n\nEste bloque tiene dos párrafos y conserva el signo = como texto." },
-  { type: "exercise", title: "Práctica #1", content: "Calcula el área de A = [0,2] \\times [0,3]." },
-  { type: "solution", title: "", content: "El área es 2 \\times 3 = 6 unidades cuadradas." }
-] };
+const {
+  BLOCK_TYPES, blockToLatex, buildPreamble, buildTheoremDefs,
+  escapeLatexText, generateLatex, normalizeLineBreaks, sanitizeFilename,
+} = await loadTexNotes();
+
 
 test("escapa todos los caracteres reservados en texto", () => {
   assert.equal(escapeLatexText("# $ % & _ { } ~ ^ \\"), "\\# \\$ \\% \\& \\_ \\{ \\} \\textasciitilde{} \\textasciicircum{} \\textbackslash{}");
@@ -26,29 +23,39 @@ test("conserva párrafos y escapa texto", () => assert.equal(blockToLatex({ type
 test("el ejemplo genera exactamente el archivo de referencia", async () => assert.equal(generateLatex(example), await readFile(new URL("../examples/calculo-3.tex", import.meta.url), "utf8")));
 test("el nombre descargable es portable y tiene alternativa", () => { assert.equal(sanitizeFilename("Álgebra / Tema 1"), "algebra-tema-1.tex"); assert.equal(sanitizeFilename(""), "notas-calculo-3.tex"); });
 
-test("hace ida y vuelta de estado a .tex y estado, incluido UTF-8", () => {
-  assert.deepEqual(parseTexDocument(generateLatex(example)), example);
+test("los seis tipos de bloque del temario están disponibles", () => {
+  assert.deepEqual(BLOCK_TYPES.map((type) => type.id), ["text", "equation", "definition", "theorem", "example", "note"]);
 });
-test("normaliza CRLF antes de reconocer el formato", () => {
-  assert.deepEqual(parseTexDocument(generateLatex(example).replace(/\n/g, "\r\n")), example);
-  assert.equal(normalizeTexLineBreaks("á\r\nβ\rc"), "á\nβ\nc");
+test("un tipo desconocido no rompe la generación y cae en texto", () => {
+  assert.equal(blockToLatex({ type: "inexistente", content: "Hola & adiós" }), "Hola \\& adiós");
 });
-test("rechaza archivos vacíos, demasiado grandes o de tipo incorrecto", () => {
-  assert.throws(() => validateTexFile({ name: "vacio.tex", type: "text/x-tex", size: 0 }), /vacío/);
-  assert.throws(() => validateTexFile({ name: "grande.tex", type: "text/x-tex", size: MAX_TEX_FILE_SIZE + 1 }), /1 MB/);
-  assert.throws(() => validateTexFile({ name: "notas.txt", type: "text/plain", size: 10 }), /\.tex/);
-  assert.equal(validateTexFile({ name: "notas.tex", type: "", size: 10 }), true);
-  assert.throws(() => parseTexDocument(""), /vacío/);
+test("el bloque nota usa su propio entorno", () => {
+  assert.equal(blockToLatex({ type: "note", title: "Aviso", content: "Texto" }), "\\begin{note}[Aviso]\nTexto\n\\end{note}");
 });
-test("rechaza versiones desconocidas y marcadores incompletos", () => {
+
+test("el preámbulo deriva un \\newtheorem por cada tipo declarado", () => {
+  const defs = buildTheoremDefs();
+  const declared = BLOCK_TYPES.filter((type) => type.kind === "theorem");
+  for (const type of declared) assert.match(defs, new RegExp(`\\\\newtheorem\\{${type.environment}\\}\\{${type.heading}\\}`));
+  assert.equal((defs.match(/\\newtheorem/g) || []).length, declared.length);
+  assert.ok(buildPreamble().includes(defs), "el preámbulo debe incluir las declaraciones derivadas");
+});
+test("no repite \\theoremstyle al agrupar entornos del mismo estilo", () => {
+  const styles = buildTheoremDefs().match(/\\theoremstyle\{(\w+)\}/g) || [];
+  assert.deepEqual(styles, [...new Set(styles)], "cada \\theoremstyle aparece una sola vez");
+});
+
+test("el documento es autocontenido y no lleva sobre de reimportación", () => {
   const tex = generateLatex(example);
-  assert.throws(() => parseTexDocument(tex.replace("FORMAT:1", "FORMAT:99")), /versión 99/);
-  assert.throws(() => parseTexDocument(tex.replace("% TEX-NOTES:METADATA:END", "% marcador ausente")), /incompletos/);
-  assert.throws(() => parseTexDocument(tex.replace("% TEX-NOTES:BLOCK:END", "% marcador ausente")), /incompletos/);
+  assert.match(tex, /^\\documentclass/, "el archivo empieza por el preámbulo visible");
+  assert.doesNotMatch(tex, /TEX-NOTES/, "no debe quedar rastro del sobre de ida y vuelta");
+  assert.doesNotMatch(tex, /\\usepackage\{[^}]*\.sty/, "no debe depender de un .sty externo");
 });
-test("el contenido que parece marcador no altera el sobre", () => {
-  const stateWithMarker = { metadata: { title: "Marcadores", author: "", course: "", teacher: "", date: "", topic: "" }, blocks: [
-    { type: "equation", title: "", content: "% TEX-NOTES:METADATA:BEGIN\nx=1\n% TEX-NOTES:BLOCK:END" },
-  ] };
-  assert.deepEqual(parseTexDocument(generateLatex(stateWithMarker)), stateWithMarker);
+
+test("las opciones de index.html coinciden con la tabla de tipos", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const select = html.match(/<select id="block-type"[^>]*>([\s\S]*?)<\/select>/);
+  assert.ok(select, "falta el selector de tipo de bloque");
+  const options = [...select[1].matchAll(/<option value="([^"]+)">([^<]+)<\/option>/g)].map((match) => ({ id: match[1], label: match[2] }));
+  assert.deepEqual(options, BLOCK_TYPES.map((type) => ({ id: type.id, label: type.label })));
 });
