@@ -139,6 +139,11 @@ El tablero es un **muelle compacto** unido al campo de contenido y abierto por d
 
 ## Uso
 
+> Para quien solo va a **usar** la aplicación, sin tocar el código, está la
+> [**guía de uso**](docs/guia-de-uso.md): lleva de unos apuntes a un PDF
+> compilado, e incluye qué hacer cuando Overleaf da error. Lo que sigue aquí es
+> el resumen del flujo.
+
 1. Abre `index.html` —por doble clic o mediante HTTP—. Verifica los datos prellenados del curso, profesor y fecha, completa el título y añade cada bloque con el botón explícito.
 2. Dentro de **Símbolos matemáticos** puedes insertar un comando en la posición del cursor, buscarlo por su nombre o, si ya lo conoces, escribirlo directamente en el contenido.
 3. Revisa o cambia el orden con **Editar**, **Añadir dentro**, **Eliminar**, **Subir** y **Bajar**. No hay arrastrar y soltar: los controles nativos funcionan con teclado y evitan otra dependencia.
@@ -294,10 +299,17 @@ Las capas de documentación de diseño están instaladas —[`INVARIANTES.md`](I
 y el inventario de pruebas se deriva de la suite. Falta:
 
 - **Ampliar `tests/documentacion.test.js`.** Hoy solo vigila que `docs/pruebas.md`
-  esté al día. Le faltan dos aserciones: que ningún enlace relativo de ningún `.md`
-  apunte a un archivo inexistente, y que todo botón que la guía de uso nombre en
-  **negrita** exista todavía en `index.html`. Es lo que impide que las guías
-  envejezcan en silencio al renombrar un control.
+  esté al día. Le faltan dos aserciones:
+  1. que ningún enlace relativo de ningún `.md` apunte a un archivo inexistente;
+  2. que **cada rótulo entre guillemets de `docs/guia-de-uso.md` siga existiendo como
+     etiqueta real de la interfaz**. La convención está fijada y verificada: en esa
+     guía `«…»` significa siempre «rótulo copiado de la pantalla» —hoy son 33— y para
+     cualquier otra cosa se usan comillas altas o negrita. El respaldo debe buscarse
+     en el texto de un `button`, `label`, `legend`, `option`, `summary` o encabezado
+     de `index.html`, o en un `textContent`/`actionButton()` de `app.js`; **no** en el
+     archivo entero, porque la prosa de las ayudas produce falsos positivos: eso ya
+     dejó pasar un rótulo inexistente al escribir la guía.
+  Es lo que impide que las guías envejezcan en silencio al renombrar un control.
 - **Escribir `docs/guia-de-desarrollo.md`**: mapa de los siete archivos del
   navegador, el paso del estado al `.tex`, y las recetas —añadir un tipo de bloque,
   añadir un símbolo, cambiar el preámbulo o el formato de salida, resolver un fallo
