@@ -1,6 +1,9 @@
 import { generateLatex } from "./latex-generator.js";
 import { downloadTex } from "./file-download.js";
 import { parseTexDocument, validateTexFile } from "./tex-import.js";
+import { blockTypeLabel } from "./block-types.js";
+import { MATH_SYMBOLS, MATH_SYMBOL_GROUPS, filterMathSymbols, symbolAccessibleName, symbolsByGroup } from "./math-symbols.js";
+import { insertIntoField } from "./text-insertion.js";
 
 const STORAGE_KEY = "tex-notes:draft:v1";
 const $ = (selector) => document.querySelector(selector);
@@ -27,10 +30,9 @@ function actionButton(label, action, index, disabled = false) {
 }
 function renderBlocks(focus = null) {
   blockList.replaceChildren(); $("#empty-blocks").hidden = blocks.length > 0;
-  const labels = { text: "Texto", definition: "Definición", theorem: "Teorema", example: "Ejemplo", exercise: "Ejercicio", solution: "Solución", equation: "Ecuación" };
   blocks.forEach((block, index) => {
     const item = document.createElement("li"); const article = document.createElement("article"); const heading = document.createElement("h4");
-    heading.textContent = `${labels[block.type] || "Bloque"}${block.title ? `: ${block.title}` : ""}`;
+    heading.textContent = `${blockTypeLabel(block.type)}${block.title ? `: ${block.title}` : ""}`;
     const preview = document.createElement("p"); preview.textContent = block.content || "(Bloque vacío)";
     const actions = document.createElement("menu"); actions.className = "block-actions"; actions.setAttribute("aria-label", `Acciones para bloque ${index + 1}`);
     [["Editar", "edit", false], ["Eliminar", "delete", false], ["Subir", "up", index === 0], ["Bajar", "down", index === blocks.length - 1]].forEach(([label, action, disabled]) => actions.append(actionButton(label, action, index, disabled)));
@@ -96,5 +98,72 @@ $("#copy-code").addEventListener("click", async () => {
   if (!output.value) { announce("Genera el documento antes de copiarlo."); $("#generate").focus(); return; }
   try { if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(output.value); else { output.focus(); output.select(); if (!document.execCommand("copy")) throw new Error(); } announce("Código LaTeX copiado."); } catch { announce("No se pudo copiar el código; permanece disponible para seleccionarlo manualmente."); }
 });
+
+/* --- Tablero de símbolos matemáticos --- */
+
+function symbolButton(symbol) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "symbol-button";
+  button.dataset.command = symbol.command;
+  button.dataset.symbolId = symbol.id;
+  button.setAttribute("aria-label", symbolAccessibleName(symbol));
+  const glyph = document.createElement("span"); glyph.className = "symbol-glyph"; glyph.textContent = symbol.symbol;
+  const name = document.createElement("span"); name.className = "symbol-name"; name.textContent = symbol.name;
+  const command = document.createElement("span"); command.className = "symbol-command"; command.textContent = symbol.command;
+  button.append(glyph, name, command);
+  return button;
+}
+
+function renderSymbolBoard() {
+  const container = $("#symbol-groups");
+  container.replaceChildren();
+  for (const group of MATH_SYMBOL_GROUPS) {
+    const symbols = symbolsByGroup(group.id);
+    if (!symbols.length) continue;
+    const section = document.createElement("section");
+    section.className = "symbol-group";
+    section.dataset.group = group.id;
+    const heading = document.createElement("h4");
+    heading.id = `symbol-group-${group.id}`;
+    heading.textContent = group.label;
+    const list = document.createElement("menu");
+    list.className = "symbol-grid";
+    list.setAttribute("aria-labelledby", heading.id);
+    for (const symbol of symbols) {
+      const item = document.createElement("li");
+      item.append(symbolButton(symbol));
+      list.append(item);
+    }
+    section.append(heading, list);
+    container.append(section);
+  }
+  applySymbolFilter("");
+}
+
+function applySymbolFilter(query) {
+  const container = $("#symbol-groups");
+  const visible = new Set(filterMathSymbols(query).map((symbol) => symbol.id));
+  for (const button of container.querySelectorAll("button[data-symbol-id]")) button.closest("li").hidden = !visible.has(button.dataset.symbolId);
+  for (const group of container.querySelectorAll(".symbol-group")) group.hidden = !group.querySelector("li:not([hidden])");
+  $("#symbol-empty").hidden = visible.size > 0;
+  // El recuento solo se escribe tras una búsqueda: así la región activa no anuncia nada al cargar.
+  const results = $("#symbol-results");
+  if (!query.trim() && !results.textContent) return;
+  results.textContent = query.trim()
+    ? `${visible.size} ${visible.size === 1 ? "símbolo coincide" : "símbolos coinciden"} con la búsqueda.`
+    : `Se muestran los ${MATH_SYMBOLS.length} símbolos del tablero.`;
+}
+
+$("#symbol-search").addEventListener("input", (event) => applySymbolFilter(event.currentTarget.value));
+$("#symbol-groups").addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-command]");
+  if (!button) return;
+  const symbol = MATH_SYMBOLS.find((candidate) => candidate.id === button.dataset.symbolId);
+  insertIntoField($("#block-content"), button.dataset.command);
+  announce(`Símbolo insertado en el contenido: ${symbol ? symbol.name : button.dataset.command}.`);
+});
+
+renderSymbolBoard();
 
 renderBlocks();

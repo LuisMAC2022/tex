@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { blockToLatex, escapeLatexText, generateLatex, normalizeLineBreaks } from "../assets/js/latex-generator.js";
+import { blockToLatex, buildPreamble, escapeLatexText, generateLatex, normalizeLineBreaks } from "../assets/js/latex-generator.js";
+import { BLOCK_TYPES } from "../assets/js/block-types.js";
 import { sanitizeFilename } from "../assets/js/file-download.js";
 import { MAX_TEX_FILE_SIZE, normalizeTexLineBreaks, parseTexDocument, validateTexFile } from "../assets/js/tex-import.js";
 
@@ -51,4 +52,44 @@ test("el contenido que parece marcador no altera el sobre", () => {
     { type: "equation", title: "", content: "% TEX-NOTES:METADATA:BEGIN\nx=1\n% TEX-NOTES:BLOCK:END" },
   ] };
   assert.deepEqual(parseTexDocument(generateLatex(stateWithMarker)), stateWithMarker);
+});
+
+test("una proposición usa su entorno, con y sin título", () => {
+  assert.equal(blockToLatex({ type: "proposition", title: "Modus ponens", content: "Si P implica Q y P, entonces Q." }),
+    "\\begin{proposition}[Modus ponens]\nSi P implica Q y P, entonces Q.\n\\end{proposition}");
+  assert.equal(blockToLatex({ type: "proposition", title: "", content: "Todo conjunto es subconjunto de sí mismo." }),
+    "\\begin{proposition}\nTodo conjunto es subconjunto de sí mismo.\n\\end{proposition}");
+});
+test("una proposición escapa los caracteres reservados y omite el contenido vacío", () => {
+  assert.equal(blockToLatex({ type: "proposition", title: "50 % & más", content: "P_1 \\land P_2 usa # y ~." }),
+    "\\begin{proposition}[50 \\% \\& más]\nP\\_1 \\textbackslash{}land P\\_2 usa \\# y \\textasciitilde{}.\n\\end{proposition}");
+  assert.equal(blockToLatex({ type: "proposition", title: "Sin cuerpo", content: "   \n\n  " }), "");
+});
+test("el preámbulo declara la proposición junto a los demás entornos", () => {
+  const preamble = buildPreamble();
+  assert.match(preamble, /\\newtheorem\{proposition\}\{Proposición\}/);
+  assert.match(preamble, /\\usepackage\{amssymb\}/);
+  assert.equal(BLOCK_TYPES.filter((type) => type.declaration).length, (preamble.match(/\\new(?:theorem|environment)\{/g) || []).length);
+});
+test("una proposición se combina con fórmulas en línea y destacadas", () => {
+  const tex = generateLatex({ metadata: { title: "Lógica" }, blocks: [
+    { type: "proposition", title: "Distributiva", content: "Para todo par de proposiciones se cumple la equivalencia siguiente." },
+    { type: "math-inline", title: "", content: "P \\land (Q \\lor R)" },
+    { type: "equation", title: "", content: "P \\land (Q \\lor R) \\Leftrightarrow (P \\land Q) \\lor (P \\land R)" },
+  ] });
+  assert.match(tex, /\\begin\{proposition\}\[Distributiva\]\n/);
+  assert.match(tex, /\\\(P \\land \(Q \\lor R\)\\\)/);
+  assert.match(tex, /\\\[\nP \\land \(Q \\lor R\) \\Leftrightarrow \(P \\land Q\) \\lor \(P \\land R\)\n\\\]/);
+});
+test("la matemática en línea se conserva literalmente y en una sola línea", () => {
+  assert.equal(blockToLatex({ type: "math-inline", content: "  \\forall x \\in \\mathbb{R}  " }), "\\(\\forall x \\in \\mathbb{R}\\)");
+  assert.equal(blockToLatex({ type: "math-inline", content: "   " }), "");
+});
+test("las listas toman un elemento por línea y escapan su texto", () => {
+  assert.equal(blockToLatex({ type: "itemize", content: "Uno & dos\r\n\nEl 100%\n" }), "\\begin{itemize}\n\\item Uno \\& dos\n\\item El 100\\%\n\\end{itemize}");
+  assert.equal(blockToLatex({ type: "enumerate", content: "Primero" }), "\\begin{enumerate}\n\\item Primero\n\\end{enumerate}");
+  assert.equal(blockToLatex({ type: "itemize", content: "\n \n" }), "");
+});
+test("un tipo desconocido se trata como texto y no inventa un entorno", () => {
+  assert.equal(blockToLatex({ type: "no-existe", title: "T", content: "Contenido" }), "\\subsection{T}\nContenido");
 });

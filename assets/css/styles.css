@@ -46,6 +46,21 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .block-list h4 { margin-block: 0 .25rem; }
 .block-actions { display: flex; flex-wrap: wrap; gap: .5rem; padding: 0; list-style: none; }
 .block-actions button { min-width: 2.75rem; }
+.symbol-board { margin-block: 1rem; padding: 0; border: 1px dashed var(--border); border-radius: .5rem; background: transparent; box-shadow: none; }
+.symbol-board > details > summary { padding: .75rem 1rem; cursor: pointer; font-weight: 700; }
+.symbol-board > details > summary:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+.symbol-board h3 { display: inline; margin: 0; font-size: 1.05rem; }
+.symbol-board > details > :not(summary) { margin-inline: 1rem; }
+.symbol-board > details > #symbol-groups { margin-block-end: 1rem; }
+#symbol-results:empty { display: none; }
+.symbol-group { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.symbol-group h4 { margin-block: 1rem .5rem; }
+.symbol-grid { display: grid; gap: .5rem; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); margin: 0; padding: 0; list-style: none; }
+.symbol-button { display: grid; gap: .1rem; width: 100%; min-width: 2.75rem; min-height: 3.5rem; padding: .5rem; justify-items: center; text-align: center; color: var(--primary); background: var(--surface); }
+.symbol-button:hover { color: #fff; background: var(--primary-hover); }
+.symbol-glyph { font-size: 1.35rem; line-height: 1.2; }
+.symbol-name { font-weight: 650; font-size: .85rem; overflow-wrap: anywhere; }
+.symbol-command { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .75rem; font-weight: 400; overflow-wrap: anywhere; }
 .error { min-height: 1.5em; padding-inline: .25rem; color: #8a1c1c; font-weight: 700; }
 .error:not(:empty) { background: var(--error-bg); }
 .status { padding: .85rem 1rem; border-inline-start: .35rem solid var(--primary); background: #e8f2fc; font-weight: 650; }
@@ -59,6 +74,8 @@ footer { padding-block: .5rem 2rem; }
   .field-wide { grid-column: auto; }
   section { padding: 1rem; }
   .button-row > li, .button-row button { width: 100%; }
+  .symbol-grid { grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); }
+  .symbol-board > details > :not(summary) { margin-inline: .75rem; }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -67,6 +84,8 @@ footer { padding-block: .5rem 2rem; }
   button { color: #101827; }
   button.secondary { background: #192438; }
   .status { background: #173453; }
+  .symbol-button { color: var(--text); background: var(--surface); }
+  .symbol-button:hover { color: #101827; background: var(--primary-hover); }
 }
 
 @media (prefers-reduced-motion: reduce) {

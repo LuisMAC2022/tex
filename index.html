@@ -54,19 +54,41 @@
             <p class="field">
               <label for="block-type">Tipo de bloque</label>
               <select id="block-type" name="blockType">
-                <option value="text">Texto</option><option value="definition">Definición</option>
-                <option value="theorem">Teorema</option><option value="example">Ejemplo</option>
-                <option value="exercise">Ejercicio</option><option value="solution">Solución</option>
-                <option value="equation">Ecuación</option>
+                <option value="text">Texto</option>
+                <option value="definition">Definición</option>
+                <option value="theorem">Teorema</option>
+                <option value="proposition">Proposición</option>
+                <option value="example">Ejemplo</option>
+                <option value="exercise">Ejercicio</option>
+                <option value="solution">Solución</option>
+                <option value="equation">Ecuación destacada</option>
+                <option value="math-inline">Expresión matemática en línea</option>
+                <option value="itemize">Lista con viñetas</option>
+                <option value="enumerate">Lista numerada</option>
               </select>
             </p>
             <p class="field"><label for="block-title">Título del bloque (opcional)</label><input id="block-title" name="blockTitle" type="text"></p>
             <p class="field">
               <label for="block-content">Contenido</label>
               <textarea id="block-content" name="blockContent" rows="6" aria-describedby="block-help block-error"></textarea>
-              <small id="block-help">Se permiten párrafos separados por una línea vacía. Una ecuación no se escapa ni se interpreta.</small>
+              <small id="block-help">Se permiten párrafos separados por una línea vacía. Una ecuación o expresión matemática no se escapa ni se interpreta; una lista toma un elemento por línea.</small>
               <span id="block-error" class="error" aria-live="polite"></span>
             </p>
+
+            <section class="symbol-board" aria-labelledby="simbolos-heading">
+              <details id="symbol-details">
+                <summary><h3 id="simbolos-heading">Símbolos matemáticos</h3></summary>
+                <p id="symbol-board-intro">Cada botón inserta su comando LaTeX en el campo «Contenido», en la posición del cursor. Los comandos se conservan literalmente en los bloques de expresión matemática; en un bloque de texto se escaparían. Si ya conoces el comando, escríbelo directamente.</p>
+                <p class="field">
+                  <label for="symbol-search">Buscar símbolo por nombre</label>
+                  <input id="symbol-search" name="symbolSearch" type="search" autocomplete="off" aria-describedby="symbol-search-help">
+                  <small id="symbol-search-help">Por ejemplo «para todo», «implica» o «conjunción». También acepta el comando, como «forall».</small>
+                </p>
+                <p id="symbol-results" class="status" role="status"></p>
+                <p id="symbol-empty" hidden>Ningún símbolo coincide con la búsqueda.</p>
+                <div id="symbol-groups"></div>
+              </details>
+            </section>
             <menu class="button-row">
               <li><button id="add-block" type="button">Añadir bloque</button></li>
               <li><button id="cancel-edit" class="secondary" type="button" hidden>Cancelar edición</button></li>

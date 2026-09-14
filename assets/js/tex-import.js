@@ -1,12 +1,13 @@
 /** Pure validation and parsing for the application's own, inert .tex envelope. */
 
+import { isBlockType } from "./block-types.js";
+
 export const MAX_TEX_FILE_SIZE = 1024 * 1024;
 export const TEX_FORMAT_VERSION = 1;
 export const TEX_MIME_TYPE = "text/x-tex";
 
 const PREFIX = "% TEX-NOTES:";
 const METADATA_KEYS = ["title", "author", "course", "teacher", "date", "topic"];
-const BLOCK_TYPES = new Set(["text", "definition", "theorem", "example", "exercise", "solution", "equation"]);
 
 export function normalizeTexLineBreaks(value = "") {
   return String(value).replace(/\r\n?/g, "\n");
@@ -57,6 +58,6 @@ export function parseTexDocument(content = "") {
   }
   if (lines[result.cursor] !== `${PREFIX}CONTENT:BEGIN`) throw new Error("Los marcadores del archivo están incompletos o desordenados.");
   if (!metadata || typeof metadata !== "object" || Array.isArray(metadata) || METADATA_KEYS.some((key) => typeof metadata[key] !== "string")) throw new Error("Los metadatos internos del archivo no son válidos.");
-  if (blocks.some((block) => !block || typeof block !== "object" || !BLOCK_TYPES.has(block.type) || typeof block.title !== "string" || typeof block.content !== "string")) throw new Error("Uno de los bloques internos del archivo no es válido.");
+  if (blocks.some((block) => !block || typeof block !== "object" || !isBlockType(block.type) || typeof block.title !== "string" || typeof block.content !== "string")) throw new Error("Uno de los bloques internos del archivo no es válido.");
   return { metadata: Object.fromEntries(METADATA_KEYS.map((key) => [key, metadata[key]])), blocks };
 }

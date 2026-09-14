@@ -1,5 +1,7 @@
 /** Deterministic LaTeX generation. No function in this module mutates its input. */
 
+import { BLOCK_TYPES, getBlockType } from "./block-types.js";
+
 const ESCAPES = { "\\": "\\textbackslash{}", "#": "\\#", "$": "\\$", "%": "\\%", "&": "\\&", "_": "\\_", "{": "\\{", "}": "\\}", "~": "\\textasciitilde{}", "^": "\\textasciicircum{}" };
 export const TEX_FORMAT_VERSION = 1;
 
@@ -35,18 +37,30 @@ function optionalTitle(title) {
 }
 
 export function blockToLatex(block = {}) {
-  const type = block.type || "text";
+  const definition = getBlockType(block.type) || getBlockType("text");
   const content = normalizeLineBreaks(block.content);
-  if (type === "equation") return content.trim() ? `\\[\n${content}\n\\]` : "";
+
+  if (definition.kind === "math") {
+    const formula = content.trim();
+    if (!formula) return "";
+    const [open, close] = definition.delimiters;
+    return definition.inline ? `${open}${formula}${close}` : `${open}\n${content}\n${close}`;
+  }
+
+  if (definition.kind === "list") {
+    const items = content.split("\n").map((line) => escapeLatexText(line).trim()).filter(Boolean);
+    if (!items.length) return "";
+    const body = items.map((item) => `\\item ${item}`).join("\n");
+    return `\\begin{${definition.listEnvironment}}\n${body}\n\\end{${definition.listEnvironment}}`;
+  }
+
   const escaped = escapeLatexText(content).trim();
   if (!escaped) return "";
-  if (type === "text") {
+  if (definition.kind === "text") {
     const heading = escapeLatexText(block.title).trim();
     return heading ? `\\subsection{${heading}}\n${escaped}` : escaped;
   }
-  const environments = { definition: "definition", theorem: "theorem", example: "example", exercise: "exercise", solution: "solution" };
-  const environment = environments[type] || "example";
-  return `\\begin{${environment}}${optionalTitle(block.title)}\n${escaped}\n\\end{${environment}}`;
+  return `\\begin{${definition.environment}}${optionalTitle(block.title)}\n${escaped}\n\\end{${definition.environment}}`;
 }
 
 export function buildPreamble() {
@@ -60,13 +74,12 @@ export function buildPreamble() {
     "\\usepackage[spanish]{babel}",
     "% amsmath proporciona los entornos matemáticos habituales.",
     "\\usepackage{amsmath}",
+    "% amssymb aporta los conjuntos numéricos de \\mathbb del tablero de símbolos.",
+    "\\usepackage{amssymb}",
     "% amsthm permite declarar teoremas y bloques relacionados.",
     "\\usepackage{amsthm}",
-    "\\newtheorem{theorem}{Teorema}",
-    "\\newtheorem{definition}{Definición}",
-    "\\newtheorem{example}{Ejemplo}",
-    "\\newtheorem{exercise}{Ejercicio}",
-    "\\newenvironment{solution}{\\par\\noindent\\textbf{Solución.} }{\\hfill$\\square$\\par}",
+    // Cada entorno numerado lleva un contador propio, continuo en todo el documento.
+    ...BLOCK_TYPES.filter((type) => type.declaration).map((type) => type.declaration),
   ].join("\n");
 }
 
