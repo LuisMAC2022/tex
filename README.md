@@ -28,7 +28,7 @@ El generador recibe un objeto con este contrato conceptual:
 }
 ```
 
-- El **título de la nota** es el único campo obligatorio en la interfaz. Autor, curso, profesor y fecha son opcionales.
+- El **título de la nota** es el único campo obligatorio en la interfaz. Autor, curso, profesor y fecha son opcionales. Para acelerar las entregas actuales, la interfaz inicia con el curso **Cálculo III (1352)**, el profesor **Guzmán Fuentes Ricardo** y la fecha **2026-09-13** ya escritos; siguen siendo campos editables y un borrador restaurado puede reemplazarlos.
 - El **tema o unidad** produce una `\section` cuando no está vacío.
 - `blocks` es una lista ordenada. Su orden determina exactamente el orden del cuerpo del documento.
 - Los seis tipos de bloque del temario viven en una sola tabla, [`assets/js/block-types.js`](assets/js/block-types.js). Los bloques `definition`, `theorem`, `example` y `note` se convierten en sus entornos homónimos; `text` es texto normal y, si tiene título, comienza con `\subsection`; `equation` queda delimitado por `\[` y `\]`.
@@ -65,7 +65,7 @@ El archivo exacto producido y comprobado byte a byte es [`examples/calculo-3.tex
 
 ## Uso
 
-1. Abre `index.html` —por doble clic o mediante HTTP—, completa los datos y añade cada bloque con el botón explícito.
+1. Abre `index.html` —por doble clic o mediante HTTP—. Verifica los datos prellenados del curso, profesor y fecha, completa el título y añade cada bloque con el botón explícito.
 2. Revisa o cambia el orden con **Editar**, **Eliminar**, **Subir** y **Bajar**. No hay arrastrar y soltar: los controles nativos funcionan con teclado y evitan otra dependencia.
 3. Pulsa **Generar documento**; la vista previa solo cambia entonces, no con cada pulsación.
 4. Copia o descarga el resultado y pégalo en Overleaf. Si la API moderna del portapapeles no está disponible, se utiliza selección y copia del `textarea` como alternativa.
