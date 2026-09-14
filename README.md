@@ -141,8 +141,9 @@ El tablero es un **muelle compacto** unido al campo de contenido y abierto por d
 
 > Para quien solo va a **usar** la aplicación, sin tocar el código, está la
 > [**guía de uso**](docs/guia-de-uso.md): lleva de unos apuntes a un PDF
-> compilado, e incluye qué hacer cuando Overleaf da error. Lo que sigue aquí es
-> el resumen del flujo.
+> compilado, e incluye qué hacer cuando Overleaf da error. Para extenderla, la
+> [**guía de desarrollo**](docs/guia-de-desarrollo.md), con el mapa del código y
+> las recetas de los cambios habituales. Lo que sigue aquí es el resumen del flujo.
 
 1. Abre `index.html` —por doble clic o mediante HTTP—. Verifica los datos prellenados del curso, profesor y fecha, completa el título y añade cada bloque con el botón explícito.
 2. Dentro de **Símbolos matemáticos** puedes insertar un comando en la posición del cursor, buscarlo por su nombre o, si ya lo conoces, escribirlo directamente en el contenido.
@@ -297,14 +298,11 @@ Quedan expresamente fuera por ahora: TeX en WASM, TikZ/PGFPlots, traducción de 
 Las capas de documentación de diseño están instaladas —[`INVARIANTES.md`](INVARIANTES.md),
 [`decisiones/`](decisiones/), [`PROTOCOLO.md`](PROTOCOLO.md) y los bloques `@decision`—,
 el inventario de pruebas se deriva de la suite y
-[`docs/guia-de-uso.md`](docs/guia-de-uso.md) ya existe y está vigilada por
-`tests/documentacion.test.js`: enlaces, anclas de índice y cada rótulo que cita.
-Falta:
+[`docs/guia-de-uso.md`](docs/guia-de-uso.md) y
+[`docs/guia-de-desarrollo.md`](docs/guia-de-desarrollo.md) ya existen y están
+vigiladas por `tests/documentacion.test.js`: enlaces, anclas de índice y cada rótulo
+que citan. Falta:
 
-- **Escribir `docs/guia-de-desarrollo.md`**: mapa de los siete archivos del
-  navegador, el paso del estado al `.tex`, y las recetas —añadir un tipo de bloque,
-  añadir un símbolo, cambiar el preámbulo o el formato de salida, resolver un fallo
-  de ancla, declarar una invariante—.
 - **Repartir el README.** Sacar `### Revisión manual` a `docs/revision-manual.md`,
   `## Hitos` a `docs/hitos.md`, sustituir los párrafos de `## Pruebas automatizadas`
   por el enlace a [`docs/pruebas.md`](docs/pruebas.md) y dejar en
