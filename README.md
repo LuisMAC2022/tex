@@ -122,35 +122,20 @@ El archivo exacto producido y comprobado byte a byte es [`examples/calculo-3.tex
 
 ## Símbolos matemáticos
 
-El tablero de símbolos es un mecanismo de **descubrimiento**, no el modo principal de entrada. La progresión prevista es: pulsar un botón del tablero, buscar por nombre (por ejemplo «para todo», «implica» o «conjunción»), escribir el comando directamente y, más adelante, definir alias personales.
+El tablero es un **muelle compacto** unido al campo de contenido y abierto por defecto. Su altura no depende del tamaño del catálogo: no debe superar **20 rem (320 px) en escritorio** ni **25 rem (400 px) bajo 38 rem de ancho**. La rejilla tiene desplazamiento propio y solo muestra una categoría a la vez; una búsqueda suspende esa categoría y consulta el catálogo completo.
 
-- El tablero vive plegado dentro del editor de bloques, en `<details><summary>`, y se abre con teclado o ratón.
-- Cada símbolo es un `button` nativo que muestra **nombre, carácter Unicode y comando LaTeX**, y expone un nombre accesible explícito, como `Insertar cuantificador universal, comando barra invertida forall`: el carácter por sí solo no basta con lector de pantalla.
-- Al pulsarlo se inserta **únicamente el comando** en `#block-content`, en la posición del cursor: sustituye la selección si la hay, conserva el resto, devuelve el foco al campo, deja el cursor tras lo insertado y anuncia el símbolo en `#app-status`, sin releer todo el tablero. La inserción vive en `insertAtSelection`, una función pura que recibe el estado del campo y devuelve el siguiente.
-- No se carga ninguna biblioteca de renderizado matemático: aumentaría el peso y la complejidad sin ser necesaria para insertar texto. La vista previa con KaTeX sigue siendo un hito aparte.
-- **El comando insertado se conserva literalmente en cualquier bloque**, dentro y fuera de `$…$`, porque el contenido no se escapa: insertar `\forall` en un bloque de texto produce `\forall`.
-
-### Conjunto inicial
-
-El catálogo es deliberadamente pequeño; una tabla breve es preferible a cientos de botones. Vive en [`assets/js/math-symbols.js`](assets/js/math-symbols.js) y agrupa 30 símbolos:
-
-| Grupo | Comandos |
-| --- | --- |
-| Variables griegas | `\alpha`, `\beta`, `\gamma`, `\varphi` |
-| Conectores lógicos | `\neg`, `\land`, `\lor`, `\Rightarrow`, `\Leftrightarrow` |
-| Cuantificadores | `\forall`, `\exists` |
-| Relaciones | `=`, `\neq`, `\in`, `\notin`, `\subseteq` |
-| Conjuntos y números | `\mathbb{N}`, `\mathbb{Z}`, `\mathbb{Q}`, `\mathbb{R}`, `\emptyset`, `\cup`, `\cap` |
-| Delimitadores y agrupación | `(`, `)`, `\{`, `\}`, `\left(`, `\right)`, `\mid` |
+- El buscador permanece visible y los botones de categoría indican su estado con `aria-pressed`.
+- Cada botón nativo mide al menos 44 × 44 px y muestra solo el glifo. Una única línea visual presenta `nombre — comando`; está oculta a lectores de pantalla porque el `aria-label` completo del botón ya comunica ambos datos.
+- La rejilla usa el patrón de barra de herramientas: una sola parada de tabulación, flechas izquierda/derecha con ajuste circular e Inicio/Fin. Esto evita atravesar cientos de controles para llegar a «Añadir bloque».
+- No se carga ninguna biblioteca matemática ni dependencia externa. El catálogo compatible con `amsmath` y `amssymb` contiene 210 entradas para griegas, lógica, conjuntos, topología, funciones, cálculo, vectores y estructura.
+- Un símbolo sencillo inserta `command`. Una plantilla puede declarar `insert: { before, after }`: envuelve una selección o, si no existe, deja el cursor entre ambas partes.
 
 ### Cómo ampliarlo
 
-1. Añade una entrada a `MATH_SYMBOLS` con `id` único, `group` existente, `symbol` (carácter Unicode), `command` (comando exacto que se insertará), `name` en español y `keywords`, es decir, los términos de búsqueda que esperarías teclear, sin acentos.
-2. Si el símbolo no encaja en ningún grupo, declara primero uno nuevo en `MATH_SYMBOL_GROUPS`; el orden del array es el orden visible.
-3. Si el comando necesita un paquete que el preámbulo no carga —como `amssymb` para `\mathbb`—, añade ese `\usepackage` en `buildPreamble` de [`assets/js/latex-generator.js`](assets/js/latex-generator.js).
-4. Ejecuta `npm test`: las pruebas comprueban identificadores únicos, grupos declarados, campos obligatorios y que ningún grupo quede vacío. No hay que tocar el HTML ni el CSS: el tablero se renderiza desde el catálogo y usa delegación de eventos.
-
-Queda fuera de esta iteración lo que la búsqueda por nombre no resuelve: alias personales (`imp` → `\Rightarrow`), vista previa renderizada y comandos con argumentos que coloquen el cursor entre llaves.
+1. Añade una entrada a `MATH_SYMBOLS` con `id` único, `group`, `symbol`, `command`, `name` y `keywords` en español. Si es una plantilla, añade opcionalmente `insert: { before, after }`.
+2. Si hace falta una categoría nueva, declárala en `MATH_SYMBOL_GROUPS`; el selector y la rejilla se generan desde esos arrays, sin modificar HTML ni CSS.
+3. Usa únicamente comandos disponibles con `amsmath` y `amssymb`. Incorporar otro paquete es una decisión de producto y exige actualizar el generador y regenerar el ejemplo.
+4. Ejecuta `npm test`: se validan coherencia, cobertura, alfabeto griego, comandos prohibidos y comportamiento de inserción.
 
 ## Uso
 
@@ -209,10 +194,11 @@ El foco tiene contorno contrastado y no depende del color; los mensajes contiene
 - [ ] Copiar un bloque a la bandeja y pegarlo en la raíz y dentro de otro bloque; comprobar el resumen visible de la bandeja, el anuncio con la ruta nueva y dónde queda el foco.
 - [ ] Usar **Copiar texto** y pegar fuera de la aplicación; denegar el permiso del portapapeles y confirmar que el mensaje ofrece la alternativa.
 - [ ] Comprobar con lector de pantalla que **Duplicar**, **Copiar bloque**, **Copiar texto** y **Pegar bloque** se distinguen entre sí y de **Copiar código**, y que cada uno nombra su bloque, nivel y padre.
-- [ ] Abrir y cerrar el tablero de símbolos solo con teclado; recorrer los botones y comprobar que el lector de pantalla lee el nombre del símbolo, no únicamente el carácter.
-- [ ] Insertar un símbolo con el cursor al principio, en medio, al final y sobre una selección; confirmar que el foco vuelve al contenido, que el cursor queda tras el comando y que el anuncio no relee todo el tablero.
-- [ ] Buscar «para todo» y una consulta sin resultados; comprobar el recuento anunciado y el mensaje de ausencia de coincidencias.
-- [ ] Comprobar que los botones del tablero conservan al menos 44 por 44 píxeles y foco visible a 320 CSS px y con zoom del 200 %.
+- [ ] Medir el muelle completo: como máximo 320 px a 1280×800 y 400 px a 390×844; confirmar que el `textarea` permanece visible al usarlo.
+- [ ] Recorrer categorías y rejilla con teclado: una sola parada en la rejilla, flechas izquierda/derecha circulares, Inicio/Fin, y salida directa hacia «Añadir bloque».
+- [ ] Insertar comandos y plantillas con y sin selección; confirmar la posición del cursor y que el foco vuelve al contenido.
+- [ ] Buscar en todo el catálogo y borrar la consulta; comprobar contador, ausencia de resultados y restauración de la categoría elegida.
+- [ ] Comprobar a 320 CSS px que no hay desplazamiento horizontal y que cada botón conserva al menos 44 × 44 px y foco visible.
 - [ ] Revisar con lector de pantalla que el orden anunciado coincide con el visual y que etiquetas, instrucciones, errores y títulos son comprensibles.
 - [ ] Confirmar que altas, movimientos, borrados, generación, copia, descarga y borrador se anuncian dinámicamente y no solo mediante color.
 - [ ] Forzar un título vacío y un bloque vacío; confirmar error escrito, `aria-invalid` y foco en el campo.

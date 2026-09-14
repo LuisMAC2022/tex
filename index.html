@@ -73,7 +73,7 @@
             </p>
 
             <section class="symbol-board" aria-labelledby="simbolos-heading">
-              <details id="symbol-details">
+              <details id="symbol-details" open>
                 <summary><h3 id="simbolos-heading">Símbolos matemáticos</h3></summary>
                 <p id="symbol-board-intro">Cada botón inserta su comando LaTeX en el campo «Contenido», en la posición del cursor. El comando se conserva literalmente en cualquier bloque, dentro y fuera de <code>$…$</code>. Si ya conoces el comando, escríbelo directamente.</p>
                 <p class="field">
@@ -81,9 +81,11 @@
                   <input id="symbol-search" name="symbolSearch" type="search" autocomplete="off" aria-describedby="symbol-search-help">
                   <small id="symbol-search-help">Por ejemplo «para todo», «implica» o «conjunción». También acepta el comando, como «forall».</small>
                 </p>
+                <nav id="symbol-category-picker" class="symbol-categories" aria-label="Categorías de símbolos"></nav>
+                <p id="symbol-detail" aria-hidden="true">Selecciona un símbolo para ver su nombre y comando.</p>
                 <p id="symbol-results" class="status" role="status"></p>
                 <p id="symbol-empty" hidden>Ningún símbolo coincide con la búsqueda.</p>
-                <div id="symbol-groups"></div>
+                <menu id="symbol-groups" class="symbol-grid" role="toolbar" aria-orientation="horizontal" aria-label="Símbolos matemáticos"></menu>
               </details>
             </section>
             <menu class="button-row">

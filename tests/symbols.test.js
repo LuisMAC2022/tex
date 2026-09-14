@@ -77,12 +77,12 @@ test("el nombre accesible describe el comando en palabras", () => {
   assert.equal(describeCommand("\\mathbb{R}"), "barra invertida mathbb llave izquierda R llave derecha");
   assert.equal(describeCommand("="), "igual");
   assert.equal(symbolAccessibleName(MATH_SYMBOLS.find((symbol) => symbol.id === "forall")),
-    "Insertar cuantificador universal, comando barra invertida forall");
+    "Insertar cuantificador universal para todo, comando barra invertida forall");
 });
 test("la búsqueda ignora acentos, mayúsculas y acepta el comando", () => {
   assert.equal(normalizeSearchTerm("  Conjunción  "), "conjuncion");
   assert.deepEqual(commandsOf("para todo"), ["\\forall"]);
-  assert.deepEqual(commandsOf("IMPLICA"), ["\\Rightarrow", "\\Leftrightarrow"]);
+  assert.deepEqual(commandsOf("IMPLICA"), ["\\Rightarrow", "\\Leftarrow", "\\Leftrightarrow"]);
   assert.deepEqual(commandsOf("conjunción"), ["\\land"]);
   assert.deepEqual(idsOf("\\forall"), ["forall"]);
   assert.deepEqual(commandsOf("numeros reales"), ["\\mathbb{R}"]);
@@ -90,5 +90,23 @@ test("la búsqueda ignora acentos, mayúsculas y acepta el comando", () => {
 test("una búsqueda vacía devuelve todo el catálogo y una sin coincidencias devuelve nada", () => {
   assert.equal(filterMathSymbols("").length, MATH_SYMBOLS.length);
   assert.equal(filterMathSymbols("   ").length, MATH_SYMBOLS.length);
-  assert.deepEqual(commandsOf("integral triple"), []);
+  assert.deepEqual(commandsOf("integral triple"), ["\\iiint"]);
+});
+
+test("cubre el alfabeto griego y sus variantes válidas", () => {
+  const commands = new Set(MATH_SYMBOLS.map((symbol) => symbol.command));
+  for (const command of ["\\alpha", "\\beta", "\\gamma", "\\delta", "\\varepsilon", "\\zeta", "\\eta", "\\theta", "\\iota", "\\kappa", "\\lambda", "\\mu", "\\nu", "\\xi", "o", "\\pi", "\\rho", "\\sigma", "\\tau", "\\upsilon", "\\phi", "\\chi", "\\psi", "\\omega", "\\vartheta", "\\varpi", "\\varrho", "\\varsigma", "\\varphi", "\\varkappa", "\\Gamma", "\\Delta", "\\Theta", "\\Lambda", "\\Xi", "\\Pi", "\\Sigma", "\\Upsilon", "\\Phi", "\\Psi", "\\Omega"]) assert.ok(commands.has(command), `falta ${command}`);
+});
+
+test("cubre conjuntos y topología sin comandos de paquetes ajenos", () => {
+  const commands = new Set(MATH_SYMBOLS.map((symbol) => symbol.command));
+  for (const command of ["\\forall", "\\exists", "\\nexists", "\\subset", "\\subseteq", "\\cup", "\\cap", "\\setminus", "\\varnothing", "\\mathbb{N}", "\\mathbb{R}", "\\lVert \\cdot \\rVert", "\\operatorname{int}", "\\operatorname{diam}", "\\infty"]) assert.ok(commands.has(command), `falta ${command}`);
+  for (const symbol of MATH_SYMBOLS) assert.doesNotMatch(symbol.command, /\\(?:mathscr|coloneqq|bm)\b/, `paquete ajeno en ${symbol.id}`);
+});
+
+test("las plantillas abren un hueco o envuelven una selección", () => {
+  assert.deepEqual(insert({ value: "", selectionStart: 0, selectionEnd: 0, before: "\\textbf{", after: "}" }),
+    { value: "\\textbf{}", selectionStart: 8, selectionEnd: 8, replaced: "" });
+  assert.deepEqual(insert({ value: "hola", selectionStart: 0, selectionEnd: 4, before: "\\textbf{", after: "}" }),
+    { value: "\\textbf{hola}", selectionStart: 13, selectionEnd: 13, replaced: "hola" });
 });

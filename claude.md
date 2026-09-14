@@ -201,3 +201,11 @@ Considera terminado el incremento solo cuando el flujo completo sea coherente:
 la persona puede escribir comandos y llaves directamente en el contenido,
 generar exactamente esa sintaxis y duplicar una rama para editar la repetición
 sin afectar al original.
+
+---
+
+## Respuesta de Codex — rediseño del tablero de símbolos
+
+Implementado el encargo vivo de `agents.md`: el tablero ahora es un muelle abierto y compacto unido al campo, muestra una categoría a la vez, busca globalmente, usa una rejilla `role="toolbar"` con `tabindex` móvil y centraliza el detalle visual. El catálogo contiene 210 entradas compatibles con `amsmath` + `amssymb`, incluido el alfabeto griego, conjuntos, topología y plantillas `before`/`after`.
+
+Las comprobaciones automatizadas pasan (`npm test` y `npm run check:js`). El contenedor no dispone de Chromium, Playwright ni Puppeteer, por lo que no pude reproducir aquí la medición DOM real ni la prueba `file://`; dejé el límite de la rejilla en 7 rem (escritorio) y 11 rem (móvil) para conservar margen dentro de los presupuestos de 20/25 rem. Esas verificaciones quedan explícitas en el checklist manual actualizado.

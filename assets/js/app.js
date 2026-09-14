@@ -384,59 +384,93 @@
     button.className = "symbol-button";
     button.dataset.command = symbol.command;
     button.dataset.symbolId = symbol.id;
+    button.tabIndex = -1;
     button.setAttribute("aria-label", symbolAccessibleName(symbol));
     const glyph = document.createElement("span"); glyph.className = "symbol-glyph"; glyph.textContent = symbol.symbol;
-    const name = document.createElement("span"); name.className = "symbol-name"; name.textContent = symbol.name;
-    const command = document.createElement("span"); command.className = "symbol-command"; command.textContent = symbol.command;
-    button.append(glyph, name, command);
+    button.append(glyph);
     return button;
   }
 
-  function renderSymbolBoard() {
-    const container = $("#symbol-groups");
-    container.replaceChildren();
+  let activeSymbolGroup = MATH_SYMBOL_GROUPS[0].id;
+
+  function renderCategoryPicker(searching = false) {
+    const picker = $("#symbol-category-picker");
+    picker.replaceChildren();
     for (const group of MATH_SYMBOL_GROUPS) {
-      const symbols = symbolsByGroup(group.id);
-      if (!symbols.length) continue;
-      const section = document.createElement("section");
-      section.className = "symbol-group";
-      const heading = document.createElement("h4");
-      heading.id = `symbol-group-${group.id}`;
-      heading.textContent = group.label;
-      const list = document.createElement("menu");
-      list.className = "symbol-grid";
-      list.setAttribute("aria-labelledby", heading.id);
-      for (const symbol of symbols) {
-        const item = document.createElement("li");
-        item.append(symbolButton(symbol));
-        list.append(item);
-      }
-      section.append(heading, list);
-      container.append(section);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "symbol-category";
+      button.dataset.groupId = group.id;
+      button.textContent = group.label;
+      button.setAttribute("aria-pressed", String(!searching && group.id === activeSymbolGroup));
+      picker.append(button);
     }
+  }
+
+  function renderSymbolBoard() {
+    renderCategoryPicker();
     applySymbolFilter("");
   }
 
   function applySymbolFilter(query) {
     const container = $("#symbol-groups");
-    const visible = new Set(filterMathSymbols(query).map((symbol) => symbol.id));
-    for (const button of container.querySelectorAll("button[data-symbol-id]")) button.closest("li").hidden = !visible.has(button.dataset.symbolId);
-    for (const group of container.querySelectorAll(".symbol-group")) group.hidden = !group.querySelector("li:not([hidden])");
-    $("#symbol-empty").hidden = visible.size > 0;
+    const searching = Boolean(query.trim());
+    const visible = searching ? filterMathSymbols(query) : symbolsByGroup(activeSymbolGroup);
+    container.replaceChildren(...visible.map((symbol, index) => {
+      const item = document.createElement("li");
+      const button = symbolButton(symbol);
+      if (index === 0) button.tabIndex = 0;
+      item.append(button);
+      return item;
+    }));
+    renderCategoryPicker(searching);
+    const activeLabel = MATH_SYMBOL_GROUPS.find((group) => group.id === activeSymbolGroup).label;
+    container.setAttribute("aria-label", searching ? "Resultados de símbolos" : `Símbolos: ${activeLabel}`);
+    $("#symbol-empty").hidden = visible.length > 0;
     // El recuento solo se escribe tras una búsqueda: así la región activa no anuncia nada al cargar.
     const results = $("#symbol-results");
     if (!query.trim() && !results.textContent) return;
     results.textContent = query.trim()
-      ? `${visible.size} ${visible.size === 1 ? "símbolo coincide" : "símbolos coinciden"} con la búsqueda.`
-      : `Se muestran los ${MATH_SYMBOLS.length} símbolos del tablero.`;
+      ? `${visible.length} ${visible.length === 1 ? "símbolo coincide" : "símbolos coinciden"} con la búsqueda.`
+      : `Se muestran ${visible.length} símbolos de ${activeLabel}.`;
   }
 
   $("#symbol-search").addEventListener("input", (event) => applySymbolFilter(event.currentTarget.value));
+  $("#symbol-category-picker").addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-group-id]");
+    if (!button) return;
+    activeSymbolGroup = button.dataset.groupId;
+    $("#symbol-search").value = "";
+    applySymbolFilter("");
+  });
+  function updateSymbolDetail(button) {
+    const symbol = MATH_SYMBOLS.find((candidate) => candidate.id === button.dataset.symbolId);
+    if (symbol) $("#symbol-detail").textContent = `${symbol.name} — ${symbol.command}`;
+  }
+  $("#symbol-groups").addEventListener("mouseover", (event) => {
+    const button = event.target.closest("button[data-symbol-id]");
+    if (button) updateSymbolDetail(button);
+  });
+  $("#symbol-groups").addEventListener("focusin", (event) => {
+    const button = event.target.closest("button[data-symbol-id]");
+    if (button) updateSymbolDetail(button);
+  });
+  $("#symbol-groups").addEventListener("keydown", (event) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    const buttons = [...event.currentTarget.querySelectorAll("button[data-symbol-id]")];
+    if (!buttons.length) return;
+    event.preventDefault();
+    const current = Math.max(0, buttons.indexOf(document.activeElement));
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 :
+      (current + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length;
+    buttons.forEach((button, index) => { button.tabIndex = index === next ? 0 : -1; });
+    buttons[next].focus();
+  });
   $("#symbol-groups").addEventListener("click", (event) => {
     const button = event.target.closest("button[data-command]");
     if (!button) return;
     const symbol = MATH_SYMBOLS.find((candidate) => candidate.id === button.dataset.symbolId);
-    insertIntoField($("#block-content"), button.dataset.command);
+    insertIntoField($("#block-content"), symbol?.insert || button.dataset.command);
     announce(`Símbolo insertado en el contenido: ${symbol ? symbol.name : button.dataset.command}.`);
   });
 
