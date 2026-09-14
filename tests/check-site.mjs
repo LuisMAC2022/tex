@@ -12,12 +12,16 @@ assert.match(html, /href="#contenido-principal"/, "Falta el enlace de salto");
 // Restricción file://: scripts clásicos en orden de dependencia, nunca módulos ES.
 assert.doesNotMatch(html, /<script[^>]+type="module"/, "los scripts no deben ser módulos ES");
 const scripts = [...html.matchAll(/<script src="(assets\/js\/[^"]+)"><\/script>/g)].map((match) => match[1]);
-assert.deepEqual(scripts, ["assets/js/block-types.js", "assets/js/block-tree.js", "assets/js/latex-generator.js", "assets/js/file-download.js", "assets/js/math-symbols.js", "assets/js/text-insertion.js", "assets/js/app.js"], "faltan scripts o el orden de carga es incorrecto");
+assert.deepEqual(scripts, ["assets/js/block-types.js", "assets/js/block-tree.js", "assets/js/latex-generator.js", "assets/js/file-download.js", "assets/js/math-symbols.js", "assets/js/text-insertion.js", "assets/js/math-preview.js", "assets/js/app.js"], "faltan scripts o el orden de carga es incorrecto");
+assert.match(html, /<link rel="stylesheet" href="assets\/vendor\/katex\/katex\.min\.css">/, "Falta la hoja vendorizada de KaTeX");
+assert.match(html, /<script src="assets\/vendor\/katex\/katex\.min\.js"><\/script>/, "Falta el script vendorizado de KaTeX");
 assert.match(html, /<input id="course"[^>]+value="Cálculo III \(1352\)">/, "El curso debe aparecer prellenado desde el temario");
 assert.match(html, /<input id="teacher"[^>]+value="Guzmán Fuentes Ricardo">/, "El profesor debe aparecer prellenado desde el temario");
 assert.match(html, /<input id="date"[^>]+type="date"[^>]+value="2026-09-13">/, "La fecha acordada debe aparecer prellenada");
 assert.doesNotMatch(html, /(?:src|href)="\/(?!\/)/, "Las rutas internas no deben partir de la raíz");
 const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]));
+assert(ids.has("math-preview") && ids.has("math-preview-status"), "Falta la vista previa matemática o su estado");
+assert.doesNotMatch(html, /id="math-preview"[^>]*aria-live/, "La vista matemática no debe anunciar cada renderizado");
 for (const match of html.matchAll(/<label\s+for="([^"]+)"/g)) assert(ids.has(match[1]), `label apunta a id inexistente: ${match[1]}`);
 for (const match of html.matchAll(/(?:src|href)="((?:assets|examples)\/[^"#]+)"/g)) await access(match[1]);
 

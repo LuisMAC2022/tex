@@ -5,6 +5,7 @@
     DRAFT_VERSION, blockAtPath, cloneBlock, cloneBlocks, countBlocks, duplicateBlock, insertBlock, keyToPath,
     moveBlock, normalizeDraft, pathLabel, pathToKey, removeBlock, updateBlock,
     MATH_SYMBOLS, MATH_SYMBOL_GROUPS, filterMathSymbols, symbolAccessibleName, symbolsByGroup, insertIntoField,
+    analyzeContent, normalizeLineBreaks,
   } = global.TexNotes;
 
   // El borrador v1 era una lista plana. Se sigue leyendo para migrarlo; lo que
@@ -24,6 +25,54 @@
    * Tampoco se persiste en el borrador, porque no forma parte del documento.
    */
   let tray = null;
+  let previewTimer = null;
+  let announcedPreviewFailures = null;
+
+  function katexRender(math, displayMode) {
+    try {
+      return { ok: true, html: global.katex.renderToString(math, {
+        displayMode, throwOnError: true, strict: false, trust: false, output: "htmlAndMathml",
+      }) };
+    } catch (error) {
+      return { ok: false, message: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  function fillMathPreview(container, content, blockTypeId) {
+    const normalized = normalizeLineBreaks(content || "");
+    const analysis = analyzeContent(normalized, blockTypeId, katexRender);
+    if (!analysis.segments.length) { container.textContent = normalized.trim() ? "No hay tramos matemáticos delimitados para previsualizar." : "Escribe contenido para ver aquí sus matemáticas."; return analysis; }
+    const fragment = document.createDocumentFragment();
+    let cursor = 0;
+    for (const segment of analysis.segments) {
+      fragment.append(document.createTextNode(normalized.slice(cursor, segment.start)));
+      const rendered = document.createElement(segment.displayMode ? "div" : "span");
+      rendered.className = segment.ok ? "math-rendered" : "math-preview-failure";
+      if (segment.ok) rendered.innerHTML = segment.html;
+      else rendered.textContent = `No se pudo previsualizar: ${segment.math || "(tramo vacío)"}. ${segment.message}`;
+      fragment.append(rendered);
+      cursor = segment.end;
+    }
+    fragment.append(document.createTextNode(normalized.slice(cursor)));
+    container.replaceChildren(fragment);
+    return analysis;
+  }
+
+  function renderEditorPreview() {
+    const analysis = fillMathPreview($("#math-preview"), $("#block-content").value, $("#block-type").value);
+    const failures = analysis.failures.length;
+    if (failures !== announcedPreviewFailures) {
+      $("#math-preview-status").textContent = failures
+        ? `No se pudo previsualizar ${failures} ${failures === 1 ? "tramo matemático" : "tramos matemáticos"}. Esto no impide generar el documento.`
+        : analysis.segments.length ? "Todos los tramos matemáticos se pudieron previsualizar." : "";
+      announcedPreviewFailures = failures;
+    }
+  }
+
+  function scheduleEditorPreview() {
+    global.clearTimeout(previewTimer);
+    previewTimer = global.setTimeout(renderEditorPreview, 200);
+  }
 
   function metadata() {
     return Object.fromEntries(METADATA_KEYS.map((name) => [name, form.elements[name].value]));
@@ -76,6 +125,7 @@
   function clearBlockFields() {
     $("#block-title").value = ""; $("#block-content").value = "";
     $("#block-error").textContent = ""; $("#block-content").removeAttribute("aria-invalid");
+    renderEditorPreview();
   }
   function resetBlockEditor() { clearBlockFields(); setEditorTarget({}); }
 
@@ -116,7 +166,8 @@
     meta.textContent = `Nivel ${path.length} · ${where}`;
     const preview = document.createElement("p");
     preview.className = "block-preview";
-    preview.textContent = (block.content || "").trim() || "(Bloque vacío)";
+    const previewAnalysis = fillMathPreview(preview, (block.content || "").trim(), block.type);
+    if (!previewAnalysis.segments.length) preview.textContent = (block.content || "").trim() || "(Bloque vacío)";
     const actions = document.createElement("menu");
     actions.className = "block-actions";
     actions.setAttribute("aria-label", `Acciones para el bloque ${describeBlock(block, path)}`);
@@ -286,6 +337,7 @@
       $("#block-type").value = block.type; $("#block-title").value = block.title; $("#block-content").value = block.content;
       $("#block-error").textContent = ""; $("#block-content").removeAttribute("aria-invalid");
       setEditorTarget({ editing: path }); $("#block-type").focus();
+      renderEditorPreview();
       announce(`Editando ${describeBlock(block, path)}.`);
       return;
     }
@@ -471,10 +523,15 @@
     if (!button) return;
     const symbol = MATH_SYMBOLS.find((candidate) => candidate.id === button.dataset.symbolId);
     insertIntoField($("#block-content"), symbol?.insert || button.dataset.command);
+    scheduleEditorPreview();
     announce(`Símbolo insertado en el contenido: ${symbol ? symbol.name : button.dataset.command}.`);
   });
+
+  $("#block-content").addEventListener("input", scheduleEditorPreview);
+  $("#block-type").addEventListener("change", renderEditorPreview);
 
   renderSymbolBoard();
   renderBlocks();
   setEditorTarget({});
+  renderEditorPreview();
 })(typeof globalThis !== "undefined" ? globalThis : this);
