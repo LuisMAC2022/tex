@@ -386,6 +386,10 @@
     button.dataset.symbolId = symbol.id;
     button.tabIndex = -1;
     button.setAttribute("aria-label", symbolAccessibleName(symbol));
+    // La casilla mide lo mismo para todos, pero los glifos no: «negrita» o
+    // «d²f/dx²» al tamaño de una letra griega se salían sobre las casillas
+    // vecinas. La longitud en puntos de código elige el tramo de tamaño en CSS.
+    button.dataset.glyphLength = String(Math.min([...String(symbol.symbol)].length, 7));
     const glyph = document.createElement("span"); glyph.className = "symbol-glyph"; glyph.textContent = symbol.symbol;
     button.append(glyph);
     return button;
@@ -407,6 +411,14 @@
     }
   }
 
+  // El texto base se toma del propio HTML para que no haya dos redacciones que
+  // mantener en paralelo.
+  const SYMBOL_DETAIL_PLACEHOLDER = $("#symbol-detail").textContent;
+
+  function resetSymbolDetail() {
+    $("#symbol-detail").textContent = SYMBOL_DETAIL_PLACEHOLDER;
+  }
+
   function renderSymbolBoard() {
     renderCategoryPicker();
     applySymbolFilter("");
@@ -418,13 +430,17 @@
     const visible = searching ? filterMathSymbols(query) : symbolsByGroup(activeSymbolGroup);
     container.replaceChildren(...visible.map((symbol, index) => {
       const item = document.createElement("li");
+      item.setAttribute("role", "presentation");
       const button = symbolButton(symbol);
       if (index === 0) button.tabIndex = 0;
       item.append(button);
       return item;
     }));
     renderCategoryPicker(searching);
-    const activeLabel = MATH_SYMBOL_GROUPS.find((group) => group.id === activeSymbolGroup).label;
+    // La rejilla se rehízo: el detalle ya no describe nada visible.
+    resetSymbolDetail();
+    const activeGroup = MATH_SYMBOL_GROUPS.find((group) => group.id === activeSymbolGroup);
+    const activeLabel = activeGroup ? activeGroup.label : MATH_SYMBOL_GROUPS[0].label;
     container.setAttribute("aria-label", searching ? "Resultados de símbolos" : `Símbolos: ${activeLabel}`);
     $("#symbol-empty").hidden = visible.length > 0;
     // El recuento solo se escribe tras una búsqueda: así la región activa no anuncia nada al cargar.
@@ -455,16 +471,33 @@
     const button = event.target.closest("button[data-symbol-id]");
     if (button) updateSymbolDetail(button);
   });
+  /** Columnas que el grid resolvió para el ancho actual; nunca menos de una. */
+  function symbolGridColumns(container) {
+    const columns = getComputedStyle(container).gridTemplateColumns.split(" ").filter(Boolean).length;
+    return Math.max(1, columns);
+  }
+
   $("#symbol-groups").addEventListener("keydown", (event) => {
-    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
     const buttons = [...event.currentTarget.querySelectorAll("button[data-symbol-id]")];
     if (!buttons.length) return;
     event.preventDefault();
+    const last = buttons.length - 1;
     const current = Math.max(0, buttons.indexOf(document.activeElement));
-    const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 :
-      (current + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length;
+    const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1
+      : symbolGridColumns(event.currentTarget) * (event.key === 'ArrowDown' ? 1 : -1);
+    // Las flechas horizontales dan la vuelta; las verticales se detienen en los
+    // extremos para que la última fila incompleta no mande el foco al principio.
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? last
+      : event.key === 'ArrowUp' || event.key === 'ArrowDown' ? Math.min(Math.max(current + step, 0), last)
+      : (current + step + buttons.length) % buttons.length;
     buttons.forEach((button, index) => { button.tabIndex = index === next ? 0 : -1; });
     buttons[next].focus();
+  });
+  // El puntero salió del tablero: si nadie tiene el foco dentro, el detalle
+  // vuelve a su texto base en lugar de congelar el último símbolo señalado.
+  $("#symbol-groups").addEventListener("mouseleave", (event) => {
+    if (!event.currentTarget.contains(document.activeElement)) resetSymbolDetail();
   });
   $("#symbol-groups").addEventListener("click", (event) => {
     const button = event.target.closest("button[data-command]");

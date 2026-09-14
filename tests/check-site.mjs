@@ -76,4 +76,21 @@ assert.match(html, /id="symbol-groups"[^>]+role="toolbar"[^>]+aria-orientation="
 assert.match(html, /id="symbol-detail" aria-hidden="true"/, "El detalle visual no debe duplicar anuncios");
 assert(ids.has("app-status"), "Falta la región de anuncios de la aplicación");
 
+// Todo color vive en :root y en su redefinición oscura; ninguna regla puede
+// llevar un literal. Un literal en una regla sobrevive al cambio de tema y es
+// lo que dejaba el tablero de símbolos con texto claro sobre panel claro.
+const css = await readFile("assets/css/styles.css", "utf8");
+const bloquesDeTokens = [...css.matchAll(/:root\s*\{[^}]*\}/g)].map((match) => match[0]);
+let reglas = css;
+for (const bloque of bloquesDeTokens) reglas = reglas.replace(bloque, "");
+const literales = [...reglas.matchAll(/#[0-9a-fA-F]{3,8}(?![\w-])/g)].map((match) => match[0]);
+assert.deepEqual(literales, [], `Colores literales fuera de :root: ${literales.join(", ")}. Declara un token y redefínelo en el bloque oscuro.`);
+// El bloque oscuro tiene que redefinir cada token de color, o el tema claro se
+// filtra al oscuro en las reglas que lo usan.
+const [claro, oscuro] = bloquesDeTokens;
+const nombres = (bloque) => new Set([...bloque.matchAll(/(--[\w-]+)\s*:/g)].map((match) => match[1]));
+const sinColor = new Set(["--shadow"]);
+const faltantes = [...nombres(claro)].filter((token) => !nombres(oscuro).has(token) && !sinColor.has(token));
+assert.deepEqual(faltantes, [], `El bloque oscuro no redefine: ${faltantes.join(", ")}`);
+
 console.log("HTML estructural, tipos de bloque, anidamiento, copia de bloques, tablero de símbolos y rutas internas: correctos");
