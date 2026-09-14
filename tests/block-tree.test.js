@@ -32,7 +32,7 @@ test("la ausencia de children equivale a una lista vacía y el estado plano sigu
 
 test("solo los tipos declarados como contenedores admiten hijos", () => {
   for (const id of ["text", "definition", "theorem", "proposition", "example", "note", "itemize", "enumerate"]) assert.ok(acceptsChildren(id), id);
-  for (const id of ["equation", "math-inline"]) assert.ok(!acceptsChildren(id), id);
+  for (const id of ["equation", "math-inline", "bibliography"]) assert.ok(!acceptsChildren(id), id);
   // Un tipo desconocido cae en "text", igual que en el generador.
   assert.ok(acceptsChildren("inexistente"));
 });

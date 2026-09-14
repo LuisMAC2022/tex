@@ -59,7 +59,7 @@ for (const type of BLOCK_TYPES) {
   // tipo contenedor emite a sus hijos, y uno que no lo es jamás los mete dentro.
   const anidado = blockToLatex({ type: type.id, title: "", content: "Contenido de prueba", children: [{ type: "text", content: "Hijo", children: [] }] });
   assert(anidado.includes("Hijo"), `El tipo «${type.id}» pierde a sus hijos`);
-  assert.equal(acceptsChildren(type.id), type.kind !== "equation", `«${type.id}» debe admitir hijos salvo que sea una fórmula`);
+  assert.equal(acceptsChildren(type.id), type.container === true, `«${type.id}» debe respetar la regla de anidamiento declarada`);
   if (type.kind === "equation") {
     const [, cola = ""] = anidado.split(type.inline ? "\\)" : "\\]");
     assert(cola.includes("Hijo"), `Una fórmula no anida: los hijos de «${type.id}» deben emitirse tras su cierre`);
