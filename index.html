@@ -12,7 +12,7 @@
     <header class="site-header">
       <p class="eyebrow">Editor estático y local</p>
       <h1>Notas LaTeX</h1>
-      <p>Crea una nota estructurada y descarga su código sin enviar datos a ningún servidor.</p>
+      <p>Crea una nota estructurada y copia o descarga su código para pegarlo en Overleaf.</p>
     </header>
 
     <main id="contenido-principal">
@@ -28,9 +28,9 @@
               <span id="title-error" class="error" aria-live="polite"></span>
             </p>
             <p class="field"><label for="author">Autor</label><input id="author" name="author" type="text" autocomplete="name"></p>
-            <p class="field"><label for="course">Curso</label><input id="course" name="course" type="text"></p>
-            <p class="field"><label for="teacher">Profesor</label><input id="teacher" name="teacher" type="text"></p>
-            <p class="field"><label for="date">Fecha</label><input id="date" name="date" type="date"></p>
+            <p class="field"><label for="course">Curso</label><input id="course" name="course" type="text" value="Cálculo III (1352)"></p>
+            <p class="field"><label for="teacher">Profesor</label><input id="teacher" name="teacher" type="text" value="Guzmán Fuentes Ricardo"></p>
+            <p class="field"><label for="date">Fecha</label><input id="date" name="date" type="date" value="2026-09-13"></p>
             <p class="field field-wide"><label for="topic">Tema o unidad</label><input id="topic" name="topic" type="text"></p>
           </fieldset>
           <menu class="button-row" aria-label="Acciones del borrador">
@@ -38,11 +38,6 @@
             <li><button id="restore-draft" type="button">Restaurar borrador</button></li>
             <li><button id="delete-draft" class="secondary danger" type="button">Borrar borrador</button></li>
           </menu>
-          <p class="field field-wide">
-            <label for="import-tex">Importar un documento .tex</label>
-            <input id="import-tex" name="importTex" type="file" accept=".tex,text/x-tex" aria-describedby="import-help">
-            <small id="import-help">El archivo se procesa solo en este dispositivo. Inicialmente, solo se admiten documentos creados por esta aplicación.</small>
-          </p>
         </section>
 
         <section aria-labelledby="contenido-heading">
@@ -55,14 +50,13 @@
               <label for="block-type">Tipo de bloque</label>
               <select id="block-type" name="blockType">
                 <option value="text">Texto</option>
+                <option value="equation">Ecuación destacada</option>
+                <option value="math-inline">Expresión matemática en línea</option>
                 <option value="definition">Definición</option>
                 <option value="theorem">Teorema</option>
                 <option value="proposition">Proposición</option>
                 <option value="example">Ejemplo</option>
-                <option value="exercise">Ejercicio</option>
-                <option value="solution">Solución</option>
-                <option value="equation">Ecuación destacada</option>
-                <option value="math-inline">Expresión matemática en línea</option>
+                <option value="note">Nota</option>
                 <option value="itemize">Lista con viñetas</option>
                 <option value="enumerate">Lista numerada</option>
               </select>
@@ -78,7 +72,7 @@
             <section class="symbol-board" aria-labelledby="simbolos-heading">
               <details id="symbol-details">
                 <summary><h3 id="simbolos-heading">Símbolos matemáticos</h3></summary>
-                <p id="symbol-board-intro">Cada botón inserta su comando LaTeX en el campo «Contenido», en la posición del cursor. Los comandos se conservan literalmente en los bloques de expresión matemática; en un bloque de texto se escaparían. Si ya conoces el comando, escríbelo directamente.</p>
+                <p id="symbol-board-intro">Cada botón inserta su comando LaTeX en el campo «Contenido», en la posición del cursor. Los comandos se conservan literalmente en los bloques de ecuación y de expresión matemática; en un bloque de texto se escaparían. Si ya conoces el comando, escríbelo directamente.</p>
                 <p class="field">
                   <label for="symbol-search">Buscar símbolo por nombre</label>
                   <input id="symbol-search" name="symbolSearch" type="search" autocomplete="off" aria-describedby="symbol-search-help">
@@ -114,6 +108,11 @@
       <p id="app-status" class="status" aria-live="polite" aria-atomic="true">Editor listo.</p>
     </main>
     <footer><p>La primera versión no interpreta, valida ni compila matemáticas.</p></footer>
-    <script type="module" src="assets/js/app.js"></script>
+    <script src="assets/js/block-types.js"></script>
+    <script src="assets/js/latex-generator.js"></script>
+    <script src="assets/js/file-download.js"></script>
+    <script src="assets/js/math-symbols.js"></script>
+    <script src="assets/js/text-insertion.js"></script>
+    <script src="assets/js/app.js"></script>
   </body>
 </html>

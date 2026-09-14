@@ -1,8 +1,10 @@
 # Notas LaTeX
 
-Aplicación web estática, sin dependencias de ejecución, para ordenar apuntes y exportarlos como un archivo LaTeX reproducible. Todo el trabajo —incluido el borrador versionado— permanece en el navegador del dispositivo; la aplicación no envía información a un servidor.
+Aplicación web estática, sin dependencias de ejecución, para consolidar apuntes de clase y exportarlos como un archivo LaTeX autocontenido. Todo el trabajo —incluido el borrador— permanece en el navegador del dispositivo; la aplicación no envía información a un servidor.
 
-> **Alcance de la primera versión:** no interpreta, valida ni compila las matemáticas. Una ecuación se copia literalmente al `.tex`; la prueba automatizada compara cadenas `.tex`, no genera ni compara PDF.
+> **Overleaf es la copia maestra.** Esta aplicación es un frente de redacción **de ida**: el `.tex` generado se copia o se descarga y se pega en Overleaf, donde se corrige y se compila. Las correcciones hechas allí no vuelven a la aplicación.
+
+> **Alcance de la primera versión:** no interpreta, valida ni compila las matemáticas. Una ecuación se copia literalmente al `.tex`; la prueba automatizada compara cadenas `.tex`, no genera ni compara PDF. La compilación queda deliberadamente fuera: se hace en Overleaf.
 
 ## Especificación del documento generado
 
@@ -21,26 +23,24 @@ El generador recibe un objeto con este contrato conceptual:
     topic: "Tema o unidad, opcional"
   },
   blocks: [
-    { type: "text|definition|theorem|proposition|example|exercise|solution|equation|math-inline|itemize|enumerate", title: "opcional", content: "texto" }
+    { type: "text|equation|math-inline|definition|theorem|proposition|example|note|itemize|enumerate", title: "opcional", content: "texto" }
   ]
 }
 ```
 
-- El **título de la nota** es el único campo obligatorio en la interfaz. Autor, curso, profesor y fecha son opcionales.
+- El **título de la nota** es el único campo obligatorio en la interfaz. Autor, curso, profesor y fecha son opcionales. Para acelerar las entregas actuales, la interfaz inicia con el curso **Cálculo III (1352)**, el profesor **Guzmán Fuentes Ricardo** y la fecha **2026-09-13** ya escritos; siguen siendo campos editables y un borrador restaurado puede reemplazarlos.
 - El **tema o unidad** produce una `\section` cuando no está vacío.
 - `blocks` es una lista ordenada. Su orden determina exactamente el orden del cuerpo del documento.
-- Los bloques `definition`, `theorem`, `proposition`, `example`, `exercise` y `solution` se convierten en sus entornos homónimos; `text` es texto normal y, si tiene título, comienza con `\subsection`.
-- Hay **dos tipos de contenido matemático**, deliberadamente separados del texto: `equation` queda delimitado por `\[` y `\]` en líneas propias, y `math-inline` por `\(` y `\)` en una sola línea. Ambos conservan literalmente lo escrito.
+- Los tipos de bloque viven en una sola tabla, [`assets/js/block-types.js`](assets/js/block-types.js). Los bloques `definition`, `theorem`, `proposition`, `example` y `note` se convierten en sus entornos homónimos; `text` es texto normal y, si tiene título, comienza con `\subsection`.
+- Hay **dos tipos de contenido matemático**, deliberadamente separados del texto: `equation` queda delimitado por `\[` y `\]` en líneas propias, y `math-inline` por `\(` y `\)` en una sola línea. Ambos conservan literalmente lo escrito y solo se diferencian por sus delimitadores en la tabla.
 - `itemize` y `enumerate` producen listas: **cada línea no vacía del contenido es un `\item`**, con su texto escapado.
-- Los caracteres reservados `#`, `$`, `%`, `&`, `_`, `{`, `}`, `~`, `^` y `\` se escapan en metadatos, títulos, contenido textual y elementos de lista. En cambio, el contenido de un **bloque matemático conserva literalmente la sintaxis escrita por el usuario**. El escapado nunca se desactiva de forma global: escribir `\forall` en una proposición produce `\textbackslash{}forall`, y para obtener el símbolo hay que añadir un bloque matemático contiguo.
-- Una **proposición** se compone, por tanto, de un bloque `proposition` con su enunciado en prosa y uno o más bloques matemáticos adyacentes. No existe todavía un análisis de LaTeX mixto dentro de un mismo bloque.
-- **Regla de numeración:** cada entorno declarado con `\newtheorem` mantiene un contador propio, independiente y continuo en todo el documento. `proposition` no comparte contador con `theorem` ni se reinicia por sección. Cambiar esta regla —por ejemplo, compartir contador con `[theorem]` o numerar por sección— exige editar una sola línea `declaration` en `assets/js/block-types.js`.
-- Los tipos de bloque están centralizados en [`assets/js/block-types.js`](assets/js/block-types.js): de ahí salen las etiquetas visibles, las declaraciones del preámbulo, la transformación del generador y los tipos que acepta el importador. `npm test` comprueba que la lista de `<option>` de `index.html` coincide exactamente, en valor y orden, con ese catálogo.
+- `buildTheoremDefs()` deriva las declaraciones `\newtheorem` de esa misma tabla y agrupa los entornos por `\theoremstyle`, de modo que el preámbulo no puede desincronizarse de los tipos disponibles: añadir un tipo es una entrada en la tabla y su `<option>` en `index.html`, y una prueba compara ambas listas.
+- **Regla de numeración:** cada entorno declarado con `\newtheorem` mantiene un contador propio, independiente y continuo en todo el documento. `proposition` comparte `\theoremstyle{plain}` con `theorem`, pero **no comparte contador** ni se reinicia por sección. Cambiar esa regla es editar una sola entrada de la tabla, y es un cambio de contrato que debe documentarse aquí.
+- Los caracteres reservados `#`, `$`, `%`, `&`, `_`, `{`, `}`, `~`, `^` y `\` se escapan en metadatos, títulos, contenido textual y elementos de lista. En cambio, el contenido de un **bloque matemático conserva literalmente la sintaxis escrita por el usuario**. El escapado nunca se desactiva de forma global: escribir `\forall` dentro de una proposición produce `\textbackslash{}forall`, y para obtener el símbolo hay que añadir un bloque matemático contiguo.
+- Una **proposición** se compone, por tanto, de un bloque `proposition` con su enunciado en prosa y uno o más bloques matemáticos adyacentes. No existe todavía un análisis de LaTeX mixto dentro de un mismo bloque, y evitarlo es deliberado: conserva el escapado y no obliga a escribir un parser.
 - Los saltos CRLF y CR se normalizan a LF. Las líneas vacías de un bloque textual conservan los párrafos. Los bloques sin contenido no se emiten.
-- La plantilla `article` incluye solamente `fontenc` (salida latina copiable), `inputenc` (fuente UTF-8), `babel` (español), `amsmath` (matemáticas), `amssymb` (los conjuntos `\mathbb` del tablero) y `amsthm` (entornos). El propio preámbulo documenta el motivo.
+- La plantilla `article` incluye solamente `fontenc` (salida latina copiable), `inputenc` (fuente UTF-8), `babel` (español), `amsmath` (matemáticas), `amssymb` (los conjuntos `\mathbb` del tablero de símbolos) y `amsthm` (entornos). El propio preámbulo documenta el motivo. El archivo es **autocontenido**: no depende de ningún `.sty` externo, así que basta pegarlo en un proyecto vacío de Overleaf.
 - El resultado termina siempre con un salto de línea y es determinista: el mismo estado produce exactamente la misma cadena.
-- Antes del LaTeX visible se escribe un sobre de comentarios estable, `% TEX-NOTES:FORMAT:1`, con secciones `METADATA` y `BLOCK` cuyos datos JSON UTF-8 están codificados en Base64. La codificación evita que los datos puedan cerrar un marcador y los comentarios no afectan a la compilación.
-- El importador lee exclusivamente ese sobre y se detiene en `% TEX-NOTES:CONTENT:BEGIN`: no analiza comandos generales de TeX ni ejecuta el contenido. Por ello, un texto de usuario idéntico a un marcador —incluso dentro de una ecuación sin escapar— se conserva como dato codificado y cualquier apariencia de marcador en el LaTeX posterior se ignora.
 - El nombre sugerido se deriva del título: minúsculas, sin diacríticos, grupos no alfanuméricos convertidos en guiones y extensión `.tex`. Si queda vacío, se usa **`notas-calculo-3.tex`**.
 
 ### Ejemplo completo de entrada
@@ -58,14 +58,14 @@ El generador recibe un objeto con este contrato conceptual:
   "blocks": [
     { "type": "definition", "title": "Integral doble", "content": "Sea f: A → R. La integral sobre A se escribe en la ecuación siguiente." },
     { "type": "equation", "title": "", "content": "\\iint_A f(x,y) \\, dx \\, dy" },
+    { "type": "theorem", "title": "Fubini", "content": "Bajo las hipótesis del curso, el orden de integración no altera el resultado." },
     { "type": "example", "title": "Rectángulo", "content": "Para f(x,y)=x+y en [0,1] \\times [0,2], calculamos el valor por iteración.\n\nEste bloque tiene dos párrafos y conserva el signo = como texto." },
-    { "type": "exercise", "title": "Práctica #1", "content": "Calcula el área de A = [0,2] \\times [0,3]." },
-    { "type": "solution", "title": "", "content": "El área es 2 \\times 3 = 6 unidades cuadradas." }
+    { "type": "note", "title": "", "content": "La argumentación escrita cuenta para la calificación: no basta con el símbolo." }
   ]
 }
 ```
 
-El archivo exacto producido y comprobado byte a byte es [`examples/calculo-3.tex`](examples/calculo-3.tex). Se mantiene como archivo de referencia independiente para que cualquier cambio del formato versionado sea explícito en la revisión.
+El archivo exacto producido y comprobado byte a byte es [`examples/calculo-3.tex`](examples/calculo-3.tex). Ese estado vive en [`tests/example-state.mjs`](tests/example-state.mjs) y lo comparten la prueba y `npm run build:example`, que regenera el archivo cuando el formato cambia a propósito.
 
 ## Símbolos matemáticos
 
@@ -73,8 +73,8 @@ El tablero de símbolos es un mecanismo de **descubrimiento**, no el modo princi
 
 - El tablero vive plegado dentro del editor de bloques, en `<details><summary>`, y se abre con teclado o ratón.
 - Cada símbolo es un `button` nativo que muestra **nombre, carácter Unicode y comando LaTeX**, y expone un nombre accesible explícito, como `Insertar cuantificador universal, comando barra invertida forall`: el carácter por sí solo no basta con lector de pantalla.
-- Al pulsarlo se inserta **únicamente el comando** en `#block-content`, en la posición del cursor: sustituye la selección si la hay, conserva el resto, devuelve el foco al campo, deja el cursor tras lo insertado y anuncia el símbolo en `#app-status`, sin releer todo el tablero.
-- No se carga ninguna biblioteca de renderizado matemático: aumentaría el peso y la complejidad sin ser necesaria para insertar texto.
+- Al pulsarlo se inserta **únicamente el comando** en `#block-content`, en la posición del cursor: sustituye la selección si la hay, conserva el resto, devuelve el foco al campo, deja el cursor tras lo insertado y anuncia el símbolo en `#app-status`, sin releer todo el tablero. La inserción vive en `insertAtSelection`, una función pura que recibe el estado del campo y devuelve el siguiente.
+- No se carga ninguna biblioteca de renderizado matemático: aumentaría el peso y la complejidad sin ser necesaria para insertar texto. La vista previa con KaTeX sigue siendo un hito aparte.
 - **Los comandos solo se conservan literalmente en los bloques matemáticos.** Insertar `\forall` en un bloque de texto produce `\textbackslash{}forall`, que es el comportamiento correcto y seguro.
 
 ### Conjunto inicial
@@ -97,28 +97,29 @@ El catálogo es deliberadamente pequeño; una tabla breve es preferible a ciento
 3. Si el comando necesita un paquete que el preámbulo no carga —como `amssymb` para `\mathbb`—, añade ese `\usepackage` en `buildPreamble` de [`assets/js/latex-generator.js`](assets/js/latex-generator.js).
 4. Ejecuta `npm test`: las pruebas comprueban identificadores únicos, grupos declarados, campos obligatorios y que ningún grupo quede vacío. No hay que tocar el HTML ni el CSS: el tablero se renderiza desde el catálogo y usa delegación de eventos.
 
-Queda fuera de esta iteración lo que la lectura por nombre no resuelve: alias personales (`imp` → `\Rightarrow`), vista previa renderizada y comandos con argumentos que coloquen el cursor entre llaves.
+Queda fuera de esta iteración lo que la búsqueda por nombre no resuelve: alias personales (`imp` → `\Rightarrow`), vista previa renderizada y comandos con argumentos que coloquen el cursor entre llaves.
 
 ## Uso
 
-1. Abre el sitio mediante HTTP, completa los datos y añade cada bloque con el botón explícito.
+1. Abre `index.html` —por doble clic o mediante HTTP—. Verifica los datos prellenados del curso, profesor y fecha, completa el título y añade cada bloque con el botón explícito.
 2. Dentro de **Símbolos matemáticos** puedes insertar un comando en la posición del cursor, buscarlo por su nombre o, si ya lo conoces, escribirlo directamente en el contenido.
 3. Revisa o cambia el orden con **Editar**, **Eliminar**, **Subir** y **Bajar**. No hay arrastrar y soltar: los controles nativos funcionan con teclado y evitan otra dependencia.
 4. Pulsa **Generar documento**; la vista previa solo cambia entonces, no con cada pulsación.
-5. Copia o descarga el resultado. Si la API moderna del portapapeles no está disponible, se utiliza selección y copia del `textarea` como alternativa.
+5. Copia o descarga el resultado y pégalo en Overleaf. Si la API moderna del portapapeles no está disponible, se utiliza selección y copia del `textarea` como alternativa.
 6. **Guardar borrador** escribe bajo demanda `{ version: 1, metadata, blocks }` en `localStorage` con la clave `tex-notes:draft:v1`. Restaurar tolera datos ausentes o corruptos. Borrar pide confirmación y nunca borra el formulario abierto.
-7. **Importar un documento .tex** acepta inicialmente solo archivos exportados por la aplicación, de hasta 1 MB. Se valida y analiza localmente antes de tocar el editor; se anuncia título y número de bloques, y si el documento abierto no está vacío se solicita confirmación antes de reemplazarlo. Un error o una cancelación conserva todo el contenido abierto.
 
-### Servidor HTTP local
+### Apertura directa con `file://`
 
-Desde la raíz del repositorio, utiliza una de estas opciones y visita la URL indicada:
+La aplicación se carga con **scripts clásicos** y un único global (`window.TexNotes`), nunca con módulos ES: el navegador bloquea por CORS la descarga de un módulo cuando la página se abre por doble clic, y con módulos la interfaz quedaba inerte. `index.html` carga en orden `block-types.js`, `latex-generator.js`, `file-download.js`, `math-symbols.js`, `text-insertion.js` y `app.js`; `npm test` comprueba tanto el orden como la ausencia de `type="module"`.
+
+Servir por HTTP sigue siendo válido y es lo que usa GitHub Pages:
 
 ```sh
 python3 -m http.server 8000
 # http://localhost:8000/
 ```
 
-También sirve `npx serve .`, si ya se dispone de esa herramienta. Abrir `index.html` directamente puede limitar el portapapeles o los módulos ES en algunos navegadores; por eso se recomienda HTTP.
+Con `file://`, el portapapeles puede estar restringido en algunos navegadores; en ese caso la aplicación recurre a seleccionar el `textarea` y avisa por la región `aria-live`.
 
 ### GitHub Pages
 
@@ -147,7 +148,8 @@ El foco tiene contorno contrastado y no depende del color; los mensajes contiene
 - [ ] Usar `prefers-reduced-motion: reduce` y verificar que no aparece movimiento inesperado.
 - [ ] Guardar, recargar, restaurar y borrar un borrador; probar también una entrada corrupta en `localStorage`.
 - [ ] Denegar permiso del portapapeles y confirmar que un fallo conserva el resultado y comunica una alternativa.
-- [ ] Importar un `.tex` propio con y sin contenido abierto; comprobar resumen, confirmación, foco y anuncios con lector de pantalla.
+- [ ] Abrir `index.html` por doble clic (`file://`) y confirmar que se añaden bloques, se genera, se copia y se descarga sin errores en consola.
+- [ ] Pegar el `.tex` generado en un proyecto vacío de Overleaf y comprobar que compila sin añadir paquetes.
 
 ## Pruebas automatizadas
 
@@ -158,7 +160,11 @@ npm test
 npm run check:js
 ```
 
-`npm test` comprueba estructura HTML esencial y asociaciones de etiquetas, rutas relativas e internas, caracteres reservados, títulos y bloques vacíos, varios párrafos, ecuaciones multilínea, nombres de archivo, ida y vuelta de importación, UTF-8, CRLF, límites y errores de formato, además de la equivalencia byte a byte con `examples/calculo-3.tex`. También cubre las proposiciones con y sin título, la combinación de texto y fórmula, los dos tipos de matemática, las listas, la inserción en el cursor —principio, medio, final, con selección activa, campo vacío, índices fuera de rango y caracteres Unicode— y la coherencia entre el selector de `index.html`, el catálogo de tipos y el generador. `npm run check:js` analiza la sintaxis de todos los módulos. La compilación de LaTeX queda deliberadamente fuera del flujo: se comparan cadenas `.tex`, no PDF compilados.
+`npm test` comprueba estructura HTML esencial y asociaciones de etiquetas, rutas relativas e internas, el orden de los scripts clásicos, caracteres reservados, títulos y bloques vacíos, varios párrafos, ecuaciones multilínea, nombres de archivo, CRLF, la correspondencia entre la tabla de tipos y las opciones de `index.html`, la derivación de `\newtheorem` sin `\theoremstyle` repetidos y la ausencia de sobre de reimportación, además de la equivalencia byte a byte con `examples/calculo-3.tex`. `npm run check:js` analiza la sintaxis de los seis archivos del navegador.
+
+Sobre la entrada matemática, `npm test` cubre además las proposiciones con y sin título, los caracteres reservados y el contenido vacío dentro de una proposición, la combinación de texto y fórmula, los dos tipos de matemática, las listas, la coherencia del catálogo de símbolos y su búsqueda, y la inserción en el cursor: al principio, en medio, al final, con selección activa, con selección invertida, sobre un campo vacío, con índices ausentes o fuera de rango y con caracteres Unicode fuera del ASCII.
+
+Como el navegador carga scripts clásicos y no módulos, [`tests/load-app.mjs`](tests/load-app.mjs) los ejecuta en un contexto `node:vm` en el mismo orden que `index.html` y clona los datos al realm de la prueba. Así se prueba exactamente el código que se publica, sin mantener una segunda copia en formato módulo. La compilación de LaTeX queda fuera del flujo: se comparan cadenas `.tex`, no PDF compilados.
 
 ## Hitos
 
@@ -186,20 +192,25 @@ Semántica, errores accesibles, foco persistente, contraste, temas y pruebas lig
 </details>
 <details><summary><strong>6. Persistencia</strong>: borrador local versionado</summary>
 
-Guardado explícito, restauración defensiva y borrado confirmado en `localStorage`.
+Guardado explícito, restauración defensiva y borrado confirmado en `localStorage`. Es un borrador de trabajo del propio dispositivo, no una copia maestra: la copia maestra está en Overleaf.
 </details>
 <details><summary><strong>7. Publicación</strong>: despliegue automatizado en GitHub Pages</summary>
 
 Flujo oficial que prueba y publica el sitio estático desde `main`.
 </details>
-
 <details><summary><strong>8. Entrada matemática</strong>: tablero de símbolos y proposiciones</summary>
 
-Catálogo estático sin dependencias, inserción accesible en la posición del cursor, entorno `proposition` y separación explícita entre texto, matemática en línea y matemática destacada.
+Catálogo estático sin dependencias, inserción accesible en la posición del cursor, entorno `proposition` con contador propio y separación explícita entre texto, matemática en línea y matemática destacada.
 </details>
 
 ## Criterio de finalización del MVP
 
-El MVP está terminado cuando una persona puede, usando solamente el teclado, crear una nota con al menos dos tipos de bloque, revisar el código generado, copiarlo, descargarlo, recargar la página y recuperar el borrador.
+El MVP está terminado cuando una persona puede, usando solamente el teclado y con la página abierta por doble clic, crear una nota con al menos dos tipos de bloque, revisar el código generado, copiarlo, descargarlo, recargar la página y recuperar el borrador.
 
-Quedan expresamente para iteraciones posteriores: plantillas múltiples, alias y macros personalizadas, importación de `.tex` ajenos a la aplicación, vista previa matemática renderizada, listas anidadas, texto y fórmulas mezclados dentro de un mismo bloque, historial de documentos y compilación.
+## Pendiente
+
+Siguiente en la secuencia: el **diccionario de macros** (`macros.js` y `validate.js`, con nombres reservados, aridad y renderizado real en KaTeX), la **vista previa con KaTeX** y el **modelo de documento de tres niveles** (Unidad → Clase → Bloques); hoy la estructura es plana y `topic` produce una única `\section`. Después, el módulo de apoyo al curso: botón de cita de asesoría, panel de fechas con `.ics` y lista de entregables.
+
+También quedan pendientes, dentro de la entrada matemática ya empezada: los alias personales (`imp` → `\Rightarrow`), las listas anidadas y la mezcla de texto y fórmulas dentro de un mismo bloque.
+
+Quedan expresamente fuera por ahora: TeX en WASM, TikZ/PGFPlots, traducción de errores de TeX, paleta de comandos, buscar y reemplazar, historial de versiones, infraestructura de sincronización y cualquier ida y vuelta desde Overleaf a la aplicación.

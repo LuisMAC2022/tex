@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test && node tests/check-site.mjs",
-    "check:js": "node --check assets/js/app.js && node --check assets/js/block-types.js && node --check assets/js/latex-generator.js && node --check assets/js/math-symbols.js && node --check assets/js/text-insertion.js && node --check assets/js/file-download.js && node --check assets/js/tex-import.js"
+    "check:js": "node --check assets/js/block-types.js && node --check assets/js/latex-generator.js && node --check assets/js/file-download.js && node --check assets/js/math-symbols.js && node --check assets/js/text-insertion.js && node --check assets/js/app.js",
+    "build:example": "node tests/build-example.mjs"
   }
 }
