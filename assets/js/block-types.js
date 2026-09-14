@@ -8,13 +8,13 @@
   "use strict";
   const TexNotes = global.TexNotes || (global.TexNotes = {});
 
-  /**
+  /** @decision DEC-005 ancla:fe5dadc4 tramo:12
    * kind: "text" | "equation" | "theorem" | "list".
    * Los tipos "theorem" declaran un entorno amsthm; buildTheoremDefs() agrupa
    * sus \newtheorem por style para no repetir \theoremstyle.
    * Los tipos "equation" conservan el contenido literalmente y solo se
    * diferencian por sus delimitadores: destacada en líneas propias o en línea.
-   * Los tipos "list" escapan cada línea no vacía y la convierten en un \item.
+   * Los tipos "list" convierten cada línea no vacía en un \item, sin escaparla.
    *
    * container: el tipo admite bloques hijos. Es la única fuente de verdad de esa
    * regla: la interfaz solo ofrece «Añadir dentro» en un tipo con container, y la

@@ -24,7 +24,7 @@
     return normalizeLineBreaks(value).replace(/[\\#$%&_{}~^]/g, (character) => ESCAPES[character]);
   }
 
-  /**
+  /** @decision DEC-004 ancla:03f12fa0 tramo:3
    * El CONTENIDO de un bloque llega al .tex tal cual se escribió: la aplicación
    * no inserta ni un solo carácter de escape.
    *
