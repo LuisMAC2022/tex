@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import vm from "node:vm";
 import { loadTexNotes } from "./load-app.mjs";
 
 const {
@@ -109,4 +111,13 @@ test("las plantillas abren un hueco o envuelven una selección", () => {
     { value: "\\textbf{}", selectionStart: 8, selectionEnd: 8, replaced: "" });
   assert.deepEqual(insert({ value: "hola", selectionStart: 0, selectionEnd: 4, before: "\\textbf{", after: "}" }),
     { value: "\\textbf{hola}", selectionStart: 13, selectionEnd: 13, replaced: "hola" });
+});
+
+test("todo el catálogo se puede representar con KaTeX", async () => {
+  const context = vm.createContext({});
+  vm.runInContext(await readFile(new URL("../assets/vendor/katex/katex.min.js", import.meta.url), "utf8"), context);
+  for (const symbol of MATH_SYMBOLS) {
+    const probe = symbol.katexProbe || (symbol.insert ? `${symbol.insert.before}x${symbol.insert.after}` : symbol.command);
+    assert.doesNotThrow(() => context.katex.renderToString(probe, { throwOnError: true, strict: false, trust: false }), symbol.id);
+  }
 });
