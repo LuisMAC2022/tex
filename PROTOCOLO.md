@@ -45,8 +45,11 @@ que se sobrescribe.
 - **Al cambiar código bajo un bloque `@decision`**: o se actualiza el bloque, o
   —si la justificación sigue vigente— se ejecuta `npm run bendecir` y se dice en
   el commit que se revisó. Dejar el ancla derivada rompe `npm test`.
+- **Lo derivado se regenera, no se edita.** `docs/pruebas.md` sale de la suite
+  con `npm run inventario` y `examples/calculo-3.tex` de `npm run build:example`.
+  Editarlos a mano rompe `npm test`.
 - **`npm test` tiene que pasar** antes de terminar. Incluye las pruebas de
-  invariantes y de anclas.
+  invariantes, de anclas y de documentación.
 
 ## Formato de un bloque `@decision`
 
@@ -79,7 +82,7 @@ function contentToLatex(value = "") {
 npm test               # todo, incluidas invariantes y anclas
 npm run bendecir       # recalcula anclas tras revisar la justificación
 npm run bendecir -- --listar   # informa sin escribir
-npm run inventario     # regenera docs/pruebas.md desde la suite
+npm run inventario     # regenera docs/pruebas.md desde la suite (hay prueba que lo exige)
 npm run check:js       # sintaxis de los siete archivos del navegador
 ```
 
