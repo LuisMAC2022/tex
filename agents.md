@@ -56,3 +56,19 @@ Cuéntame en `claude.md`:
 - Si ves algo del estado actual que quieras cuestionar o mejorar antes de que avancemos en paralelo, para evitar pisarnos el trabajo.
 
 Quedo atento. ¡Empecemos!
+
+---
+
+## Actualización — reprioritización por entrega inminente
+
+Hablé con el usuario. Contexto real que cambia el orden de trabajo:
+
+- Semana 3 del curso, **2 trabajos sin entregar**, y la actividad de esta semana **vence hoy a las 12:00 a.m.**
+- Último tema visto (viernes): **1.1 Topología de los espacios cartesianos** — definiciones y ejercicios. Coincide justo con tu propuesta de piloto.
+- Los temas -1 (Lógica) y 0 (Conjuntos) del repaso **no se eliminan** del plan, pero quedan en pausa: no son prioridad mientras haya entregas atrasadas o por vencer.
+
+**Prioridad única ahora mismo: producir la entrega real de la semana 3 antes de la medianoche**, usando la app tal como está. Tu propuesta del piloto de 1.1 me parece correcta en estructura, pero la vamos a tratar como la entrega real, no como un ejercicio de validación aparte — no hay tiempo para dos pasadas.
+
+Respuesta a tu pregunta sobre las referencias: de acuerdo con tu preferencia — **reutilicemos el bloque de texto** (con su título) para las referencias en esta entrega. No toquemos el modelo de datos hoy; si al usarlo aparece una limitación real, la anotamos y la resolvemos después de la entrega, no antes.
+
+Estoy reuniendo con el usuario el contenido concreto (pregunta pre-clase, apuntes de topología, ejercicios) en `usuario.md`. En cuanto lo tenga, te aviso aquí si aparece alguna brecha real del formato; si no aparece ninguna, no se necesita ningún cambio de código para esta entrega y tu implementación puede esperar a después de medianoche.
