@@ -94,6 +94,36 @@
   }
 
   /**
+   * Copia profunda de un bloque suelto, saneada como cualquier otro bloque que
+   * entra al árbol. Es lo que toma «Copiar» y lo que entrega «Pegar»: cada
+   * pegado produce objetos nuevos, de modo que dos pegados del mismo bloque no
+   * comparten estado y editar uno no toca al otro.
+   */
+  function cloneBlock(block) {
+    return normalizeBlock(block ? cloneBlocks([block])[0] : null);
+  }
+
+  /**
+   * Duplica el bloque de `path` con toda su descendencia e inserta la copia
+   * inmediatamente después del original, entre sus mismos hermanos: conserva
+   * padre y nivel. Devuelve { blocks, path } con la ruta de la copia, o null si
+   * la ruta no existe.
+   *
+   * No comparte objetos con el original: es una copia profunda, no una
+   * referencia. Editar o eliminar cualquiera de los dos deja intacto al otro.
+   */
+  function duplicateBlock(blocks, path) {
+    if (!isPath(path) || !path.length) return null;
+    const next = cloneBlocks(blocks);
+    const siblings = siblingsAtPath(next, path);
+    const position = path[path.length - 1];
+    if (!siblings || position >= siblings.length) return null;
+    const copy = cloneBlocks([siblings[position]])[0];
+    siblings.splice(position + 1, 0, copy);
+    return { blocks: next, path: [...path.slice(0, -1), position + 1] };
+  }
+
+  /**
    * Reemplaza type, title y content de `path` conservando su descendencia.
    * Rechaza el cambio si el tipo nuevo no admite los hijos que ya tiene: el
    * árbol se queda como estaba y la interfaz explica por qué.
@@ -185,8 +215,8 @@
   }
 
   Object.assign(TexNotes, {
-    DRAFT_VERSION, cloneBlocks, normalizeBlock, normalizeBlocks, blockAtPath, siblingsAtPath,
-    insertBlock, updateBlock, removeBlock, moveBlock, countBlocks, flattenBlocks,
+    DRAFT_VERSION, cloneBlocks, cloneBlock, normalizeBlock, normalizeBlocks, blockAtPath, siblingsAtPath,
+    insertBlock, duplicateBlock, updateBlock, removeBlock, moveBlock, countBlocks, flattenBlocks,
     pathToKey, keyToPath, pathLabel, normalizeDraft,
   });
 })(typeof globalThis !== "undefined" ? globalThis : this);

@@ -42,12 +42,13 @@
 
         <section aria-labelledby="contenido-heading">
           <h2 id="contenido-heading">Contenido</h2>
-          <p>Completa un bloque y usa «Añadir bloque». Las ecuaciones conservan exactamente la sintaxis LaTeX introducida. Un bloque puede contener otros bloques: usa «Añadir dentro» en el bloque que quieras como padre, sin límite de niveles.</p>
+          <p>Completa un bloque y usa «Añadir bloque». El contenido de cualquier bloque llega al documento exactamente como lo escribes: la aplicación no añade caracteres de escape. Un bloque puede contener otros bloques: usa «Añadir dentro» en el bloque que quieras como padre, sin límite de niveles.</p>
           <fieldset>
             <legend id="block-form-heading">Nuevo bloque</legend>
             <input id="editing-path" type="hidden" value="">
             <input id="parent-path" type="hidden" value="">
             <p id="block-target" class="block-target">El bloque se añadirá al final de la raíz del documento.</p>
+            <p id="tray-summary" class="block-target" hidden></p>
             <p class="field">
               <label for="block-type">Tipo de bloque</label>
               <select id="block-type" name="blockType">
@@ -67,14 +68,14 @@
             <p class="field">
               <label for="block-content">Contenido</label>
               <textarea id="block-content" name="blockContent" rows="6" aria-describedby="block-help block-error"></textarea>
-              <small id="block-help">Se permiten párrafos separados por una línea vacía. Dentro del texto, de un teorema o de un elemento de lista puedes escribir matemáticas entre <code>$…$</code> o, destacadas, entre <code>$$…$$</code>: esos tramos se copian tal cual, como en <code>Sea $x_1 \in A$</code>. Para un signo de dólar literal escribe <code>\$</code>; un delimitador sin pareja se imprime como texto. Una ecuación o expresión matemática no se escapa ni se interpreta; una lista toma un elemento por línea.</small>
+              <small id="block-help">El contenido se copia al documento <strong>tal cual</strong>: comandos como <code>\textbf{...}</code> o <code>\mathbb{R}</code>, llaves y matemáticas entre <code>$…$</code> o <code>$$…$$</code> llegan exactamente como los escribes, y la aplicación no inserta ningún carácter de escape. Por eso puedes pegar aquí LaTeX de otro documento sin revisarlo. A cambio, los caracteres reservados de LaTeX son cosa tuya: para que aparezcan impresos escribe <code>\%</code>, <code>\&amp;</code>, <code>\#</code>, <code>\_</code> o <code>\$</code> —un <code>%</code> suelto comenta el resto de su línea—. Se permiten párrafos separados por una línea vacía y una lista toma un elemento por línea. Solo el título del bloque y los metadatos se escapan por completo, porque la aplicación los coloca dentro de un argumento.</small>
               <span id="block-error" class="error" aria-live="polite"></span>
             </p>
 
             <section class="symbol-board" aria-labelledby="simbolos-heading">
               <details id="symbol-details">
                 <summary><h3 id="simbolos-heading">Símbolos matemáticos</h3></summary>
-                <p id="symbol-board-intro">Cada botón inserta su comando LaTeX en el campo «Contenido», en la posición del cursor. Los comandos se conservan literalmente en los bloques de ecuación y de expresión matemática, y también dentro de <code>$…$</code> o <code>$$…$$</code> en un bloque de texto, de teorema o de lista. Fuera de esos delimitadores se escapan. Si ya conoces el comando, escríbelo directamente.</p>
+                <p id="symbol-board-intro">Cada botón inserta su comando LaTeX en el campo «Contenido», en la posición del cursor. El comando se conserva literalmente en cualquier bloque, dentro y fuera de <code>$…$</code>. Si ya conoces el comando, escríbelo directamente.</p>
                 <p class="field">
                   <label for="symbol-search">Buscar símbolo por nombre</label>
                   <input id="symbol-search" name="symbolSearch" type="search" autocomplete="off" aria-describedby="symbol-search-help">
@@ -87,12 +88,13 @@
             </section>
             <menu class="button-row">
               <li><button id="add-block" type="button">Añadir bloque</button></li>
+              <li><button id="paste-block" class="secondary" type="button" hidden>Pegar bloque</button></li>
               <li><button id="cancel-edit" class="secondary" type="button" hidden>Cancelar edición</button></li>
             </menu>
           </fieldset>
 
           <h3>Estructura actual</h3>
-          <p>Cada bloque indica su nivel y su bloque padre. «Subir» y «Bajar» mueven el bloque solo entre sus hermanos, sin sacarlo de su nivel.</p>
+          <p>Cada bloque indica su nivel y su bloque padre. «Subir» y «Bajar» mueven el bloque solo entre sus hermanos, sin sacarlo de su nivel. Para repetir una estructura hay tres acciones distintas: <strong>«Duplicar»</strong> deja una copia justo después del original; <strong>«Copiar bloque»</strong> lo guarda en una bandeja y luego eliges el destino con «Pegar bloque», las veces que haga falta; <strong>«Copiar texto»</strong> lleva su contenido al portapapeles del sistema para pegarlo donde quieras, dentro o fuera de la aplicación.</p>
           <p id="empty-blocks">Todavía no hay bloques.</p>
           <ol id="block-list" class="block-list"></ol>
         </section>

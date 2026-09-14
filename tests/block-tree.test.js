@@ -4,8 +4,8 @@ import assert from "node:assert/strict";
 import { loadTexNotes } from "./load-app.mjs";
 
 const {
-  DRAFT_VERSION, acceptsChildren, blockAtPath, blockToLatex, countBlocks, flattenBlocks,
-  generateLatex, insertBlock, keyToPath, moveBlock, normalizeBlocks, normalizeDraft,
+  DRAFT_VERSION, acceptsChildren, blockAtPath, blockToLatex, cloneBlock, countBlocks, duplicateBlock,
+  flattenBlocks, generateLatex, insertBlock, keyToPath, moveBlock, normalizeBlocks, normalizeDraft,
   pathLabel, pathToKey, removeBlock, updateBlock,
 } = await loadTexNotes();
 
@@ -145,7 +145,7 @@ test("la anidación de tres niveles conserva el orden y cierra cada entorno", ()
   assert.equal(
     blockToLatex(node("definition", "Nivel uno con $x_1$.", [node("example", "Nivel dos.", [node("enumerate", "Nivel tres & 50%")])])),
     ["\\begin{definition}", "Nivel uno con $x_1$.", "\\begin{example}", "Nivel dos.",
-      "\\begin{enumerate}", "\\item Nivel tres \\& 50\\%", "\\end{enumerate}", "\\end{example}", "\\end{definition}"].join("\n"));
+      "\\begin{enumerate}", "\\item Nivel tres & 50%", "\\end{enumerate}", "\\end{example}", "\\end{definition}"].join("\n"));
 });
 
 test("los hijos de un bloque de texto se emiten tras su contenido, como nodos propios", () => {
@@ -175,7 +175,7 @@ test("el documento combina matemática mixta y anidación en un mismo bloque", (
   const tex = generateLatex({ metadata: { title: "Topología" }, blocks: normalizeBlocks([
     node("theorem", "Sea $x_1 \\in A$ un punto interior.", [node("itemize", "Existe $r > 0$ con $B(x_1, r) \\subseteq A$\nEl 50% restante & más")]),
   ]) });
-  assert.match(tex, /\\begin\{theorem\}\nSea \$x_1 \\in A\$ un punto interior\.\n\\begin\{itemize\}\n\\item Existe \$r > 0\$ con \$B\(x_1, r\) \\subseteq A\$\n\\item El 50\\% restante \\& más\n\\end\{itemize\}\n\\end\{theorem\}/);
+  assert.match(tex, /\\begin\{theorem\}\nSea \$x_1 \\in A\$ un punto interior\.\n\\begin\{itemize\}\n\\item Existe \$r > 0\$ con \$B\(x_1, r\) \\subseteq A\$\n\\item El 50% restante & más\n\\end\{itemize\}\n\\end\{theorem\}/);
   assert.equal(tex, generateLatex({ metadata: { title: "Topología" }, blocks: normalizeBlocks([
     node("theorem", "Sea $x_1 \\in A$ un punto interior.", [node("itemize", "Existe $r > 0$ con $B(x_1, r) \\subseteq A$\nEl 50% restante & más")]),
   ]) }), "la salida es determinista");
@@ -214,4 +214,85 @@ test("una anidación mal formada se sanea en lugar de romper la restauración", 
   });
   assert.deepEqual(mirror(draft.metadata), { title: "Notas" }, "solo se conservan los metadatos de tipo cadena");
   assert.deepEqual(shape(draft.blocks), ["0:Padre", "1:Otro", "1.0:Hijo", "1.0.0:Nieto"]);
+});
+
+/* --- Duplicar y copiar: dos operaciones distintas sobre la misma copia profunda --- */
+
+test("duplicar una hoja la coloca inmediatamente después, en el mismo nivel", () => {
+  const original = tree();
+  const result = duplicateBlock(original, [0, 0, 0]);
+  assert.deepEqual(mirror(result.path), [0, 0, 1], "la copia ocupa la posición siguiente entre sus hermanos");
+  assert.deepEqual(shape(result.blocks), ["0:Padre", "0.0:Uno\nDos", "0.0.0:Nieto", "0.0.1:Nieto", "1:Hermano"]);
+  assert.deepEqual(shape(original), shape(tree()), "el árbol recibido no se modifica");
+});
+
+test("duplicar una rama de tres niveles conserva el orden exacto de toda la rama", () => {
+  const result = duplicateBlock(tree(), [0]);
+  assert.deepEqual(mirror(result.path), [1]);
+  assert.deepEqual(shape(result.blocks), [
+    "0:Padre", "0.0:Uno\nDos", "0.0.0:Nieto",
+    "1:Padre", "1.0:Uno\nDos", "1.0.0:Nieto",
+    "2:Hermano",
+  ]);
+  assert.equal(countBlocks(result.blocks), 7);
+});
+
+test("la copia es profunda: editar o eliminar una rama no toca a la otra", () => {
+  const { blocks, path } = duplicateBlock(tree(), [0]);
+  assert.notEqual(blockAtPath(blocks, [0]), blockAtPath(blocks, path), "no comparten el nodo");
+  assert.notEqual(blockAtPath(blocks, [0, 0]).children, blockAtPath(blocks, [1, 0]).children, "no comparten el array de hijos");
+  const editado = updateBlock(blocks, [1, 0, 0], { content: "Cambiado" });
+  assert.equal(blockAtPath(editado, [0, 0, 0]).content, "Nieto", "el original conserva su contenido");
+  const podado = removeBlock(blocks, [1, 0]);
+  assert.deepEqual(shape(podado), ["0:Padre", "0.0:Uno\nDos", "0.0.0:Nieto", "1:Padre", "2:Hermano"]);
+});
+
+test("duplicar por una ruta inválida devuelve null y no muta el árbol", () => {
+  const original = tree();
+  for (const ruta of [[], [9], [0, 5], [0, 0, 0, 0], "0", null, [-1], [1.5]]) {
+    assert.equal(duplicateBlock(original, ruta), null, JSON.stringify(ruta));
+  }
+  assert.deepEqual(shape(original), shape(tree()));
+});
+
+test("el duplicado de un bloque generado produce la misma salida dos veces", () => {
+  const { blocks } = duplicateBlock(tree(), [0]);
+  const latex = generateLatex({ metadata: { title: "T" }, blocks });
+  const teoremas = latex.match(/\\begin\{theorem\}[\s\S]*?\\end\{theorem\}/g) || [];
+  assert.equal(teoremas.length, 2);
+  assert.equal(teoremas[0], teoremas[1], "las dos ramas generan exactamente el mismo LaTeX");
+});
+
+test("copiar entrega un bloque suelto e independiente, y cada pegado es otro más", () => {
+  const original = tree();
+  const bandeja = cloneBlock(blockAtPath(original, [0]));
+  assert.deepEqual(shape([bandeja]), ["0:Padre", "0.0:Uno\nDos", "0.0.0:Nieto"]);
+  const primero = insertBlock(original, [], cloneBlock(bandeja));
+  const segundo = insertBlock(primero.blocks, [1], cloneBlock(bandeja));
+  assert.deepEqual(mirror(segundo.path), [1, 0], "el segundo pegado cae dentro del destino elegido, no en la raíz");
+  assert.deepEqual(shape(segundo.blocks), [
+    "0:Padre", "0.0:Uno\nDos", "0.0.0:Nieto",
+    "1:Hermano", "1.0:Padre", "1.0.0:Uno\nDos", "1.0.0.0:Nieto",
+    "2:Padre", "2.0:Uno\nDos", "2.0.0:Nieto",
+  ]);
+  const editado = updateBlock(segundo.blocks, [2, 0, 0], { content: "Solo este" });
+  assert.equal(blockAtPath(editado, [1, 0, 0, 0]).content, "Nieto", "los pegados no comparten estado entre sí");
+  assert.equal(blockAtPath(editado, [0, 0, 0]).content, "Nieto", "ni con el original");
+  assert.deepEqual(shape(original), shape(tree()), "copiar no modifica el documento");
+});
+
+test("copiar sanea lo que entra y rechaza lo que no es un bloque", () => {
+  assert.equal(cloneBlock(null), null);
+  assert.equal(cloneBlock({ type: "text" }), null, "sin contenido ni hijos no hay bloque");
+  const saneado = cloneBlock({ type: "equation", content: "x^2", children: [{ type: "text", content: "Hijo" }] });
+  assert.deepEqual(mirror(saneado.children), [], "una fórmula no anida: sus hijos no viajan dentro");
+});
+
+test("guardar y restaurar después de duplicar mantiene ambas ramas", () => {
+  const { blocks } = duplicateBlock(tree(), [0]);
+  const guardado = JSON.parse(JSON.stringify({ version: DRAFT_VERSION, metadata: { title: "Notas" }, blocks }));
+  const draft = normalizeDraft(guardado);
+  assert.equal(draft.version, DRAFT_VERSION, "duplicar no cambia el esquema del borrador");
+  assert.deepEqual(shape(draft.blocks), shape(blocks));
+  assert.equal(countBlocks(draft.blocks), 7);
 });

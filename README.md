@@ -39,26 +39,34 @@ El generador recibe un objeto con este contrato conceptual:
 - `children` es opcional: **su ausencia equivale a `children: []`**, así que un estado plano escrito para la versión anterior sigue siendo válido y no hay que reescribirlo.
 - Los tipos de bloque viven en una sola tabla, [`assets/js/block-types.js`](assets/js/block-types.js). Los bloques `definition`, `theorem`, `proposition`, `example` y `note` se convierten en sus entornos homónimos; `text` es texto normal y, si tiene título, comienza con `\subsection`.
 - Hay **dos tipos de contenido matemático**, deliberadamente separados del texto: `equation` queda delimitado por `\[` y `\]` en líneas propias, y `math-inline` por `\(` y `\)` en una sola línea. Ambos conservan literalmente lo escrito y solo se diferencian por sus delimitadores en la tabla.
-- `itemize` y `enumerate` producen listas: **cada línea no vacía del contenido es un `\item`**, con su texto escapado salvo los tramos matemáticos delimitados.
+- `itemize` y `enumerate` producen listas: **cada línea no vacía del contenido es un `\item`**, con su texto tal cual se escribió.
 - `buildTheoremDefs()` deriva las declaraciones `\newtheorem` de esa misma tabla y agrupa los entornos por `\theoremstyle`, de modo que el preámbulo no puede desincronizarse de los tipos disponibles: añadir un tipo es una entrada en la tabla y su `<option>` en `index.html`, y una prueba compara ambas listas.
 - **Regla de numeración:** cada entorno declarado con `\newtheorem` mantiene un contador propio, independiente y continuo en todo el documento. `proposition` comparte `\theoremstyle{plain}` con `theorem`, pero **no comparte contador** ni se reinicia por sección. Cambiar esa regla es editar una sola entrada de la tabla, y es un cambio de contrato que debe documentarse aquí.
-- Los caracteres reservados `#`, `$`, `%`, `&`, `_`, `{`, `}`, `~`, `^` y `\` se escapan en metadatos, títulos, contenido textual y elementos de lista. En cambio, el contenido de un **bloque matemático conserva literalmente la sintaxis escrita por el usuario**, igual que los tramos delimitados que se describen abajo. El escapado nunca se desactiva de forma global: escribir `\forall` en prosa, fuera de un delimitador, sigue produciendo `\textbackslash{}forall`.
+- **El contenido de un bloque llega al `.tex` tal cual se escribió.** La aplicación no inserta ningún carácter de escape en `content`: ni en prosa, ni en los entornos tipo teorema, ni en los elementos de lista, ni por supuesto en los bloques matemáticos. Escribir `\forall x \in \mathbb{R}` produce exactamente eso, y un fragmento de LaTeX pegado desde otro documento —un `align`, un `tabular`— llega intacto.
+- **Los metadatos y los títulos sí se escapan por completo** (`#`, `$`, `%`, `&`, `_`, `{`, `}`, `~`, `^` y `\`). Son valores que la aplicación interpola dentro de un argumento que ella misma genera —`\title{}`, `\section{}`, `\begin{theorem}[…]`—, donde un carácter reservado rompe el argumento y quien escribe no tiene forma de repararlo desde la interfaz. Son dos funciones distintas y con nombres distintos: `contentToLatex()` y `escapeMetadata()`.
 - Una **proposición** puede escribirse ya como un solo bloque de prosa con sus fórmulas intercaladas, o bien, si se prefiere destacarlas, como un bloque `proposition` seguido de bloques matemáticos adyacentes. Ambas formas son válidas.
 
-### Matemática delimitada dentro del texto
+### Por qué el contenido no se escapa
 
-El contenido en prosa de los bloques `text` y de los entornos tipo teorema, y el texto de cada elemento de lista, admite fórmulas delimitadas. No hay análisis de LaTeX: solo se distingue qué tramos se escapan y cuáles se copian tal cual.
+La versión anterior escapaba la prosa y respetaba solo los tramos entre `$…$`. Ese escapado se retiró por completo, a petición de quien usa la aplicación. El motivo queda escrito aquí porque es un cambio de contrato:
 
-| Se escribe | Se obtiene | Regla |
-| --- | --- | --- |
-| `El costo es 50% y $x_1 \in A & B$.` | `El costo es 50\% y $x_1 \in A & B$.` | `$…$` conserva delimitadores y sintaxis interior |
-| `Antes:\n$$\n\iint_A f\n$$` | el mismo texto, sin escapar | `$$…$$` vale también en varias líneas |
-| `Cuesta 5\$ exactos.` | `Cuesta 5\$ exactos.` | `\$` es un dólar literal y nunca abre modo matemático |
-| `Cuesta 5$ en total_1` | `Cuesta 5\$ en total\_1` | un delimitador **sin pareja** se imprime como texto |
+- El contenido de un bloque **es LaTeX**, no prosa mecanografiada. La propia aplicación invita a escribirlo: el tablero de símbolos inserta `\forall` y `\mathbb{R}` en ese mismo campo.
+- Escapar «solo algunos» reservados rompe justo lo que se invita a escribir. Con la regla anterior, un `\begin{align}` pegado desde otro documento salía con sus `&` escapados (`a \&= b`) y dejaba de compilar. Media transparencia es peor que ninguna: falla precisamente en el caso que promete resolver.
+- **Overleaf es la copia maestra.** Un error de LaTeX se ve y se corrige allí, que es donde ya se trabaja el documento.
 
-- Dentro de la fórmula, una barra invertida protege al carácter siguiente: un `\$` no la cierra, igual que en TeX.
-- La prioridad es no abrir nunca una apertura matemática rota en silencio: ante la duda, se imprime el dólar.
-- **Los títulos y los metadatos siguen siendo texto puro** y se escapan por completo, incluido el `$`. Los bloques `equation` y `math-inline` conservan su comportamiento literal de siempre.
+A cambio, los caracteres reservados son responsabilidad de quien escribe, igual que en cualquier editor de LaTeX:
+
+| Se escribe en el contenido | Se obtiene en el `.tex` |
+| --- | --- |
+| `Usa \textbf{este término}.` | `Usa \textbf{este término}.` |
+| `Sea A = {1, 2}.` | `Sea A = {1, 2}.` |
+| `\forall x \in \mathbb{R}` | `\forall x \in \mathbb{R}` |
+| `El 50\% \& el resto` | `El 50\% \& el resto` |
+| `El 50% del total` | `El 50% del total` — el `%` **comenta el resto de su línea** |
+| `Sea $x_1 \in A$.` | `Sea $x_1 \in A$.` |
+| `Cuesta 5$ en total_1` | el mismo texto; el `$` sin pareja abrirá modo matemático al compilar |
+
+El único caso que falla en silencio es `%`: no da error, simplemente hace desaparecer del PDF lo que le sigue en esa línea. Los demás (`_`, `&`, `#`, `^` sueltos fuera de matemáticas) fallan de forma ruidosa al compilar en Overleaf. La ayuda visible del campo lo explica, y ni la documentación ni las pruebas pueden volver a afirmar que el contenido se escapa.
 
 ### Bloques anidados
 
@@ -101,10 +109,10 @@ Bajo las hipótesis del curso, ... se cumple $\iint_A f = \int \! \int f \, dx \
       "type": "theorem", "title": "Fubini",
       "content": "Bajo las hipótesis del curso, el orden de integración no altera el resultado: se cumple $\\iint_A f = \\int \\! \\int f \\, dx \\, dy$ siempre que",
       "children": [
-        { "type": "itemize", "title": "", "content": "$f$ sea continua en el rectángulo $[a,b] \\times [c,d]$\\nel 100% del recinto quede dentro de $A$ & sin cortes" }
+        { "type": "itemize", "title": "", "content": "$f$ sea continua en el rectángulo $[a,b] \\times [c,d]$\\nel 100\\\\% del recinto quede dentro de $A$ \\\\& sin cortes" }
       ]
     },
-    { "type": "example", "title": "Rectángulo", "content": "Para f(x,y)=x+y en [0,1] \\times [0,2], calculamos el valor por iteración.\n\nEste bloque tiene dos párrafos y conserva el signo = como texto." },
+    { "type": "example", "title": "Rectángulo", "content": "Para $f(x,y)=x+y$ en $[0,1] \\times [0,2]$, calculamos el valor por iteración con \\textbf{el orden natural}.\n\nEste bloque tiene dos párrafos y llega al .tex tal cual se escribió." },
     { "type": "note", "title": "", "content": "La argumentación escrita cuenta para la calificación: no basta con el símbolo." }
   ]
 }
@@ -120,7 +128,7 @@ El tablero de símbolos es un mecanismo de **descubrimiento**, no el modo princi
 - Cada símbolo es un `button` nativo que muestra **nombre, carácter Unicode y comando LaTeX**, y expone un nombre accesible explícito, como `Insertar cuantificador universal, comando barra invertida forall`: el carácter por sí solo no basta con lector de pantalla.
 - Al pulsarlo se inserta **únicamente el comando** en `#block-content`, en la posición del cursor: sustituye la selección si la hay, conserva el resto, devuelve el foco al campo, deja el cursor tras lo insertado y anuncia el símbolo en `#app-status`, sin releer todo el tablero. La inserción vive en `insertAtSelection`, una función pura que recibe el estado del campo y devuelve el siguiente.
 - No se carga ninguna biblioteca de renderizado matemático: aumentaría el peso y la complejidad sin ser necesaria para insertar texto. La vista previa con KaTeX sigue siendo un hito aparte.
-- **Los comandos solo se conservan literalmente en los bloques matemáticos.** Insertar `\forall` en un bloque de texto produce `\textbackslash{}forall`, que es el comportamiento correcto y seguro.
+- **El comando insertado se conserva literalmente en cualquier bloque**, dentro y fuera de `$…$`, porque el contenido no se escapa: insertar `\forall` en un bloque de texto produce `\forall`.
 
 ### Conjunto inicial
 
@@ -152,9 +160,14 @@ Queda fuera de esta iteración lo que la búsqueda por nombre no resuelve: alias
    - **Añadir dentro** fija el bloque como padre del siguiente que añadas, y lo mantiene para encadenar varios hermanos; el texto bajo el título del formulario dice siempre dónde caerá el bloque, y **Añadir en la raíz** deshace esa elección. Los bloques de ecuación no ofrecen el botón: no admiten hijos.
    - **Subir** y **Bajar** mueven el bloque solo entre sus hermanos, nunca fuera de su nivel; en los extremos el botón aparece deshabilitado.
    - Eliminar un bloque con descendencia pide confirmación e indica cuántos bloques anidados se van con él. Si había una edición a medias, se cancela para no escribir sobre un bloque distinto del que se estaba editando.
-4. Pulsa **Generar documento**; la vista previa solo cambia entonces, no con cada pulsación.
-5. Copia o descarga el resultado y pégalo en Overleaf. Si la API moderna del portapapeles no está disponible, se utiliza selección y copia del `textarea` como alternativa.
-6. **Guardar borrador** escribe bajo demanda `{ version: 2, metadata, blocks }` en `localStorage` con la clave `tex-notes:draft:v2`. **Restaurar** lee esa clave y, si no existe, la antigua `tex-notes:draft:v1` con su lista plana: la convierte al árbol y lo dice en el anuncio. La restauración normaliza `type`, `title`, `content` y `children` de forma recursiva, tolera datos ausentes, corruptos o mal anidados a cualquier profundidad y nunca lanza. Borrar retira ambas claves, pide confirmación y nunca borra el formulario abierto.
+4. Para repetir una estructura hay **tres acciones distintas**, a propósito, porque copiar y duplicar no son lo mismo:
+   - **Duplicar** deja la copia inmediatamente después del original, entre sus mismos hermanos y en su mismo nivel, con toda su descendencia. Es un atajo de un solo paso: no se elige destino. El foco pasa a **Editar** de la copia y, como cualquier cambio estructural, cancela una edición a medias y lo anuncia.
+   - **Copiar bloque** guarda el bloque —y su rama entera— en una **bandeja** de la aplicación, sin moverlo ni modificarlo. Después, **Pegar bloque** lo inserta en el destino que muestra el formulario: la raíz, o el bloque que hayas fijado con **Añadir dentro**. La bandeja no se vacía al pegar, así que el mismo bloque se pega tantas veces y en tantos destinos como haga falta. Cada pegado es una copia profunda independiente: editar una no cambia las demás ni al original.
+   - **Copiar texto** lleva el contenido del bloque al **portapapeles del sistema**, para pegarlo con `Ctrl+V` donde quieras, dentro o fuera de la aplicación. No es lo mismo que **Copiar código**, que copia el documento entero ya generado.
+   - La bandeja vive solo en la pestaña abierta: no se guarda en el borrador ni cambia su versión, porque no forma parte del documento.
+5. Pulsa **Generar documento**; la vista previa solo cambia entonces, no con cada pulsación.
+6. Copia o descarga el resultado y pégalo en Overleaf. Si la API moderna del portapapeles no está disponible, se utiliza selección y copia del `textarea` como alternativa.
+7. **Guardar borrador** escribe bajo demanda `{ version: 2, metadata, blocks }` en `localStorage` con la clave `tex-notes:draft:v2`. **Restaurar** lee esa clave y, si no existe, la antigua `tex-notes:draft:v1` con su lista plana: la convierte al árbol y lo dice en el anuncio. La restauración normaliza `type`, `title`, `content` y `children` de forma recursiva, tolera datos ausentes, corruptos o mal anidados a cualquier profundidad y nunca lanza. Borrar retira ambas claves, pide confirmación y nunca borra el formulario abierto.
 
 ### Apertura directa con `file://`
 
@@ -191,7 +204,11 @@ El foco tiene contorno contrastado y no depende del color; los mensajes contiene
 - [ ] Eliminar un bloque con descendencia y comprobar el aviso con el número de bloques anidados.
 - [ ] Comprobar con lector de pantalla que se anuncian el nivel y el bloque padre, y que la lista anidada se lee como tal.
 - [ ] Intentar cambiar a **Ecuación destacada** un bloque que ya tiene hijos y confirmar que el error se explica junto al campo.
-- [ ] Escribir un bloque con `$…$`, `$$…$$`, un `\$` literal y un delimitador sin cerrar; generar y revisar el `.tex`.
+- [ ] Escribir en el contenido `\textbf{x}`, llaves sueltas, `50%`, `&`, `_`, `$…$` y un `$` sin pareja; generar y confirmar que el `.tex` los reproduce sin añadir ni un solo escape.
+- [ ] Duplicar con teclado una hoja y una rama de tres niveles; editar la copia y confirmar que el original no cambia.
+- [ ] Copiar un bloque a la bandeja y pegarlo en la raíz y dentro de otro bloque; comprobar el resumen visible de la bandeja, el anuncio con la ruta nueva y dónde queda el foco.
+- [ ] Usar **Copiar texto** y pegar fuera de la aplicación; denegar el permiso del portapapeles y confirmar que el mensaje ofrece la alternativa.
+- [ ] Comprobar con lector de pantalla que **Duplicar**, **Copiar bloque**, **Copiar texto** y **Pegar bloque** se distinguen entre sí y de **Copiar código**, y que cada uno nombra su bloque, nivel y padre.
 - [ ] Abrir y cerrar el tablero de símbolos solo con teclado; recorrer los botones y comprobar que el lector de pantalla lee el nombre del símbolo, no únicamente el carácter.
 - [ ] Insertar un símbolo con el cursor al principio, en medio, al final y sobre una selección; confirmar que el foco vuelve al contenido, que el cursor queda tras el comando y que el anuncio no relee todo el tablero.
 - [ ] Buscar «para todo» y una consulta sin resultados; comprobar el recuento anunciado y el mensaje de ausencia de coincidencias.
@@ -216,9 +233,13 @@ npm test
 npm run check:js
 ```
 
-`npm test` comprueba estructura HTML esencial y asociaciones de etiquetas, rutas relativas e internas, el orden de los scripts clásicos, caracteres reservados, títulos y bloques vacíos, varios párrafos, ecuaciones multilínea, nombres de archivo, CRLF, la correspondencia entre la tabla de tipos y las opciones de `index.html`, la derivación de `\newtheorem` sin `\theoremstyle` repetidos y la ausencia de sobre de reimportación, además de la equivalencia byte a byte con `examples/calculo-3.tex`. `npm run check:js` analiza la sintaxis de los siete archivos del navegador.
+`npm test` comprueba estructura HTML esencial y asociaciones de etiquetas, rutas relativas e internas, el orden de los scripts clásicos, el contenido literal de los bloques frente al escapado completo de metadatos y títulos, el duplicado y la copia profunda de ramas, títulos y bloques vacíos, varios párrafos, ecuaciones multilínea, nombres de archivo, CRLF, la correspondencia entre la tabla de tipos y las opciones de `index.html`, la derivación de `\newtheorem` sin `\theoremstyle` repetidos y la ausencia de sobre de reimportación, además de la equivalencia byte a byte con `examples/calculo-3.tex`. `npm run check:js` analiza la sintaxis de los siete archivos del navegador.
 
-Sobre la **matemática delimitada**, [`tests/mixed-math.test.js`](tests/mixed-math.test.js) cubre una fórmula entre prosa con `_`, `^`, llaves, barra invertida y `&` dentro; dos fórmulas en el mismo párrafo; `$$…$$` en varias líneas; caracteres reservados antes y después; un delimitador sin cerrar y el `\$` literal; contenido mixto dentro de un teorema y de un elemento de lista; y la no regresión de metadatos, títulos y bloques matemáticos.
+Sobre el **contenido literal**, [`tests/content-literal.test.js`](tests/content-literal.test.js) —que sustituye al antiguo `mixed-math.test.js`— cubre la conservación de `\`, `{` y `}` en todo tipo de prosa y en los elementos de lista; comandos con argumento, del tablero y llaves sueltas; los reservados `#`, `%`, `&`, `_`, `~` y `^` sin escapar; un `align` y un `tabular` pegados desde otro documento; `$…$`, `$$…$$`, `\$` y un delimitador sin pareja; los bloques matemáticos sin regresión; y el escapado completo que conservan metadatos y títulos, barra y llaves incluidas.
+
+Sobre **duplicar y copiar**, `tests/block-tree.test.js` añade: el duplicado de una hoja justo después del original, el de una rama de tres niveles con su orden exacto, la independencia de la copia al editar o eliminar, el rechazo con `null` de una ruta inválida sin mutar el árbol, la salida idéntica de las dos ramas, la copia suelta que entrega la bandeja con un pegado independiente por vez, el saneado de lo que entra en ella y la persistencia de ambas ramas al guardar y restaurar.
+
+**La interfaz de `app.js` no tiene pruebas automatizadas**: no hay DOM en el entorno de pruebas y no se añaden dependencias para tenerlo. Los botones por bloque, el foco y los anuncios se comprueban en la lista de revisión manual; `tests/check-site.mjs` solo vigila lo estructural del HTML —que exista «Pegar bloque» oculto, el resumen de la bandeja y una ayuda visible que no prometa un escapado que ya no ocurre—.
 
 Sobre los **bloques anidados**, [`tests/block-tree.test.js`](tests/block-tree.test.js) cubre la normalización de estados planos y corruptos a cualquier profundidad, qué tipos admiten hijos, las operaciones por ruta —buscar, insertar, actualizar, eliminar y mover—, su pureza, el rechazo controlado de una operación inválida, los movimientos limitados a hermanos, la generación con tres niveles y el orden exacto de un entorno con lista hija, y la persistencia: migración desde `version: 1`, restauración del esquema nuevo, versiones futuras y anidación mal formada.
 
@@ -240,7 +261,7 @@ Metadatos, editor progresivo y acciones nativas de edición, eliminación y orde
 </details>
 <details><summary><strong>3. Generación</strong>: transformación determinista y vista previa</summary>
 
-Funciones puras, escapado contextual y salida de solo lectura bajo demanda.
+Funciones puras, contenido literal frente a metadatos escapados, y salida de solo lectura bajo demanda.
 </details>
 <details><summary><strong>4. Exportación</strong>: copia y descarga</summary>
 
@@ -265,7 +286,7 @@ Catálogo estático sin dependencias, inserción accesible en la posición del c
 
 <details><summary><strong>9. Texto mixto y estructura anidada</strong>: fórmulas dentro de la prosa y bloques dentro de bloques</summary>
 
-Contenido mixto con `$…$` y `$$…$$` sin desactivar el escapado, árbol de bloques con rutas estables y operaciones puras, generación recursiva, editor accesible con nivel y padre explícitos, y borrador `version: 2` que migra el plano anterior.
+Contenido entregado tal cual —comandos, llaves y matemática delimitada— con el escapado reservado a metadatos y títulos; árbol de bloques con rutas estables y operaciones puras, incluidas duplicar y copiar; generación recursiva, editor accesible con nivel y padre explícitos, y borrador `version: 2` que migra el plano anterior.
 </details>
 
 ## Criterio de finalización del MVP

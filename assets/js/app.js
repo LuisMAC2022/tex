@@ -2,7 +2,7 @@
   "use strict";
   const {
     METADATA_KEYS, blockLabel, acceptsChildren, generateLatex, downloadTex,
-    DRAFT_VERSION, blockAtPath, cloneBlocks, countBlocks, insertBlock, keyToPath,
+    DRAFT_VERSION, blockAtPath, cloneBlock, cloneBlocks, countBlocks, duplicateBlock, insertBlock, keyToPath,
     moveBlock, normalizeDraft, pathLabel, pathToKey, removeBlock, updateBlock,
     MATH_SYMBOLS, MATH_SYMBOL_GROUPS, filterMathSymbols, symbolAccessibleName, symbolsByGroup, insertIntoField,
   } = global.TexNotes;
@@ -17,6 +17,13 @@
   const output = $("#latex-output");
   const status = $("#app-status");
   let blocks = [];
+  /**
+   * Bandeja de copia: un bloque suelto, fuera del árbol, a la espera de que la
+   * persona elija dónde pegarlo. Deliberadamente NO es el portapapeles del
+   * sistema: ahí va «Copiar texto», que saca el contenido de la aplicación.
+   * Tampoco se persiste en el borrador, porque no forma parte del documento.
+   */
+  let tray = null;
 
   function metadata() {
     return Object.fromEntries(METADATA_KEYS.map((name) => [name, form.elements[name].value]));
@@ -56,6 +63,7 @@
       $("#add-block").textContent = "Guardar cambios";
       $("#cancel-edit").textContent = "Cancelar edición";
       $("#cancel-edit").hidden = false;
+      updateTrayControls();
       return;
     }
     $("#block-form-heading").textContent = "Nuevo bloque";
@@ -63,6 +71,7 @@
     $("#add-block").textContent = "Añadir bloque";
     $("#cancel-edit").textContent = "Añadir en la raíz";
     $("#cancel-edit").hidden = !parentPath.length;
+    updateTrayControls();
   }
   function clearBlockFields() {
     $("#block-title").value = ""; $("#block-content").value = "";
@@ -111,7 +120,15 @@
     const actions = document.createElement("menu");
     actions.className = "block-actions";
     actions.setAttribute("aria-label", `Acciones para el bloque ${describeBlock(block, path)}`);
-    actions.append(actionButton("Editar", "edit", path, `Editar ${subject}`));
+    actions.append(
+      actionButton("Editar", "edit", path, `Editar ${subject}`),
+      // Tres operaciones distintas, con nombres distintos a propósito:
+      // duplicar deja la copia aquí mismo; copiar la guarda para elegir destino;
+      // copiar texto saca el contenido de la aplicación.
+      actionButton("Duplicar", "duplicate", path, `Duplicar ${subject}: la copia queda justo después`),
+      actionButton("Copiar bloque", "copy", path, `Copiar ${subject} a la bandeja, para pegarlo donde elijas`),
+      actionButton("Copiar texto", "copy-text", path, `Copiar al portapapeles el texto de ${subject}`),
+    );
     if (acceptsChildren(block.type)) actions.append(actionButton("Añadir dentro", "child", path, `Añadir un bloque dentro de ${subject}`));
     actions.append(
       actionButton("Eliminar", "delete", path, `Eliminar ${subject}`),
@@ -154,6 +171,53 @@
     $("#add-block").focus();
   }
 
+  /* --- Bandeja de copia y portapapeles del sistema --- */
+
+  /** Describe lo que hay en la bandeja, con el tamaño de la rama si la tiene. */
+  function trayLabel() {
+    if (!tray) return "";
+    const nested = countBlocks(tray.block.children);
+    const title = (tray.block.title || "").trim();
+    return `${blockLabel(tray.block.type)}${title ? `: ${title}` : ""}${nested ? ` con ${nested} ${nested === 1 ? "bloque anidado" : "bloques anidados"}` : ""}`;
+  }
+
+  /**
+   * «Pegar bloque» solo aparece cuando hay algo que pegar, y dice siempre dónde
+   * caerá: reutiliza el mismo destino que «Añadir bloque», el que muestra
+   * #block-target, en vez de inventar un gesto de colocación nuevo.
+   */
+  function updateTrayControls() {
+    const paste = $("#paste-block");
+    const summary = $("#tray-summary");
+    paste.hidden = !tray;
+    summary.hidden = !tray;
+    if (!tray) { summary.textContent = ""; return; }
+    const label = trayLabel();
+    summary.textContent = `En la bandeja: ${label}. Se pegará ${describeLocation(editorTarget().parent)}.`;
+    paste.setAttribute("aria-label", `Pegar ${label} ${describeLocation(editorTarget().parent)}`);
+  }
+
+  /**
+   * Copia al portapapeles del sistema. Sin la API moderna —file:// o permiso
+   * denegado— se recurre a seleccionar un campo: el de salida cuando existe, o
+   * uno temporal fuera de la vista para el texto de un bloque.
+   */
+  async function copyToClipboard(text, field = null) {
+    if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(text); return; }
+    const source = field || document.createElement("textarea");
+    if (!field) {
+      source.value = text;
+      source.setAttribute("readonly", "");
+      source.setAttribute("aria-hidden", "true");
+      source.style.cssText = "position:fixed;top:-1000px;left:-1000px";
+      document.body.append(source);
+    }
+    source.focus(); source.select();
+    const copied = document.execCommand("copy");
+    if (!field) source.remove();
+    if (!copied) throw new Error("No se pudo copiar");
+  }
+
   function blockError(message) {
     const field = $("#block-content");
     $("#block-error").textContent = message;
@@ -191,13 +255,26 @@
     announce(`Bloque ${pathLabel(result.path)} añadido ${parent.length ? `dentro de ${describeBlock(blockAtPath(blocks, parent), parent)}` : "en la raíz"}.`);
   });
 
+  $("#paste-block").addEventListener("click", () => {
+    if (!tray) { updateTrayControls(); announce("La bandeja está vacía: copia un bloque antes de pegar."); return; }
+    const { parent } = editorTarget();
+    // Cada pegado entrega una copia nueva: la bandeja conserva su bloque y dos
+    // pegados del mismo origen no comparten objetos.
+    const result = insertBlock(blocks, parent, cloneBlock(tray.block));
+    if (!result) { renderBlocks(); setEditorTarget(editorTarget()); announce("No se pudo pegar el bloque en ese destino; la lista se actualizó."); return; }
+    const label = trayLabel();
+    blocks = result.blocks; renderBlocks(); setEditorTarget(editorTarget());
+    if (!focusAction("edit", result.path)) $("#add-block").focus();
+    announce(`${label} pegado como bloque ${pathLabel(result.path)} ${describeLocation(parent)}. Sigue en la bandeja para pegarlo otra vez.`);
+  });
+
   $("#cancel-edit").addEventListener("click", () => {
     const cancelled = editorTarget().editing.length;
     resetBlockEditor(); $("#block-type").focus();
     announce(cancelled ? "Edición cancelada." : "El siguiente bloque se añadirá en la raíz.");
   });
 
-  blockList.addEventListener("click", (event) => {
+  blockList.addEventListener("click", async (event) => {
     const button = event.target.closest("button[data-action]");
     if (!button) return;
     const path = keyToPath(button.dataset.path);
@@ -215,6 +292,37 @@
     if (action === "child") {
       clearBlockFields(); setEditorTarget({ parent: path }); $("#block-type").focus();
       announce(`El siguiente bloque se añadirá dentro de ${describeBlock(block, path)}, en el nivel ${path.length + 1}.`);
+      return;
+    }
+    if (action === "duplicate") {
+      const result = duplicateBlock(blocks, path);
+      if (!result) { button.focus(); announce("No se pudo duplicar el bloque."); return; }
+      const nested = countBlocks(block.children);
+      // La copia se inserta entre hermanos y desplaza las rutas siguientes: una
+      // edición a medias se cancela, como en cualquier cambio estructural.
+      const cancelled = cancelEditForStructuralChange();
+      blocks = result.blocks; renderBlocks(); setEditorTarget(editorTarget());
+      if (!focusAction("edit", result.path)) $("#add-block").focus();
+      announce(`${describeBlock(block, path)} duplicado como ${describeBlock(block, result.path)}${nested ? `, con sus ${nested} ${nested === 1 ? "bloque anidado" : "bloques anidados"}` : ""}. El original no cambia.${cancelled}`);
+      return;
+    }
+    if (action === "copy") {
+      tray = { block: cloneBlock(block) };
+      if (!tray.block) { tray = null; button.focus(); announce("No se pudo copiar ese bloque."); return; }
+      updateTrayControls();
+      button.focus();
+      announce(`${describeBlock(block, path)} copiado a la bandeja. Elige dónde pegarlo con «Pegar bloque»; el original se queda donde está.`);
+      return;
+    }
+    if (action === "copy-text") {
+      const text = block.content || "";
+      if (!text.trim()) { button.focus(); announce("Ese bloque no tiene texto que copiar."); return; }
+      try {
+        await copyToClipboard(text);
+        button.focus(); announce(`Texto de ${describeBlock(block, path)} copiado al portapapeles. Pégalo donde quieras con Ctrl+V.`);
+      } catch {
+        button.focus(); announce("No se pudo copiar el texto; ábrelo con «Editar» y cópialo desde el campo de contenido.");
+      }
       return;
     }
     if (action === "delete") {
@@ -265,7 +373,7 @@
   $("#download-tex").addEventListener("click", () => { if (!output.value) { announce("Genera el documento antes de descargarlo."); $("#generate").focus(); return; } downloadTex(output.value, $("#note-title").value); announce("Descarga del archivo .tex iniciada."); });
   $("#copy-code").addEventListener("click", async () => {
     if (!output.value) { announce("Genera el documento antes de copiarlo."); $("#generate").focus(); return; }
-    try { if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(output.value); else { output.focus(); output.select(); if (!document.execCommand("copy")) throw new Error(); } announce("Código LaTeX copiado."); } catch { announce("No se pudo copiar el código; permanece disponible para seleccionarlo manualmente."); }
+    try { await copyToClipboard(output.value, output); announce("Código LaTeX copiado."); } catch { announce("No se pudo copiar el código; permanece disponible para seleccionarlo manualmente."); }
   });
 
   /* --- Tablero de símbolos matemáticos --- */

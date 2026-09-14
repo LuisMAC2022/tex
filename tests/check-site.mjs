@@ -27,10 +27,28 @@ assert(ids.has("editing-path"), "Falta el campo de ruta en edición");
 assert(ids.has("parent-path"), "Falta el campo de ruta del bloque padre");
 assert(ids.has("block-target"), "Falta el texto que indica dónde se añadirá el bloque");
 assert.doesNotMatch(html, /id="editing-index"/, "el índice plano de edición fue sustituido por la ruta");
-// La ayuda visible tiene que explicar la sintaxis mixta y el dólar literal.
+// La ayuda visible tiene que decir que el contenido se copia tal cual y que
+// los caracteres reservados los escribe la persona: es la diferencia con el
+// contrato anterior y lo que evita que alguien espere un escapado automático.
 const help = html.match(/<small id="block-help">([\s\S]*?)<\/small>/);
 assert(help, "Falta la ayuda del campo de contenido");
-for (const fragment of ["$…$", "$$…$$", "\\$"]) assert(help[1].includes(fragment), `La ayuda debe explicar ${fragment}`);
+assert.match(help[1], /tal cual/i, "La ayuda debe decir que el contenido se copia tal cual");
+for (const fragment of ["\\%", "\\&amp;", "\\$"]) assert(help[1].includes(fragment), `La ayuda debe mostrar el escape ${fragment}`);
+assert.match(help[1], /título del bloque y los metadatos se escapan/i, "La ayuda debe distinguir el contenido de los metadatos y títulos");
+// Ninguna ayuda visible puede seguir prometiendo el escapado que se retiró.
+for (const [id, texto] of [["block-help", help[1]], ["symbol-board-intro", html.match(/<p id="symbol-board-intro">([\s\S]*?)<\/p>/)[1]]]) {
+  assert.doesNotMatch(texto, /se escapan\.|Fuera de esos delimitadores/i, `La ayuda «${id}» conserva una afirmación obsoleta sobre el escapado`);
+}
+
+// Copiar, duplicar y pegar son tres acciones distintas y se explican como tales.
+assert(ids.has("paste-block"), "Falta el botón de pegar el bloque de la bandeja");
+assert(ids.has("tray-summary"), "Falta el resumen visible de la bandeja de copia");
+assert.match(html, /<button id="paste-block"[^>]*\bhidden\b[^>]*>Pegar bloque<\/button>/, "«Pegar bloque» debe existir oculto hasta que haya algo en la bandeja");
+const estructura = html.match(/<h3>Estructura actual<\/h3>\s*<p>([\s\S]*?)<\/p>/);
+assert(estructura, "Falta la explicación de la estructura actual");
+for (const accion of ["Duplicar", "Copiar bloque", "Copiar texto", "Pegar bloque"]) {
+  assert(estructura[1].includes(accion), `La explicación de la estructura debe distinguir «${accion}»`);
+}
 
 // Todo tipo ofrecido por la interfaz tiene que producir salida en el generador.
 // La paridad entre el selector y la tabla la comprueba tests/generator.test.js.
@@ -55,4 +73,4 @@ assert.match(html, /<p id="symbol-results" class="status" role="status">/, "Falt
 assert(ids.has("symbol-groups"), "Falta el contenedor de grupos de símbolos");
 assert(ids.has("app-status"), "Falta la región de anuncios de la aplicación");
 
-console.log("HTML estructural, tipos de bloque, anidamiento, tablero de símbolos y rutas internas: correctos");
+console.log("HTML estructural, tipos de bloque, anidamiento, copia de bloques, tablero de símbolos y rutas internas: correctos");

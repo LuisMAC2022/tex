@@ -3,6 +3,14 @@
   "use strict";
   const TexNotes = global.TexNotes || (global.TexNotes = {});
 
+  /**
+   * Escapes para METADATOS Y TÍTULOS únicamente. Esos valores se interpolan
+   * dentro de argumentos que genera la aplicación (\title{}, \section{},
+   * \begin{teorema}[...]), donde un carácter reservado rompe el argumento y la
+   * persona no tiene forma de repararlo desde la interfaz.
+   *
+   * El CONTENIDO de un bloque no pasa por aquí: ver contentToLatex().
+   */
   const ESCAPES = { "\\": "\\textbackslash{}", "#": "\\#", "$": "\\$", "%": "\\%", "&": "\\&", "_": "\\_", "{": "\\{", "}": "\\}", "~": "\\textasciitilde{}", "^": "\\textasciicircum{}" };
   const METADATA_KEYS = ["title", "author", "course", "teacher", "date", "topic"];
   const STYLE_ORDER = ["plain", "definition", "remark"];
@@ -11,78 +19,32 @@
     return String(value).replace(/\r\n?/g, "\n");
   }
 
-  function escapeLatexText(value = "") {
+  /** Escapado completo. Solo para metadatos y títulos. */
+  function escapeMetadata(value = "") {
     return normalizeLineBreaks(value).replace(/[\\#$%&_{}~^]/g, (character) => ESCAPES[character]);
   }
 
   /**
-   * Busca el delimitador de cierre a partir de `from`. Una barra invertida
-   * protege al carácter siguiente, de modo que un `\$` dentro de la fórmula no
-   * la cierra; es la misma regla que aplica TeX.
-   */
-  function findClosingDelimiter(text, from, delimiter) {
-    for (let index = from; index < text.length; index += 1) {
-      if (text[index] === "\\") { index += 1; continue; }
-      if (text.startsWith(delimiter, index)) return index;
-    }
-    return -1;
-  }
-
-  /**
-   * Separa contenido mixto en tramos de prosa y de matemática, sin interpretar
-   * la fórmula. Reglas deterministas y deliberadamente conservadoras:
+   * El CONTENIDO de un bloque llega al .tex tal cual se escribió: la aplicación
+   * no inserta ni un solo carácter de escape.
    *
-   * - `$...$` y `$$...$$` con pareja: el tramo se conserva literalmente, con
-   *   sus delimitadores y a lo largo de varias líneas si hace falta.
-   * - `\$`: es el dólar literal de la persona. Se emite como `\$` y nunca abre
-   *   modo matemático.
-   * - Delimitador sin pareja: se trata como texto y se escapa. Antes de abrir
-   *   una fórmula rota se prefiere imprimir el dólar.
+   * El motivo es que el contenido es LaTeX, no prosa mecanografiada. En cuanto
+   * se admite `\textbf{...}` o `\mathbb{R}` —y el tablero de símbolos los
+   * inserta— el contenido es código, y escapar «solo algunos» reservados rompe
+   * ese código a la mitad: `a &= b` de un `align` saldría como `a \&= b`, y un
+   * `\begin{tabular}` sería inservible. Media transparencia es peor que
+   * ninguna, porque falla justo en lo que invita a escribir.
+   *
+   * A cambio, un `%` literal desaparece del PDF (comenta su línea) y un `_`
+   * suelto no compila. Esa corrección se hace en Overleaf, que es la copia
+   * maestra, o escribiendo `\%` al teclear. Quien escribe decide.
    */
-  function splitMixedContent(value = "") {
-    const text = normalizeLineBreaks(value);
-    const segments = [];
-    let prose = "";
-    let index = 0;
-    const flush = () => { if (prose) { segments.push({ kind: "text", value: prose }); prose = ""; } };
-    while (index < text.length) {
-      if (text[index] === "\\" && text[index + 1] === "$") {
-        flush();
-        segments.push({ kind: "literal", value: "\\$" });
-        index += 2;
-        continue;
-      }
-      if (text[index] === "$") {
-        const delimiter = text.startsWith("$$", index) ? "$$" : "$";
-        const close = findClosingDelimiter(text, index + delimiter.length, delimiter);
-        if (close === -1) {
-          // Sin pareja: se consume el delimitador entero como texto para no
-          // reexaminar su segundo dólar como una apertura distinta.
-          prose += delimiter;
-          index += delimiter.length;
-          continue;
-        }
-        flush();
-        segments.push({ kind: "math", display: delimiter === "$$", value: text.slice(index, close + delimiter.length) });
-        index = close + delimiter.length;
-        continue;
-      }
-      prose += text[index];
-      index += 1;
-    }
-    flush();
-    return segments;
-  }
-
-  /** Escapa la prosa y conserva intactos los tramos matemáticos. */
-  function escapeMixedText(value = "") {
-    return splitMixedContent(value)
-      .map((segment) => (segment.kind === "text" ? escapeLatexText(segment.value) : segment.value))
-      .join("");
+  function contentToLatex(value = "") {
+    return normalizeLineBreaks(value);
   }
 
   function optionalTitle(title) {
-    const clean = escapeLatexText(title).trim();
+    const clean = escapeMetadata(title).trim();
     return clean ? `[${clean}]` : "";
   }
 
@@ -103,7 +65,7 @@
    */
   function blockToLatex(block = {}) {
     const type = TexNotes.blockType(block.type) || TexNotes.blockType("text");
-    const content = normalizeLineBreaks(block.content);
+    const content = contentToLatex(block.content);
     const children = (Array.isArray(block.children) ? block.children : [])
       .map((child) => ({ separator: childSeparator(child), latex: blockToLatex(child) }))
       .filter((child) => child.latex);
@@ -118,20 +80,20 @@
       return withChildren(math);
     }
     if (type.kind === "list") {
-      const items = content.split("\n").map((line) => escapeMixedText(line).trim()).filter(Boolean);
+      const items = content.split("\n").map((line) => line.trim()).filter(Boolean);
       // Un entorno de lista sin ningún \item no compila: sin elementos, los
       // hijos se emiten por sí solos.
       if (!items.length) return withChildren("");
       const body = withChildren(items.map((item) => `\\item ${item}`).join("\n"));
       return `\\begin{${type.listEnvironment}}\n${body}\n\\end{${type.listEnvironment}}`;
     }
-    const escaped = escapeMixedText(content).trim();
-    if (!escaped && !children.length) return "";
+    const body = content.trim();
+    if (!body && !children.length) return "";
     if (type.kind === "text") {
-      const heading = escapeLatexText(block.title).trim();
-      return withChildren(heading ? [`\\subsection{${heading}}`, escaped].filter(Boolean).join("\n") : escaped);
+      const heading = escapeMetadata(block.title).trim();
+      return withChildren(heading ? [`\\subsection{${heading}}`, body].filter(Boolean).join("\n") : body);
     }
-    return `\\begin{${type.environment}}${optionalTitle(block.title)}\n${withChildren(escaped)}\n\\end{${type.environment}}`;
+    return `\\begin{${type.environment}}${optionalTitle(block.title)}\n${withChildren(body)}\n\\end{${type.environment}}`;
   }
 
   /**
@@ -173,16 +135,16 @@
   }
 
   function buildMetadata(metadata = {}) {
-    const title = escapeLatexText(metadata.title).trim();
+    const title = escapeMetadata(metadata.title).trim();
     const authorParts = [metadata.author, metadata.course, metadata.teacher && `Profesor: ${metadata.teacher}`]
-      .filter(Boolean).map((value) => escapeLatexText(value).trim());
-    const date = metadata.date ? escapeLatexText(metadata.date) : "";
+      .filter(Boolean).map((value) => escapeMetadata(value).trim());
+    const date = metadata.date ? escapeMetadata(metadata.date) : "";
     return [`\\title{${title}}`, `\\author{${authorParts.join(" \\\\ ")}}`, `\\date{${date}}`].join("\n");
   }
 
   function buildBody(state = {}) {
     const metadata = state.metadata || {};
-    const topic = escapeLatexText(metadata.topic).trim();
+    const topic = escapeMetadata(metadata.topic).trim();
     const blocks = (Array.isArray(state.blocks) ? state.blocks : []).map(blockToLatex).filter(Boolean);
     return ["\\begin{document}", "\\maketitle", topic ? `\\section{${topic}}` : "", ...blocks].filter(Boolean).join("\n\n");
   }
@@ -195,7 +157,7 @@
   }
 
   Object.assign(TexNotes, {
-    METADATA_KEYS, normalizeLineBreaks, escapeLatexText, splitMixedContent, escapeMixedText, blockToLatex,
+    METADATA_KEYS, normalizeLineBreaks, escapeMetadata, contentToLatex, blockToLatex,
     buildTheoremDefs, buildPreamble, buildMetadata, buildBody, buildDocumentEnd, generateLatex,
   });
 })(typeof globalThis !== "undefined" ? globalThis : this);

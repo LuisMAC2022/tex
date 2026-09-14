@@ -345,3 +345,118 @@ Queda pendiente y lo dejo anotado: **mover un bloque de un padre a otro**. Hoy
 padre obliga a recrear el bloque. Hace falta una operación de reparentado con
 su interfaz propia, y no me pareció que cupiera en este incremento sin inventar
 gestos que nadie pidió.
+
+---
+
+## Incremento de Claude — contenido literal y tres formas de repetir un bloque
+
+Recibí tu encargo en `claude.md` e implementé los dos cambios, pero **el usuario
+corrigió el contrato de los dos antes de que empezara**. Dejo constancia de qué
+cambió respecto a lo que pediste y por qué, porque en ambos casos su corrección
+me parece mejor que el encargo y que mi propia solución anterior.
+
+### 1. El contenido no se escapa. Ninguno de los reservados
+
+Tu encargo mantenía el escapado de `#`, `%`, `&`, `_`, `~` y `^` en prosa. El
+usuario lo rechazó explícitamente: quiere pegar bloques sin que aparezcan
+escapes que él no puso. Su argumento en una frase: *si quiero un carácter de
+escape, yo me encargo de introducirlo*.
+
+Al comprobarlo, el escapado parcial no se sostenía:
+
+- en cuanto `\`, `{` y `}` son literales, el contenido **es código LaTeX**, no
+  prosa —y el tablero de símbolos invita a escribirlo en ese mismo campo—;
+- pegar `\begin{align}\na &= b\n\end{align}` salía como `a \&= b` y no
+  compilaba. Media transparencia falla justo en el caso que promete resolver;
+- un `tabular` completo era inservible por la misma razón.
+
+Así que `contentToLatex()` solo normaliza CRLF/CR y nada más. El coste está
+aceptado y escrito en el README y en la ayuda visible: un `%` sin escapar
+comenta su línea **en silencio**; los demás fallan ruidosamente en Overleaf, que
+es la copia maestra. La decisión es suya y la tomó con ese coste delante.
+
+**Retiré `splitMixedContent()` y `escapeMixedText()`.** No es revertir tu
+solución: es subsumirla. Con contenido literal, `escapeMixedText` era la
+identidad, y todo lo que aquella máquina garantizaba —`$…$`, `$$…$$` multilínea,
+`\$` literal— ahora se cumple por construcción y más fuerte. Mantener 50 líneas
+de separador inalcanzable habría sido peor que quitarlas. Lo único que cambia de
+verdad es el delimitador sin pareja: antes salía `\$`, ahora sale `$` tal cual.
+
+Hice el renombrado que pedías, y es el cambio que más me importa de todo esto:
+`escapeLatexText()` ya no existe. Hay `contentToLatex()` y `escapeMetadata()`,
+imposibles de confundir al leer una llamada. Metadatos, título del documento,
+tema y títulos de bloque y de entorno conservan el escapado completo, barra y
+llaves incluidas: van dentro de un argumento que genera la aplicación.
+
+`tests/mixed-math.test.js` pasó a ser `tests/content-literal.test.js`. **No
+borré cobertura**: cada caso observable de aquel archivo sigue ahí con su salida
+nueva, y añadí el `align` y el `tabular` pegados desde fuera. Dos pruebas tuyas
+de `block-tree.test.js` afirmaban el escapado del contenido; las actualicé sin
+tocar lo que vigilaban (orden y cierre de entornos anidados).
+
+### 2. «Duplicar» y «Copiar» son dos cosas distintas, y hacen falta las dos
+
+Tu encargo las fundía: decía presentar la acción como «Duplicar» para evitar la
+ambigüedad con «Copiar código». El usuario lo separó: duplicar es el atajo que
+deja la copia *aquí mismo*; copiar es tomar un bloque y decidir *después* dónde
+pegarlo, quizá varias veces. Le pregunté y confirmó que quiere las dos, más el
+texto al portapapeles del sistema. Así quedó:
+
+- **Duplicar** — `duplicateBlock(blocks, path)` en `block-tree.js`, pura, copia
+  profunda inmediatamente después del original, mismo padre y nivel, devuelve
+  `{ blocks, path }`, ruta inválida → `null`. Exactamente tu contrato.
+- **Copiar bloque** — `cloneBlock()` deja la rama en una bandeja de `app.js`.
+  **Pegar bloque** la inserta con `insertBlock()` y una copia nueva cada vez, así
+  que dos pegados nunca comparten objetos. La bandeja no se vacía.
+- **Copiar texto** — el contenido al portapapeles del sistema, con la misma
+  alternativa por `execCommand` que ya usaba «Copiar código», ahora compartida.
+
+**Dónde se pega:** reutilicé el destino que ya muestra `#block-target` —la raíz,
+o el padre fijado con «Añadir dentro»— en vez de añadir «Pegar aquí» y «Pegar
+dentro» a cada bloque. Con eso ya son ocho botones por nodo; dos más por bloque
+me pareció peor que reutilizar un mecanismo que la persona ya conoce. El botón
+«Pegar bloque» solo aparece con la bandeja llena y su nombre accesible dice
+siempre dónde caerá. Si prefieres el pegado posicional, se añade encima de esto
+sin tocar el árbol.
+
+Como pediste: la bandeja no se persiste y **el borrador sigue en `version: 2`**;
+el esquema no cambia. Duplicar sí cancela una edición a medias, porque inserta
+entre hermanos y desplaza rutas; pegar no hace falta que la cancele, porque
+siempre añade al final de su lista y no desplaza ninguna ruta existente.
+
+### El ejemplo de referencia cambió, y era inevitable
+
+`examples/calculo-3.tex` contenía `el 100% del recinto` y `[0,1] \times [0,2]`
+en prosa. Con el contrato nuevo, el primero comentaría su línea y el segundo no
+compilaría. Corregí el **estado de origen** en `tests/example-state.mjs` —ahora
+escribe `100\%`, `\&` y la fórmula entre `$…$`, que es como lo haría una
+persona— y regeneré con `npm run build:example`. El diff del `.tex` son dos
+líneas: la lista sale idéntica a antes, solo que ahora el escape lo puso quien
+escribe y no el generador. Es la demostración más corta del cambio.
+
+### Pruebas
+
+71 en verde, más `npm run check:js`. Las nueve nuevas de duplicar y copiar
+cubren tus puntos 6, 7, 8 y 10, y añaden la copia profunda independiente y el
+saneado de lo que entra en la bandeja. En `check-site.mjs` puse cinco
+comprobaciones estructurales —«Pegar bloque» oculto, el resumen de la bandeja,
+las cuatro acciones distinguidas en el texto visible, y que ninguna ayuda
+prometa un escapado retirado— y comprobé por mutación que las cinco fallan si se
+rompe lo que vigilan.
+
+**Tu punto 9 no está automatizado y quiero que lo sepas:** no hay DOM en el
+entorno de pruebas y no voy a añadir una dependencia para tenerlo, así que los
+botones por bloque, los nombres accesibles, el foco y los anuncios no tienen
+prueba unitaria. Lo verifiqué conduciendo Chromium sobre `file://` y sobre HTTP:
+árbol de tres niveles, duplicado de rama, dos pegados en destinos distintos,
+edición de la copia sin tocar el original, copia de texto, borrador guardado y
+restaurado con las dos ramas, cero errores de consola y cero desbordamiento
+horizontal a 320 px. Está anotado como tal en el README y en la revisión manual,
+no disfrazado de cobertura.
+
+### Lo que no pude verificar
+
+**No compilé en Overleaf.** No hay distribución de TeX en mi entorno y la ida a
+Overleaf es manual por diseño. Con el contrato nuevo esto pesa más que antes: el
+generador ya no puede garantizar que la salida compile, y no debe intentarlo. Es
+el punto que conviene que el usuario revise primero con un documento real.
