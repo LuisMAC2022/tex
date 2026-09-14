@@ -40,10 +40,17 @@ button.danger { color: var(--danger); border-color: var(--danger); }
 button:disabled { cursor: not-allowed; opacity: .55; }
 :where(a, button, input, select, textarea):focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 .button-row { display: flex; flex-wrap: wrap; gap: .65rem; margin: 1rem 0 0; padding: 0; list-style: none; }
-.block-list { padding-inline-start: 1.75rem; }
-.block-list > li { margin-block: .75rem; padding: .8rem; border: 1px solid #b5c0d0; border-radius: .5rem; }
+.block-target { margin-block: 0 .75rem; padding: .6rem .75rem; border-inline-start: .25rem solid var(--primary); background: #e8f2fc; }
+.block-list, .block-children { padding-inline-start: 1.75rem; }
+.block-list li { margin-block: .75rem; }
+.block-list article { padding: .8rem; border: 1px solid #b5c0d0; border-radius: .5rem; }
 .block-list article p { white-space: pre-wrap; overflow-wrap: anywhere; }
 .block-list h4 { margin-block: 0 .25rem; }
+/* La sangría acompaña al nivel, pero nunca es su única señal: cada bloque
+   escribe «Nivel N · dentro de …» en .block-meta. */
+.block-children { margin-block: .5rem 0; border-inline-start: .2rem solid var(--border); }
+.block-meta, .block-preview { margin-block: 0 .5rem; }
+.block-meta { color: var(--muted); font-size: .9rem; font-weight: 650; }
 .block-actions { display: flex; flex-wrap: wrap; gap: .5rem; padding: 0; list-style: none; }
 .block-actions button { min-width: 2.75rem; }
 .symbol-board { margin-block: 1rem; padding: 0; border: 1px dashed var(--border); border-radius: .5rem; background: transparent; box-shadow: none; }
@@ -75,6 +82,10 @@ footer { padding-block: .5rem 2rem; }
   section { padding: 1rem; }
   .button-row > li, .button-row button { width: 100%; }
   .symbol-grid { grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); }
+  /* A 320 px la sangría por nivel se reduce para que un bloque de nivel 3 siga
+     siendo legible sin desplazamiento horizontal. */
+  .block-list, .block-children { padding-inline-start: .85rem; }
+  .block-actions button { flex: 1 1 8rem; }
   .symbol-board > details > :not(summary) { margin-inline: .75rem; }
 }
 
@@ -83,7 +94,7 @@ footer { padding-block: .5rem 2rem; }
   input, select, textarea { background: #101827; }
   button { color: #101827; }
   button.secondary { background: #192438; }
-  .status { background: #173453; }
+  .status, .block-target { background: #173453; }
   .symbol-button { color: var(--text); background: var(--surface); }
   .symbol-button:hover { color: #101827; background: var(--primary-hover); }
 }

@@ -6,7 +6,7 @@ import vm from "node:vm";
  * módulos ES. Se cargan aquí en un contexto vm, en el mismo orden que
  * index.html, para probarlos sin duplicar el código en otro formato.
  */
-export async function loadTexNotes(files = ["block-types.js", "latex-generator.js", "file-download.js"]) {
+export async function loadTexNotes(files = ["block-types.js", "block-tree.js", "latex-generator.js", "file-download.js"]) {
   const context = vm.createContext({});
   for (const file of files) {
     const url = new URL(`../assets/js/${file}`, import.meta.url);

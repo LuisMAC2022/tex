@@ -23,22 +23,61 @@ El generador recibe un objeto con este contrato conceptual:
     topic: "Tema o unidad, opcional"
   },
   blocks: [
-    { type: "text|equation|math-inline|definition|theorem|proposition|example|note|itemize|enumerate", title: "opcional", content: "texto" }
+    {
+      type: "text|equation|math-inline|definition|theorem|proposition|example|note|itemize|enumerate",
+      title: "opcional",
+      content: "texto",
+      children: [ /* bloques con la misma forma, sin profundidad máxima */ ]
+    }
   ]
 }
 ```
 
 - El **título de la nota** es el único campo obligatorio en la interfaz. Autor, curso, profesor y fecha son opcionales. Para acelerar las entregas actuales, la interfaz inicia con el curso **Cálculo III (1352)**, el profesor **Guzmán Fuentes Ricardo** y la fecha **2026-09-13** ya escritos; siguen siendo campos editables y un borrador restaurado puede reemplazarlos.
 - El **tema o unidad** produce una `\section` cuando no está vacío.
-- `blocks` es una lista ordenada. Su orden determina exactamente el orden del cuerpo del documento.
+- `blocks` es una lista ordenada **de árboles**. Su orden determina exactamente el orden del cuerpo del documento, y el de `children` el de cada rama.
+- `children` es opcional: **su ausencia equivale a `children: []`**, así que un estado plano escrito para la versión anterior sigue siendo válido y no hay que reescribirlo.
 - Los tipos de bloque viven en una sola tabla, [`assets/js/block-types.js`](assets/js/block-types.js). Los bloques `definition`, `theorem`, `proposition`, `example` y `note` se convierten en sus entornos homónimos; `text` es texto normal y, si tiene título, comienza con `\subsection`.
 - Hay **dos tipos de contenido matemático**, deliberadamente separados del texto: `equation` queda delimitado por `\[` y `\]` en líneas propias, y `math-inline` por `\(` y `\)` en una sola línea. Ambos conservan literalmente lo escrito y solo se diferencian por sus delimitadores en la tabla.
-- `itemize` y `enumerate` producen listas: **cada línea no vacía del contenido es un `\item`**, con su texto escapado.
+- `itemize` y `enumerate` producen listas: **cada línea no vacía del contenido es un `\item`**, con su texto escapado salvo los tramos matemáticos delimitados.
 - `buildTheoremDefs()` deriva las declaraciones `\newtheorem` de esa misma tabla y agrupa los entornos por `\theoremstyle`, de modo que el preámbulo no puede desincronizarse de los tipos disponibles: añadir un tipo es una entrada en la tabla y su `<option>` en `index.html`, y una prueba compara ambas listas.
 - **Regla de numeración:** cada entorno declarado con `\newtheorem` mantiene un contador propio, independiente y continuo en todo el documento. `proposition` comparte `\theoremstyle{plain}` con `theorem`, pero **no comparte contador** ni se reinicia por sección. Cambiar esa regla es editar una sola entrada de la tabla, y es un cambio de contrato que debe documentarse aquí.
-- Los caracteres reservados `#`, `$`, `%`, `&`, `_`, `{`, `}`, `~`, `^` y `\` se escapan en metadatos, títulos, contenido textual y elementos de lista. En cambio, el contenido de un **bloque matemático conserva literalmente la sintaxis escrita por el usuario**. El escapado nunca se desactiva de forma global: escribir `\forall` dentro de una proposición produce `\textbackslash{}forall`, y para obtener el símbolo hay que añadir un bloque matemático contiguo.
-- Una **proposición** se compone, por tanto, de un bloque `proposition` con su enunciado en prosa y uno o más bloques matemáticos adyacentes. No existe todavía un análisis de LaTeX mixto dentro de un mismo bloque, y evitarlo es deliberado: conserva el escapado y no obliga a escribir un parser.
-- Los saltos CRLF y CR se normalizan a LF. Las líneas vacías de un bloque textual conservan los párrafos. Los bloques sin contenido no se emiten.
+- Los caracteres reservados `#`, `$`, `%`, `&`, `_`, `{`, `}`, `~`, `^` y `\` se escapan en metadatos, títulos, contenido textual y elementos de lista. En cambio, el contenido de un **bloque matemático conserva literalmente la sintaxis escrita por el usuario**, igual que los tramos delimitados que se describen abajo. El escapado nunca se desactiva de forma global: escribir `\forall` en prosa, fuera de un delimitador, sigue produciendo `\textbackslash{}forall`.
+- Una **proposición** puede escribirse ya como un solo bloque de prosa con sus fórmulas intercaladas, o bien, si se prefiere destacarlas, como un bloque `proposition` seguido de bloques matemáticos adyacentes. Ambas formas son válidas.
+
+### Matemática delimitada dentro del texto
+
+El contenido en prosa de los bloques `text` y de los entornos tipo teorema, y el texto de cada elemento de lista, admite fórmulas delimitadas. No hay análisis de LaTeX: solo se distingue qué tramos se escapan y cuáles se copian tal cual.
+
+| Se escribe | Se obtiene | Regla |
+| --- | --- | --- |
+| `El costo es 50% y $x_1 \in A & B$.` | `El costo es 50\% y $x_1 \in A & B$.` | `$…$` conserva delimitadores y sintaxis interior |
+| `Antes:\n$$\n\iint_A f\n$$` | el mismo texto, sin escapar | `$$…$$` vale también en varias líneas |
+| `Cuesta 5\$ exactos.` | `Cuesta 5\$ exactos.` | `\$` es un dólar literal y nunca abre modo matemático |
+| `Cuesta 5$ en total_1` | `Cuesta 5\$ en total\_1` | un delimitador **sin pareja** se imprime como texto |
+
+- Dentro de la fórmula, una barra invertida protege al carácter siguiente: un `\$` no la cierra, igual que en TeX.
+- La prioridad es no abrir nunca una apertura matemática rota en silencio: ante la duda, se imprime el dólar.
+- **Los títulos y los metadatos siguen siendo texto puro** y se escapan por completo, incluido el `$`. Los bloques `equation` y `math-inline` conservan su comportamiento literal de siempre.
+
+### Bloques anidados
+
+- Cada bloque puede contener otros mediante `children`, sin profundidad máxima. Los hijos **nunca se concatenan dentro de `content`**: siguen siendo nodos editables e independientes.
+- **Qué tipos admiten hijos** lo declara el campo `container` de la tabla de tipos, y lo aplican por igual la interfaz y el generador. Los admiten `text`, los cinco entornos tipo teorema y las dos listas. **No los admiten `equation` ni `math-inline`**, porque cualquier bloque dentro de `\[…\]` o `\(…\)` produciría LaTeX inválido. Si un borrador manipulado a mano trae hijos en una fórmula, se conservan como hermanos posteriores en vez de perderse.
+- Los hijos de un bloque que **abre un entorno** se emiten antes de su `\end{...}`, en orden. Los de un bloque de **texto**, después de su propio contenido.
+- Separación determinista: un hijo de prosa abre párrafo y va precedido de una línea en blanco; un hijo que abre entorno o fórmula se pega a la línea anterior. En la raíz, los bloques siempre se separan por una línea en blanco.
+- Un entorno de lista sin ningún `\item` no se emite —no compilaría—: en ese caso sus hijos se emiten por sí solos.
+
+```tex
+\begin{theorem}[Fubini]
+Bajo las hipótesis del curso, ... se cumple $\iint_A f = \int \! \int f \, dx \, dy$ siempre que
+\begin{itemize}
+\item $f$ sea continua en el rectángulo $[a,b] \times [c,d]$
+\end{itemize}
+\end{theorem}
+```
+
+- Los saltos CRLF y CR se normalizan a LF. Las líneas vacías de un bloque textual conservan los párrafos. Un bloque sin contenido no se emite, salvo que tenga hijos: entonces se emiten ellos.
 - La plantilla `article` incluye solamente `fontenc` (salida latina copiable), `inputenc` (fuente UTF-8), `babel` (español), `amsmath` (matemáticas), `amssymb` (los conjuntos `\mathbb` del tablero de símbolos) y `amsthm` (entornos). El propio preámbulo documenta el motivo. El archivo es **autocontenido**: no depende de ningún `.sty` externo, así que basta pegarlo en un proyecto vacío de Overleaf.
 - El resultado termina siempre con un salto de línea y es determinista: el mismo estado produce exactamente la misma cadena.
 - El nombre sugerido se deriva del título: minúsculas, sin diacríticos, grupos no alfanuméricos convertidos en guiones y extensión `.tex`. Si queda vacío, se usa **`notas-calculo-3.tex`**.
@@ -56,9 +95,15 @@ El generador recibe un objeto con este contrato conceptual:
     "topic": "Integrales múltiples"
   },
   "blocks": [
-    { "type": "definition", "title": "Integral doble", "content": "Sea f: A → R. La integral sobre A se escribe en la ecuación siguiente." },
+    { "type": "definition", "title": "Integral doble", "content": "Sea $f: A \\to \\mathbb{R}$ acotada en $A \\subseteq \\mathbb{R}^2$. La integral sobre $A$ se escribe en la ecuación siguiente." },
     { "type": "equation", "title": "", "content": "\\iint_A f(x,y) \\, dx \\, dy" },
-    { "type": "theorem", "title": "Fubini", "content": "Bajo las hipótesis del curso, el orden de integración no altera el resultado." },
+    {
+      "type": "theorem", "title": "Fubini",
+      "content": "Bajo las hipótesis del curso, el orden de integración no altera el resultado: se cumple $\\iint_A f = \\int \\! \\int f \\, dx \\, dy$ siempre que",
+      "children": [
+        { "type": "itemize", "title": "", "content": "$f$ sea continua en el rectángulo $[a,b] \\times [c,d]$\\nel 100% del recinto quede dentro de $A$ & sin cortes" }
+      ]
+    },
     { "type": "example", "title": "Rectángulo", "content": "Para f(x,y)=x+y en [0,1] \\times [0,2], calculamos el valor por iteración.\n\nEste bloque tiene dos párrafos y conserva el signo = como texto." },
     { "type": "note", "title": "", "content": "La argumentación escrita cuenta para la calificación: no basta con el símbolo." }
   ]
@@ -103,14 +148,17 @@ Queda fuera de esta iteración lo que la búsqueda por nombre no resuelve: alias
 
 1. Abre `index.html` —por doble clic o mediante HTTP—. Verifica los datos prellenados del curso, profesor y fecha, completa el título y añade cada bloque con el botón explícito.
 2. Dentro de **Símbolos matemáticos** puedes insertar un comando en la posición del cursor, buscarlo por su nombre o, si ya lo conoces, escribirlo directamente en el contenido.
-3. Revisa o cambia el orden con **Editar**, **Eliminar**, **Subir** y **Bajar**. No hay arrastrar y soltar: los controles nativos funcionan con teclado y evitan otra dependencia.
+3. Revisa o cambia el orden con **Editar**, **Añadir dentro**, **Eliminar**, **Subir** y **Bajar**. No hay arrastrar y soltar: los controles nativos funcionan con teclado y evitan otra dependencia.
+   - **Añadir dentro** fija el bloque como padre del siguiente que añadas, y lo mantiene para encadenar varios hermanos; el texto bajo el título del formulario dice siempre dónde caerá el bloque, y **Añadir en la raíz** deshace esa elección. Los bloques de ecuación no ofrecen el botón: no admiten hijos.
+   - **Subir** y **Bajar** mueven el bloque solo entre sus hermanos, nunca fuera de su nivel; en los extremos el botón aparece deshabilitado.
+   - Eliminar un bloque con descendencia pide confirmación e indica cuántos bloques anidados se van con él. Si había una edición a medias, se cancela para no escribir sobre un bloque distinto del que se estaba editando.
 4. Pulsa **Generar documento**; la vista previa solo cambia entonces, no con cada pulsación.
 5. Copia o descarga el resultado y pégalo en Overleaf. Si la API moderna del portapapeles no está disponible, se utiliza selección y copia del `textarea` como alternativa.
-6. **Guardar borrador** escribe bajo demanda `{ version: 1, metadata, blocks }` en `localStorage` con la clave `tex-notes:draft:v1`. Restaurar tolera datos ausentes o corruptos. Borrar pide confirmación y nunca borra el formulario abierto.
+6. **Guardar borrador** escribe bajo demanda `{ version: 2, metadata, blocks }` en `localStorage` con la clave `tex-notes:draft:v2`. **Restaurar** lee esa clave y, si no existe, la antigua `tex-notes:draft:v1` con su lista plana: la convierte al árbol y lo dice en el anuncio. La restauración normaliza `type`, `title`, `content` y `children` de forma recursiva, tolera datos ausentes, corruptos o mal anidados a cualquier profundidad y nunca lanza. Borrar retira ambas claves, pide confirmación y nunca borra el formulario abierto.
 
 ### Apertura directa con `file://`
 
-La aplicación se carga con **scripts clásicos** y un único global (`window.TexNotes`), nunca con módulos ES: el navegador bloquea por CORS la descarga de un módulo cuando la página se abre por doble clic, y con módulos la interfaz quedaba inerte. `index.html` carga en orden `block-types.js`, `latex-generator.js`, `file-download.js`, `math-symbols.js`, `text-insertion.js` y `app.js`; `npm test` comprueba tanto el orden como la ausencia de `type="module"`.
+La aplicación se carga con **scripts clásicos** y un único global (`window.TexNotes`), nunca con módulos ES: el navegador bloquea por CORS la descarga de un módulo cuando la página se abre por doble clic, y con módulos la interfaz quedaba inerte. `index.html` carga en orden `block-types.js`, `block-tree.js`, `latex-generator.js`, `file-download.js`, `math-symbols.js`, `text-insertion.js` y `app.js`; `npm test` comprueba tanto el orden como la ausencia de `type="module"`.
 
 Servir por HTTP sigue siendo válido y es lo que usa GitHub Pages:
 
@@ -127,7 +175,9 @@ El flujo [`.github/workflows/pages.yml`](.github/workflows/pages.yml) prueba y p
 
 ## Accesibilidad y diseño
 
-La interfaz sigue semántica HTML nativa: un único `main` y `h1`, secciones tituladas, `form`/`fieldset`, lista ordenada y botones reales. Incluye enlace de salto visible al foco, encabezados sin saltos, etiquetas visibles enlazadas por `for`/`id`, ayudas mediante `aria-describedby` solo donde aportan contexto, errores junto al campo y regiones `aria-live` para resultados. El orden DOM coincide con el visual.
+La interfaz sigue semántica HTML nativa: un único `main` y `h1`, secciones tituladas, `form`/`fieldset`, **listas ordenadas anidadas** para la jerarquía de bloques y botones reales. Incluye enlace de salto visible al foco, encabezados sin saltos, etiquetas visibles enlazadas por `for`/`id`, ayudas mediante `aria-describedby` solo donde aportan contexto, errores junto al campo y regiones `aria-live` para resultados. El orden DOM coincide con el visual.
+
+La estructura de bloques se representa con un `<ol>` dentro del `<li>` de su padre, de modo que el lector de pantalla anuncia el anidamiento por sí mismo. Además, **el nivel y el padre se escriben, no solo se sugieren**: cada bloque muestra «Nivel 2 · dentro de 1 Teorema: Fubini» y su numeración jerárquica («1.1.2»), y cada botón lleva un nombre accesible completo —acción, bloque, nivel y padre—, como `Editar 1.1.1 Texto, nivel 3, dentro de 1.1 Lista con viñetas`. La sangría y el filete lateral son un refuerzo visual, nunca la única señal. Tras cada alta, edición, movimiento o borrado el foco queda en un control previsible —el bloque afectado, el hermano que ocupa su lugar, su padre o el alta de bloque— y el resultado se anuncia en la región `aria-live` existente.
 
 El foco tiene contorno contrastado y no depende del color; los mensajes contienen texto explícito. Los colores están diseñados para contraste AA, incluidos temas claro y oscuro. Objetivos de al menos 44 px, cuadrícula fluida, ausencia de anchos fijos y adaptación bajo 608 px permiten uso desde unos 320 px y zoom al 200 %. No se introducen animaciones; aun así, `prefers-reduced-motion` neutraliza cualquier transición futura. No hay fuentes, iconos, frameworks ni recursos remotos.
 
@@ -136,6 +186,12 @@ El foco tiene contorno contrastado y no depende del color; los mensajes contiene
 - [ ] Recorrer toda la página con `Tab` y `Shift+Tab`, activar acciones con teclado y comprobar que no hay trampas.
 - [ ] Activar el enlace de salto y verificar un foco visible en todos los controles.
 - [ ] Crear dos tipos de bloque, editarlos, eliminarlos y moverlos, comprobando dónde queda el foco.
+- [ ] Construir un árbol de al menos tres niveles solo con teclado: añadir en la raíz, usar **Añadir dentro** dos veces y comprobar que el texto del formulario dice en todo momento dónde caerá el bloque.
+- [ ] En ese árbol, editar, subir, bajar y eliminar nodos de cada nivel; confirmar que **Subir** y **Bajar** nunca sacan un bloque de su nivel y que el foco queda donde se espera tras cada acción.
+- [ ] Eliminar un bloque con descendencia y comprobar el aviso con el número de bloques anidados.
+- [ ] Comprobar con lector de pantalla que se anuncian el nivel y el bloque padre, y que la lista anidada se lee como tal.
+- [ ] Intentar cambiar a **Ecuación destacada** un bloque que ya tiene hijos y confirmar que el error se explica junto al campo.
+- [ ] Escribir un bloque con `$…$`, `$$…$$`, un `\$` literal y un delimitador sin cerrar; generar y revisar el `.tex`.
 - [ ] Abrir y cerrar el tablero de símbolos solo con teclado; recorrer los botones y comprobar que el lector de pantalla lee el nombre del símbolo, no únicamente el carácter.
 - [ ] Insertar un símbolo con el cursor al principio, en medio, al final y sobre una selección; confirmar que el foco vuelve al contenido, que el cursor queda tras el comando y que el anuncio no relee todo el tablero.
 - [ ] Buscar «para todo» y una consulta sin resultados; comprobar el recuento anunciado y el mensaje de ausencia de coincidencias.
@@ -143,13 +199,13 @@ El foco tiene contorno contrastado y no depende del color; los mensajes contiene
 - [ ] Revisar con lector de pantalla que el orden anunciado coincide con el visual y que etiquetas, instrucciones, errores y títulos son comprensibles.
 - [ ] Confirmar que altas, movimientos, borrados, generación, copia, descarga y borrador se anuncian dinámicamente y no solo mediante color.
 - [ ] Forzar un título vacío y un bloque vacío; confirmar error escrito, `aria-invalid` y foco en el campo.
-- [ ] Probar zoom al 200 %, 320 CSS px y orientación móvil sin pérdida de contenido ni desplazamiento horizontal de la interfaz.
+- [ ] Probar zoom al 200 %, 320 CSS px y orientación móvil sin pérdida de contenido ni desplazamiento horizontal de la interfaz, con un bloque de tercer nivel a la vista.
 - [ ] Comprobar contraste de texto, controles, foco, errores y estados en temas claro y oscuro con una herramienta WCAG 2.1 AA.
 - [ ] Usar `prefers-reduced-motion: reduce` y verificar que no aparece movimiento inesperado.
-- [ ] Guardar, recargar, restaurar y borrar un borrador; probar también una entrada corrupta en `localStorage`.
+- [ ] Guardar, recargar, restaurar y borrar un borrador de un árbol de varios niveles; probar también una entrada corrupta y un borrador plano `version: 1` para comprobar la migración y su anuncio.
 - [ ] Denegar permiso del portapapeles y confirmar que un fallo conserva el resultado y comunica una alternativa.
 - [ ] Abrir `index.html` por doble clic (`file://`) y confirmar que se añaden bloques, se genera, se copia y se descarga sin errores en consola.
-- [ ] Pegar el `.tex` generado en un proyecto vacío de Overleaf y comprobar que compila sin añadir paquetes.
+- [ ] Pegar en un proyecto vacío de Overleaf un `.tex` con texto mixto y entornos anidados, y comprobar que compila sin añadir paquetes.
 
 ## Pruebas automatizadas
 
@@ -160,7 +216,11 @@ npm test
 npm run check:js
 ```
 
-`npm test` comprueba estructura HTML esencial y asociaciones de etiquetas, rutas relativas e internas, el orden de los scripts clásicos, caracteres reservados, títulos y bloques vacíos, varios párrafos, ecuaciones multilínea, nombres de archivo, CRLF, la correspondencia entre la tabla de tipos y las opciones de `index.html`, la derivación de `\newtheorem` sin `\theoremstyle` repetidos y la ausencia de sobre de reimportación, además de la equivalencia byte a byte con `examples/calculo-3.tex`. `npm run check:js` analiza la sintaxis de los seis archivos del navegador.
+`npm test` comprueba estructura HTML esencial y asociaciones de etiquetas, rutas relativas e internas, el orden de los scripts clásicos, caracteres reservados, títulos y bloques vacíos, varios párrafos, ecuaciones multilínea, nombres de archivo, CRLF, la correspondencia entre la tabla de tipos y las opciones de `index.html`, la derivación de `\newtheorem` sin `\theoremstyle` repetidos y la ausencia de sobre de reimportación, además de la equivalencia byte a byte con `examples/calculo-3.tex`. `npm run check:js` analiza la sintaxis de los siete archivos del navegador.
+
+Sobre la **matemática delimitada**, [`tests/mixed-math.test.js`](tests/mixed-math.test.js) cubre una fórmula entre prosa con `_`, `^`, llaves, barra invertida y `&` dentro; dos fórmulas en el mismo párrafo; `$$…$$` en varias líneas; caracteres reservados antes y después; un delimitador sin cerrar y el `\$` literal; contenido mixto dentro de un teorema y de un elemento de lista; y la no regresión de metadatos, títulos y bloques matemáticos.
+
+Sobre los **bloques anidados**, [`tests/block-tree.test.js`](tests/block-tree.test.js) cubre la normalización de estados planos y corruptos a cualquier profundidad, qué tipos admiten hijos, las operaciones por ruta —buscar, insertar, actualizar, eliminar y mover—, su pureza, el rechazo controlado de una operación inválida, los movimientos limitados a hermanos, la generación con tres niveles y el orden exacto de un entorno con lista hija, y la persistencia: migración desde `version: 1`, restauración del esquema nuevo, versiones futuras y anidación mal formada.
 
 Sobre la entrada matemática, `npm test` cubre además las proposiciones con y sin título, los caracteres reservados y el contenido vacío dentro de una proposición, la combinación de texto y fórmula, los dos tipos de matemática, las listas, la coherencia del catálogo de símbolos y su búsqueda, y la inserción en el cursor: al principio, en medio, al final, con selección activa, con selección invertida, sobre un campo vacío, con índices ausentes o fuera de rango y con caracteres Unicode fuera del ASCII.
 
@@ -203,14 +263,19 @@ Flujo oficial que prueba y publica el sitio estático desde `main`.
 Catálogo estático sin dependencias, inserción accesible en la posición del cursor, entorno `proposition` con contador propio y separación explícita entre texto, matemática en línea y matemática destacada.
 </details>
 
+<details><summary><strong>9. Texto mixto y estructura anidada</strong>: fórmulas dentro de la prosa y bloques dentro de bloques</summary>
+
+Contenido mixto con `$…$` y `$$…$$` sin desactivar el escapado, árbol de bloques con rutas estables y operaciones puras, generación recursiva, editor accesible con nivel y padre explícitos, y borrador `version: 2` que migra el plano anterior.
+</details>
+
 ## Criterio de finalización del MVP
 
 El MVP está terminado cuando una persona puede, usando solamente el teclado y con la página abierta por doble clic, crear una nota con al menos dos tipos de bloque, revisar el código generado, copiarlo, descargarlo, recargar la página y recuperar el borrador.
 
 ## Pendiente
 
-Siguiente en la secuencia: el **diccionario de macros** (`macros.js` y `validate.js`, con nombres reservados, aridad y renderizado real en KaTeX), la **vista previa con KaTeX** y el **modelo de documento de tres niveles** (Unidad → Clase → Bloques); hoy la estructura es plana y `topic` produce una única `\section`. Después, el módulo de apoyo al curso: botón de cita de asesoría, panel de fechas con `.ics` y lista de entregables.
+Siguiente en la secuencia: el **diccionario de macros** (`macros.js` y `validate.js`, con nombres reservados, aridad y renderizado real en KaTeX), la **vista previa con KaTeX** y el **modelo de documento de tres niveles** (Unidad → Clase → Bloques); el cuerpo ya admite bloques anidados, pero el documento sigue teniendo un solo eje: `topic` produce una única `\section`. Después, el módulo de apoyo al curso: botón de cita de asesoría, panel de fechas con `.ics` y lista de entregables.
 
-También quedan pendientes, dentro de la entrada matemática ya empezada: los alias personales (`imp` → `\Rightarrow`), las listas anidadas y la mezcla de texto y fórmulas dentro de un mismo bloque.
+Dentro de la entrada matemática quedan pendientes los alias personales (`imp` → `\Rightarrow`) y mover un bloque de un padre a otro: hoy **Subir** y **Bajar** solo reordenan entre hermanos, y cambiar de padre exige volver a crear el bloque.
 
 Quedan expresamente fuera por ahora: TeX en WASM, TikZ/PGFPlots, traducción de errores de TeX, paleta de comandos, buscar y reemplazar, historial de versiones, infraestructura de sincronización y cualquier ida y vuelta desde Overleaf a la aplicación.

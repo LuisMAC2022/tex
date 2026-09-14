@@ -207,3 +207,141 @@ que pidió el usuario: tablero → búsqueda → comando → alias. El catálogo
 `keywords`; faltaría la tabla de alias en `localStorage` y expandirlos al
 escribir. Encaja mejor junto a tu diccionario de macros que por separado, así
 que lo dejo para cuando lo abordes.
+
+---
+
+## Incremento de Claude — matemática mixta y bloques anidados
+
+Recibí tu encargo en `claude.md` y lo implementé completo. Antes de tocar nada
+comprobé tu diagnóstico ejecutando el código: es correcto en los cinco puntos.
+Dejo constancia de lo que medí, porque uno no estaba escrito y es el peor:
+
+- `blockToLatex({ type: "text", content: "Sea $x_1$ un punto." })` devolvía
+  `Sea \$x\_1\$ un punto.`
+- **Los `children` se descartaban en silencio.** Un bloque con hijos generaba
+  exactamente el mismo `.tex` que sin ellos, sin aviso. No era solo que no se
+  pudieran crear desde la interfaz: el generador los perdía.
+
+### Requisito 1: matemática delimitada
+
+`splitMixedContent()` recorre el contenido y separa prosa de matemática;
+`escapeMixedText()` escapa solo la prosa. Las dos son puras y viven en
+`latex-generator.js`, junto al escapado del que son vecinas. No hay parser de
+TeX ni validación de la fórmula.
+
+Las tres decisiones que pediste definir, y por qué:
+
+- **`\$` es un dólar literal** y se emite como `\$`. Si lo pasara por
+  `escapeLatexText()` saldría `\textbackslash{}\$`, que no es lo que nadie
+  escribe al teclear `\$`.
+- **Delimitador sin pareja → texto escapado.** Y consumo el delimitador
+  entero: ante un `$$` sin cierre no reexamino su segundo dólar como apertura
+  en línea, porque eso emparejaba dólares lejanos y producía fórmulas que la
+  persona nunca escribió.
+- **Dentro de la fórmula, una barra invertida protege al carácter siguiente**,
+  así que un `\$` no la cierra. Es la regla de TeX, no una invención.
+
+Se aplica a la prosa de `text`, a los entornos tipo teorema y al texto de cada
+elemento de lista. Títulos y metadatos siguen escapándose por completo, y
+`equation` y `math-inline` no cambian.
+
+### Requisito 2: árbol de bloques
+
+`assets/js/block-tree.js` es nuevo y carga entre `block-types.js` y
+`latex-generator.js`. Contiene el modelo y las operaciones puras por ruta
+—buscar, insertar, actualizar, eliminar, mover—, el recorrido para la interfaz
+y la normalización del borrador. Una ruta inválida devuelve `null`: quien llama
+conserva el estado anterior y lo explica, en vez de operar sobre un árbol roto.
+
+Tres decisiones que tomé y que conviene que revises:
+
+1. **Qué tipos anidan lo declara la tabla**, con un campo `container` nuevo.
+   Lo llevan `text`, los cinco entornos y las dos listas; no lo llevan
+   `equation` ni `math-inline`. Es una sola fuente de verdad para la interfaz,
+   la normalización y el generador, como pediste.
+2. **Los hijos de un tipo que no los admite no se pierden: suben a hermanos.**
+   Descartarlos era la alternativa obvia y me pareció peor: un borrador editado
+   a mano perdería contenido sin decirlo. Así el invariante «solo un tipo
+   `container` tiene descendencia» se cumple en todo el árbol.
+3. **Separación entre padre e hijo según el tipo del hijo:** uno de prosa abre
+   párrafo con una línea en blanco, uno que abre entorno o fórmula se pega a la
+   línea anterior. Con un único salto siempre, dos hijos de texto se fundían en
+   el mismo párrafo de LaTeX; con dos siempre, tu orden conceptual del teorema
+   con lista salía con una línea en blanco de más. La regla depende solo del
+   tipo, así que la salida sigue siendo determinista.
+
+Una lista sin ningún `\item` ya no emite su entorno: `\begin{itemize}` sin
+elementos no compila. Si tiene hijos, se emiten solos.
+
+### Interfaz
+
+Listas `<ol>` anidadas de verdad, dentro del `<li>` del padre. Cada bloque
+muestra su numeración jerárquica y escribe «Nivel 2 · dentro de 1 Teorema:
+Fubini»; cada botón lleva nombre accesible completo, como
+`Editar 1.1.1 Texto, nivel 3, dentro de 1.1 Lista con viñetas`. La sangría es
+refuerzo, nunca la única señal. «Añadir dentro» fija el padre y lo mantiene
+para encadenar hermanos; el formulario dice siempre dónde caerá el bloque.
+
+Dos casos que resolví de forma conservadora, por si prefieres otra cosa:
+
+- **Una edición a medias se cancela si cambia la estructura.** Mover o eliminar
+  desplaza rutas; en vez de adivinar a qué nodo apuntaba la edición, la cancelo
+  y lo anuncio. Nunca se escribe sobre un bloque distinto del que se editaba.
+- **Cambiar a un tipo que no anida un bloque que ya tiene hijos se rechaza**
+  con un error junto al campo, en lugar de mover o borrar sus hijos por mi
+  cuenta.
+
+Sin frameworks ni bibliotecas de árboles. Scripts clásicos, un solo
+`TexNotes`, y lo verifiqué abriendo `index.html` por `file://` en Chromium:
+árbol de tres niveles, altas, anidado, movimientos, borrado, generación,
+borrador y recorrido por teclado, sin un solo error en consola.
+
+### Persistencia
+
+Borrador `version: 2` en `tex-notes:draft:v2`. Restaurar lee esa clave y, si no
+existe, la antigua `tex-notes:draft:v1` con su lista plana, la convierte y lo
+dice en el anuncio. Preferí una clave nueva a reutilizar la vieja: así el
+nombre no miente sobre lo que contiene y el borrador plano sigue ahí hasta que
+se borre. `normalizeDraft()` es pura y está probada, porque la migración no
+debería depender del DOM para poder comprobarse.
+
+### Pruebas
+
+62 en total, todas verdes, más `npm run check:js`. Nuevas:
+`tests/mixed-math.test.js` (8) y `tests/block-tree.test.js` (22), que incluye
+tu orden conceptual exacto del teorema con lista hija y un caso de tres
+niveles. Añadí a `check-site.mjs` la paridad de anidamiento entre tabla y
+generador y la ayuda visible; comprobé por mutación que las tres fallan si se
+rompe lo que vigilan.
+
+**No borré ninguna prueba tuya.** El ejemplo sí cambió a propósito: el teorema
+Fubini ahora lleva matemática en su prosa y una lista hija, para que la
+referencia byte a byte cubra las dos capacidades juntas. Regenerado con
+`npm run build:example`.
+
+### Lo que no pude verificar
+
+**No compilé el `.tex` en Overleaf**: no hay distribución TeX en mi entorno y
+la ida a Overleaf es manual por diseño. Las pruebas comparan cadenas, como
+acordamos. Si algo va a fallar al compilar, mi sospechoso es la línea en blanco
+que deja un hijo de prosa dentro de un `itemize`: es LaTeX válido —un segundo
+párrafo dentro del último `\item`— pero conviene verlo en el PDF.
+
+Tampoco hice la revisión manual con lector de pantalla. Lo que sí automaticé:
+recorrido por teclado hasta los controles de ambos niveles, 320 CSS px sin
+desplazamiento horizontal y botones de 44 px o más. A 200 % de zoom medí 41 px
+de desbordamiento, **idénticos en el commit anterior**: es previo y no lo
+empeora la anidación, pero sigue ahí.
+
+### Lo que sigue siendo tuyo
+
+No toqué el diccionario de macros, KaTeX ni el modelo Unidad → Clase → Bloques.
+Ese tercer punto cambia de forma con esto: el cuerpo ya es un árbol, así que
+quizá Unidad y Clase sean niveles del mismo árbol en vez de un eje aparte. Tú
+decides, es tu hito.
+
+Queda pendiente y lo dejo anotado: **mover un bloque de un padre a otro**. Hoy
+«Subir» y «Bajar» solo reordenan entre hermanos —como pediste— y cambiar de
+padre obliga a recrear el bloque. Hace falta una operación de reparentado con
+su interfaz propia, y no me pareció que cupiera en este incremento sin inventar
+gestos que nadie pidió.

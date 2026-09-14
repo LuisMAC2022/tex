@@ -15,32 +15,123 @@
     return normalizeLineBreaks(value).replace(/[\\#$%&_{}~^]/g, (character) => ESCAPES[character]);
   }
 
+  /**
+   * Busca el delimitador de cierre a partir de `from`. Una barra invertida
+   * protege al carácter siguiente, de modo que un `\$` dentro de la fórmula no
+   * la cierra; es la misma regla que aplica TeX.
+   */
+  function findClosingDelimiter(text, from, delimiter) {
+    for (let index = from; index < text.length; index += 1) {
+      if (text[index] === "\\") { index += 1; continue; }
+      if (text.startsWith(delimiter, index)) return index;
+    }
+    return -1;
+  }
+
+  /**
+   * Separa contenido mixto en tramos de prosa y de matemática, sin interpretar
+   * la fórmula. Reglas deterministas y deliberadamente conservadoras:
+   *
+   * - `$...$` y `$$...$$` con pareja: el tramo se conserva literalmente, con
+   *   sus delimitadores y a lo largo de varias líneas si hace falta.
+   * - `\$`: es el dólar literal de la persona. Se emite como `\$` y nunca abre
+   *   modo matemático.
+   * - Delimitador sin pareja: se trata como texto y se escapa. Antes de abrir
+   *   una fórmula rota se prefiere imprimir el dólar.
+   */
+  function splitMixedContent(value = "") {
+    const text = normalizeLineBreaks(value);
+    const segments = [];
+    let prose = "";
+    let index = 0;
+    const flush = () => { if (prose) { segments.push({ kind: "text", value: prose }); prose = ""; } };
+    while (index < text.length) {
+      if (text[index] === "\\" && text[index + 1] === "$") {
+        flush();
+        segments.push({ kind: "literal", value: "\\$" });
+        index += 2;
+        continue;
+      }
+      if (text[index] === "$") {
+        const delimiter = text.startsWith("$$", index) ? "$$" : "$";
+        const close = findClosingDelimiter(text, index + delimiter.length, delimiter);
+        if (close === -1) {
+          // Sin pareja: se consume el delimitador entero como texto para no
+          // reexaminar su segundo dólar como una apertura distinta.
+          prose += delimiter;
+          index += delimiter.length;
+          continue;
+        }
+        flush();
+        segments.push({ kind: "math", display: delimiter === "$$", value: text.slice(index, close + delimiter.length) });
+        index = close + delimiter.length;
+        continue;
+      }
+      prose += text[index];
+      index += 1;
+    }
+    flush();
+    return segments;
+  }
+
+  /** Escapa la prosa y conserva intactos los tramos matemáticos. */
+  function escapeMixedText(value = "") {
+    return splitMixedContent(value)
+      .map((segment) => (segment.kind === "text" ? escapeLatexText(segment.value) : segment.value))
+      .join("");
+  }
+
   function optionalTitle(title) {
     const clean = escapeLatexText(title).trim();
     return clean ? `[${clean}]` : "";
   }
 
+  /**
+   * Un hijo de prosa necesita una línea en blanco para ser su propio párrafo;
+   * un entorno o una fórmula se pegan a la línea anterior. La regla depende
+   * solo del tipo del hijo, así que la salida sigue siendo determinista.
+   */
+  function childSeparator(child = {}) {
+    const type = TexNotes.blockType(child.type) || TexNotes.blockType("text");
+    return type.kind === "text" ? "\n\n" : "\n";
+  }
+
+  /**
+   * Serializa un bloque y su descendencia. Los hijos de un bloque que abre un
+   * entorno se emiten antes de su \end{...}; los de un bloque de texto, tras su
+   * propio contenido. Nunca se concatenan dentro de `content`.
+   */
   function blockToLatex(block = {}) {
     const type = TexNotes.blockType(block.type) || TexNotes.blockType("text");
     const content = normalizeLineBreaks(block.content);
+    const children = (Array.isArray(block.children) ? block.children : [])
+      .map((child) => ({ separator: childSeparator(child), latex: blockToLatex(child) }))
+      .filter((child) => child.latex);
+    const withChildren = (base) => children.reduce((text, child) => (text ? `${text}${child.separator}${child.latex}` : child.latex), base);
+
     if (type.kind === "equation") {
       const formula = content.trim();
-      if (!formula) return "";
       const [open, close] = type.delimiters || ["\\[", "\\]"];
-      return type.inline ? `${open}${formula}${close}` : `${open}\n${content}\n${close}`;
+      const math = formula ? (type.inline ? `${open}${formula}${close}` : `${open}\n${content}\n${close}`) : "";
+      // Una fórmula no admite hijos. Si un estado manipulado los trae, se
+      // emiten después del cierre; dentro producirían LaTeX inválido.
+      return withChildren(math);
     }
     if (type.kind === "list") {
-      const items = content.split("\n").map((line) => escapeLatexText(line).trim()).filter(Boolean);
-      if (!items.length) return "";
-      return `\\begin{${type.listEnvironment}}\n${items.map((item) => `\\item ${item}`).join("\n")}\n\\end{${type.listEnvironment}}`;
+      const items = content.split("\n").map((line) => escapeMixedText(line).trim()).filter(Boolean);
+      // Un entorno de lista sin ningún \item no compila: sin elementos, los
+      // hijos se emiten por sí solos.
+      if (!items.length) return withChildren("");
+      const body = withChildren(items.map((item) => `\\item ${item}`).join("\n"));
+      return `\\begin{${type.listEnvironment}}\n${body}\n\\end{${type.listEnvironment}}`;
     }
-    const escaped = escapeLatexText(content).trim();
-    if (!escaped) return "";
+    const escaped = escapeMixedText(content).trim();
+    if (!escaped && !children.length) return "";
     if (type.kind === "text") {
       const heading = escapeLatexText(block.title).trim();
-      return heading ? `\\subsection{${heading}}\n${escaped}` : escaped;
+      return withChildren(heading ? [`\\subsection{${heading}}`, escaped].filter(Boolean).join("\n") : escaped);
     }
-    return `\\begin{${type.environment}}${optionalTitle(block.title)}\n${escaped}\n\\end{${type.environment}}`;
+    return `\\begin{${type.environment}}${optionalTitle(block.title)}\n${withChildren(escaped)}\n\\end{${type.environment}}`;
   }
 
   /**
@@ -104,7 +195,7 @@
   }
 
   Object.assign(TexNotes, {
-    METADATA_KEYS, normalizeLineBreaks, escapeLatexText, blockToLatex,
+    METADATA_KEYS, normalizeLineBreaks, escapeLatexText, splitMixedContent, escapeMixedText, blockToLatex,
     buildTheoremDefs, buildPreamble, buildMetadata, buildBody, buildDocumentEnd, generateLatex,
   });
 })(typeof globalThis !== "undefined" ? globalThis : this);

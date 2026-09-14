@@ -32,7 +32,7 @@
 \section{Integrales múltiples}
 
 \begin{definition}[Integral doble]
-Sea f: A → R. La integral sobre A se escribe en la ecuación siguiente.
+Sea $f: A \to \mathbb{R}$ acotada en $A \subseteq \mathbb{R}^2$. La integral sobre $A$ se escribe en la ecuación siguiente.
 \end{definition}
 
 \[
@@ -40,7 +40,11 @@ Sea f: A → R. La integral sobre A se escribe en la ecuación siguiente.
 \]
 
 \begin{theorem}[Fubini]
-Bajo las hipótesis del curso, el orden de integración no altera el resultado.
+Bajo las hipótesis del curso, el orden de integración no altera el resultado: se cumple $\iint_A f = \int \! \int f \, dx \, dy$ siempre que
+\begin{itemize}
+\item $f$ sea continua en el rectángulo $[a,b] \times [c,d]$
+\item el 100\% del recinto quede dentro de $A$ \& sin cortes
+\end{itemize}
 \end{theorem}
 
 \begin{example}[Rectángulo]

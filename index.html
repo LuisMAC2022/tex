@@ -42,10 +42,12 @@
 
         <section aria-labelledby="contenido-heading">
           <h2 id="contenido-heading">Contenido</h2>
-          <p>Completa un bloque y usa «Añadir bloque». Las ecuaciones conservan exactamente la sintaxis LaTeX introducida.</p>
+          <p>Completa un bloque y usa «Añadir bloque». Las ecuaciones conservan exactamente la sintaxis LaTeX introducida. Un bloque puede contener otros bloques: usa «Añadir dentro» en el bloque que quieras como padre, sin límite de niveles.</p>
           <fieldset>
             <legend id="block-form-heading">Nuevo bloque</legend>
-            <input id="editing-index" type="hidden" value="">
+            <input id="editing-path" type="hidden" value="">
+            <input id="parent-path" type="hidden" value="">
+            <p id="block-target" class="block-target">El bloque se añadirá al final de la raíz del documento.</p>
             <p class="field">
               <label for="block-type">Tipo de bloque</label>
               <select id="block-type" name="blockType">
@@ -65,14 +67,14 @@
             <p class="field">
               <label for="block-content">Contenido</label>
               <textarea id="block-content" name="blockContent" rows="6" aria-describedby="block-help block-error"></textarea>
-              <small id="block-help">Se permiten párrafos separados por una línea vacía. Una ecuación o expresión matemática no se escapa ni se interpreta; una lista toma un elemento por línea.</small>
+              <small id="block-help">Se permiten párrafos separados por una línea vacía. Dentro del texto, de un teorema o de un elemento de lista puedes escribir matemáticas entre <code>$…$</code> o, destacadas, entre <code>$$…$$</code>: esos tramos se copian tal cual, como en <code>Sea $x_1 \in A$</code>. Para un signo de dólar literal escribe <code>\$</code>; un delimitador sin pareja se imprime como texto. Una ecuación o expresión matemática no se escapa ni se interpreta; una lista toma un elemento por línea.</small>
               <span id="block-error" class="error" aria-live="polite"></span>
             </p>
 
             <section class="symbol-board" aria-labelledby="simbolos-heading">
               <details id="symbol-details">
                 <summary><h3 id="simbolos-heading">Símbolos matemáticos</h3></summary>
-                <p id="symbol-board-intro">Cada botón inserta su comando LaTeX en el campo «Contenido», en la posición del cursor. Los comandos se conservan literalmente en los bloques de ecuación y de expresión matemática; en un bloque de texto se escaparían. Si ya conoces el comando, escríbelo directamente.</p>
+                <p id="symbol-board-intro">Cada botón inserta su comando LaTeX en el campo «Contenido», en la posición del cursor. Los comandos se conservan literalmente en los bloques de ecuación y de expresión matemática, y también dentro de <code>$…$</code> o <code>$$…$$</code> en un bloque de texto, de teorema o de lista. Fuera de esos delimitadores se escapan. Si ya conoces el comando, escríbelo directamente.</p>
                 <p class="field">
                   <label for="symbol-search">Buscar símbolo por nombre</label>
                   <input id="symbol-search" name="symbolSearch" type="search" autocomplete="off" aria-describedby="symbol-search-help">
@@ -90,6 +92,7 @@
           </fieldset>
 
           <h3>Estructura actual</h3>
+          <p>Cada bloque indica su nivel y su bloque padre. «Subir» y «Bajar» mueven el bloque solo entre sus hermanos, sin sacarlo de su nivel.</p>
           <p id="empty-blocks">Todavía no hay bloques.</p>
           <ol id="block-list" class="block-list"></ol>
         </section>
@@ -109,6 +112,7 @@
     </main>
     <footer><p>La primera versión no interpreta, valida ni compila matemáticas.</p></footer>
     <script src="assets/js/block-types.js"></script>
+    <script src="assets/js/block-tree.js"></script>
     <script src="assets/js/latex-generator.js"></script>
     <script src="assets/js/file-download.js"></script>
     <script src="assets/js/math-symbols.js"></script>
