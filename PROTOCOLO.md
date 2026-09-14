@@ -51,6 +51,28 @@ que se sobrescribe.
 - **`npm test` tiene que pasar** antes de terminar. Incluye las pruebas de
   invariantes, de anclas y de documentación.
 
+## Qué se actualiza con qué
+
+En el **mismo commit** que el cambio. Tres de las cinco filas las hace cumplir una
+prueba; las otras dos están escritas porque son las que dependen de mirar. El porqué
+de esta tabla está en [DEC-008](decisiones/DEC-008-seis-documentos.md).
+
+| Si cambias… | …actualizas también | Lo exige |
+| --- | --- | --- |
+| un rótulo o un texto de ayuda | `docs/guia-de-uso.md` | `tests/documentacion.test.js` |
+| la tabla de tipos de bloque | ambas guías, el `tramo` del ancla y `npm run build:example` | anclas + ejemplo byte a byte |
+| el formato del `.tex` | `README.md` y `npm run build:example` | ejemplo byte a byte |
+| una prueba | `npm run inventario` | `tests/documentacion.test.js` |
+| el porqué de algo | `decisiones/` o su bloque `@decision` — **nunca** una guía | nadie |
+
+Las dos guías de `docs/` **se sobrescriben y no llevan justificaciones**: describen
+cómo se usa y cómo se extiende la aplicación, y enlazan el porqué. Una justificación
+escrita en un documento que se sobrescribe se pierde en la siguiente reescritura.
+
+En `docs/guia-de-uso.md`, `«…»` es siempre un rótulo copiado literal de la pantalla
+—`tests/documentacion.test.js` comprueba que cada uno siga existiendo—, y cualquier
+otra cosa va entre comillas altas o en negrita.
+
 ## Formato de un bloque `@decision`
 
 Comentario de bloque cerrado con la marca del lenguaje (`*/` en JS y CSS,
