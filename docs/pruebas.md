@@ -56,9 +56,12 @@
 - los metadatos y los títulos conservan el escapado completo, barra y llaves incluidas
 - el contenido se emite igual dentro de un bloque anidado
 
-## `tests/documentacion.test.js` — 1 pruebas
+## `tests/documentacion.test.js` — 4 pruebas
 
 - docs/pruebas.md está al día respecto de la suite
+- ningún enlace de la documentación apunta a un archivo inexistente
+- ningún índice apunta a una sección que ya no existe
+- cada rótulo que citan las guías sigue existiendo en la interfaz
 
 ## `tests/generator.test.js` — 21 pruebas
 
@@ -115,4 +118,4 @@ No usa `node:test`: es un script con 38 aserciones sobre `index.html` (doctype, 
 
 ---
 
-84 pruebas con `node:test` más la comprobación estructural.
+87 pruebas con `node:test` más la comprobación estructural.

@@ -295,21 +295,12 @@ Quedan expresamente fuera por ahora: TeX en WASM, TikZ/PGFPlots, traducción de 
 ### Sistema de documentación, pendiente
 
 Las capas de documentación de diseño están instaladas —[`INVARIANTES.md`](INVARIANTES.md),
-[`decisiones/`](decisiones/), [`PROTOCOLO.md`](PROTOCOLO.md) y los bloques `@decision`—
-y el inventario de pruebas se deriva de la suite. Falta:
+[`decisiones/`](decisiones/), [`PROTOCOLO.md`](PROTOCOLO.md) y los bloques `@decision`—,
+el inventario de pruebas se deriva de la suite y
+[`docs/guia-de-uso.md`](docs/guia-de-uso.md) ya existe y está vigilada por
+`tests/documentacion.test.js`: enlaces, anclas de índice y cada rótulo que cita.
+Falta:
 
-- **Ampliar `tests/documentacion.test.js`.** Hoy solo vigila que `docs/pruebas.md`
-  esté al día. Le faltan dos aserciones:
-  1. que ningún enlace relativo de ningún `.md` apunte a un archivo inexistente;
-  2. que **cada rótulo entre guillemets de `docs/guia-de-uso.md` siga existiendo como
-     etiqueta real de la interfaz**. La convención está fijada y verificada: en esa
-     guía `«…»` significa siempre «rótulo copiado de la pantalla» —hoy son 33— y para
-     cualquier otra cosa se usan comillas altas o negrita. El respaldo debe buscarse
-     en el texto de un `button`, `label`, `legend`, `option`, `summary` o encabezado
-     de `index.html`, o en un `textContent`/`actionButton()` de `app.js`; **no** en el
-     archivo entero, porque la prosa de las ayudas produce falsos positivos: eso ya
-     dejó pasar un rótulo inexistente al escribir la guía.
-  Es lo que impide que las guías envejezcan en silencio al renombrar un control.
 - **Escribir `docs/guia-de-desarrollo.md`**: mapa de los siete archivos del
   navegador, el paso del estado al `.tex`, y las recetas —añadir un tipo de bloque,
   añadir un símbolo, cambiar el preámbulo o el formato de salida, resolver un fallo
