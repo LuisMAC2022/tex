@@ -242,6 +242,8 @@ El MVP está terminado cuando una persona puede, usando solamente el teclado y c
 
 Siguen pendientes el **diccionario de macros** (`macros.js` y `validate.js`, con nombres reservados, aridad y renderizado en KaTeX) y el **modelo de documento de tres niveles** (Unidad → Clase → Bloques). Hoy `topic` produce una sola `\section`. Después viene el módulo de apoyo al curso, con cita de asesoría, fechas `.ics` y entregables.
 
+El bloque de imagen queda pendiente de implementación. El [encargo original](https://github.com/LuisMAC2022/tex/blob/e515a9cece9aad07cdeb2a49d2b274d06cd8844c/agents.md) describe `\includegraphics`, el uso de `graphicx` y los casos de exportación que se deben comprobar en Overleaf.
+
 Dentro de la entrada matemática quedan pendientes los alias personales (`imp` → `\Rightarrow`) y mover un bloque de un padre a otro: hoy **Subir** y **Bajar** solo reordenan entre hermanos, y cambiar de padre exige volver a crear el bloque.
 
 Quedan expresamente fuera por ahora: TeX en WASM, TikZ/PGFPlots, traducción de errores de TeX, paleta de comandos, buscar y reemplazar, historial de versiones, infraestructura de sincronización y cualquier ida y vuelta desde Overleaf a la aplicación.
