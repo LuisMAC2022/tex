@@ -43,7 +43,7 @@ dependencia, ni de ejecución ni de desarrollo, y eso es INV-006 con prueba prop
 
 ```sh
 npm test            # todo: node:test + la comprobación estructural
-npm run check:js    # sintaxis de los siete archivos del navegador
+npm run check:js    # sintaxis de los ocho archivos del navegador
 python3 -m http.server 8000     # o abre index.html con doble clic
 ```
 
@@ -52,7 +52,7 @@ Los cinco comandos del repositorio:
 | Comando | Qué hace |
 | --- | --- |
 | `npm test` | la suite entera, incluidas invariantes, anclas y documentación |
-| `npm run check:js` | comprueba la sintaxis de los siete archivos del navegador |
+| `npm run check:js` | comprueba la sintaxis de los ocho archivos del navegador |
 | `npm run build:example` | regenera `examples/calculo-3.tex`, el archivo de referencia |
 | `npm run bendecir` | recalcula las anclas `@decision` tras revisar su justificación |
 | `npm run inventario` | regenera `docs/pruebas.md` desde la suite |

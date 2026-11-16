@@ -31,5 +31,8 @@ por ronda de revisión, no al cambiar código.
 - [ ] Usar `prefers-reduced-motion: reduce` y verificar que no aparece movimiento inesperado.
 - [ ] Guardar, recargar, restaurar y borrar un borrador de un árbol de varios niveles; probar también una entrada corrupta y un borrador plano `version: 1` para comprobar la migración y su anuncio.
 - [ ] Denegar permiso del portapapeles y confirmar que un fallo conserva el resultado y comunica una alternativa.
-- [ ] Abrir `index.html` por doble clic (`file://`) y confirmar que se añaden bloques, se genera, se copia y se descarga sin errores en consola.
+- [ ] Abrir `index.html` por doble clic (`file://`) y confirmar que se añaden bloques, se genera, se copia y se descarga sin errores en consola; comprobar además que KaTeX y sus fuentes cargan.
+- [ ] Previsualizar `$x \in \mathbb{R}$` dentro de prosa y una ecuación destacada, con teclado y sin saltos de foco.
+- [ ] Revisar la matemática en temas claro y oscuro y confirmar contraste AA.
+- [ ] Escribir una fórmula incompleta, comprobar "No se pudo previsualizar" y generar el `.tex` de todos modos.
 - [ ] Pegar en un proyecto vacío de Overleaf un `.tex` con texto mixto y entornos anidados, y comprobar que compila sin añadir paquetes.

@@ -105,7 +105,7 @@ npm test               # todo, incluidas invariantes y anclas
 npm run bendecir       # recalcula anclas tras revisar la justificación
 npm run bendecir -- --listar   # informa sin escribir
 npm run inventario     # regenera docs/pruebas.md desde la suite (hay prueba que lo exige)
-npm run check:js       # sintaxis de los siete archivos del navegador
+npm run check:js       # sintaxis de los ocho archivos del navegador
 ```
 
 ## Lo que este protocolo no hace

@@ -1,6 +1,6 @@
 # Notas LaTeX
 
-Aplicación web estática, sin dependencias de ejecución, para consolidar apuntes de clase y exportarlos como un archivo LaTeX autocontenido. Todo el trabajo —incluido el borrador— permanece en el navegador del dispositivo; la aplicación no envía información a un servidor.
+Aplicación web estática, con KaTeX vendorizado como única dependencia de ejecución, para consolidar apuntes de clase y exportarlos como un archivo LaTeX autocontenido. Todo el trabajo —incluido el borrador— permanece en el navegador del dispositivo; la aplicación no envía información a un servidor.
 
 > Invariantes vigiladas: [`INVARIANTES.md`](INVARIANTES.md) · por qué de cada
 > decisión: [`decisiones/`](decisiones/) · reglas para agentes:
@@ -10,7 +10,7 @@ Aplicación web estática, sin dependencias de ejecución, para consolidar apunt
 
 > **Overleaf es la copia maestra.** Esta aplicación es un frente de redacción **de ida**: el `.tex` generado se copia o se descarga y se pega en Overleaf, donde se corrige y se compila. Las correcciones hechas allí no vuelven a la aplicación.
 
-> **Alcance de la primera versión:** no interpreta, valida ni compila las matemáticas. Una ecuación se copia literalmente al `.tex`; la prueba automatizada compara cadenas `.tex`, no genera ni compara PDF. La compilación queda deliberadamente fuera: se hace en Overleaf.
+> **Alcance de la vista previa:** KaTeX representa el modo matemático mientras se escribe, pero no valida ni compila el documento. Una ecuación se copia literalmente al `.tex`; la prueba automatizada compara cadenas `.tex`, no genera ni compara PDF. La compilación queda deliberadamente fuera: se hace en Overleaf.
 
 ## Especificación del documento generado
 
@@ -132,7 +132,7 @@ El tablero es un **muelle compacto** unido al campo de contenido y abierto por d
 - El buscador permanece visible y los botones de categoría indican su estado con `aria-pressed`.
 - Cada botón nativo mide al menos 44 × 44 px y muestra solo el glifo. Una única línea visual presenta `nombre — comando`; está oculta a lectores de pantalla porque el `aria-label` completo del botón ya comunica ambos datos.
 - La rejilla usa el patrón de barra de herramientas: una sola parada de tabulación, flechas izquierda/derecha con ajuste circular e Inicio/Fin. Esto evita atravesar cientos de controles para llegar a «Añadir bloque».
-- No se carga ninguna biblioteca matemática ni dependencia externa. El catálogo compatible con `amsmath` y `amssymb` contiene 210 entradas para griegas, lógica, conjuntos, topología, funciones, cálculo, vectores y estructura.
+- KaTeX 0.18.7 se carga desde `assets/vendor/katex/`, sin CDN ni peticiones de red; su licencia MIT está incluida. El catálogo compatible con `amsmath` y `amssymb` contiene 210 entradas para griegas, lógica, conjuntos, topología, funciones, cálculo, vectores y estructura.
 - Un símbolo sencillo inserta `command`. Una plantilla puede declarar `insert: { before, after }`: envuelve una selección o, si no existe, deja el cursor entre ambas partes.
 
 ### Cómo ampliarlo
@@ -141,6 +141,14 @@ El tablero es un **muelle compacto** unido al campo de contenido y abierto por d
 2. Si hace falta una categoría nueva, declárala en `MATH_SYMBOL_GROUPS`; el selector y la rejilla se generan desde esos arrays, sin modificar HTML ni CSS.
 3. Usa únicamente comandos disponibles con `amsmath` y `amssymb`. Incorporar otro paquete es una decisión de producto y exige actualizar el generador y regenerar el ejemplo.
 4. Ejecuta `npm test`: se validan coherencia, cobertura, alfabeto griego, comandos prohibidos y comportamiento de inserción.
+
+## Vista previa matemática
+
+La vista bajo «Contenido» se actualiza 200 ms después de escribir y cada bloque de «Estructura actual» representa sus tramos matemáticos. En bloques de ecuación se representa todo el contenido; en texto, teoremas y listas se reconocen `$…$`, `$$…$$`, `\(…\)` y `\[…\]`, conservando la prosa como texto.
+
+KaTeX **no es LaTeX completo**: cubre modo matemático y un subconjunto de comandos. Una macro propia, `tabular` o `includegraphics` puede no previsualizarse y aun así compilar en Overleaf. Por eso el aviso dice «No se pudo previsualizar», nunca declara LaTeX inválido y jamás bloquea «Generar documento». Tampoco detecta problemas fuera de modo matemático —por ejemplo `%`, `_`, `&` o una llave sin cerrar en prosa— ni reproduce la tipografía exacta del PDF. La salida incluye MathML para tecnologías de asistencia.
+
+KaTeX 0.18.7, sus 20 fuentes WOFF2 y su licencia MIT se conservan localmente en `assets/vendor/katex/` (aproximadamente 600 KB). Esto permite abrir la aplicación con `file://` sin conexión y evita una petición a CDN.
 
 ## Uso
 
@@ -161,13 +169,13 @@ El tablero es un **muelle compacto** unido al campo de contenido y abierto por d
    - **Copiar bloque** guarda el bloque —y su rama entera— en una **bandeja** de la aplicación, sin moverlo ni modificarlo. Después, **Pegar bloque** lo inserta en el destino que muestra el formulario: la raíz, o el bloque que hayas fijado con **Añadir dentro**. La bandeja no se vacía al pegar, así que el mismo bloque se pega tantas veces y en tantos destinos como haga falta. Cada pegado es una copia profunda independiente: editar una no cambia las demás ni al original.
    - **Copiar texto** lleva el contenido del bloque al **portapapeles del sistema**, para pegarlo con `Ctrl+V` donde quieras, dentro o fuera de la aplicación. No es lo mismo que **Copiar código**, que copia el documento entero ya generado.
    - La bandeja vive solo en la pestaña abierta: no se guarda en el borrador ni cambia su versión, porque no forma parte del documento.
-5. Pulsa **Generar documento**; la vista previa solo cambia entonces, no con cada pulsación.
+5. Pulsa **Generar documento**; la vista del código `.tex` solo cambia entonces. La vista matemática del bloque sí se actualiza 200 ms después de escribir.
 6. Copia o descarga el resultado y pégalo en Overleaf. Si la API moderna del portapapeles no está disponible, se utiliza selección y copia del `textarea` como alternativa.
 7. **Guardar borrador** escribe bajo demanda `{ version: 2, metadata, blocks }` en `localStorage` con la clave `tex-notes:draft:v2`. **Restaurar** lee esa clave y, si no existe, la antigua `tex-notes:draft:v1` con su lista plana: la convierte al árbol y lo dice en el anuncio. La restauración normaliza `type`, `title`, `content` y `children` de forma recursiva, tolera datos ausentes, corruptos o mal anidados a cualquier profundidad y nunca lanza. Borrar retira ambas claves, pide confirmación y nunca borra el formulario abierto.
 
 ### Apertura directa con `file://`
 
-La aplicación se carga con **scripts clásicos** y un único global (`window.TexNotes`), nunca con módulos ES: el navegador bloquea por CORS la descarga de un módulo cuando la página se abre por doble clic, y con módulos la interfaz quedaba inerte. `index.html` carga en orden `block-types.js`, `block-tree.js`, `latex-generator.js`, `file-download.js`, `math-symbols.js`, `text-insertion.js` y `app.js`; `npm test` comprueba tanto el orden como la ausencia de `type="module"`.
+La aplicación se carga con **scripts clásicos** y un único global (`window.TexNotes`), nunca con módulos ES: el navegador bloquea por CORS la descarga de un módulo cuando la página se abre por doble clic, y con módulos la interfaz quedaba inerte. `index.html` carga en orden `block-types.js`, `block-tree.js`, `latex-generator.js`, `file-download.js`, `math-symbols.js`, `text-insertion.js`, `math-preview.js` y `app.js`; `npm test` comprueba tanto el orden como la ausencia de `type="module"`.
 
 Servir por HTTP sigue siendo válido y es lo que usa GitHub Pages:
 
@@ -188,7 +196,7 @@ La interfaz sigue semántica HTML nativa: un único `main` y `h1`, secciones tit
 
 La estructura de bloques se representa con un `<ol>` dentro del `<li>` de su padre, de modo que el lector de pantalla anuncia el anidamiento por sí mismo. Además, **el nivel y el padre se escriben, no solo se sugieren**: cada bloque muestra «Nivel 2 · dentro de 1 Teorema: Fubini» y su numeración jerárquica («1.1.2»), y cada botón lleva un nombre accesible completo —acción, bloque, nivel y padre—, como `Editar 1.1.1 Texto, nivel 3, dentro de 1.1 Lista con viñetas`. La sangría y el filete lateral son un refuerzo visual, nunca la única señal. Tras cada alta, edición, movimiento o borrado el foco queda en un control previsible —el bloque afectado, el hermano que ocupa su lugar, su padre o el alta de bloque— y el resultado se anuncia en la región `aria-live` existente.
 
-El foco tiene contorno contrastado y no depende del color; los mensajes contienen texto explícito. Los colores están diseñados para contraste AA, incluidos temas claro y oscuro. Objetivos de al menos 44 px, cuadrícula fluida, ausencia de anchos fijos y adaptación bajo 608 px permiten uso desde unos 320 px y zoom al 200 %. No se introducen animaciones; aun así, `prefers-reduced-motion` neutraliza cualquier transición futura. No hay fuentes, iconos, frameworks ni recursos remotos.
+El foco tiene contorno contrastado y no depende del color; los mensajes contienen texto explícito. Los colores están diseñados para contraste AA, incluidos temas claro y oscuro. Objetivos de al menos 44 px, cuadrícula fluida, ausencia de anchos fijos y adaptación bajo 608 px permiten uso desde unos 320 px y zoom al 200 %. No se introducen animaciones; aun así, `prefers-reduced-motion` neutraliza cualquier transición futura. Las fuentes matemáticas WOFF2 y KaTeX están vendorizados; no hay iconos, frameworks ni recursos remotos.
 
 ### Revisión manual
 
@@ -220,13 +228,18 @@ Los nueve hitos entregados, cada uno independiente y desplegable, están en
 [`docs/hitos.md`](docs/hitos.md). Es historia: no cambia y no hace falta para
 trabajar.
 
+<details><summary><strong>10. Vista previa matemática con KaTeX</strong>: representación local mientras se escribe</summary>
+
+Extracción pura de tramos matemáticos, representación accesible con MathML bajo el editor y dentro de cada bloque, avisos que no bloquean la generación y KaTeX 0.18.7 vendorizado para funcionar sin red.
+</details>
+
 ## Criterio de finalización del MVP
 
 El MVP está terminado cuando una persona puede, usando solamente el teclado y con la página abierta por doble clic, crear una nota con al menos dos tipos de bloque, revisar el código generado, copiarlo, descargarlo, recargar la página y recuperar el borrador.
 
 ## Pendiente
 
-Siguiente en la secuencia: el **diccionario de macros** (`macros.js` y `validate.js`, con nombres reservados, aridad y renderizado real en KaTeX), la **vista previa con KaTeX** y el **modelo de documento de tres niveles** (Unidad → Clase → Bloques); el cuerpo ya admite bloques anidados, pero el documento sigue teniendo un solo eje: `topic` produce una única `\section`. Después, el módulo de apoyo al curso: botón de cita de asesoría, panel de fechas con `.ics` y lista de entregables.
+Siguiente en la secuencia: el **diccionario de macros** (`macros.js` y `validate.js`, con nombres reservados, aridad y renderizado real en KaTeX) y el **modelo de documento de tres niveles** (Unidad → Clase → Bloques); el cuerpo ya admite bloques anidados, pero el documento sigue teniendo un solo eje: `topic` produce una única `\section`. Después, el módulo de apoyo al curso: botón de cita de asesoría, panel de fechas con `.ics` y lista de entregables.
 
 Dentro de la entrada matemática quedan pendientes los alias personales (`imp` → `\Rightarrow`) y mover un bloque de un padre a otro: hoy **Subir** y **Bajar** solo reordenan entre hermanos, y cambiar de padre exige volver a crear el bloque.
 

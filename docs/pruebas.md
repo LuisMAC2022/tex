@@ -94,7 +94,16 @@
 - cada guardián existe y sigue afirmando lo que se le atribuye
 - INV-006: ni el sitio ni el proyecto cargan nada remoto
 
-## `tests/symbols.test.js` — 15 pruebas
+## `tests/math-preview.test.js` — 6 pruebas
+
+- extrae cada delimitador y conserva posiciones y prosa literal
+- prioriza dobles dólares e ignora dólares escapados o sin pareja
+- normaliza CRLF y acepta varios tramos y contenido vacío
+- los tipos matemáticos usan todo el contenido y derivan displayMode de la tabla
+- todos los kinds no matemáticos extraen tramos delimitados
+- analyzeContent clasifica resultados y fallos del renderizador inyectado
+
+## `tests/symbols.test.js` — 16 pruebas
 
 - inserta al principio, en medio y al final del contenido
 - sustituye la selección activa y conserva el resto
@@ -111,11 +120,12 @@
 - cubre el alfabeto griego y sus variantes válidas
 - cubre conjuntos y topología sin comandos de paquetes ajenos
 - las plantillas abren un hueco o envuelven una selección
+- todo el catálogo se puede representar con KaTeX
 
 ## `tests/check-site.mjs` — comprobación estructural
 
-No usa `node:test`: es un script con 40 aserciones sobre `index.html` (doctype, un solo `main` y `h1`, enlace de salto, orden de los scripts clásicos, rutas relativas, etiquetas asociadas y ayudas visibles). Se ejecuta con `npm test`.
+No usa `node:test`: es un script con 44 aserciones sobre `index.html` (doctype, un solo `main` y `h1`, enlace de salto, orden de los scripts clásicos, rutas relativas, etiquetas asociadas y ayudas visibles). Se ejecuta con `npm test`.
 
 ---
 
-87 pruebas con `node:test` más la comprobación estructural.
+94 pruebas con `node:test` más la comprobación estructural.

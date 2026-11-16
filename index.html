@@ -6,6 +6,7 @@
     <meta name="description" content="Editor accesible para crear y descargar notas en LaTeX.">
     <title>Notas LaTeX</title>
     <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/vendor/katex/katex.min.css">
   </head>
   <body>
     <a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
@@ -71,6 +72,12 @@
               <small id="block-help">El contenido se copia al documento <strong>tal cual</strong>: comandos como <code>\textbf{...}</code> o <code>\mathbb{R}</code>, llaves y matemáticas entre <code>$…$</code> o <code>$$…$$</code> llegan exactamente como los escribes, y la aplicación no inserta ningún carácter de escape. Por eso puedes pegar aquí LaTeX de otro documento sin revisarlo. A cambio, los caracteres reservados de LaTeX son cosa tuya: para que aparezcan impresos escribe <code>\%</code>, <code>\&amp;</code>, <code>\#</code>, <code>\_</code> o <code>\$</code> —un <code>%</code> suelto comenta el resto de su línea—. Se permiten párrafos separados por una línea vacía y una lista toma un elemento por línea. Solo el título del bloque y los metadatos se escapan por completo, porque la aplicación los coloca dentro de un argumento.</small>
               <span id="block-error" class="error" aria-live="polite"></span>
             </p>
+            <details class="math-preview-panel" open>
+              <summary>Vista previa de las matemáticas</summary>
+              <p>KaTeX orienta sobre los tramos matemáticos, pero no es LaTeX completo ni reproduce la tipografía del PDF final. No revisa la prosa: un <code>%</code> suelto, un <code>_</code> o <code>&amp;</code> fuera de matemáticas, o un <code>\textbf{</code> sin cerrar pueden fallar en Overleaf aunque esta vista no avise.</p>
+              <div id="math-preview"></div>
+              <p id="math-preview-status" class="preview-status" aria-live="polite" aria-atomic="true"></p>
+            </details>
 
             <section class="symbol-board" aria-labelledby="simbolos-heading">
               <details id="symbol-details" open>
@@ -114,13 +121,15 @@
       </form>
       <p id="app-status" class="status" aria-live="polite" aria-atomic="true">Editor listo.</p>
     </main>
-    <footer><p>La primera versión no interpreta, valida ni compila matemáticas.</p></footer>
+    <footer><p>La vista previa orienta sobre modo matemático; la validación y compilación del documento se realizan en Overleaf.</p></footer>
+    <script src="assets/vendor/katex/katex.min.js"></script>
     <script src="assets/js/block-types.js"></script>
     <script src="assets/js/block-tree.js"></script>
     <script src="assets/js/latex-generator.js"></script>
     <script src="assets/js/file-download.js"></script>
     <script src="assets/js/math-symbols.js"></script>
     <script src="assets/js/text-insertion.js"></script>
+    <script src="assets/js/math-preview.js"></script>
     <script src="assets/js/app.js"></script>
   </body>
 </html>
