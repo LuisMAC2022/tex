@@ -40,12 +40,36 @@ button.danger { color: var(--danger); border-color: var(--danger); }
 button:disabled { cursor: not-allowed; opacity: .55; }
 :where(a, button, input, select, textarea):focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 .button-row { display: flex; flex-wrap: wrap; gap: .65rem; margin: 1rem 0 0; padding: 0; list-style: none; }
-.block-list { padding-inline-start: 1.75rem; }
-.block-list > li { margin-block: .75rem; padding: .8rem; border: 1px solid #b5c0d0; border-radius: .5rem; }
+.block-target { margin-block: 0 .75rem; padding: .6rem .75rem; border-inline-start: .25rem solid var(--primary); background: #e8f2fc; }
+.block-list, .block-children { padding-inline-start: 1.75rem; }
+.block-list li { margin-block: .75rem; }
+.block-list article { padding: .8rem; border: 1px solid #b5c0d0; border-radius: .5rem; }
 .block-list article p { white-space: pre-wrap; overflow-wrap: anywhere; }
 .block-list h4 { margin-block: 0 .25rem; }
+/* La sangría acompaña al nivel, pero nunca es su única señal: cada bloque
+   escribe «Nivel N · dentro de …» en .block-meta. */
+.block-children { margin-block: .5rem 0; border-inline-start: .2rem solid var(--border); }
+.block-meta, .block-preview { margin-block: 0 .5rem; }
+.block-meta { color: var(--muted); font-size: .9rem; font-weight: 650; }
 .block-actions { display: flex; flex-wrap: wrap; gap: .5rem; padding: 0; list-style: none; }
 .block-actions button { min-width: 2.75rem; }
+.symbol-board { margin: -.75rem 0 0; padding: 0; border: 0; border-radius: 0 0 .5rem .5rem; background: #edf4fb; box-shadow: none; }
+.symbol-board > details > summary { padding: .4rem .75rem; cursor: pointer; font-weight: 700; }
+.symbol-board > details > summary:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+.symbol-board h3 { display: inline; margin: 0; font-size: 1.05rem; }
+.symbol-board > details > :not(summary) { margin-inline: .75rem; }
+#symbol-board-intro, #symbol-search-help { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.symbol-board .field { grid-template-columns: auto minmax(8rem, 1fr); align-items: center; gap: .4rem; margin-block: .2rem; }
+.symbol-board .field input { min-height: 2.75rem; }
+.symbol-categories { display: flex; gap: .35rem; margin-block: .3rem; padding-block-end: .15rem; overflow-x: auto; }
+.symbol-category { flex: 0 0 auto; min-height: 2.75rem; padding: .35rem .65rem; color: var(--primary); background: var(--surface); font-size: .85rem; }
+.symbol-category[aria-pressed="true"] { color: #fff; background: var(--primary); }
+#symbol-detail { min-height: 1.5rem; margin-block: .15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9rem; }
+#symbol-results:empty { display: none; }
+.symbol-grid { display: grid; gap: .35rem; grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr)); max-block-size: 7rem; margin: .2rem .75rem .5rem !important; padding: 0; overflow-y: auto; list-style: none; }
+.symbol-button { display: grid; width: 100%; min-width: 2.75rem; min-height: 2.75rem; padding: .25rem; place-items: center; color: var(--primary); background: var(--surface); }
+.symbol-button:hover { color: #fff; background: var(--primary-hover); }
+.symbol-glyph { font-size: 1.35rem; line-height: 1.2; }
 .error { min-height: 1.5em; padding-inline: .25rem; color: #8a1c1c; font-weight: 700; }
 .error:not(:empty) { background: var(--error-bg); }
 .status { padding: .85rem 1rem; border-inline-start: .35rem solid var(--primary); background: #e8f2fc; font-weight: 650; }
@@ -59,6 +83,13 @@ footer { padding-block: .5rem 2rem; }
   .field-wide { grid-column: auto; }
   section { padding: 1rem; }
   .button-row > li, .button-row button { width: 100%; }
+  .symbol-grid { max-block-size: 11rem; }
+  /* A 320 px la sangría por nivel se reduce para que un bloque de nivel 3 siga
+     siendo legible sin desplazamiento horizontal. */
+  .block-list, .block-children { padding-inline-start: .85rem; }
+  .block-actions button { flex: 1 1 8rem; }
+  .symbol-board > details > :not(summary) { margin-inline: .75rem; }
+  .symbol-board .field { grid-template-columns: 1fr; }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -66,7 +97,9 @@ footer { padding-block: .5rem 2rem; }
   input, select, textarea { background: #101827; }
   button { color: #101827; }
   button.secondary { background: #192438; }
-  .status { background: #173453; }
+  .status, .block-target { background: #173453; }
+  .symbol-button { color: var(--text); background: var(--surface); }
+  .symbol-button:hover { color: #101827; background: var(--primary-hover); }
 }
 
 @media (prefers-reduced-motion: reduce) {
