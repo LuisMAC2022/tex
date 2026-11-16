@@ -87,6 +87,13 @@
       const body = withChildren(items.map((item) => `\\item ${item}`).join("\n"));
       return `\\begin{${type.listEnvironment}}\n${body}\n\\end{${type.listEnvironment}}`;
     }
+    if (type.kind === "bibliography") {
+      const items = content.split("\n").map((line) => line.trim()).filter(Boolean);
+      if (!items.length) return withChildren("");
+      const labelWidth = "9".repeat(String(items.length).length);
+      const body = items.map((item, index) => `\\bibitem{ref${index + 1}} ${item}`).join("\n");
+      return withChildren(`\\begin{thebibliography}{${labelWidth}}\n${body}\n\\end{thebibliography}`);
+    }
     const body = content.trim();
     if (!body && !children.length) return "";
     if (type.kind === "text") {

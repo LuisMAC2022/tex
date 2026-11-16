@@ -133,11 +133,16 @@ ningún paquete ni subir ningún archivo extra.
 | «Nota» | `Nota 1`. |
 | «Lista con viñetas» | Una lista de puntos. |
 | «Lista numerada» | Una lista 1, 2, 3. |
+| «Bibliografía (IEEE)» | Referencias numeradas entre corchetes. |
 
 Dos cosas que sorprenden la primera vez:
 
 **En las listas, cada renglón es un punto.** Escribe un elemento por línea; no pongas
 guiones ni números delante, la aplicación los añade. Las líneas vacías se ignoran.
+
+**En la bibliografía, escribe una referencia por línea.** Cada línea con texto
+se convierte en un `\bibitem`. Usa un solo bloque por documento para evitar
+claves repetidas.
 
 **Cada tipo lleva su propia cuenta.** `Teorema 1`, `Teorema 2`… van por un lado y
 `Definición 1`, `Definición 2`… por otro. Los números **no se reinician** en cada
@@ -161,8 +166,7 @@ de un teorema en vez de después de él.
 Se puede anidar tantos niveles como quieras. Cada bloque muestra su nivel y de quién
 depende (`Nivel 2 · dentro de 1 Teorema: Fubini`).
 
-**Las ecuaciones no admiten nada dentro**, así que no ofrecen el botón. No es un
-fallo: una fórmula con un párrafo dentro no compilaría.
+«Añadir dentro» está disponible en texto, entornos tipo teorema y listas.
 
 ### Los demás botones de cada bloque
 

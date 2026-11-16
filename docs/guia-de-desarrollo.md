@@ -190,20 +190,18 @@ deducen leyendo el código: aparecieron al hacerlo.
      heading: "Lema", style: "plain", container: true },
    ```
 
-   `kind` es `"text" | "equation" | "theorem" | "list"`. `container` decide si admite
+   `kind` es `"text" | "equation" | "theorem" | "list" | "bibliography"`. `container` decide si admite
    hijos, y lo aplican por igual la interfaz y el generador.
 
 2. **Su `<option>` en `index.html`**, en la misma posición que en la tabla. Una prueba
    compara ambas listas (INV-005).
 
-3. **Amplía el `tramo` del bloque `@decision`** que encabeza `BLOCK_TYPES` —la tabla
-   ganó una línea, así que `tramo:12` pasa a `tramo:13`— y ejecuta:
+3. **Amplía el `tramo` del bloque `@decision`** que encabeza `BLOCK_TYPES` para
+   incluir la nueva línea y ejecuta:
 
    ```sh
    npm run bendecir
    ```
-
-   Sin esto: `block-types.js:11 DEC-005 — declara fe5dadc4, el código da 6bbe8d97`.
 
 4. **Actualiza la lista literal** de `tests/generator.test.js`, en la prueba «la tabla
    declara los tipos del temario en el orden de la interfaz». Es deliberadamente una

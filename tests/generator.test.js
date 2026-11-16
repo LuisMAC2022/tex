@@ -29,7 +29,7 @@ test("el nombre descargable es portable y tiene alternativa", () => { assert.equ
 
 test("la tabla declara los tipos del temario en el orden de la interfaz", () => {
   assert.deepEqual(BLOCK_TYPES.map((type) => type.id),
-    ["text", "equation", "math-inline", "definition", "theorem", "proposition", "example", "note", "itemize", "enumerate"]);
+    ["text", "equation", "math-inline", "definition", "theorem", "proposition", "example", "note", "itemize", "enumerate", "bibliography"]);
 });
 test("un tipo desconocido no rompe la generación y cae en texto", () => {
   assert.equal(blockToLatex({ type: "inexistente", content: "Hola & adiós" }), "Hola & adiós");
@@ -99,4 +99,19 @@ test("las listas toman un elemento por línea y conservan su texto", () => {
   assert.equal(blockToLatex({ type: "itemize", content: "Uno & dos\r\n\nEl 100%\n" }), "\\begin{itemize}\n\\item Uno & dos\n\\item El 100%\n\\end{itemize}");
   assert.equal(blockToLatex({ type: "enumerate", content: "Primero" }), "\\begin{enumerate}\n\\item Primero\n\\end{enumerate}");
   assert.equal(blockToLatex({ type: "itemize", content: "\n \n" }), "");
+});
+test("la bibliografía genera claves predecibles y conserva literalmente cada referencia", () => {
+  assert.equal(blockToLatex({ type: "bibliography", title: "No se usa", content: "Leithold, L. (1992). El cálculo con geometría. México: Harla.\nSpivak, M. (1993). Cálculo infinitesimal. México: Reverté." }),
+    "\\begin{thebibliography}{9}\n\\bibitem{ref1} Leithold, L. (1992). El cálculo con geometría. México: Harla.\n\\bibitem{ref2} Spivak, M. (1993). Cálculo infinitesimal. México: Reverté.\n\\end{thebibliography}");
+});
+test("la bibliografía admite una referencia y omite el entorno vacío", () => {
+  assert.equal(blockToLatex({ type: "bibliography", content: "Referencia única" }), "\\begin{thebibliography}{9}\n\\bibitem{ref1} Referencia única\n\\end{thebibliography}");
+  assert.equal(blockToLatex({ type: "bibliography", content: " \n\n " }), "");
+});
+test("la bibliografía recorta líneas y ajusta el ancho para diez o más referencias", () => {
+  const references = Array.from({ length: 10 }, (_, index) => `  Referencia ${index + 1}  `).join("\n");
+  const latex = blockToLatex({ type: "bibliography", content: `\n${references}\n` });
+  assert.match(latex, /^\\begin\{thebibliography\}\{99\}\n/);
+  assert.match(latex, /\\bibitem\{ref1\} Referencia 1\n/);
+  assert.match(latex, /\\bibitem\{ref10\} Referencia 10\n\\end\{thebibliography\}$/);
 });

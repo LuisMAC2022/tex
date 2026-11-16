@@ -63,7 +63,7 @@
 - ningún índice apunta a una sección que ya no existe
 - cada rótulo que citan las guías sigue existiendo en la interfaz
 
-## `tests/generator.test.js` — 21 pruebas
+## `tests/generator.test.js` — 24 pruebas
 
 - los metadatos y los títulos escapan todos los caracteres reservados
 - el contenido de un bloque no recibe ningún escape
@@ -86,6 +86,9 @@
 - una proposición se combina con fórmulas en línea y destacadas
 - la matemática en línea se conserva literalmente y en una sola línea
 - las listas toman un elemento por línea y conservan su texto
+- la bibliografía genera claves predecibles y conserva literalmente cada referencia
+- la bibliografía admite una referencia y omite el entorno vacío
+- la bibliografía recorta líneas y ajusta el ancho para diez o más referencias
 
 ## `tests/invariantes.test.js` — 4 pruebas
 
@@ -114,8 +117,8 @@
 
 ## `tests/check-site.mjs` — comprobación estructural
 
-No usa `node:test`: es un script con 38 aserciones sobre `index.html` (doctype, un solo `main` y `h1`, enlace de salto, orden de los scripts clásicos, rutas relativas, etiquetas asociadas y ayudas visibles). Se ejecuta con `npm test`.
+No usa `node:test`: es un script con 41 aserciones sobre `index.html` (doctype, un solo `main` y `h1`, enlace de salto, orden de los scripts clásicos, rutas relativas, etiquetas asociadas y ayudas visibles). Se ejecuta con `npm test`.
 
 ---
 
-87 pruebas con `node:test` más la comprobación estructural.
+90 pruebas con `node:test` más la comprobación estructural.
