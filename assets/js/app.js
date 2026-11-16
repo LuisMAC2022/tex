@@ -1,81 +1,513 @@
-import { generateLatex } from "./latex-generator.js";
-import { downloadTex } from "./file-download.js";
+(function (global) {
+  "use strict";
+  const {
+    METADATA_KEYS, blockLabel, acceptsChildren, generateLatex, downloadTex,
+    DRAFT_VERSION, blockAtPath, cloneBlock, cloneBlocks, countBlocks, duplicateBlock, insertBlock, keyToPath,
+    moveBlock, normalizeDraft, pathLabel, pathToKey, removeBlock, updateBlock,
+    MATH_SYMBOLS, MATH_SYMBOL_GROUPS, filterMathSymbols, symbolAccessibleName, symbolsByGroup, insertIntoField,
+  } = global.TexNotes;
 
-const STORAGE_KEY = "tex-notes:draft:v1";
-const $ = (selector) => document.querySelector(selector);
-const form = $("#document-form");
-const blockList = $("#block-list");
-const output = $("#latex-output");
-const status = $("#app-status");
-let blocks = [];
+  // El borrador v1 era una lista plana. Se sigue leyendo para migrarlo; lo que
+  // se guarda a partir de ahora es el árbol de la v2.
+  const STORAGE_KEY = "tex-notes:draft:v2";
+  const LEGACY_STORAGE_KEY = "tex-notes:draft:v1";
+  const $ = (selector) => document.querySelector(selector);
+  const form = $("#document-form");
+  const blockList = $("#block-list");
+  const output = $("#latex-output");
+  const status = $("#app-status");
+  let blocks = [];
+  /**
+   * Bandeja de copia: un bloque suelto, fuera del árbol, a la espera de que la
+   * persona elija dónde pegarlo. Deliberadamente NO es el portapapeles del
+   * sistema: ahí va «Copiar texto», que saca el contenido de la aplicación.
+   * Tampoco se persiste en el borrador, porque no forma parte del documento.
+   */
+  let tray = null;
 
-function metadata() {
-  return Object.fromEntries(["title", "author", "course", "teacher", "date", "topic"].map((name) => [name, form.elements[name].value]));
-}
-function state() { return { metadata: metadata(), blocks: blocks.map((block) => ({ ...block })) }; }
-function announce(message) { status.textContent = message; }
-function setMetadata(values = {}) {
-  for (const name of ["title", "author", "course", "teacher", "date", "topic"]) form.elements[name].value = typeof values[name] === "string" ? values[name] : "";
-}
-function resetBlockEditor() {
-  $("#editing-index").value = ""; $("#block-title").value = ""; $("#block-content").value = "";
-  $("#add-block").textContent = "Añadir bloque"; $("#cancel-edit").hidden = true; $("#block-form-heading").textContent = "Nuevo bloque";
-}
-function actionButton(label, action, index, disabled = false) {
-  const button = document.createElement("button"); button.type = "button"; button.textContent = label; button.dataset.action = action; button.dataset.index = index; button.disabled = disabled; return button;
-}
-function renderBlocks(focus = null) {
-  blockList.replaceChildren(); $("#empty-blocks").hidden = blocks.length > 0;
-  const labels = { text: "Texto", definition: "Definición", theorem: "Teorema", example: "Ejemplo", exercise: "Ejercicio", solution: "Solución", equation: "Ecuación" };
-  blocks.forEach((block, index) => {
-    const item = document.createElement("li"); const article = document.createElement("article"); const heading = document.createElement("h4");
-    heading.textContent = `${labels[block.type] || "Bloque"}${block.title ? `: ${block.title}` : ""}`;
-    const preview = document.createElement("p"); preview.textContent = block.content || "(Bloque vacío)";
-    const actions = document.createElement("menu"); actions.className = "block-actions"; actions.setAttribute("aria-label", `Acciones para bloque ${index + 1}`);
-    [["Editar", "edit", false], ["Eliminar", "delete", false], ["Subir", "up", index === 0], ["Bajar", "down", index === blocks.length - 1]].forEach(([label, action, disabled]) => actions.append(actionButton(label, action, index, disabled)));
-    article.append(heading, preview, actions); item.append(article); blockList.append(item);
-  });
-  if (focus && blocks.length) blockList.querySelector(`[data-action="${focus.action}"][data-index="${focus.index}"]`)?.focus();
-}
-function validateBlock() {
-  const field = $("#block-content"); const error = $("#block-error");
-  if (!field.value.trim()) { error.textContent = "Escribe contenido antes de incorporar el bloque."; field.setAttribute("aria-invalid", "true"); field.focus(); return false; }
-  error.textContent = ""; field.removeAttribute("aria-invalid"); return true;
-}
-
-$("#add-block").addEventListener("click", () => {
-  if (!validateBlock()) return;
-  const block = { type: $("#block-type").value, title: $("#block-title").value, content: $("#block-content").value };
-  const editing = $("#editing-index").value;
-  if (editing === "") { blocks.push(block); announce(`Bloque ${blocks.length} añadido.`); } else { blocks[Number(editing)] = block; announce(`Bloque ${Number(editing) + 1} actualizado.`); }
-  resetBlockEditor(); renderBlocks(); $("#block-type").focus();
-});
-$("#cancel-edit").addEventListener("click", () => { resetBlockEditor(); $("#block-type").focus(); announce("Edición cancelada."); });
-blockList.addEventListener("click", (event) => {
-  const button = event.target.closest("button[data-action]"); if (!button) return;
-  const index = Number(button.dataset.index); const action = button.dataset.action;
-  if (action === "edit") {
-    const block = blocks[index]; $("#block-type").value = block.type; $("#block-title").value = block.title; $("#block-content").value = block.content; $("#editing-index").value = index;
-    $("#add-block").textContent = "Guardar cambios"; $("#cancel-edit").hidden = false; $("#block-form-heading").textContent = `Editar bloque ${index + 1}`; $("#block-type").focus(); announce(`Editando el bloque ${index + 1}.`); return;
+  function metadata() {
+    return Object.fromEntries(METADATA_KEYS.map((name) => [name, form.elements[name].value]));
   }
-  if (action === "delete") { blocks.splice(index, 1); renderBlocks(blocks.length ? { action: "delete", index: Math.min(index, blocks.length - 1) } : null); if (!blocks.length) $("#add-block").focus(); announce(`Bloque ${index + 1} eliminado.`); return; }
-  const target = action === "up" ? index - 1 : index + 1; [blocks[index], blocks[target]] = [blocks[target], blocks[index]]; renderBlocks({ action, index: target }); announce(`Bloque movido a la posición ${target + 1}.`);
-});
+  function state() { return { metadata: metadata(), blocks: cloneBlocks(blocks) }; }
+  function announce(message) { status.textContent = message; }
+  function setMetadata(values = {}) {
+    for (const name of METADATA_KEYS) form.elements[name].value = typeof values[name] === "string" ? values[name] : "";
+  }
 
-form.addEventListener("submit", (event) => {
-  event.preventDefault(); const title = $("#note-title");
-  if (!title.value.trim()) { $("#title-error").textContent = "Escribe un título para generar el documento."; title.setAttribute("aria-invalid", "true"); title.focus(); announce("No se generó el documento: falta el título."); return; }
-  $("#title-error").textContent = ""; title.removeAttribute("aria-invalid"); output.value = generateLatex(state()); announce("Documento generado.");
-});
-$("#save-draft").addEventListener("click", () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, ...state() })); announce("Borrador guardado únicamente en este dispositivo."); } catch { announce("No se pudo guardar el borrador; el contenido actual se conserva."); } });
-$("#restore-draft").addEventListener("click", () => {
-  try { const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY)); if (!parsed || parsed.version !== 1 || !parsed.metadata || !Array.isArray(parsed.blocks)) throw new Error(); setMetadata(parsed.metadata); blocks = parsed.blocks.filter((block) => block && typeof block.content === "string" && typeof block.type === "string").map((block) => ({ type: block.type, title: typeof block.title === "string" ? block.title : "", content: block.content })); resetBlockEditor(); renderBlocks(); $("#note-title").focus(); announce("Borrador restaurado."); } catch { $("#restore-draft").focus(); announce("No hay un borrador válido para restaurar."); }
-});
-$("#delete-draft").addEventListener("click", () => { if (!confirm("¿Borrar el borrador guardado en este dispositivo?")) { $("#delete-draft").focus(); announce("No se borró el borrador."); return; } localStorage.removeItem(STORAGE_KEY); $("#save-draft").focus(); announce("Borrador guardado eliminado; el contenido actual se conserva."); });
-$("#download-tex").addEventListener("click", () => { if (!output.value) { announce("Genera el documento antes de descargarlo."); $("#generate").focus(); return; } downloadTex(output.value, $("#note-title").value); announce("Descarga del archivo .tex iniciada."); });
-$("#copy-code").addEventListener("click", async () => {
-  if (!output.value) { announce("Genera el documento antes de copiarlo."); $("#generate").focus(); return; }
-  try { if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(output.value); else { output.focus(); output.select(); if (!document.execCommand("copy")) throw new Error(); } announce("Código LaTeX copiado."); } catch { announce("No se pudo copiar el código; permanece disponible para seleccionarlo manualmente."); }
-});
+  /* --- Nombres de cada nodo, compartidos por la vista y por los anuncios --- */
 
-renderBlocks();
+  function describeBlock(block, path) {
+    const title = (block.title || "").trim();
+    return `${pathLabel(path)} ${blockLabel(block.type)}${title ? `: ${title}` : ""}`;
+  }
+  function describeLocation(parentPath) {
+    const parent = parentPath.length ? blockAtPath(blocks, parentPath) : null;
+    return parent ? `dentro de ${describeBlock(parent, parentPath)}, en el nivel ${parentPath.length + 1}` : "al final de la raíz del documento";
+  }
+
+  /* --- Editor: a qué nodo apunta el formulario --- */
+
+  function editorTarget() {
+    return { editing: keyToPath($("#editing-path").value), parent: keyToPath($("#parent-path").value) };
+  }
+  function setEditorTarget({ editing = [], parent = [] } = {}) {
+    const editingBlock = editing.length ? blockAtPath(blocks, editing) : null;
+    // Una ruta que ya no resuelve se descarta: el formulario nunca queda
+    // apuntando a un nodo inexistente tras un borrado o un movimiento.
+    const parentPath = !editingBlock && parent.length && blockAtPath(blocks, parent) ? parent : [];
+    $("#editing-path").value = editingBlock ? pathToKey(editing) : "";
+    $("#parent-path").value = pathToKey(parentPath);
+    if (editingBlock) {
+      $("#block-form-heading").textContent = `Editar bloque ${pathLabel(editing)}`;
+      $("#block-target").textContent = `Editas ${describeBlock(editingBlock, editing)}. Sus bloques anidados se conservan.`;
+      $("#add-block").textContent = "Guardar cambios";
+      $("#cancel-edit").textContent = "Cancelar edición";
+      $("#cancel-edit").hidden = false;
+      updateTrayControls();
+      return;
+    }
+    $("#block-form-heading").textContent = "Nuevo bloque";
+    $("#block-target").textContent = `El bloque se añadirá ${describeLocation(parentPath)}.`;
+    $("#add-block").textContent = "Añadir bloque";
+    $("#cancel-edit").textContent = "Añadir en la raíz";
+    $("#cancel-edit").hidden = !parentPath.length;
+    updateTrayControls();
+  }
+  function clearBlockFields() {
+    $("#block-title").value = ""; $("#block-content").value = "";
+    $("#block-error").textContent = ""; $("#block-content").removeAttribute("aria-invalid");
+  }
+  function resetBlockEditor() { clearBlockFields(); setEditorTarget({}); }
+
+  /**
+   * Una acción sobre la estructura desplaza las rutas del resto del árbol. En
+   * lugar de adivinar a qué nodo apuntaba una edición a medias, se cancela y se
+   * dice: nunca se escribe sobre un bloque distinto del que se estaba editando.
+   */
+  function cancelEditForStructuralChange() {
+    if (!editorTarget().editing.length) return "";
+    resetBlockEditor();
+    return " Se canceló la edición en curso porque cambió la estructura.";
+  }
+
+  /* --- Lista anidada --- */
+
+  function actionButton(label, action, path, accessibleName, disabled = false) {
+    const button = document.createElement("button");
+    button.type = "button"; button.textContent = label;
+    button.dataset.action = action; button.dataset.path = pathToKey(path);
+    button.disabled = disabled;
+    button.setAttribute("aria-label", accessibleName);
+    return button;
+  }
+
+  function blockItem(block, path, parent, parentPath, siblings) {
+    const position = path[path.length - 1];
+    const where = parent ? `dentro de ${describeBlock(parent, parentPath)}` : "en la raíz";
+    const subject = `${describeBlock(block, path)}, nivel ${path.length}, ${where}`;
+
+    const item = document.createElement("li");
+    const article = document.createElement("article");
+    const heading = document.createElement("h4");
+    heading.textContent = describeBlock(block, path);
+    // El nivel y el padre se escriben, no solo se sugieren con la sangría.
+    const meta = document.createElement("p");
+    meta.className = "block-meta";
+    meta.textContent = `Nivel ${path.length} · ${where}`;
+    const preview = document.createElement("p");
+    preview.className = "block-preview";
+    preview.textContent = (block.content || "").trim() || "(Bloque vacío)";
+    const actions = document.createElement("menu");
+    actions.className = "block-actions";
+    actions.setAttribute("aria-label", `Acciones para el bloque ${describeBlock(block, path)}`);
+    actions.append(
+      actionButton("Editar", "edit", path, `Editar ${subject}`),
+      // Tres operaciones distintas, con nombres distintos a propósito:
+      // duplicar deja la copia aquí mismo; copiar la guarda para elegir destino;
+      // copiar texto saca el contenido de la aplicación.
+      actionButton("Duplicar", "duplicate", path, `Duplicar ${subject}: la copia queda justo después`),
+      actionButton("Copiar bloque", "copy", path, `Copiar ${subject} a la bandeja, para pegarlo donde elijas`),
+      actionButton("Copiar texto", "copy-text", path, `Copiar al portapapeles el texto de ${subject}`),
+    );
+    if (acceptsChildren(block.type)) actions.append(actionButton("Añadir dentro", "child", path, `Añadir un bloque dentro de ${subject}`));
+    actions.append(
+      actionButton("Eliminar", "delete", path, `Eliminar ${subject}`),
+      actionButton("Subir", "up", path, `Subir ${subject}, entre sus hermanos`, position === 0),
+      actionButton("Bajar", "down", path, `Bajar ${subject}, entre sus hermanos`, position === siblings - 1),
+    );
+    article.append(heading, meta, preview, actions);
+    item.append(article);
+
+    if (block.children.length) {
+      const nested = document.createElement("ol");
+      nested.className = "block-children";
+      nested.setAttribute("aria-label", `Bloques dentro de ${describeBlock(block, path)}`);
+      block.children.forEach((child, index) => nested.append(blockItem(child, [...path, index], block, path, block.children.length)));
+      item.append(nested);
+    }
+    return item;
+  }
+
+  function renderBlocks() {
+    blockList.replaceChildren();
+    $("#empty-blocks").hidden = blocks.length > 0;
+    blocks.forEach((block, index) => blockList.append(blockItem(block, [index], null, [], blocks.length)));
+  }
+
+  /** Devuelve true si existe y es enfocable; permite encadenar alternativas. */
+  function focusAction(action, path) {
+    const button = blockList.querySelector(`button[data-action="${action}"][data-path="${pathToKey(path)}"]`);
+    if (!button || button.disabled) return false;
+    button.focus();
+    return true;
+  }
+  /** Tras eliminar: hermano que ocupa el hueco, anterior, padre o alta de bloque. */
+  function focusAfterRemoval(path) {
+    const position = path[path.length - 1];
+    const parentPath = path.slice(0, -1);
+    if (focusAction("edit", path)) return;
+    if (position > 0 && focusAction("edit", [...parentPath, position - 1])) return;
+    if (parentPath.length && (focusAction("child", parentPath) || focusAction("edit", parentPath))) return;
+    $("#add-block").focus();
+  }
+
+  /* --- Bandeja de copia y portapapeles del sistema --- */
+
+  /** Describe lo que hay en la bandeja, con el tamaño de la rama si la tiene. */
+  function trayLabel() {
+    if (!tray) return "";
+    const nested = countBlocks(tray.block.children);
+    const title = (tray.block.title || "").trim();
+    return `${blockLabel(tray.block.type)}${title ? `: ${title}` : ""}${nested ? ` con ${nested} ${nested === 1 ? "bloque anidado" : "bloques anidados"}` : ""}`;
+  }
+
+  /**
+   * «Pegar bloque» solo aparece cuando hay algo que pegar, y dice siempre dónde
+   * caerá: reutiliza el mismo destino que «Añadir bloque», el que muestra
+   * #block-target, en vez de inventar un gesto de colocación nuevo.
+   */
+  function updateTrayControls() {
+    const paste = $("#paste-block");
+    const summary = $("#tray-summary");
+    paste.hidden = !tray;
+    summary.hidden = !tray;
+    if (!tray) { summary.textContent = ""; return; }
+    const label = trayLabel();
+    summary.textContent = `En la bandeja: ${label}. Se pegará ${describeLocation(editorTarget().parent)}.`;
+    paste.setAttribute("aria-label", `Pegar ${label} ${describeLocation(editorTarget().parent)}`);
+  }
+
+  /**
+   * Copia al portapapeles del sistema. Sin la API moderna —file:// o permiso
+   * denegado— se recurre a seleccionar un campo: el de salida cuando existe, o
+   * uno temporal fuera de la vista para el texto de un bloque.
+   */
+  async function copyToClipboard(text, field = null) {
+    if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(text); return; }
+    const source = field || document.createElement("textarea");
+    if (!field) {
+      source.value = text;
+      source.setAttribute("readonly", "");
+      source.setAttribute("aria-hidden", "true");
+      source.style.cssText = "position:fixed;top:-1000px;left:-1000px";
+      document.body.append(source);
+    }
+    source.focus(); source.select();
+    const copied = document.execCommand("copy");
+    if (!field) source.remove();
+    if (!copied) throw new Error("No se pudo copiar");
+  }
+
+  function blockError(message) {
+    const field = $("#block-content");
+    $("#block-error").textContent = message;
+    field.setAttribute("aria-invalid", "true");
+    field.focus();
+    announce(message);
+  }
+  function validateBlock() {
+    const field = $("#block-content");
+    if (!field.value.trim()) { blockError("Escribe contenido antes de incorporar el bloque."); return false; }
+    $("#block-error").textContent = ""; field.removeAttribute("aria-invalid");
+    return true;
+  }
+
+  $("#add-block").addEventListener("click", () => {
+    if (!validateBlock()) return;
+    const draft = { type: $("#block-type").value, title: $("#block-title").value, content: $("#block-content").value, children: [] };
+    const { editing, parent } = editorTarget();
+    if (editing.length) {
+      const next = updateBlock(blocks, editing, draft);
+      if (!next) { blockError(`«${blockLabel(draft.type)}» no admite bloques anidados y este bloque ya tiene. Muévelos o elimínalos antes de cambiar el tipo.`); return; }
+      blocks = next; resetBlockEditor(); renderBlocks();
+      if (!focusAction("edit", editing)) $("#block-type").focus();
+      announce(`Bloque ${pathLabel(editing)} actualizado.`);
+      return;
+    }
+    const result = insertBlock(blocks, parent, draft);
+    if (!result) { blockError("No se pudo añadir el bloque en esa posición; la lista se actualizó."); renderBlocks(); return; }
+    blocks = result.blocks;
+    clearBlockFields();
+    // El destino se conserva para encadenar varios hijos del mismo padre.
+    setEditorTarget({ parent });
+    renderBlocks();
+    $("#block-type").focus();
+    announce(`Bloque ${pathLabel(result.path)} añadido ${parent.length ? `dentro de ${describeBlock(blockAtPath(blocks, parent), parent)}` : "en la raíz"}.`);
+  });
+
+  $("#paste-block").addEventListener("click", () => {
+    if (!tray) { updateTrayControls(); announce("La bandeja está vacía: copia un bloque antes de pegar."); return; }
+    const { parent } = editorTarget();
+    // Cada pegado entrega una copia nueva: la bandeja conserva su bloque y dos
+    // pegados del mismo origen no comparten objetos.
+    const result = insertBlock(blocks, parent, cloneBlock(tray.block));
+    if (!result) { renderBlocks(); setEditorTarget(editorTarget()); announce("No se pudo pegar el bloque en ese destino; la lista se actualizó."); return; }
+    const label = trayLabel();
+    blocks = result.blocks; renderBlocks(); setEditorTarget(editorTarget());
+    if (!focusAction("edit", result.path)) $("#add-block").focus();
+    announce(`${label} pegado como bloque ${pathLabel(result.path)} ${describeLocation(parent)}. Sigue en la bandeja para pegarlo otra vez.`);
+  });
+
+  $("#cancel-edit").addEventListener("click", () => {
+    const cancelled = editorTarget().editing.length;
+    resetBlockEditor(); $("#block-type").focus();
+    announce(cancelled ? "Edición cancelada." : "El siguiente bloque se añadirá en la raíz.");
+  });
+
+  blockList.addEventListener("click", async (event) => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
+    const path = keyToPath(button.dataset.path);
+    const block = blockAtPath(blocks, path);
+    if (!block) { renderBlocks(); $("#add-block").focus(); announce("Ese bloque ya no existe; la lista se actualizó."); return; }
+    const action = button.dataset.action;
+
+    if (action === "edit") {
+      $("#block-type").value = block.type; $("#block-title").value = block.title; $("#block-content").value = block.content;
+      $("#block-error").textContent = ""; $("#block-content").removeAttribute("aria-invalid");
+      setEditorTarget({ editing: path }); $("#block-type").focus();
+      announce(`Editando ${describeBlock(block, path)}.`);
+      return;
+    }
+    if (action === "child") {
+      clearBlockFields(); setEditorTarget({ parent: path }); $("#block-type").focus();
+      announce(`El siguiente bloque se añadirá dentro de ${describeBlock(block, path)}, en el nivel ${path.length + 1}.`);
+      return;
+    }
+    if (action === "duplicate") {
+      const result = duplicateBlock(blocks, path);
+      if (!result) { button.focus(); announce("No se pudo duplicar el bloque."); return; }
+      const nested = countBlocks(block.children);
+      // La copia se inserta entre hermanos y desplaza las rutas siguientes: una
+      // edición a medias se cancela, como en cualquier cambio estructural.
+      const cancelled = cancelEditForStructuralChange();
+      blocks = result.blocks; renderBlocks(); setEditorTarget(editorTarget());
+      if (!focusAction("edit", result.path)) $("#add-block").focus();
+      announce(`${describeBlock(block, path)} duplicado como ${describeBlock(block, result.path)}${nested ? `, con sus ${nested} ${nested === 1 ? "bloque anidado" : "bloques anidados"}` : ""}. El original no cambia.${cancelled}`);
+      return;
+    }
+    if (action === "copy") {
+      tray = { block: cloneBlock(block) };
+      if (!tray.block) { tray = null; button.focus(); announce("No se pudo copiar ese bloque."); return; }
+      updateTrayControls();
+      button.focus();
+      announce(`${describeBlock(block, path)} copiado a la bandeja. Elige dónde pegarlo con «Pegar bloque»; el original se queda donde está.`);
+      return;
+    }
+    if (action === "copy-text") {
+      const text = block.content || "";
+      if (!text.trim()) { button.focus(); announce("Ese bloque no tiene texto que copiar."); return; }
+      try {
+        await copyToClipboard(text);
+        button.focus(); announce(`Texto de ${describeBlock(block, path)} copiado al portapapeles. Pégalo donde quieras con Ctrl+V.`);
+      } catch {
+        button.focus(); announce("No se pudo copiar el texto; ábrelo con «Editar» y cópialo desde el campo de contenido.");
+      }
+      return;
+    }
+    if (action === "delete") {
+      const nested = countBlocks(block.children);
+      if (nested && !confirm(`¿Eliminar ${describeBlock(block, path)} y sus ${nested} ${nested === 1 ? "bloque anidado" : "bloques anidados"}?`)) {
+        button.focus(); announce("No se eliminó el bloque."); return;
+      }
+      const next = removeBlock(blocks, path);
+      if (!next) { announce("No se pudo eliminar el bloque."); return; }
+      const label = describeBlock(block, path);
+      const cancelled = cancelEditForStructuralChange();
+      blocks = next; renderBlocks(); setEditorTarget(editorTarget()); focusAfterRemoval(path);
+      announce(`Eliminado ${label}${nested ? ` con sus ${nested} bloques anidados` : ""}.${cancelled}`);
+      return;
+    }
+
+    const result = moveBlock(blocks, path, action === "up" ? -1 : 1);
+    if (!result) { button.focus(); announce("El bloque ya está en el extremo de sus hermanos."); return; }
+    const cancelled = cancelEditForStructuralChange();
+    blocks = result.blocks; renderBlocks(); setEditorTarget(editorTarget());
+    // Si el botón usado quedó deshabilitado en el extremo, el foco pasa al
+    // movimiento contrario y, si tampoco existe, a la edición del mismo bloque.
+    if (!focusAction(action, result.path) && !focusAction(action === "up" ? "down" : "up", result.path)) focusAction("edit", result.path);
+    announce(`${describeBlock(block, result.path)} movido a la posición ${result.path[result.path.length - 1] + 1} de su nivel.${cancelled}`);
+  });
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault(); const title = $("#note-title");
+    if (!title.value.trim()) { $("#title-error").textContent = "Escribe un título para generar el documento."; title.setAttribute("aria-invalid", "true"); title.focus(); announce("No se generó el documento: falta el título."); return; }
+    $("#title-error").textContent = ""; title.removeAttribute("aria-invalid"); output.value = generateLatex(state()); announce("Documento generado.");
+  });
+  $("#save-draft").addEventListener("click", () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: DRAFT_VERSION, ...state() })); announce("Borrador guardado únicamente en este dispositivo."); } catch { announce("No se pudo guardar el borrador; el contenido actual se conserva."); } });
+  $("#restore-draft").addEventListener("click", () => {
+    let draft = null;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
+      draft = normalizeDraft(JSON.parse(raw));
+    } catch { draft = null; }
+    if (!draft) { $("#restore-draft").focus(); announce("No hay un borrador válido para restaurar."); return; }
+    setMetadata(draft.metadata); blocks = draft.blocks; resetBlockEditor(); renderBlocks(); $("#note-title").focus();
+    announce(draft.version < DRAFT_VERSION ? "Borrador restaurado y convertido al formato con bloques anidados." : "Borrador restaurado.");
+  });
+  $("#delete-draft").addEventListener("click", () => {
+    if (!confirm("¿Borrar el borrador guardado en este dispositivo?")) { $("#delete-draft").focus(); announce("No se borró el borrador."); return; }
+    try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(LEGACY_STORAGE_KEY); } catch { /* el contenido abierto se conserva igualmente */ }
+    $("#save-draft").focus(); announce("Borrador guardado eliminado; el contenido actual se conserva.");
+  });
+  $("#download-tex").addEventListener("click", () => { if (!output.value) { announce("Genera el documento antes de descargarlo."); $("#generate").focus(); return; } downloadTex(output.value, $("#note-title").value); announce("Descarga del archivo .tex iniciada."); });
+  $("#copy-code").addEventListener("click", async () => {
+    if (!output.value) { announce("Genera el documento antes de copiarlo."); $("#generate").focus(); return; }
+    try { await copyToClipboard(output.value, output); announce("Código LaTeX copiado."); } catch { announce("No se pudo copiar el código; permanece disponible para seleccionarlo manualmente."); }
+  });
+
+  /* --- Tablero de símbolos matemáticos --- */
+
+  function symbolButton(symbol) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "symbol-button";
+    button.dataset.command = symbol.command;
+    button.dataset.symbolId = symbol.id;
+    button.tabIndex = -1;
+    button.setAttribute("aria-label", symbolAccessibleName(symbol));
+    // La casilla mide lo mismo para todos, pero los glifos no: «negrita» o
+    // «d²f/dx²» al tamaño de una letra griega se salían sobre las casillas
+    // vecinas. La longitud en puntos de código elige el tramo de tamaño en CSS.
+    button.dataset.glyphLength = String(Math.min([...String(symbol.symbol)].length, 7));
+    const glyph = document.createElement("span"); glyph.className = "symbol-glyph"; glyph.textContent = symbol.symbol;
+    button.append(glyph);
+    return button;
+  }
+
+  let activeSymbolGroup = MATH_SYMBOL_GROUPS[0].id;
+
+  function renderCategoryPicker(searching = false) {
+    const picker = $("#symbol-category-picker");
+    picker.replaceChildren();
+    for (const group of MATH_SYMBOL_GROUPS) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "symbol-category";
+      button.dataset.groupId = group.id;
+      button.textContent = group.label;
+      button.setAttribute("aria-pressed", String(!searching && group.id === activeSymbolGroup));
+      picker.append(button);
+    }
+  }
+
+  // El texto base se toma del propio HTML para que no haya dos redacciones que
+  // mantener en paralelo.
+  const SYMBOL_DETAIL_PLACEHOLDER = $("#symbol-detail").textContent;
+
+  function resetSymbolDetail() {
+    $("#symbol-detail").textContent = SYMBOL_DETAIL_PLACEHOLDER;
+  }
+
+  function renderSymbolBoard() {
+    renderCategoryPicker();
+    applySymbolFilter("");
+  }
+
+  function applySymbolFilter(query) {
+    const container = $("#symbol-groups");
+    const searching = Boolean(query.trim());
+    const visible = searching ? filterMathSymbols(query) : symbolsByGroup(activeSymbolGroup);
+    container.replaceChildren(...visible.map((symbol, index) => {
+      const item = document.createElement("li");
+      item.setAttribute("role", "presentation");
+      const button = symbolButton(symbol);
+      if (index === 0) button.tabIndex = 0;
+      item.append(button);
+      return item;
+    }));
+    renderCategoryPicker(searching);
+    // La rejilla se rehízo: el detalle ya no describe nada visible.
+    resetSymbolDetail();
+    const activeGroup = MATH_SYMBOL_GROUPS.find((group) => group.id === activeSymbolGroup);
+    const activeLabel = activeGroup ? activeGroup.label : MATH_SYMBOL_GROUPS[0].label;
+    container.setAttribute("aria-label", searching ? "Resultados de símbolos" : `Símbolos: ${activeLabel}`);
+    $("#symbol-empty").hidden = visible.length > 0;
+    // El recuento solo se escribe tras una búsqueda: así la región activa no anuncia nada al cargar.
+    const results = $("#symbol-results");
+    if (!query.trim() && !results.textContent) return;
+    results.textContent = query.trim()
+      ? `${visible.length} ${visible.length === 1 ? "símbolo coincide" : "símbolos coinciden"} con la búsqueda.`
+      : `Se muestran ${visible.length} símbolos de ${activeLabel}.`;
+  }
+
+  $("#symbol-search").addEventListener("input", (event) => applySymbolFilter(event.currentTarget.value));
+  $("#symbol-category-picker").addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-group-id]");
+    if (!button) return;
+    activeSymbolGroup = button.dataset.groupId;
+    $("#symbol-search").value = "";
+    applySymbolFilter("");
+  });
+  function updateSymbolDetail(button) {
+    const symbol = MATH_SYMBOLS.find((candidate) => candidate.id === button.dataset.symbolId);
+    if (symbol) $("#symbol-detail").textContent = `${symbol.name} — ${symbol.command}`;
+  }
+  $("#symbol-groups").addEventListener("mouseover", (event) => {
+    const button = event.target.closest("button[data-symbol-id]");
+    if (button) updateSymbolDetail(button);
+  });
+  $("#symbol-groups").addEventListener("focusin", (event) => {
+    const button = event.target.closest("button[data-symbol-id]");
+    if (button) updateSymbolDetail(button);
+  });
+  /** Columnas que el grid resolvió para el ancho actual; nunca menos de una. */
+  function symbolGridColumns(container) {
+    const columns = getComputedStyle(container).gridTemplateColumns.split(" ").filter(Boolean).length;
+    return Math.max(1, columns);
+  }
+
+  $("#symbol-groups").addEventListener("keydown", (event) => {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+    const buttons = [...event.currentTarget.querySelectorAll("button[data-symbol-id]")];
+    if (!buttons.length) return;
+    event.preventDefault();
+    const last = buttons.length - 1;
+    const current = Math.max(0, buttons.indexOf(document.activeElement));
+    const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1
+      : symbolGridColumns(event.currentTarget) * (event.key === 'ArrowDown' ? 1 : -1);
+    // Las flechas horizontales dan la vuelta; las verticales se detienen en los
+    // extremos para que la última fila incompleta no mande el foco al principio.
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? last
+      : event.key === 'ArrowUp' || event.key === 'ArrowDown' ? Math.min(Math.max(current + step, 0), last)
+      : (current + step + buttons.length) % buttons.length;
+    buttons.forEach((button, index) => { button.tabIndex = index === next ? 0 : -1; });
+    buttons[next].focus();
+  });
+  // El puntero salió del tablero: si nadie tiene el foco dentro, el detalle
+  // vuelve a su texto base en lugar de congelar el último símbolo señalado.
+  $("#symbol-groups").addEventListener("mouseleave", (event) => {
+    if (!event.currentTarget.contains(document.activeElement)) resetSymbolDetail();
+  });
+  $("#symbol-groups").addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-command]");
+    if (!button) return;
+    const symbol = MATH_SYMBOLS.find((candidate) => candidate.id === button.dataset.symbolId);
+    insertIntoField($("#block-content"), symbol?.insert || button.dataset.command);
+    announce(`Símbolo insertado en el contenido: ${symbol ? symbol.name : button.dataset.command}.`);
+  });
+
+  renderSymbolBoard();
+  renderBlocks();
+  setEditorTarget({});
+})(typeof globalThis !== "undefined" ? globalThis : this);
