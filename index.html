@@ -6,16 +6,17 @@
     <meta name="description" content="Editor accesible para crear y descargar notas en LaTeX.">
     <title>Notas LaTeX</title>
     <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/vendor/katex/katex.min.css">
   </head>
   <body>
     <a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
     <header class="site-header">
       <p class="eyebrow">Editor estático y local</p>
       <h1>Notas LaTeX</h1>
-      <p>Crea una nota estructurada y descarga su código sin enviar datos a ningún servidor.</p>
+      <p>Crea una nota estructurada y copia o descarga su código para pegarlo en Overleaf.</p>
     </header>
 
-    <main id="contenido-principal">
+    <main id="contenido-principal" tabindex="-1">
       <form id="document-form" novalidate>
         <section aria-labelledby="datos-heading">
           <h2 id="datos-heading">Datos del documento</h2>
@@ -28,9 +29,9 @@
               <span id="title-error" class="error" aria-live="polite"></span>
             </p>
             <p class="field"><label for="author">Autor</label><input id="author" name="author" type="text" autocomplete="name"></p>
-            <p class="field"><label for="course">Curso</label><input id="course" name="course" type="text"></p>
-            <p class="field"><label for="teacher">Profesor</label><input id="teacher" name="teacher" type="text"></p>
-            <p class="field"><label for="date">Fecha</label><input id="date" name="date" type="date"></p>
+            <p class="field"><label for="course">Curso</label><input id="course" name="course" type="text" value="Cálculo III (1352)"></p>
+            <p class="field"><label for="teacher">Profesor</label><input id="teacher" name="teacher" type="text" value="Guzmán Fuentes Ricardo"></p>
+            <p class="field"><label for="date">Fecha</label><input id="date" name="date" type="date" value="2026-09-13"></p>
             <p class="field field-wide"><label for="topic">Tema o unidad</label><input id="topic" name="topic" type="text"></p>
           </fieldset>
           <menu class="button-row" aria-label="Acciones del borrador">
@@ -42,33 +43,68 @@
 
         <section aria-labelledby="contenido-heading">
           <h2 id="contenido-heading">Contenido</h2>
-          <p>Completa un bloque y usa «Añadir bloque». Las ecuaciones conservan exactamente la sintaxis LaTeX introducida.</p>
+          <p>Completa un bloque y usa «Añadir bloque». El contenido de cualquier bloque llega al documento exactamente como lo escribes: la aplicación no añade caracteres de escape. Un bloque puede contener otros bloques: usa «Añadir dentro» en el bloque que quieras como padre, sin límite de niveles.</p>
           <fieldset>
             <legend id="block-form-heading">Nuevo bloque</legend>
-            <input id="editing-index" type="hidden" value="">
+            <input id="editing-path" type="hidden" value="">
+            <input id="parent-path" type="hidden" value="">
+            <p id="block-target" class="block-target">El bloque se añadirá al final de la raíz del documento.</p>
+            <p id="tray-summary" class="block-target" hidden></p>
             <p class="field">
               <label for="block-type">Tipo de bloque</label>
               <select id="block-type" name="blockType">
-                <option value="text">Texto</option><option value="definition">Definición</option>
-                <option value="theorem">Teorema</option><option value="example">Ejemplo</option>
-                <option value="exercise">Ejercicio</option><option value="solution">Solución</option>
-                <option value="equation">Ecuación</option>
+                <option value="text">Texto</option>
+                <option value="equation">Ecuación destacada</option>
+                <option value="math-inline">Expresión matemática en línea</option>
+                <option value="definition">Definición</option>
+                <option value="theorem">Teorema</option>
+                <option value="proposition">Proposición</option>
+                <option value="example">Ejemplo</option>
+                <option value="note">Nota</option>
+                <option value="itemize">Lista con viñetas</option>
+                <option value="enumerate">Lista numerada</option>
+                <option value="bibliography">Bibliografía (IEEE)</option>
               </select>
             </p>
             <p class="field"><label for="block-title">Título del bloque (opcional)</label><input id="block-title" name="blockTitle" type="text"></p>
             <p class="field">
               <label for="block-content">Contenido</label>
               <textarea id="block-content" name="blockContent" rows="6" aria-describedby="block-help block-error"></textarea>
-              <small id="block-help">Se permiten párrafos separados por una línea vacía. Una ecuación no se escapa ni se interpreta.</small>
+              <small id="block-help">El contenido se copia al documento <strong>tal cual</strong>: comandos como <code>\textbf{...}</code> o <code>\mathbb{R}</code>, llaves y matemáticas entre <code>$…$</code> o <code>$$…$$</code> llegan exactamente como los escribes, y la aplicación no inserta ningún carácter de escape. Por eso puedes pegar aquí LaTeX de otro documento sin revisarlo. A cambio, los caracteres reservados de LaTeX son cosa tuya: para que aparezcan impresos escribe <code>\%</code>, <code>\&amp;</code>, <code>\#</code>, <code>\_</code> o <code>\$</code> —un <code>%</code> suelto comenta el resto de su línea—. Se permiten párrafos separados por una línea vacía y una lista toma un elemento por línea. Solo el título del bloque y los metadatos se escapan por completo, porque la aplicación los coloca dentro de un argumento.</small>
               <span id="block-error" class="error" aria-live="polite"></span>
             </p>
+            <details class="math-preview-panel" open>
+              <summary>Vista previa de las matemáticas</summary>
+              <p>KaTeX orienta sobre los tramos matemáticos, pero no es LaTeX completo ni reproduce la tipografía del PDF final. No revisa la prosa: un <code>%</code> suelto, un <code>_</code> o <code>&amp;</code> fuera de matemáticas, o un <code>\textbf{</code> sin cerrar pueden fallar en Overleaf aunque esta vista no avise.</p>
+              <div id="math-preview"></div>
+              <p id="math-preview-status" class="preview-status" aria-live="polite" aria-atomic="true"></p>
+            </details>
+
+            <section class="symbol-board" aria-labelledby="simbolos-heading">
+              <details id="symbol-details" open>
+                <summary><h3 id="simbolos-heading">Símbolos matemáticos</h3></summary>
+                <p id="symbol-board-intro">Cada botón inserta su comando LaTeX en el campo «Contenido», en la posición del cursor. El comando se conserva literalmente en cualquier bloque, dentro y fuera de <code>$…$</code>. Si ya conoces el comando, escríbelo directamente.</p>
+                <p class="field">
+                  <label for="symbol-search">Buscar símbolo por nombre</label>
+                  <input id="symbol-search" name="symbolSearch" type="search" autocomplete="off" aria-describedby="symbol-search-help">
+                  <small id="symbol-search-help">Por ejemplo «para todo», «implica» o «conjunción». También acepta el comando, como «forall».</small>
+                </p>
+                <nav id="symbol-category-picker" class="symbol-categories" aria-label="Categorías de símbolos"></nav>
+                <p id="symbol-detail" aria-hidden="true">Selecciona un símbolo para ver su nombre y comando.</p>
+                <p id="symbol-results" class="status" role="status"></p>
+                <p id="symbol-empty" hidden>Ningún símbolo coincide con la búsqueda.</p>
+                <menu id="symbol-groups" class="symbol-grid" role="toolbar" aria-orientation="horizontal" aria-label="Símbolos matemáticos"></menu>
+              </details>
+            </section>
             <menu class="button-row">
               <li><button id="add-block" type="button">Añadir bloque</button></li>
+              <li><button id="paste-block" class="secondary" type="button" hidden>Pegar bloque</button></li>
               <li><button id="cancel-edit" class="secondary" type="button" hidden>Cancelar edición</button></li>
             </menu>
           </fieldset>
 
           <h3>Estructura actual</h3>
+          <p>Cada bloque indica su nivel y su bloque padre. «Subir» y «Bajar» mueven el bloque solo entre sus hermanos, sin sacarlo de su nivel. Para repetir una estructura hay tres acciones distintas: <strong>«Duplicar»</strong> deja una copia justo después del original; <strong>«Copiar bloque»</strong> lo guarda en una bandeja y luego eliges el destino con «Pegar bloque», las veces que haga falta; <strong>«Copiar texto»</strong> lleva su contenido al portapapeles del sistema para pegarlo donde quieras, dentro o fuera de la aplicación.</p>
           <p id="empty-blocks">Todavía no hay bloques.</p>
           <ol id="block-list" class="block-list"></ol>
         </section>
@@ -86,7 +122,15 @@
       </form>
       <p id="app-status" class="status" aria-live="polite" aria-atomic="true">Editor listo.</p>
     </main>
-    <footer><p>La primera versión no interpreta, valida ni compila matemáticas.</p></footer>
-    <script type="module" src="assets/js/app.js"></script>
+    <footer><p>La vista previa orienta sobre modo matemático; la validación y compilación del documento se realizan en Overleaf.</p></footer>
+    <script src="assets/vendor/katex/katex.min.js"></script>
+    <script src="assets/js/block-types.js"></script>
+    <script src="assets/js/block-tree.js"></script>
+    <script src="assets/js/latex-generator.js"></script>
+    <script src="assets/js/file-download.js"></script>
+    <script src="assets/js/math-symbols.js"></script>
+    <script src="assets/js/text-insertion.js"></script>
+    <script src="assets/js/math-preview.js"></script>
+    <script src="assets/js/app.js"></script>
   </body>
 </html>
