@@ -133,6 +133,7 @@ ningún paquete ni subir ningún archivo extra.
 | «Nota» | `Nota 1`. |
 | «Lista con viñetas» | Una lista de puntos. |
 | «Lista numerada» | Una lista 1, 2, 3. |
+| «Bibliografía (IEEE)» | Una lista de referencias numeradas [1], [2]…: una referencia por línea. |
 
 Dos cosas que sorprenden la primera vez:
 
