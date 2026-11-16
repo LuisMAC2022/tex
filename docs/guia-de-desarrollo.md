@@ -43,7 +43,7 @@ dependencia, ni de ejecución ni de desarrollo, y eso es INV-006 con prueba prop
 
 ```sh
 npm test            # todo: node:test + la comprobación estructural
-npm run check:js    # sintaxis de los siete archivos del navegador
+npm run check:js    # sintaxis de los scripts propios del navegador
 python3 -m http.server 8000     # o abre index.html con doble clic
 ```
 
@@ -52,7 +52,7 @@ Los cinco comandos del repositorio:
 | Comando | Qué hace |
 | --- | --- |
 | `npm test` | la suite entera, incluidas invariantes, anclas y documentación |
-| `npm run check:js` | comprueba la sintaxis de los siete archivos del navegador |
+| `npm run check:js` | comprueba la sintaxis de los scripts propios del navegador |
 | `npm run build:example` | regenera `examples/calculo-3.tex`, el archivo de referencia |
 | `npm run bendecir` | recalcula las anclas `@decision` tras revisar su justificación |
 | `npm run inventario` | regenera `docs/pruebas.md` desde la suite |
@@ -64,24 +64,23 @@ ejecutar cuando tocaba, `npm test` se pone rojo.
 
 ## 2. Mapa del código
 
-Siete archivos, cargados **en este orden** como scripts clásicos, nunca módulos ES.
-Todos cuelgan de un único global, `window.TexNotes`.
+Los scripts se cargan como clásicos **en este orden**. La aplicación usa
+`window.TexNotes` y la biblioteca local expone `window.katex`.
 
 | Orden | Archivo | Qué posee | Toca el DOM |
 | --- | --- | --- | --- |
+| 0 | `katex.min.js` | composición matemática local | biblioteca |
 | 1 | `block-types.js` | la tabla de tipos de bloque | no |
 | 2 | `block-tree.js` | el árbol: rutas y operaciones puras | no |
 | 3 | `latex-generator.js` | el estado → la cadena `.tex` | no |
 | 4 | `file-download.js` | nombre de archivo y descarga | sí |
 | 5 | `math-symbols.js` | catálogo de símbolos y su búsqueda | no |
 | 6 | `text-insertion.js` | insertar en la posición del cursor | apenas |
-| 7 | `app.js` | toda la interfaz | sí, en exclusiva |
+| 7 | `math-preview.js` | extracción y análisis de tramos | no |
+| 8 | `app.js` | interfaz del editor | sí |
 
-**La frontera importante es la última fila.** Los seis primeros son funciones puras
-sobre datos; `app.js` es el único que sabe que existe una pantalla. Por eso los seis
-tienen pruebas y `app.js` no ([DEC-007](../decisiones/DEC-007-sin-dom-en-pruebas.md)).
-Si te ves escribiendo lógica dentro de `app.js`, casi siempre pertenece a uno de los
-otros seis, donde sí se puede probar.
+Las pruebas de Node ejecutan las funciones puras con `node:vm`. La interacción
+de `app.js` se verifica en el navegador ([DEC-007](../decisiones/DEC-007-sin-dom-en-pruebas.md)).
 
 > **Nunca los conviertas en módulos ES.** Con `file://` el navegador bloquea por CORS
 > la descarga de un módulo y la interfaz queda inerte. Es INV-004 y
@@ -100,6 +99,7 @@ Qué exporta cada uno, si necesitas buscar una función:
 - **`math-symbols.js`**: `MATH_SYMBOLS`, `MATH_SYMBOL_GROUPS`, `filterMathSymbols`,
   `symbolsByGroup`, `normalizeSearchTerm`, `describeCommand`, `symbolAccessibleName`.
 - **`text-insertion.js`**: `insertAtSelection` (pura), `insertIntoField`.
+- **`math-preview.js`**: `mathSegments`, `analyzeContent` con un renderizador inyectado.
 - **`file-download.js`**: `sanitizeFilename`, `downloadTex`.
 
 ---

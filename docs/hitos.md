@@ -39,3 +39,8 @@ Catálogo estático sin dependencias, inserción accesible en la posición del c
 
 Contenido entregado tal cual —comandos, llaves y matemática delimitada— con el escapado reservado a metadatos y títulos; árbol de bloques con rutas estables y operaciones puras, incluidas duplicar y copiar; generación recursiva, editor accesible con nivel y padre explícitos, y borrador `version: 2` que migra el plano anterior.
 </details>
+
+<details><summary><strong>10. Vista previa matemática</strong></summary>
+
+KaTeX local con MathML, representación bajo el editor y en cada bloque, y avisos que permiten seguir exportando el `.tex`.
+</details>

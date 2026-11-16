@@ -220,6 +220,13 @@ El panel «Símbolos matemáticos» inserta comandos en el campo «Contenido»,
 Los símbolos funcionan igual dentro y fuera de los bloques de ecuación. Dentro de un
 párrafo normal, rodea la fórmula de `$…$` para que salga bien.
 
+### Vista previa al escribir
+
+«Vista previa de las matemáticas» muestra las fórmulas de «Contenido» y del
+bloque guardado. En un párrafo, prueba `Sea $x \in \mathbb{R}$.` El aviso
+**No se pudo previsualizar** permite seguir editando y exportando. La compilación
+en Overleaf comprueba el documento completo.
+
 ---
 
 ## 7. Guardar el trabajo

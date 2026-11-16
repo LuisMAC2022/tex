@@ -57,8 +57,9 @@ deriva. Por qué: [DEC-005](decisiones/DEC-005-tabla-unica-de-tipos.md).
 ### INV-006 — Ni el sitio ni el proyecto cargan nada remoto
 Guardián: `tests/invariantes.test.js` → "INV-006: ni el sitio ni el proyecto cargan nada remoto"
 
-Sin CDN, sin fuentes, sin iconos, sin `dependencies` ni `devDependencies`. La
-aplicación funciona abierta por doble clic y sin red.
+La aplicación funciona abierta por doble clic y sin red. KaTeX y sus fuentes
+se distribuyen con el sitio. `package.json` sigue sin `dependencies` ni
+`devDependencies`.
 
 ### INV-007 — Todas las rutas del sitio son relativas
 Guardián: `tests/check-site.mjs` → "Las rutas internas no deben partir de la raíz"

@@ -19,7 +19,7 @@ por ronda de revisión, no al cambiar código.
 - [ ] Usar **Copiar texto** y pegar fuera de la aplicación; denegar el permiso del portapapeles y confirmar que el mensaje ofrece la alternativa.
 - [ ] Comprobar con lector de pantalla que **Duplicar**, **Copiar bloque**, **Copiar texto** y **Pegar bloque** se distinguen entre sí y de **Copiar código**, y que cada uno nombra su bloque, nivel y padre.
 - [ ] Medir el muelle completo: como máximo 320 px a 1280×800 y 400 px a 390×844; confirmar que el `textarea` permanece visible al usarlo.
-- [ ] Recorrer categorías y rejilla con teclado: una sola parada en la rejilla, flechas izquierda/derecha circulares, Inicio/Fin, y salida directa hacia «Añadir bloque».
+- [ ] Recorrer categorías y rejilla con teclado. Verificar una sola parada en la rejilla, flechas horizontales circulares, desplazamiento vertical por filas, Inicio/Fin y salida hacia «Añadir bloque».
 - [ ] Insertar comandos y plantillas con y sin selección; confirmar la posición del cursor y que el foco vuelve al contenido.
 - [ ] Buscar en todo el catálogo y borrar la consulta; comprobar contador, ausencia de resultados y restauración de la categoría elegida.
 - [ ] Comprobar a 320 CSS px que no hay desplazamiento horizontal y que cada botón conserva al menos 44 × 44 px y foco visible.
@@ -32,4 +32,8 @@ por ronda de revisión, no al cambiar código.
 - [ ] Guardar, recargar, restaurar y borrar un borrador de un árbol de varios niveles; probar también una entrada corrupta y un borrador plano `version: 1` para comprobar la migración y su anuncio.
 - [ ] Denegar permiso del portapapeles y confirmar que un fallo conserva el resultado y comunica una alternativa.
 - [ ] Abrir `index.html` por doble clic (`file://`) y confirmar que se añaden bloques, se genera, se copia y se descarga sin errores en consola.
+- [ ] Con `file://` y sin conexión, verificar que las fuentes matemáticas cargan y que la vista previa es legible en ambos temas.
+- [ ] Previsualizar `$x \in \mathbb{R}$` en prosa y una ecuación destacada con el teclado. El foco debe permanecer en el editor.
+- [ ] Escribir una fórmula incompleta, comprobar **No se pudo previsualizar** y generar el archivo `.tex`.
 - [ ] Pegar en un proyecto vacío de Overleaf un `.tex` con texto mixto y entornos anidados, y comprobar que compila sin añadir paquetes.
+- [ ] Compilar con una bibliografía y comprobar que cada referencia aparece numerada entre corchetes.
