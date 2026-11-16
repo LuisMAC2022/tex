@@ -6,44 +6,49 @@
   --muted: #4d5b73;
   --primary: #164e86;
   --primary-hover: #0d3b69;
+  --on-primary: #ffffff;
   --focus: #b54708;
   --border: #718096;
+  --border-soft: #c3cddc;
   --danger: #a12828;
+  --error-text: #8a1c1c;
   --error-bg: #fff0f0;
+  --accent-soft: #e8f2fc;
+  --board: #edf4fb;
   --shadow: 0 0.25rem 1rem rgb(15 23 42 / 10%);
 }
 
 * { box-sizing: border-box; }
 html { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.5; }
 body { margin: 0; color: var(--text); background: var(--background); }
-.skip-link { position: absolute; left: 1rem; top: -5rem; z-index: 2; padding: .75rem 1rem; color: #fff; background: var(--primary); }
+.skip-link { position: absolute; left: 1rem; top: -5rem; z-index: 2; padding: .75rem 1rem; color: var(--on-primary); background: var(--primary); }
 .skip-link:focus { top: 1rem; }
 .site-header, main, footer { width: min(100% - 2rem, 70rem); margin-inline: auto; }
 .site-header { padding-block: 2rem 1rem; }
 .site-header h1 { margin: 0; font-size: clamp(2rem, 8vw, 3.25rem); line-height: 1.1; }
 .eyebrow { margin-block-end: .35rem; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
-section { margin-block: 1.25rem; padding: clamp(1rem, 4vw, 2rem); border: 1px solid #c7d0df; border-radius: .75rem; background: var(--surface); box-shadow: var(--shadow); }
+section { margin-block: 1.25rem; padding: clamp(1rem, 4vw, 2rem); border: 1px solid var(--border-soft); border-radius: .75rem; background: var(--surface); box-shadow: var(--shadow); }
 h2 { margin-block-start: 0; }
-fieldset { min-width: 0; margin: 1rem 0; padding: 1rem; border: 1px solid #b5c0d0; border-radius: .5rem; }
+fieldset { min-width: 0; margin: 1rem 0; padding: 1rem; border: 1px solid var(--border-soft); border-radius: .5rem; }
 legend { padding-inline: .35rem; font-weight: 700; }
 .form-grid { display: grid; gap: 0 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .field { display: grid; align-content: start; gap: .35rem; margin-block: .75rem; }
 .field-wide { grid-column: 1 / -1; }
 label { font-weight: 650; }
 input, select, textarea, button { min-height: 2.75rem; font: inherit; }
-input, select, textarea { width: 100%; padding: .65rem .75rem; color: var(--text); border: 1px solid var(--border); border-radius: .35rem; background: #fff; }
+input, select, textarea { width: 100%; padding: .65rem .75rem; color: var(--text); border: 1px solid var(--border); border-radius: .35rem; background: var(--surface); }
 textarea { resize: vertical; }
-button { padding: .65rem 1rem; border: 2px solid var(--primary); border-radius: .35rem; color: #fff; background: var(--primary); cursor: pointer; font-weight: 700; }
+button { padding: .65rem 1rem; border: 2px solid var(--primary); border-radius: .35rem; color: var(--on-primary); background: var(--primary); cursor: pointer; font-weight: 700; }
 button:hover { background: var(--primary-hover); }
-button.secondary { color: var(--primary); background: #fff; }
+button.secondary { color: var(--primary); background: var(--surface); }
 button.danger { color: var(--danger); border-color: var(--danger); }
 button:disabled { cursor: not-allowed; opacity: .55; }
 :where(a, button, input, select, textarea):focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 .button-row { display: flex; flex-wrap: wrap; gap: .65rem; margin: 1rem 0 0; padding: 0; list-style: none; }
-.block-target { margin-block: 0 .75rem; padding: .6rem .75rem; border-inline-start: .25rem solid var(--primary); background: #e8f2fc; }
+.block-target { margin-block: 0 .75rem; padding: .6rem .75rem; border-inline-start: .25rem solid var(--primary); background: var(--accent-soft); }
 .block-list, .block-children { padding-inline-start: 1.75rem; }
 .block-list li { margin-block: .75rem; }
-.block-list article { padding: .8rem; border: 1px solid #b5c0d0; border-radius: .5rem; }
+.block-list article { padding: .8rem; border: 1px solid var(--border-soft); border-radius: .5rem; }
 .block-list article p { white-space: pre-wrap; overflow-wrap: anywhere; }
 .block-list h4 { margin-block: 0 .25rem; }
 /* La sangría acompaña al nivel, pero nunca es su única señal: cada bloque
@@ -53,26 +58,35 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .block-meta { color: var(--muted); font-size: .9rem; font-weight: 650; }
 .block-actions { display: flex; flex-wrap: wrap; gap: .5rem; padding: 0; list-style: none; }
 .block-actions button { min-width: 2.75rem; }
-.symbol-board { margin: -.75rem 0 0; padding: 0; border: 0; border-radius: 0 0 .5rem .5rem; background: #edf4fb; box-shadow: none; }
+.symbol-board { margin: -.75rem 0 0; padding: 0; border: 0; border-radius: 0 0 .5rem .5rem; background: var(--board); box-shadow: none; }
 .symbol-board > details > summary { padding: .4rem .75rem; cursor: pointer; font-weight: 700; }
 .symbol-board > details > summary:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
 .symbol-board h3 { display: inline; margin: 0; font-size: 1.05rem; }
 .symbol-board > details > :not(summary) { margin-inline: .75rem; }
-#symbol-board-intro, #symbol-search-help { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+#symbol-board-intro, #symbol-search-help { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
 .symbol-board .field { grid-template-columns: auto minmax(8rem, 1fr); align-items: center; gap: .4rem; margin-block: .2rem; }
 .symbol-board .field input { min-height: 2.75rem; }
 .symbol-categories { display: flex; gap: .35rem; margin-block: .3rem; padding-block-end: .15rem; overflow-x: auto; }
 .symbol-category { flex: 0 0 auto; min-height: 2.75rem; padding: .35rem .65rem; color: var(--primary); background: var(--surface); font-size: .85rem; }
-.symbol-category[aria-pressed="true"] { color: #fff; background: var(--primary); }
+.symbol-category[aria-pressed="true"] { color: var(--on-primary); background: var(--primary); }
 #symbol-detail { min-height: 1.5rem; margin-block: .15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9rem; }
 #symbol-results:empty { display: none; }
-.symbol-grid { display: grid; gap: .35rem; grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr)); max-block-size: 7rem; margin: .2rem .75rem .5rem !important; padding: 0; overflow-y: auto; list-style: none; }
+.symbol-board > details > .symbol-grid { display: grid; gap: .35rem; grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr)); max-block-size: 8rem; margin: .2rem .75rem .5rem; padding: .4rem; overflow-y: auto; scroll-padding-block: .4rem; list-style: none; }
 .symbol-button { display: grid; width: 100%; min-width: 2.75rem; min-height: 2.75rem; padding: .25rem; place-items: center; color: var(--primary); background: var(--surface); }
-.symbol-button:hover { color: #fff; background: var(--primary-hover); }
-.symbol-glyph { font-size: 1.35rem; line-height: 1.2; }
-.error { min-height: 1.5em; padding-inline: .25rem; color: #8a1c1c; font-weight: 700; }
+.symbol-button:hover { color: var(--on-primary); background: var(--primary-hover); }
+.symbol-glyph { max-inline-size: 100%; font-size: 1.35rem; line-height: 1.2; }
+/* Tramos por longitud del glifo: el ancho de la casilla es fijo, así que lo que
+   cede es el cuerpo de letra. Sin esto los glifos de varios caracteres se
+   desbordaban sobre sus vecinos en lugar de encogerse. */
+.symbol-button[data-glyph-length="2"] .symbol-glyph,
+.symbol-button[data-glyph-length="3"] .symbol-glyph { font-size: .95rem; }
+.symbol-button[data-glyph-length="4"] .symbol-glyph,
+.symbol-button[data-glyph-length="5"] .symbol-glyph { font-size: .85rem; }
+.symbol-button[data-glyph-length="6"] .symbol-glyph { font-size: .7rem; }
+.symbol-button[data-glyph-length="7"] .symbol-glyph { font-size: .6rem; }
+.error { min-height: 1.5em; padding-inline: .25rem; color: var(--error-text); font-weight: 700; }
 .error:not(:empty) { background: var(--error-bg); }
-.status { padding: .85rem 1rem; border-inline-start: .35rem solid var(--primary); background: #e8f2fc; font-weight: 650; }
+.status { padding: .85rem 1rem; border-inline-start: .35rem solid var(--primary); background: var(--accent-soft); font-weight: 650; }
 .output-field textarea { min-height: 22rem; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .9rem; white-space: pre; }
 small, footer { color: var(--muted); }
 footer { padding-block: .5rem 2rem; }
@@ -83,7 +97,7 @@ footer { padding-block: .5rem 2rem; }
   .field-wide { grid-column: auto; }
   section { padding: 1rem; }
   .button-row > li, .button-row button { width: 100%; }
-  .symbol-grid { max-block-size: 11rem; }
+  .symbol-board > details > .symbol-grid { max-block-size: 12rem; }
   /* A 320 px la sangría por nivel se reduce para que un bloque de nivel 3 siga
      siendo legible sin desplazamiento horizontal. */
   .block-list, .block-children { padding-inline-start: .85rem; }
@@ -93,13 +107,11 @@ footer { padding-block: .5rem 2rem; }
 }
 
 @media (prefers-color-scheme: dark) {
-  :root { color-scheme: dark; --background: #101827; --surface: #192438; --text: #f1f5f9; --muted: #c4cede; --primary: #76b9fa; --primary-hover: #a7d3ff; --focus: #ffb454; --border: #9aa8ba; --danger: #ff9b9b; --error-bg: #481f28; --shadow: none; }
-  input, select, textarea { background: #101827; }
-  button { color: #101827; }
-  button.secondary { background: #192438; }
-  .status, .block-target { background: #173453; }
-  .symbol-button { color: var(--text); background: var(--surface); }
-  .symbol-button:hover { color: #101827; background: var(--primary-hover); }
+  :root { color-scheme: dark; --background: #101827; --surface: #192438; --text: #f1f5f9; --muted: #c4cede; --primary: #76b9fa; --primary-hover: #a7d3ff; --on-primary: #101827; --focus: #ffb454; --border: #9aa8ba; --border-soft: #66779a; --danger: #ff9b9b; --error-text: #ffb3b3; --error-bg: #481f28; --accent-soft: #173453; --board: #131d31; --shadow: none; }
+  input, select, textarea { background: var(--background); }
+  /* En claro el glifo es azul institucional sobre blanco; en oscuro ese
+     azul pierde fuerza frente al panel y la tinta del texto rinde mejor. */
+  .symbol-button { color: var(--text); }
 }
 
 @media (prefers-reduced-motion: reduce) {
