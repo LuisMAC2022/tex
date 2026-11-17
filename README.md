@@ -132,9 +132,13 @@ El tablero es un **muelle compacto** unido al campo de contenido y abierto por d
 
 - El buscador permanece visible y los botones de categoría indican su estado con `aria-pressed`.
 - Cada botón nativo mide al menos 44 × 44 px y muestra solo el glifo. Una única línea visual presenta `nombre — comando`; está oculta a lectores de pantalla porque el `aria-label` completo del botón ya comunica ambos datos.
-- La rejilla usa el patrón de barra de herramientas: una sola parada de tabulación, flechas izquierda/derecha con ajuste circular e Inicio/Fin. Esto evita atravesar cientos de controles para llegar a «Añadir bloque».
+- La rejilla usa el patrón de barra de herramientas: una sola parada de tabulación, flechas izquierda/derecha con ajuste circular, arriba/abajo por fila e Inicio/Fin. Esto evita atravesar cientos de controles para llegar a «Añadir bloque».
 - KaTeX 0.18.7 se carga desde `assets/vendor/katex/`, sin CDN ni peticiones de red; su licencia MIT está incluida. El catálogo compatible con `amsmath` y `amssymb` contiene 210 entradas para griegas, lógica, conjuntos, topología, funciones, cálculo, vectores y estructura.
 - Un símbolo sencillo inserta `command`. Una plantilla puede declarar `insert: { before, after }`: envuelve una selección o, si no existe, deja el cursor entre ambas partes.
+
+El detalle se reinicia al cambiar la categoría o la búsqueda y al salir el puntero
+si el foco no sigue en la rejilla. El tamaño de los glifos se ajusta por longitud;
+la rejilla tiene relleno para mantener visible el contorno de foco.
 
 ### Cómo ampliarlo
 
