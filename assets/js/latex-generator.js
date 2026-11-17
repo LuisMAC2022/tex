@@ -63,11 +63,15 @@
    * entorno se emiten antes de su \end{...}; los de un bloque de texto, tras su
    * propio contenido. Nunca se concatenan dentro de `content`.
    */
-  function blockToLatex(block = {}) {
+  function blockToLatex(block = {}, references = { next: 1 }) {
     const type = TexNotes.blockType(block.type) || TexNotes.blockType("text");
     const content = contentToLatex(block.content);
+    const bibliographyItems = type.kind === "bibliography"
+      ? content.split("\n").map((line) => line.trim()).filter(Boolean) : [];
+    const firstReference = references.next;
+    references.next += bibliographyItems.length;
     const children = (Array.isArray(block.children) ? block.children : [])
-      .map((child) => ({ separator: childSeparator(child), latex: blockToLatex(child) }))
+      .map((child) => ({ separator: childSeparator(child), latex: blockToLatex(child, references) }))
       .filter((child) => child.latex);
     const withChildren = (base) => children.reduce((text, child) => (text ? `${text}${child.separator}${child.latex}` : child.latex), base);
 
@@ -88,10 +92,10 @@
       return `\\begin{${type.listEnvironment}}\n${body}\n\\end{${type.listEnvironment}}`;
     }
     if (type.kind === "bibliography") {
-      const items = content.split("\n").map((line) => line.trim()).filter(Boolean);
+      const items = bibliographyItems;
       if (!items.length) return withChildren("");
       const labelWidth = "9".repeat(String(items.length).length);
-      const body = items.map((item, index) => `\\bibitem{ref${index + 1}} ${item}`).join("\n");
+      const body = items.map((item, index) => `\\bibitem{ref${firstReference + index}} ${item}`).join("\n");
       return withChildren(`\\begin{thebibliography}{${labelWidth}}\n${body}\n\\end{thebibliography}`);
     }
     const body = content.trim();
@@ -152,7 +156,8 @@
   function buildBody(state = {}) {
     const metadata = state.metadata || {};
     const topic = escapeMetadata(metadata.topic).trim();
-    const blocks = (Array.isArray(state.blocks) ? state.blocks : []).map(blockToLatex).filter(Boolean);
+    const references = { next: 1 };
+    const blocks = (Array.isArray(state.blocks) ? state.blocks : []).map((block) => blockToLatex(block, references)).filter(Boolean);
     return ["\\begin{document}", "\\maketitle", topic ? `\\section{${topic}}` : "", ...blocks].filter(Boolean).join("\n\n");
   }
 

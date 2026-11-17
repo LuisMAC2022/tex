@@ -115,3 +115,29 @@ test("la bibliografía recorta líneas y ajusta el ancho para diez o más refere
   assert.match(latex, /\\bibitem\{ref1\} Referencia 1\n/);
   assert.match(latex, /\\bibitem\{ref10\} Referencia 10\n\\end\{thebibliography\}$/);
 });
+
+test("dos bibliografías comparten claves continuas y cada generación reinicia el contador", () => {
+  const state = { blocks: [
+    { type: "bibliography", content: "Primera\n\n Segunda " },
+    { type: "text", content: "Texto", children: [
+      { type: "bibliography", content: "  \n" },
+      { type: "bibliography", content: "Tercera\nCuarta" },
+    ] },
+  ] };
+  const before = JSON.stringify(state);
+  const tex = generateLatex(state);
+  assert.deepEqual([...tex.matchAll(/\\bibitem\{(ref\d+)\}/g)].map(match => match[1]), ["ref1", "ref2", "ref3", "ref4"]);
+  assert.equal(generateLatex(state), tex);
+  assert.equal(JSON.stringify(state), before);
+  assert.match(blockToLatex({ type: "bibliography", content: "Aislada" }), /\\bibitem\{ref1\}/);
+});
+
+test("las claves siguen el orden de salida incluso en bibliografías con hijos manipulados", () => {
+  const tex = generateLatex({ blocks: [
+    { type: "bibliography", content: "Padre", children: [
+      { type: "bibliography", content: "Hijo" },
+    ] },
+    { type: "bibliography", content: "Hermano" },
+  ] });
+  assert.deepEqual([...tex.matchAll(/\\bibitem\{ref(\d+)\} (\w+)/g)].map(match => [match[1], match[2]]), [["1", "Padre"], ["2", "Hijo"], ["3", "Hermano"]]);
+});

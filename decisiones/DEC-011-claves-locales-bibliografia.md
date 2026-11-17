@@ -1,6 +1,7 @@
 ---
 type: decision
-status: accepted
+status: superseded
+superseded-by: DEC-012
 date: 2026-11-16
 project: tex
 tags: [bibliografia, buzones]
