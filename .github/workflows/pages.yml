@@ -27,9 +27,14 @@ jobs:
           node-version: 22
       - run: npm test
       - uses: actions/configure-pages@v5
+      - name: Preparar únicamente los archivos públicos
+        run: |
+          mkdir -p "$RUNNER_TEMP/sitio"
+          cp index.html "$RUNNER_TEMP/sitio/"
+          cp -R assets examples "$RUNNER_TEMP/sitio/"
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: ${{ runner.temp }}/sitio
       - name: Publicar en GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
