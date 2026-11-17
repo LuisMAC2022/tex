@@ -563,6 +563,9 @@
   $("#block-content").addEventListener("input", scheduleEditorPreview);
   $("#block-type").addEventListener("change", renderEditorPreview);
 
+  const today = new Date();
+  $("#date").value = [today.getFullYear(), String(today.getMonth() + 1).padStart(2, "0"), String(today.getDate()).padStart(2, "0")].join("-");
+
   renderSymbolBoard();
   renderBlocks();
   setEditorTarget({});

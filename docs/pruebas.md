@@ -63,7 +63,7 @@
 - ningún índice apunta a una sección que ya no existe
 - cada rótulo que citan las guías sigue existiendo en la interfaz
 
-## `tests/generator.test.js` — 24 pruebas
+## `tests/generator.test.js` — 26 pruebas
 
 - los metadatos y los títulos escapan todos los caracteres reservados
 - el contenido de un bloque no recibe ningún escape
@@ -89,6 +89,8 @@
 - la bibliografía genera claves predecibles y conserva literalmente cada referencia
 - la bibliografía admite una referencia y omite el entorno vacío
 - la bibliografía recorta líneas y ajusta el ancho para diez o más referencias
+- dos bibliografías comparten claves continuas y cada generación reinicia el contador
+- las claves siguen el orden de salida incluso en bibliografías con hijos manipulados
 
 ## `tests/invariantes.test.js` — 4 pruebas
 
@@ -131,4 +133,4 @@ No usa `node:test`: es un script con 45 aserciones sobre `index.html` (doctype, 
 
 ---
 
-97 pruebas con `node:test` más la comprobación estructural.
+99 pruebas con `node:test` más la comprobación estructural.

@@ -64,7 +64,7 @@ ejecutar cuando tocaba, `npm test` se pone rojo.
 
 ## 2. Mapa del código
 
-Siete archivos, cargados **en este orden** como scripts clásicos, nunca módulos ES.
+Ocho archivos propios en `assets/js/`, cargados **en este orden** como scripts clásicos, nunca módulos ES.
 Todos cuelgan de un único global, `window.TexNotes`.
 
 | Orden | Archivo | Qué posee | Toca el DOM |
@@ -75,13 +75,14 @@ Todos cuelgan de un único global, `window.TexNotes`.
 | 4 | `file-download.js` | nombre de archivo y descarga | sí |
 | 5 | `math-symbols.js` | catálogo de símbolos y su búsqueda | no |
 | 6 | `text-insertion.js` | insertar en la posición del cursor | apenas |
-| 7 | `app.js` | toda la interfaz | sí, en exclusiva |
+| 7 | `math-preview.js` | extracción y análisis de tramos matemáticos | no |
+| 8 | `app.js` | controles, estado de pantalla y representación de la vista previa | sí |
 
-**La frontera importante es la última fila.** Los seis primeros son funciones puras
-sobre datos; `app.js` es el único que sabe que existe una pantalla. Por eso los seis
-tienen pruebas y `app.js` no ([DEC-007](../decisiones/DEC-007-sin-dom-en-pruebas.md)).
-Si te ves escribiendo lógica dentro de `app.js`, casi siempre pertenece a uno de los
-otros seis, donde sí se puede probar.
+`assets/vendor/katex/` contiene `katex.min.js`, `katex.min.css`, las fuentes
+WOFF2 en `fonts/` y la licencia MIT. KaTeX se carga antes de los ocho scripts
+propios. `app.js` conecta sus controles con el generador y pasa el renderizador
+a `math-preview.js`. `file-download.js` gestiona el enlace de descarga y
+`text-insertion.js` ofrece tanto una función pura como un adaptador de campo.
 
 > **Nunca los conviertas en módulos ES.** Con `file://` el navegador bloquea por CORS
 > la descarga de un módulo y la interfaz queda inerte. Es INV-004 y
@@ -100,6 +101,7 @@ Qué exporta cada uno, si necesitas buscar una función:
 - **`math-symbols.js`**: `MATH_SYMBOLS`, `MATH_SYMBOL_GROUPS`, `filterMathSymbols`,
   `symbolsByGroup`, `normalizeSearchTerm`, `describeCommand`, `symbolAccessibleName`.
 - **`text-insertion.js`**: `insertAtSelection` (pura), `insertIntoField`.
+- **`math-preview.js`**: `mathSegments`, `analyzeContent` (renderizador inyectado).
 - **`file-download.js`**: `sanitizeFilename`, `downloadTex`.
 
 ---
@@ -190,7 +192,7 @@ deducen leyendo el código: aparecieron al hacerlo.
      heading: "Lema", style: "plain", container: true },
    ```
 
-   `kind` es `"text" | "equation" | "theorem" | "list"`. `container` decide si admite
+   `kind` es `"text" | "equation" | "theorem" | "list" | "bibliography"`. `container` decide si admite
    hijos, y lo aplican por igual la interfaz y el generador.
 
 2. **Su `<option>` en `index.html`**, en la misma posición que en la tabla. Una prueba
@@ -220,6 +222,21 @@ deducen leyendo el código: aparecieron al hacerlo.
 
 Nada más: el preámbulo, la interfaz y la numeración se derivan solos de la tabla.
 
+`bibliography` es un tipo sin hijos: cada línea no vacía, recortada, produce un
+`\bibitem` literal; `title` no se usa. El generador calcula el ancho del argumento
+de `thebibliography` con el número de entradas. Al cambiar este tipo, revisa
+los casos de vacío, varias referencias y diez o más entradas en `generator.test.js`.
+
+### Revisar la vista previa matemática
+
+1. Modifica la extracción en `assets/js/math-preview.js`; `mathSegments` devuelve
+   los tramos y `analyzeContent` recibe un renderizador por parámetro.
+2. Añade los casos correspondientes a `tests/math-preview.test.js` con un
+   renderizador inyectado, sin DOM, y ejecuta `npm run inventario`.
+3. Mantén los archivos de `assets/vendor/katex/` intactos. Para comprobar la
+   integración, revisa el job de humo de CI y la lista de revisión manual.
+4. Ejecuta `npm test` y `npm run check:js`.
+
 ### Añadir un símbolo al tablero
 
 1. Una entrada en `MATH_SYMBOLS`, en `assets/js/math-symbols.js`:
@@ -246,7 +263,9 @@ Nada más: el preámbulo, la interfaz y la numeración se derivan solos de la ta
 2. `npm run build:example` y **lee el diff de `examples/calculo-3.tex`**: ése es el
    cambio real, expresado en el formato que le importa a quien usa la aplicación.
 3. Si tocaste el cuerpo de `contentToLatex()`, ve a la receta siguiente.
-4. `npm test`.
+4. Actualiza `README.md` con el formato actual; si cambias pruebas, ejecuta
+   `npm run inventario`.
+5. `npm test`.
 
 ### Resolver un fallo de ancla
 
@@ -327,6 +346,7 @@ Cómo se reparten:
 | `generator.test.js` | el contrato del `.tex`: preámbulo, entornos, el ejemplo byte a byte |
 | `content-literal.test.js` | que el contenido no se escape y los metadatos sí |
 | `block-tree.test.js` | el árbol: rutas, pureza, duplicar, copiar, migrar borradores |
+| `math-preview.test.js` | delimitadores y análisis con renderizador inyectado |
 | `symbols.test.js` | catálogo, búsqueda e inserción en el cursor |
 | `invariantes.test.js` | que cada invariante siga teniendo guardián |
 | `anclas.test.js` | que ningún bloque `@decision` haya derivado |
@@ -341,11 +361,13 @@ Así se prueba exactamente el código que se publica, sin mantener una segunda c
 formato módulo — y sin añadir una dependencia, que sería violar INV-006 para poder
 vigilarlo.
 
-**Por eso `app.js` no tiene pruebas automatizadas.** Los botones por bloque, el foco y
-los anuncios se comprueban a mano, con la lista de
-[revisión manual](../README.md#revisión-manual). No es un descuido: es
-[DEC-007](../decisiones/DEC-007-sin-dom-en-pruebas.md), y la contrapartida es que la
-lógica debe vivir fuera de `app.js` siempre que se pueda.
+**La integración de `app.js` se comprueba en CI**, fuera de `npm test`, mediante
+`ci/humo.cjs`: Chromium abre el HTML por `file://` sin red, representa una fórmula
+con KaTeX y descarga un `.tex` con bibliografía. El workflow instala Playwright
+en un directorio temporal externo al proyecto. Alcance:
+[DEC-009](../decisiones/DEC-009-humo-navegador-ci.md).
+Los botones por bloque, el foco y los anuncios también se revisan con la lista de
+[revisión manual](revision-manual.md).
 
 **No se compila LaTeX en ninguna prueba.** Se comparan cadenas `.tex`, nunca PDF. La
 compilación es de Overleaf ([DEC-001](../decisiones/DEC-001-overleaf-copia-maestra.md)).
@@ -391,7 +413,9 @@ promueve lo durable.
 ## 8. Publicación
 
 `.github/workflows/pages.yml` ejecuta `npm test` y publica el sitio estático al recibir
-cambios en `main`, con acciones oficiales y nada más. En **Settings → Pages → Build and
+cambios en `main`. El artefacto contiene solo `index.html`, `assets/` y `examples/`.
+`.github/workflows/ci.yml` ejecuta las pruebas y la comprobación de sintaxis con
+Node 22 en cada push y pull request, además del job separado de humo. En **Settings → Pages → Build and
 deployment**, elige **GitHub Actions**.
 
 Todas las rutas del sitio son relativas (INV-007), así que funciona igual en un dominio
