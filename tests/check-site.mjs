@@ -18,7 +18,7 @@ assert.match(html, /<link rel="stylesheet" href="assets\/vendor\/katex\/katex\.m
 assert.match(html, /<script src="assets\/vendor\/katex\/katex\.min\.js"><\/script>/, "Falta el script vendorizado de KaTeX");
 assert.match(html, /<input id="course"[^>]+value="Cálculo III \(1352\)">/, "El curso debe aparecer prellenado desde el temario");
 assert.match(html, /<input id="teacher"[^>]+value="Guzmán Fuentes Ricardo">/, "El profesor debe aparecer prellenado desde el temario");
-assert.match(html, /<input id="date"[^>]+type="date"[^>]+value="2026-09-13">/, "La fecha acordada debe aparecer prellenada");
+assert.match(html, /<input id="date"[^>]+type="date">/, "La fecha inicial se calcula en el navegador, sin valor fijo en HTML");
 assert.doesNotMatch(html, /(?:src|href)="\/(?!\/)/, "Las rutas internas no deben partir de la raíz");
 const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]));
 assert(ids.has("math-preview") && ids.has("math-preview-status"), "Falta la vista previa matemática o su estado");
