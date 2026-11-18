@@ -63,7 +63,7 @@
 - ningún índice apunta a una sección que ya no existe
 - cada rótulo que citan las guías sigue existiendo en la interfaz
 
-## `tests/generator.test.js` — 24 pruebas
+## `tests/generator.test.js` — 25 pruebas
 
 - los metadatos y los títulos escapan todos los caracteres reservados
 - el contenido de un bloque no recibe ningún escape
@@ -77,6 +77,7 @@
 - un tipo desconocido no rompe la generación y cae en texto
 - el bloque nota usa su propio entorno
 - el preámbulo deriva un \newtheorem por cada tipo declarado
+- el preámbulo solo carga paquetes de la lista blanca
 - no repite \theoremstyle al agrupar entornos del mismo estilo
 - el documento es autocontenido y no lleva sobre de reimportación
 - las opciones de index.html coinciden con la tabla de tipos
@@ -108,6 +109,12 @@
 - todos los kinds no matemáticos extraen tramos delimitados
 - analyzeContent clasifica resultados y fallos del renderizador inyectado
 
+## `tests/shortcuts.test.js` — 3 pruebas
+
+- los atajos tienen identificadores y combinaciones por ámbito únicos
+- los atajos respetan AltGr, las teclas de los widgets y las combinaciones del navegador
+- los atajos usan el código físico y muestran teclas legibles y accesibles
+
 ## `tests/symbols.test.js` — 16 pruebas
 
 - inserta al principio, en medio y al final del contenido
@@ -133,4 +140,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-99 pruebas con `node:test` más la comprobación estructural.
+103 pruebas con `node:test` más la comprobación estructural.

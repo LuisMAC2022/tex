@@ -45,6 +45,11 @@ test("el preámbulo deriva un \\newtheorem por cada tipo declarado", () => {
   assert.equal((defs.match(/\\newtheorem/g) || []).length, declared.length);
   assert.ok(buildPreamble().includes(defs), "el preámbulo debe incluir las declaraciones derivadas");
 });
+test("el preámbulo solo carga paquetes de la lista blanca", () => {
+  const packages = [...buildPreamble().matchAll(/^[ \t]*\\usepackage\s*(?:\[[^\]]*\]\s*)?\{([^}]+)\}/gm)]
+    .flatMap((match) => match[1].split(",").map((name) => name.trim()));
+  assert.deepEqual(packages, ["fontenc", "inputenc", "babel", "amsmath", "amssymb", "amsthm"]);
+});
 test("no repite \\theoremstyle al agrupar entornos del mismo estilo", () => {
   const styles = buildTheoremDefs().match(/\\theoremstyle\{(\w+)\}/g) || [];
   assert.deepEqual(styles, [...new Set(styles)], "cada \\theoremstyle aparece una sola vez");

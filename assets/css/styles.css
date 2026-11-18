@@ -128,3 +128,18 @@ footer { padding-block: .5rem 2rem; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
+
+/* --- [A] Atajos del tablero --- */
+/* --- fin [A] --- */
+
+/* --- [B] Imagen --- */
+/* --- fin [B] --- */
+
+/* --- [C] Listas --- */
+/* --- fin [C] --- */
+
+/* --- [D] Comprobación --- */
+/* --- fin [D] --- */
+
+/* --- [E] Mover --- */
+/* --- fin [E] --- */

@@ -72,3 +72,6 @@ Guardián: `tests/generator.test.js` → "el ejemplo genera exactamente el archi
 El mismo estado produce la misma cadena, byte a byte. Cuando el formato cambia
 a propósito, se regenera con `npm run build:example` y el diff del `.tex` es la
 prueba visible de qué cambió.
+
+### INV-009 — El preámbulo carga únicamente los paquetes declarados en la lista blanca
+Guardián: `tests/generator.test.js` → "el preámbulo solo carga paquetes de la lista blanca"

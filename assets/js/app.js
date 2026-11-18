@@ -5,7 +5,7 @@
     DRAFT_VERSION, blockAtPath, cloneBlock, cloneBlocks, countBlocks, duplicateBlock, insertBlock, keyToPath,
     moveBlock, normalizeDraft, pathLabel, pathToKey, removeBlock, updateBlock,
     MATH_SYMBOLS, MATH_SYMBOL_GROUPS, filterMathSymbols, symbolAccessibleName, symbolsByGroup, insertIntoField,
-    analyzeContent, normalizeLineBreaks,
+    analyzeContent, normalizeLineBreaks, blockType, SHORTCUTS, shortcutLabel,
   } = global.TexNotes;
 
   // El borrador v1 era una lista plana. Se sigue leyendo para migrarlo; lo que
@@ -17,6 +17,11 @@
   const blockList = $("#block-list");
   const output = $("#latex-output");
   const status = $("#app-status");
+  const blockItemExtensions = [];
+  const previewRenderers = new Map();
+  const blockFieldHooks = [];
+  const beforeGenerateHooks = [];
+  const editorPreviewHooks = [];
   let blocks = [];
   /**
    * Bandeja de copia: un bloque suelto, fuera del árbol, a la espera de que la
@@ -38,10 +43,10 @@
     }
   }
 
-  function fillMathPreview(container, content, blockTypeId) {
+  function fillMathPreview(container, content, blockTypeId, showLiteral = false) {
     const normalized = normalizeLineBreaks(content || "");
     const analysis = analyzeContent(normalized, blockTypeId, katexRender);
-    if (!analysis.segments.length) { container.textContent = normalized.trim() ? "No hay tramos matemáticos delimitados para previsualizar." : "Escribe contenido para ver aquí sus matemáticas."; return analysis; }
+    if (!analysis.segments.length) { container.textContent = showLiteral ? normalized : normalized.trim() ? "No hay tramos matemáticos delimitados para previsualizar." : "Escribe contenido para ver aquí sus matemáticas."; return analysis; }
     const fragment = document.createDocumentFragment();
     let cursor = 0;
     for (const segment of analysis.segments) {
@@ -58,8 +63,27 @@
     return analysis;
   }
 
+  function blockDraft() {
+    const type = $("#block-type").value;
+    return Object.assign({ type, title: $("#block-title").value, content: $("#block-content").value, children: [] },
+      ...blockFieldHooks.map((hook) => hook.read?.(type)));
+  }
+
+  function renderBlockPreview(container, block, context) {
+    const renderer = previewRenderers.get(blockType(block.type)?.kind);
+    if (renderer) return renderer(container, block, context);
+    const content = context.structure ? (block.content || "").trim() : block.content;
+    const analysis = fillMathPreview(container, content, block.type, context.structure);
+    if (context.structure && !content) container.textContent = "(Bloque vacío)";
+    return analysis;
+  }
+
   function renderEditorPreview() {
-    const analysis = fillMathPreview($("#math-preview"), $("#block-content").value, $("#block-type").value);
+    const block = blockDraft();
+    const paths = editorTarget();
+    const parentPath = paths.editing.length ? paths.editing.slice(0, -1) : paths.parent;
+    const analysis = renderBlockPreview($("#math-preview"), block, { parentPath, structure: false });
+    for (const hook of editorPreviewHooks) hook(block, { parentPath });
     const failures = analysis.failures.length;
     if (failures !== announcedPreviewFailures) {
       $("#math-preview-status").textContent = failures
@@ -124,6 +148,7 @@
   }
   function clearBlockFields() {
     $("#block-title").value = ""; $("#block-content").value = "";
+    for (const hook of blockFieldHooks) hook.clear?.();
     $("#block-error").textContent = ""; $("#block-content").removeAttribute("aria-invalid");
     renderEditorPreview();
   }
@@ -166,8 +191,7 @@
     meta.textContent = `Nivel ${path.length} · ${where}`;
     const preview = document.createElement("div");
     preview.className = "block-preview";
-    const previewAnalysis = fillMathPreview(preview, (block.content || "").trim(), block.type);
-    if (!previewAnalysis.segments.length) preview.textContent = (block.content || "").trim() || "(Bloque vacío)";
+    renderBlockPreview(preview, block, { parentPath, structure: true });
     const actions = document.createElement("menu");
     actions.className = "block-actions";
     actions.setAttribute("aria-label", `Acciones para el bloque ${describeBlock(block, path)}`);
@@ -187,6 +211,7 @@
       actionButton("Bajar", "down", path, `Bajar ${subject}, entre sus hermanos`, position === siblings - 1),
     );
     article.append(heading, meta, preview, actions);
+    for (const extend of blockItemExtensions) extend(block, path, { article, actions, subject });
     item.append(article);
 
     if (block.children.length) {
@@ -276,7 +301,9 @@
     field.focus();
     announce(message);
   }
-  function validateBlock() {
+  function validateBlock(type) {
+    const custom = blockFieldHooks.find((hook) => hook.validate && hook.appliesTo?.(type));
+    if (custom) return custom.validate();
     const field = $("#block-content");
     if (!field.value.trim()) { blockError("Escribe contenido antes de incorporar el bloque."); return false; }
     $("#block-error").textContent = ""; field.removeAttribute("aria-invalid");
@@ -284,8 +311,8 @@
   }
 
   $("#add-block").addEventListener("click", () => {
-    if (!validateBlock()) return;
-    const draft = { type: $("#block-type").value, title: $("#block-title").value, content: $("#block-content").value, children: [] };
+    const draft = blockDraft();
+    if (!validateBlock(draft.type)) return;
     const { editing, parent } = editorTarget();
     if (editing.length) {
       const next = updateBlock(blocks, editing, draft);
@@ -335,6 +362,7 @@
 
     if (action === "edit") {
       $("#block-type").value = block.type; $("#block-title").value = block.title; $("#block-content").value = block.content;
+      for (const hook of blockFieldHooks) hook.fill?.(block);
       $("#block-error").textContent = ""; $("#block-content").removeAttribute("aria-invalid");
       setEditorTarget({ editing: path }); $("#block-type").focus();
       renderEditorPreview();
@@ -404,7 +432,12 @@
   form.addEventListener("submit", (event) => {
     event.preventDefault(); const title = $("#note-title");
     if (!title.value.trim()) { $("#title-error").textContent = "Escribe un título para generar el documento."; title.setAttribute("aria-invalid", "true"); title.focus(); announce("No se generó el documento: falta el título."); return; }
-    $("#title-error").textContent = ""; title.removeAttribute("aria-invalid"); output.value = generateLatex(state()); announce("Documento generado.");
+    $("#title-error").textContent = "";
+    title.removeAttribute("aria-invalid");
+    const documentState = state();
+    for (const hook of beforeGenerateHooks) hook(documentState);
+    output.value = generateLatex(documentState);
+    announce("Documento generado.");
   });
   $("#save-draft").addEventListener("click", () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: DRAFT_VERSION, ...state() })); announce("Borrador guardado únicamente en este dispositivo."); } catch { announce("No se pudo guardar el borrador; el contenido actual se conserva."); } });
   $("#restore-draft").addEventListener("click", () => {
@@ -428,7 +461,7 @@
     try { await copyToClipboard(output.value, output); announce("Código LaTeX copiado."); } catch { announce("No se pudo copiar el código; permanece disponible para seleccionarlo manualmente."); }
   });
 
-  /* --- Tablero de símbolos matemáticos --- */
+  /* --- [A] Atajos del tablero --- */
 
   function symbolButton(symbol) {
     const button = document.createElement("button");
@@ -560,9 +593,36 @@
     announce(`Símbolo insertado en el contenido: ${symbol ? symbol.name : button.dataset.command}.`);
   });
 
+  /* --- fin [A] --- */
+
+  /* --- [B] Imagen --- */
+  /* --- fin [B] --- */
+
+  /* --- [C] Listas --- */
+  /* --- fin [C] --- */
+
+  /* --- [D] Comprobación --- */
+  /* --- fin [D] --- */
+
+  /* --- [E] Mover --- */
+  /* --- fin [E] --- */
+
+  function renderShortcutPanel() {
+    const isMac = /Mac/.test(global.navigator.userAgentData?.platform || global.navigator.platform || "");
+    const items = SHORTCUTS.map((shortcut) => {
+      const item = document.createElement("li");
+      const keys = document.createElement("kbd");
+      keys.textContent = shortcutLabel(shortcut, isMac);
+      item.append(keys, ` · ${shortcut.label}`);
+      return item;
+    });
+    $("#keyboard-shortcuts").replaceChildren(...items);
+  }
+
   $("#block-content").addEventListener("input", scheduleEditorPreview);
   $("#block-type").addEventListener("change", renderEditorPreview);
 
+  renderShortcutPanel();
   renderSymbolBoard();
   renderBlocks();
   setEditorTarget({});
