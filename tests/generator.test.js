@@ -105,6 +105,28 @@ test("las listas toman un elemento por línea y conservan su texto", () => {
   assert.equal(blockToLatex({ type: "enumerate", content: "Primero" }), "\\begin{enumerate}\n\\item Primero\n\\end{enumerate}");
   assert.equal(blockToLatex({ type: "itemize", content: "\n \n" }), "");
 });
+test("una lista anidada cierra sus subniveles antes de emitir los bloques hijos", () => {
+  const list = { type: "itemize", content: "Padre\n  1. Hijo", children: [{ type: "text", content: "Un párrafo" }] };
+  assert.equal(blockToLatex(list), "\\begin{itemize}\n\\item Padre\n  \\begin{enumerate}\n  \\item Hijo\n  \\end{enumerate}\n\nUn párrafo\n\\end{itemize}");
+  assert.equal(blockToLatex({ ...list, content: " \n " }), "Un párrafo");
+});
+test("la profundidad de lista sigue los entornos abiertos al atravesar bloques de texto y teoremas", () => {
+  const child = { type: "itemize", content: "Primer elemento\n  1. Segundo elemento\n    - Tercer elemento" };
+  const theorem = { type: "theorem", content: "Teorema", children: [child] };
+  const text = { type: "text", content: "Texto", children: [theorem] };
+  let state = text;
+  for (const type of ["itemize", "itemize", "enumerate", "enumerate"]) {
+    state = { type, content: "Elemento padre", children: [state] };
+  }
+  const result = blockToLatex(state);
+  assert.equal(result.match(/\\begin\{/g).length, 6);
+  assert.match(result, /\\begin\{theorem\}\nTeorema\n\\begin\{itemize\}\n\\item Primer elemento\n\\item Segundo elemento\n\\item Tercer elemento\n\\end\{itemize\}\n\\end\{theorem\}/);
+});
+test("una lista completamente recortada conserva sus elementos y sus bloques hijos", () => {
+  const list = { type: "enumerate", content: "A\n  - B", children: [{ type: "text", content: "Hijo" }] };
+  const result = blockToLatex(list, { depthContext: { total: 4, itemize: 0, enumerate: 4 } });
+  assert.equal(result, "A\n\nB\n\nHijo");
+});
 test("la bibliografía genera claves predecibles y conserva literalmente cada referencia", () => {
   assert.equal(blockToLatex({ type: "bibliography", title: "No se usa", content: "Leithold, L. (1992). El cálculo con geometría. México: Harla.\nSpivak, M. (1993). Cálculo infinitesimal. México: Reverté." }),
     "\\begin{thebibliography}{9}\n\\bibitem{ref1} Leithold, L. (1992). El cálculo con geometría. México: Harla.\n\\bibitem{ref2} Spivak, M. (1993). Cálculo infinitesimal. México: Reverté.\n\\end{thebibliography}");

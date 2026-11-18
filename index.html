@@ -72,6 +72,16 @@
               <textarea id="block-content" name="blockContent" rows="6" aria-describedby="block-help block-error"></textarea>
               <small id="block-help">El contenido se copia al documento <strong>tal cual</strong>: comandos como <code>\textbf{...}</code> o <code>\mathbb{R}</code>, llaves y matemáticas entre <code>$…$</code> o <code>$$…$$</code> llegan exactamente como los escribes, y la aplicación no inserta ningún carácter de escape. Por eso puedes pegar aquí LaTeX de otro documento sin revisarlo. A cambio, los caracteres reservados de LaTeX son cosa tuya: para que aparezcan impresos escribe <code>\%</code>, <code>\&amp;</code>, <code>\#</code>, <code>\_</code> o <code>\$</code> —un <code>%</code> suelto comenta el resto de su línea—. Se permiten párrafos separados por una línea vacía y una lista toma un elemento por línea. Solo el título del bloque y los metadatos se escapan por completo, porque la aplicación los coloca dentro de un argumento.</small>
               <span id="block-error" class="error" aria-live="polite"></span>
+              <span id="list-tools" hidden>
+                <button id="list-indent" class="secondary" type="button">Sangrar</button>
+                <button id="list-outdent" class="secondary" type="button">Quitar sangría</button>
+              </span>
+              <small id="list-help" hidden>Escribe un elemento por línea y usa dos espacios o un tabulador por nivel. Los marcadores iniciales dan forma a la lista. Escribe <code>{}- </code> para empezar el elemento con un guion literal. Este ejemplo combina viñetas y numeración:
+                <code class="list-example">- Tema
+  1. Caso
+    - Detalle</code>
+              </small>
+              <small id="list-limit" hidden></small>
             </p>
             <p id="editor-content-check" class="editor-content-check" hidden></p>
             <details class="math-preview-panel" open>

@@ -44,7 +44,10 @@ El generador recibe un objeto con este contrato conceptual:
 - `children` es opcional: **su ausencia equivale a `children: []`**, así que un estado plano escrito para la versión anterior sigue siendo válido y no hay que reescribirlo.
 - Los tipos de bloque viven en una sola tabla, [`assets/js/block-types.js`](assets/js/block-types.js). Los bloques `definition`, `theorem`, `proposition`, `example` y `note` se convierten en sus entornos homónimos; `text` es texto normal y, si tiene título, comienza con `\subsection`.
 - Hay **dos tipos de contenido matemático**, deliberadamente separados del texto: `equation` queda delimitado por `\[` y `\]` en líneas propias, y `math-inline` por `\(` y `\)` en una sola línea. Ambos conservan literalmente lo escrito y solo se diferencian por sus delimitadores en la tabla.
-- `itemize` y `enumerate` producen listas: **cada línea no vacía del contenido es un `\item`**, con su texto tal cual se escribió.
+- `itemize` y `enumerate` producen listas. Cada línea no vacía da un `\item`. Dos espacios o un tabulador forman un nivel de sangría, y cada línea puede bajar hasta un nivel respecto de la anterior. La primera línea comienza en el nivel raíz.
+- El bloque define el tipo de la lista raíz. Al abrir una sublista, el primer elemento fija su tipo con `- ` o `* ` para viñetas y un número seguido de `. ` o `) ` para numeración. Sin marcador hereda el tipo de la lista que la contiene. Los marcadores se consumen en todos los niveles. `{}- ` conserva el guion como parte del elemento.
+- Se permiten hasta cuatro niveles de un mismo tipo y seis entornos combinados, contando los teoremas y las listas envolventes que genera el editor. Los elementos que alcancen el límite se incorporan al último nivel disponible sin alterar su orden. Si el bloque completo ya está en el límite, sus elementos se emiten como párrafos.
+- Una lista plana sin marcadores conserva el formato `.tex` anterior. Cada nivel de sublista añade dos espacios al comienzo de sus líneas. Los bloques de «Añadir dentro» se emiten después de los elementos y antes del cierre de la lista raíz, si la lista puede abrirse.
 - `bibliography` produce una **bibliografía manual con aspecto IEEE**: cada línea no vacía y recortada del contenido se conserva literalmente y se convierte en un `\bibitem{refN}` dentro de `thebibliography`. Este entorno del núcleo de LaTeX aporta por sí mismo la numeración entre corchetes, sin BibTeX, `natbib`, `IEEEtran` ni paquetes adicionales. El campo `title` no se usa, igual que en las listas. Las claves `ref1`, `ref2`, etc. son predecibles y únicas solo dentro de cada bloque; dos bloques de bibliografía repetirán claves y LaTeX mostrará una advertencia de etiqueta duplicada, una limitación aceptada porque la aplicación no genera `\cite{}`.
 - `buildTheoremDefs()` deriva las declaraciones `\newtheorem` de esa misma tabla y agrupa los entornos por `\theoremstyle`, de modo que el preámbulo no puede desincronizarse de los tipos disponibles: añadir un tipo es una entrada en la tabla y su `<option>` en `index.html`, y una prueba compara ambas listas.
 - **Regla de numeración:** cada entorno declarado con `\newtheorem` mantiene un contador propio, independiente y continuo en todo el documento. `proposition` comparte `\theoremstyle{plain}` con `theorem`, pero **no comparte contador** ni se reinicia por sección. Cambiar esa regla es editar una sola entrada de la tabla, y es un cambio de contrato que debe documentarse aquí.
@@ -150,6 +153,11 @@ La vista bajo «Contenido» se actualiza 200 ms después de escribir. En los blo
 de ecuación representa todo el contenido. En otros bloques reconoce `$…$`,
 `$$…$$`, `\(…\)` y `\[…\]`. La estructura del documento muestra las mismas
 fórmulas y la salida incluye MathML para tecnologías de asistencia.
+
+En los bloques de lista, «Vista previa de las matemáticas» muestra las viñetas y
+la numeración por niveles, con las fórmulas representadas dentro de cada elemento.
+«Sangrar» (Alt+Mayús+G) y «Quitar sangría» (Alt+Mayús+Q) actúan sobre las líneas de
+la selección. Intro conserva la sangría y continúa los marcadores.
 
 El aviso «No se pudo previsualizar» indica que KaTeX no pudo representar un tramo.
 Puedes seguir generando el `.tex`, que conserva el contenido original. Overleaf

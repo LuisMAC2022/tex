@@ -43,5 +43,8 @@ por ronda de revisión, no al cambiar código.
 - [ ] Escribir `50% del total` y `x_1` en un bloque de texto. Comprobar que aparecen después de una pausa dos avisos con línea y columna. Verificar con lector de pantalla que la comprobación no anuncia cada tecla.
 - [ ] Guardar ese bloque como hijo de otro, comprobar la insignia **2 avisos** y generar. Activar con Intro **Ir al bloque 1.1** si esa es la ruta del hijo. Comprobar el foco en **Editar** y que el código incluye literalmente `50% del total` y `x_1`.
 - [ ] Guardar una corrección, comprobar que se retira el resumen anterior y volver a generar. Verificar que el recuento se actualiza y que el nuevo enlace lleva al bloque correcto.
+- [ ] En «Lista con viñetas», escribir una lista de tres niveles que combine viñetas, numeración y una fórmula. Usar solo el teclado y un lector de pantalla. Confirmar que lee los niveles y que **Sangrar**, **Quitar sangría**, Intro y Escape conservan el foco esperado.
+- [ ] Probar Alt+Mayús+G y Alt+Mayús+Q con una selección de varias líneas en Chromium y Firefox. Confirmar que no cambia la página y que Tab sale del campo. En macOS, usar ⌥⇧G y ⌥⇧Q y comprobar que ⌥⇧← y ⌥⇧→ siguen seleccionando por palabras.
+- [ ] Superar el límite de anidación en una lista y comprobar que se muestra el aviso y se conservan los elementos. Compilar en Overleaf la lista mixta de tres niveles y una lista al límite.
 - [ ] Pegar en un proyecto vacío de Overleaf un `.tex` con texto mixto y entornos anidados, y comprobar que compila sin añadir paquetes.
 - [ ] Compilar con una bibliografía y comprobar que cada referencia aparece numerada entre corchetes.

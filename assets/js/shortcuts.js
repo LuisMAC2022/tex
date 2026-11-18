@@ -8,8 +8,8 @@
     { id: "symbols.search", code: "ArrowUp", alt: false, shift: false, ctrl: false, meta: false, scope: "symbol-grid-widget", label: "Volver a la búsqueda desde la primera fila de símbolos", owner: "A" },
     { id: "symbols.previousGroup", code: "PageUp", alt: false, shift: false, ctrl: false, meta: false, scope: "symbol-grid-widget", label: "Ir a la categoría anterior desde la rejilla de símbolos", owner: "A" },
     { id: "symbols.nextGroup", code: "PageDown", alt: false, shift: false, ctrl: false, meta: false, scope: "symbol-grid-widget", label: "Ir a la categoría siguiente desde la rejilla de símbolos", owner: "A" },
-    { id: "list.indent", code: "ArrowRight", alt: true, shift: true, ctrl: false, meta: false, scope: "list-editor", label: "Sangrar elementos de lista", owner: "C" },
-    { id: "list.outdent", code: "ArrowLeft", alt: true, shift: true, ctrl: false, meta: false, scope: "list-editor", label: "Quitar sangría de elementos de lista", owner: "C" },
+    { id: "list.indent", code: "KeyG", alt: true, shift: true, ctrl: false, meta: false, scope: "list-editor", label: "Sangrar elementos de lista", owner: "C" },
+    { id: "list.outdent", code: "KeyQ", alt: true, shift: true, ctrl: false, meta: false, scope: "list-editor", label: "Quitar sangría de elementos de lista", owner: "C" },
   ].map(Object.freeze));
 
   const modifiers = [

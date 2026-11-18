@@ -151,6 +151,11 @@ footer { padding-block: .5rem 2rem; }
 /* --- fin [B] --- */
 
 /* --- [C] Listas --- */
+#list-tools { display: flex; flex-wrap: wrap; gap: .5rem; }
+.list-example { display: block; margin-block-start: .25rem; white-space: pre-wrap; }
+.outline-preview { margin-block: .25rem; padding-inline-start: 1.35rem; overflow-wrap: anywhere; }
+.outline-preview > li { margin-block: .25rem; }
+#list-limit, .list-preview-warning { font-weight: 650; }
 /* --- fin [C] --- */
 
 /* --- [D] Comprobación --- */

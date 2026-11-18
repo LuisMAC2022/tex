@@ -135,10 +135,22 @@ ningún paquete ni subir ningún archivo extra.
 | «Lista numerada» | Una lista 1, 2, 3. |
 | «Bibliografía (IEEE)» | Referencias numeradas entre corchetes. |
 
-Dos cosas que sorprenden la primera vez:
+**En las listas, cada renglón con texto es un elemento.** Escribe en «Contenido» y
+sangra con dos espacios o un tabulador por nivel. El tipo de bloque determina el
+nivel raíz. Cada sublista toma el tipo de la lista que la contiene, salvo que su
+primer elemento empiece por `- ` o `* ` para viñetas, o por `1. ` o `1) ` para
+numeración. Puedes pegar líneas con marcadores. Escribe `{}- ` para imprimir un
+guion al principio de un elemento.
 
-**En las listas, cada renglón es un punto.** Escribe un elemento por línea; no pongas
-guiones ni números delante, la aplicación los añade. Las líneas vacías se ignoran.
+Con el cursor en una línea o con varias líneas seleccionadas, usa «Sangrar»
+(Alt+Mayús+G o ⌥⇧G en Mac) y «Quitar sangría» (Alt+Mayús+Q o ⌥⇧Q en Mac). Intro
+conserva la sangría y el marcador e incrementa los números. En un punto vacío
+con sangría, Intro quita un nivel. Tab recorre los controles.
+
+«Vista previa de las matemáticas» muestra la lista anidada. Si agotas los cuatro
+niveles del mismo tipo o los seis entornos combinados, verás un aviso junto a
+«Contenido» y los elementos más profundos aparecerán en el último nivel disponible.
+Si el bloque entero alcanza el límite, sus elementos aparecerán como párrafos.
 
 **En la bibliografía, escribe una referencia por línea.** Cada línea con texto
 se convierte en un `\bibitem`. Usa un solo bloque por documento para evitar

@@ -63,11 +63,15 @@
    * entorno se emiten antes de su \end{...}; los de un bloque de texto, tras su
    * propio contenido. Nunca se concatenan dentro de `content`.
    */
-  function blockToLatex(block = {}) {
+  function blockToLatex(block = {}, { depthContext } = {}) {
     const type = TexNotes.blockType(block.type) || TexNotes.blockType("text");
     const content = contentToLatex(block.content);
+    const outline = type.kind === "list" ? TexNotes.parseListOutline(content, type.listEnvironment) : null;
+    let childDepth = depthContext;
+    if (outline) childDepth = TexNotes.listOutlineDepthContext(outline, depthContext);
+    if (type.kind === "theorem") childDepth = TexNotes.listDepthWithEnvironment(depthContext, type.environment);
     const children = (Array.isArray(block.children) ? block.children : [])
-      .map((child) => ({ separator: childSeparator(child), latex: blockToLatex(child) }))
+      .map((child) => ({ separator: childSeparator(child), latex: blockToLatex(child, { depthContext: childDepth }) }))
       .filter((child) => child.latex);
     const withChildren = (base) => children.reduce((text, child) => (text ? `${text}${child.separator}${child.latex}` : child.latex), base);
 
@@ -80,12 +84,7 @@
       return withChildren(math);
     }
     if (type.kind === "list") {
-      const items = content.split("\n").map((line) => line.trim()).filter(Boolean);
-      // Un entorno de lista sin ningún \item no compila: sin elementos, los
-      // hijos se emiten por sí solos.
-      if (!items.length) return withChildren("");
-      const body = withChildren(items.map((item) => `\\item ${item}`).join("\n"));
-      return `\\begin{${type.listEnvironment}}\n${body}\n\\end{${type.listEnvironment}}`;
+      return TexNotes.outlineToLatex(outline, depthContext, withChildren);
     }
     if (type.kind === "bibliography") {
       const items = content.split("\n").map((line) => line.trim()).filter(Boolean);
@@ -152,7 +151,7 @@
   function buildBody(state = {}) {
     const metadata = state.metadata || {};
     const topic = escapeMetadata(metadata.topic).trim();
-    const blocks = (Array.isArray(state.blocks) ? state.blocks : []).map(blockToLatex).filter(Boolean);
+    const blocks = (Array.isArray(state.blocks) ? state.blocks : []).map((block) => blockToLatex(block)).filter(Boolean);
     return ["\\begin{document}", "\\maketitle", topic ? `\\section{${topic}}` : "", ...blocks].filter(Boolean).join("\n\n");
   }
 

@@ -77,10 +77,10 @@ Los scripts se cargan como clásicos **en este orden**. La aplicación usa
 | 5 | `math-symbols.js` | catálogo de símbolos, búsqueda y navegación del tablero | no |
 | 6 | `text-insertion.js` | insertar en la posición del cursor | apenas |
 | 7 | `math-preview.js` | extracción y análisis de tramos | no |
-| 8 | `shortcuts.js` | registro de atajos | no |
-| 9 | `image-options.js` | opciones de imagen | no |
-| 10 | `list-outline.js` | listas con sangría | no |
-| 11 | `content-check.js` | comprobación previa al generar | no |
+| 8 | `shortcuts.js` | registro de atajos y sus nombres | no |
+| 9 | `image-options.js` | opciones de bloque de imagen | no |
+| 10 | `list-outline.js` | análisis, límites, exportación y edición de listas | no |
+| 11 | `content-check.js` | comprobación del contenido | no |
 | 12 | `app.js` | interfaz del editor | sí |
 
 Las pruebas de Node ejecutan las funciones puras con `node:vm`. La interacción
@@ -107,6 +107,10 @@ Qué exporta cada uno, si necesitas buscar una función:
   `app.js` lee y escribe en `tex-notes:recent-symbols`.
 - **`text-insertion.js`**: `insertAtSelection` (pura), `insertIntoField`.
 - **`math-preview.js`**: `mathSegments`, `analyzeContent` con un renderizador inyectado.
+- **`list-outline.js`**: `parseListOutline` crea el árbol de elementos. `limitListOutline`
+  aplica los límites de entornos y devuelve los datos para la vista previa.
+  `outlineToLatex` aplica los mismos límites al exportar. `shiftLines` y `continueListLine`
+  reciben el texto y la selección en índices UTF-16 y devuelven el nuevo estado del campo.
 - **`content-check.js`**: `checkContent` para una cadena, `checkBlock` para
   incluir el contexto de sus bloques padre y `checkDocument` para agrupar los
   avisos por ruta. La sección D de `app.js` los presenta mediante

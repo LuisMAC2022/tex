@@ -5,7 +5,7 @@ import { loadTexNotes } from "./load-app.mjs";
 import { exampleState } from "./example-state.mjs";
 
 const { checkContent, checkBlock, checkDocument, generateLatex } = await loadTexNotes([
-  "block-types.js", "block-tree.js", "latex-generator.js", "math-preview.js", "content-check.js",
+  "block-types.js", "block-tree.js", "latex-generator.js", "math-preview.js", "list-outline.js", "content-check.js",
 ]);
 
 const codes = (issues) => Array.from(issues, ({ code }) => code);
