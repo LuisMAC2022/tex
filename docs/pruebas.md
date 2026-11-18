@@ -109,13 +109,14 @@
 - todos los kinds no matemáticos extraen tramos delimitados
 - analyzeContent clasifica resultados y fallos del renderizador inyectado
 
-## `tests/shortcuts.test.js` — 3 pruebas
+## `tests/shortcuts.test.js` — 4 pruebas
 
 - los atajos tienen identificadores y combinaciones por ámbito únicos
 - los atajos respetan AltGr, las teclas de los widgets y las combinaciones del navegador
 - los atajos usan el código físico y muestran teclas legibles y accesibles
+- los atajos internos del tablero se limitan a la búsqueda y la rejilla
 
-## `tests/symbols.test.js` — 16 pruebas
+## `tests/symbols.test.js` — 21 pruebas
 
 - inserta al principio, en medio y al final del contenido
 - sustituye la selección activa y conserva el resto
@@ -133,6 +134,11 @@
 - cubre conjuntos y topología sin comandos de paquetes ajenos
 - las plantillas abren un hueco o envuelven una selección
 - todo el catálogo se puede representar con KaTeX
+- las flechas horizontales de la rejilla dan la vuelta e Inicio y Fin van a los extremos
+- la rejilla vuelve al buscador arriba y ajusta la última fila incompleta
+- la navegación admite una sola columna y una rejilla vacía
+- el cambio circular de categoría incluye Recientes al principio
+- los recientes conservan hasta doce símbolos distintos y conocidos en orden de inserción
 
 ## `tests/check-site.mjs` — comprobación estructural
 
@@ -140,4 +146,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-103 pruebas con `node:test` más la comprobación estructural.
+109 pruebas con `node:test` más la comprobación estructural.

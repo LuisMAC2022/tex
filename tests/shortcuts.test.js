@@ -29,7 +29,18 @@ test("los atajos usan el código físico y muestran teclas legibles y accesibles
   assert.equal(matchShortcut(event, "list-editor"), undefined);
   assert.equal(matchShortcut({ ...event, ctrlKey: true }, "block-editor"), undefined);
   assert.equal(matchShortcut({ ...event, isComposing: true }, "block-editor"), undefined);
+  assert.equal(matchShortcut({ ...event, getModifierState: (name) => name === "AltGraph" }, "block-editor"), undefined);
   assert.equal(shortcutLabel(shortcut), "Alt+Mayús+S");
   assert.equal(shortcutLabel(shortcut, true), "⌥⇧S");
   assert.equal(ariaKeyshortcuts(shortcut), "Alt+Shift+S");
+});
+
+test("los atajos internos del tablero se limitan a la búsqueda y la rejilla", () => {
+  assert.equal(matchShortcut({ code: "Escape" }, "symbol-widget").id, "symbols.escape");
+  assert.equal(matchShortcut({ code: "ArrowDown" }, "symbol-search-widget").id, "symbols.firstResult");
+  assert.equal(matchShortcut({ code: "ArrowUp" }, "symbol-grid-widget").id, "symbols.search");
+  assert.equal(matchShortcut({ code: "PageUp" }, "symbol-grid-widget").id, "symbols.previousGroup");
+  assert.equal(matchShortcut({ code: "PageDown" }, "symbol-grid-widget").id, "symbols.nextGroup");
+  assert.equal(matchShortcut({ code: "PageDown" }, "symbol-search-widget"), undefined);
+  assert.equal(matchShortcut({ code: "Tab" }, "symbol-widget"), undefined);
 });

@@ -130,6 +130,21 @@ footer { padding-block: .5rem 2rem; }
 }
 
 /* --- [A] Atajos del tablero --- */
+.symbol-board > .symbol-shortcut { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .75rem; margin: 0 .75rem; padding-block-start: .2rem; }
+.symbol-shortcut > button { min-inline-size: 2.75rem; padding: .35rem .65rem; }
+.symbol-board > details > summary { min-block-size: 2.75rem; padding-block: .6rem; }
+.symbol-board > details > .symbol-grid { max-block-size: 5.5rem; }
+.symbol-caption { display: flex; align-items: center; gap: .35rem; }
+#symbol-detail { flex: 1; min-inline-size: 0; }
+#symbol-results { flex: none; margin-block: 0; padding: 0 .35rem; }
+#symbol-results, #symbol-empty { font-size: .9rem; }
+#symbol-empty { margin-block: .2rem; }
+.symbol-grid:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+
+@media (max-width: 38rem) {
+  .symbol-board h3 { font-size: .95rem; }
+  .symbol-board > details > .symbol-grid { max-block-size: 7.5rem; }
+}
 /* --- fin [A] --- */
 
 /* --- [B] Imagen --- */

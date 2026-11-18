@@ -80,20 +80,23 @@
               <p id="math-preview-status" class="preview-status" aria-live="polite" aria-atomic="true"></p>
             </details>
 
-            <section class="symbol-board" aria-labelledby="simbolos-heading">
+            <section class="symbol-board" aria-labelledby="simbolos-heading" aria-describedby="symbol-board-intro">
+              <p class="symbol-shortcut"><button id="symbol-toggle" type="button" aria-label="Buscar en el tablero de símbolos">Buscar</button> <kbd id="symbol-shortcut-label">Alt+Mayús+S</kbd></p>
               <details id="symbol-details" open>
                 <summary><h3 id="simbolos-heading">Símbolos matemáticos</h3></summary>
-                <p id="symbol-board-intro">Cada botón inserta su comando LaTeX en el campo «Contenido», en la posición del cursor. El comando se conserva literalmente en cualquier bloque, dentro y fuera de <code>$…$</code>. Si ya conoces el comando, escríbelo directamente.</p>
+                <p id="symbol-board-intro">Cada botón inserta su comando LaTeX en el campo de texto de origen o en «Contenido», en la posición del cursor. Pulsa Escape para volver al campo.</p>
                 <p class="field">
-                  <label for="symbol-search">Buscar símbolo por nombre</label>
+                  <label for="symbol-search">Buscar símbolo</label>
                   <input id="symbol-search" name="symbolSearch" type="search" autocomplete="off" aria-describedby="symbol-search-help">
                   <small id="symbol-search-help">Por ejemplo «para todo», «implica» o «conjunción». También acepta el comando, como «forall».</small>
                 </p>
                 <nav id="symbol-category-picker" class="symbol-categories" aria-label="Categorías de símbolos"></nav>
-                <p id="symbol-detail" aria-hidden="true">Selecciona un símbolo para ver su nombre y comando.</p>
-                <p id="symbol-results" class="status" role="status"></p>
+                <div class="symbol-caption" aria-hidden="true">
+                  <p id="symbol-detail" aria-hidden="true">Selecciona un símbolo para ver su nombre y comando.</p>
+                  <p id="symbol-results" class="status" role="status"></p>
+                </div>
                 <p id="symbol-empty" hidden>Ningún símbolo coincide con la búsqueda.</p>
-                <menu id="symbol-groups" class="symbol-grid" role="toolbar" aria-orientation="horizontal" aria-label="Símbolos matemáticos"></menu>
+                <menu id="symbol-groups" class="symbol-grid" role="toolbar" aria-orientation="horizontal" aria-label="Símbolos matemáticos" tabindex="-1"></menu>
               </details>
             </section>
             <menu class="button-row">
