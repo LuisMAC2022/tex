@@ -8,8 +8,8 @@
   "use strict";
   const TexNotes = global.TexNotes || (global.TexNotes = {});
 
-  /** @decision DEC-005 ancla:5abbdacb tramo:13
-   * kind: "text" | "equation" | "theorem" | "list" | "bibliography".
+  /** @decision DEC-005 ancla:17212e05 tramo:14
+   * kind: "text" | "equation" | "theorem" | "list" | "bibliography" | "image".
    * Los tipos "theorem" declaran un entorno amsthm; buildTheoremDefs() agrupa
    * sus \newtheorem por style para no repetir \theoremstyle.
    * Los tipos "equation" conservan el contenido literalmente y solo se
@@ -21,7 +21,8 @@
    * normalización del árbol sube a hermanos los hijos de un tipo sin él. Los dos
    * tipos "equation" no lo llevan porque cualquier bloque dentro de \[...\] o
    * \(...\) produciría LaTeX inválido. "bibliography" tampoco lo lleva: dentro
-   * de thebibliography solo deben aparecer sus propios \bibitem.
+   * de thebibliography solo deben aparecer sus propios \bibitem. Una imagen
+   * representa una sola figura y sus opciones no afectan a otros bloques.
    *
    * Numeración: cada entorno declarado con \newtheorem lleva un contador propio,
    * independiente y continuo en todo el documento. "proposition" no comparte
@@ -39,6 +40,7 @@
     { id: "itemize", label: "Lista con viñetas", kind: "list", listEnvironment: "itemize", container: true },
     { id: "enumerate", label: "Lista numerada", kind: "list", listEnvironment: "enumerate", container: true },
     { id: "bibliography", label: "Bibliografía (IEEE)", kind: "bibliography", container: false },
+    { id: "image", label: "Imagen", kind: "image", container: false },
   ];
 
   TexNotes.BLOCK_TYPES = BLOCK_TYPES;

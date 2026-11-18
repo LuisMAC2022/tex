@@ -1,10 +1,11 @@
 /**
  * Árbol de bloques: rutas estables y operaciones puras.
  *
- * Un bloque es { type, title, content, children }. Una ruta es un array de
- * índices ("2.0" = tercer bloque de la raíz, primer hijo). Ningún nodo se
- * identifica por su texto ni por un índice de primer nivel, de modo que mover
- * o eliminar un hermano no invalida la identidad del resto.
+ * Un bloque es { type, title, content, children }, con options en imágenes.
+ * Una ruta es un array de índices ("2.0" = tercer bloque de la raíz, primer
+ * hijo). Ningún nodo se identifica por su texto ni por un índice de primer
+ * nivel, de modo que mover o eliminar un hermano no invalida la identidad del
+ * resto.
  *
  * Todas las operaciones devuelven un árbol nuevo y nunca modifican el que
  * reciben. Una ruta inválida devuelve null: la persona que llama conserva el
@@ -21,8 +22,18 @@
     return Array.isArray(path) && path.every((index) => Number.isInteger(index) && index >= 0);
   }
 
+  function applyBlockOptions(block, options) {
+    if (options !== undefined && TexNotes.blockType(block.type)?.kind === "image") {
+      block.options = TexNotes.normalizeImageOptions(options);
+    } else {
+      delete block.options;
+    }
+    return block;
+  }
+
   function cloneBlocks(list) {
-    return (Array.isArray(list) ? list : []).map((block) => ({ ...block, children: cloneBlocks(block.children) }));
+    return (Array.isArray(list) ? list : []).map((block) =>
+      applyBlockOptions({ ...block, children: cloneBlocks(block.children) }, block.options));
   }
 
   /**
@@ -41,7 +52,7 @@
       if (!hasContent && !children.length) continue;
       const type = typeof raw.type === "string" ? raw.type : "text";
       const block = { type, title: typeof raw.title === "string" ? raw.title : "", content: hasContent ? raw.content : "", children: [] };
-      blocks.push(block);
+      blocks.push(applyBlockOptions(block, raw.options));
       if (TexNotes.acceptsChildren(type)) block.children = children;
       else blocks.push(...children);
     }
@@ -124,7 +135,7 @@
   }
 
   /**
-   * Reemplaza type, title y content de `path` conservando su descendencia.
+   * Reemplaza type, title, content y options de `path` conservando su descendencia.
    * Rechaza el cambio si el tipo nuevo no admite los hijos que ya tiene: el
    * árbol se queda como estaba y la interfaz explica por qué.
    */
@@ -138,6 +149,7 @@
     target.type = type;
     if (typeof patch.title === "string") target.title = patch.title;
     if (typeof patch.content === "string") target.content = patch.content;
+    applyBlockOptions(target, Object.hasOwn(patch, "options") ? patch.options : target.options);
     return next;
   }
 

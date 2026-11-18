@@ -37,3 +37,6 @@ por ronda de revisión, no al cambiar código.
 - [ ] Escribir una fórmula incompleta, comprobar **No se pudo previsualizar** y generar el archivo `.tex`.
 - [ ] Pegar en un proyecto vacío de Overleaf un `.tex` con texto mixto y entornos anidados, y comprobar que compila sin añadir paquetes.
 - [ ] Compilar con una bibliografía y comprobar que cada referencia aparece numerada entre corchetes.
+- [ ] Seleccionar **Imagen** y pulsar **Añadir bloque** con la ruta vacía. Comprobar el error junto a **Archivo de imagen** y el foco. Probar una ruta con espacios y extensión `.GIF` en mayúsculas y comprobar que se muestran avisos y se puede guardar.
+- [ ] Elegir un PNG local, comprobar la miniatura en el editor y la estructura, seleccionar **Mediana** y pulsar **Girar 90°**. Editar el bloque y comprobar que recupera la ruta, el 60 %, el giro y las demás opciones. Guardar el borrador, recargar y restaurar para comprobar que ahora se muestra la ruta con sus ajustes.
+- [ ] Subir un PNG a Overleaf con el nombre indicado en la ruta. Compilar un documento con una imagen raíz, otra girada y otra dentro de un teorema. Confirmar el giro, el pie escapado y la posición de la imagen anidada.

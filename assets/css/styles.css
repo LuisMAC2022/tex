@@ -133,6 +133,17 @@ footer { padding-block: .5rem 2rem; }
 /* --- fin [A] --- */
 
 /* --- [B] Imagen --- */
+.image-controls { display: flex; flex-wrap: wrap; gap: .5rem; }
+.image-controls button { min-inline-size: 2.75rem; }
+.image-alignment { margin-block: .75rem; padding-block: .25rem; }
+.image-alignment label { display: inline-flex; align-items: center; gap: .35rem; min-width: 2.75rem; min-height: 2.75rem; padding-inline: .25rem; cursor: pointer; }
+.image-alignment input { width: 1.1rem; min-height: 1.1rem; margin: 0; accent-color: var(--primary); }
+#image-file { min-width: 0; padding-block: .25rem; }
+#image-file::file-selector-button { min-height: 2.75rem; font: inherit; cursor: pointer; }
+.image-warnings { font-weight: 650; }
+.image-summary { margin-block: .35rem 0; }
+.image-thumbnail { display: block; inline-size: min(100%, 15rem); max-block-size: 12rem; object-fit: contain; }
+object.image-thumbnail { block-size: 12rem; }
 /* --- fin [B] --- */
 
 /* --- [C] Listas --- */

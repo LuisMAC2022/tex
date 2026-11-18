@@ -29,10 +29,11 @@ El generador recibe un objeto con este contrato conceptual:
   },
   blocks: [
     {
-      type: "text|equation|math-inline|definition|theorem|proposition|example|note|itemize|enumerate|bibliography",
+      type: "text|equation|math-inline|definition|theorem|proposition|example|note|itemize|enumerate|bibliography|image",
       title: "opcional",
       content: "texto",
-      children: [ /* bloques con la misma forma, sin profundidad máxima */ ]
+      children: [ /* bloques con la misma forma, sin profundidad máxima */ ],
+      options: { width: 0.8, angle: 0, align: "center", placement: "htbp" } // opcional, solo en image
     }
   ]
 }
@@ -46,6 +47,7 @@ El generador recibe un objeto con este contrato conceptual:
 - Hay **dos tipos de contenido matemático**, deliberadamente separados del texto: `equation` queda delimitado por `\[` y `\]` en líneas propias, y `math-inline` por `\(` y `\)` en una sola línea. Ambos conservan literalmente lo escrito y solo se diferencian por sus delimitadores en la tabla.
 - `itemize` y `enumerate` producen listas: **cada línea no vacía del contenido es un `\item`**, con su texto tal cual se escribió.
 - `bibliography` produce una **bibliografía manual con aspecto IEEE**: cada línea no vacía y recortada del contenido se conserva literalmente y se convierte en un `\bibitem{refN}` dentro de `thebibliography`. Este entorno del núcleo de LaTeX aporta por sí mismo la numeración entre corchetes, sin BibTeX, `natbib`, `IEEEtran` ni paquetes adicionales. El campo `title` no se usa, igual que en las listas. Las claves `ref1`, `ref2`, etc. son predecibles y únicas solo dentro de cada bloque; dos bloques de bibliografía repetirán claves y LaTeX mostrará una advertencia de etiqueta duplicada, una limitación aceptada porque la aplicación no genera `\cite{}`.
+- `image` usa la ruta recortada y literal de `content` y el pie opcional de `title`, escapado. No admite hijos. Sus `options` son opcionales y se guardan en el borrador `version: 2`.
 - `buildTheoremDefs()` deriva las declaraciones `\newtheorem` de esa misma tabla y agrupa los entornos por `\theoremstyle`, de modo que el preámbulo no puede desincronizarse de los tipos disponibles: añadir un tipo es una entrada en la tabla y su `<option>` en `index.html`, y una prueba compara ambas listas.
 - **Regla de numeración:** cada entorno declarado con `\newtheorem` mantiene un contador propio, independiente y continuo en todo el documento. `proposition` comparte `\theoremstyle{plain}` con `theorem`, pero **no comparte contador** ni se reinicia por sección. Cambiar esa regla es editar una sola entrada de la tabla, y es un cambio de contrato que debe documentarse aquí.
 - **El contenido de un bloque llega al `.tex` tal cual se escribió.** La aplicación no inserta ningún carácter de escape en `content`: ni en prosa, ni en los entornos tipo teorema, ni en los elementos de lista, ni por supuesto en los bloques matemáticos. Escribir `\forall x \in \mathbb{R}` produce exactamente eso, y un fragmento de LaTeX pegado desde otro documento —un `align`, un `tabular`— llega intacto.
@@ -76,7 +78,7 @@ El único caso que falla en silencio es `%`: no da error, simplemente hace desap
 ### Bloques anidados
 
 - Cada bloque puede contener otros mediante `children`, sin profundidad máxima. Los hijos **nunca se concatenan dentro de `content`**: siguen siendo nodos editables e independientes.
-- El campo `container` de la tabla de tipos define cuáles admiten hijos. La interfaz y el generador aplican la misma regla. Los bloques de texto, los cinco entornos tipo teorema y las dos listas admiten hijos. En un borrador que trae hijos en una fórmula o bibliografía, estos se conservan como hermanos posteriores.
+- El campo `container` de la tabla de tipos define cuáles admiten hijos. La interfaz y el generador aplican la misma regla. Los bloques de texto, los cinco entornos tipo teorema y las dos listas admiten hijos. En un borrador que trae hijos en una fórmula, una imagen o una bibliografía, estos se conservan como hermanos posteriores.
 - Los hijos de un bloque que **abre un entorno** se emiten antes de su `\end{...}`, en orden. Los de un bloque de **texto**, después de su propio contenido.
 - Separación determinista: un hijo de prosa abre párrafo y va precedido de una línea en blanco; un hijo que abre entorno o fórmula se pega a la línea anterior. En la raíz, los bloques siempre se separan por una línea en blanco.
 - Un entorno de lista sin ningún `\item` no se emite —no compilaría—: en ese caso sus hijos se emiten por sí solos.
@@ -91,9 +93,45 @@ Bajo las hipótesis del curso, ... se cumple $\iint_A f = \int \! \int f \, dx \
 ```
 
 - Los saltos CRLF y CR se normalizan a LF. Las líneas vacías de un bloque textual conservan los párrafos. Un bloque sin contenido no se emite, salvo que tenga hijos: entonces se emiten ellos.
-- La plantilla `article` incluye solamente `fontenc` (salida latina copiable), `inputenc` (fuente UTF-8), `babel` (español), `amsmath` (matemáticas), `amssymb` (los conjuntos `\mathbb` del tablero de símbolos) y `amsthm` (entornos). El propio preámbulo documenta el motivo. El archivo es **autocontenido**: no depende de ningún `.sty` externo, así que basta pegarlo en un proyecto vacío de Overleaf.
+- La plantilla `article` incluye solamente `fontenc` (salida latina copiable), `inputenc` (fuente UTF-8), `babel` (español), `amsmath` (matemáticas), `amssymb` (los conjuntos `\mathbb` del tablero de símbolos), `amsthm` (entornos) y `graphicx` (imágenes). El propio preámbulo documenta el motivo. El archivo usa los paquetes estándar de Overleaf y los archivos de imagen que se indiquen en los bloques.
 - El resultado termina siempre con un salto de línea y es determinista: el mismo estado produce exactamente la misma cadena.
 - El nombre sugerido se deriva del título: minúsculas, sin diacríticos, grupos no alfanuméricos convertidos en guiones y extensión `.tex`. Si queda vacío, se usa **`notas-calculo-3.tex`**.
+
+### Imágenes
+
+Indica la ruta que tendrá el archivo en Overleaf. El archivo seleccionado en el
+editor sirve para previsualizarlo durante la sesión. Sube el archivo a Overleaf
+con el mismo nombre.
+
+| Opción | Valores y valor inicial |
+| --- | --- |
+| `width` | Fracción de `\textwidth` entre 0.1 y 1. Inicialmente 0.8. |
+| `height` | Altura máxima opcional en cm. Con `width` activa `keepaspectratio`. |
+| `angle` | Giro entre −360 y 360 grados. Inicialmente 0. |
+| `align` | `center`, `left` o `right`. Inicialmente `center`. |
+| `placement` | Subconjunto de `htbp`. Inicialmente `htbp`. |
+| `label` | Etiqueta opcional con prefijo `fig:`. Solo admite minúsculas ASCII, cifras, guiones y dos puntos. |
+
+Los tamaños y el giro se redondean a dos decimales. El generador escribe los
+límites de escala antes del giro y omite el giro cero, el pie vacío y la etiqueta
+vacía. Una ruta vacía omite la imagen y conserva cualquier hijo que traiga el
+estado original, emitido después como bloque separado.
+
+```tex
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.6\textwidth,angle=90]{figuras/grafica.png}
+\caption{Gráfica de la función}
+\label{fig:grafica}
+\end{figure}
+```
+
+En la raíz y en bloques de texto fuera de un entorno, la imagen es flotante.
+En un entorno de teorema o lista conserva su lugar, incluso a través de un hijo
+de texto. Se escribe con `center` o con un grupo de alineación lateral, seguido
+del pie como párrafo. La posición `htbp` solo afecta a las figuras flotantes.
+Una etiqueta sin `\caption` avanza el contador de figuras para que `\ref` tenga
+un número propio.
 
 ### Ejemplo completo de entrada
 
@@ -241,8 +279,6 @@ El MVP está terminado cuando una persona puede, usando solamente el teclado y c
 ## Pendiente
 
 Siguen pendientes el **diccionario de macros** (`macros.js` y `validate.js`, con nombres reservados, aridad y renderizado en KaTeX) y el **modelo de documento de tres niveles** (Unidad → Clase → Bloques). Hoy `topic` produce una sola `\section`. Después viene el módulo de apoyo al curso, con cita de asesoría, fechas `.ics` y entregables.
-
-El bloque de imagen queda pendiente de implementación. El [encargo original](https://github.com/LuisMAC2022/tex/blob/e515a9cece9aad07cdeb2a49d2b274d06cd8844c/agents.md) describe `\includegraphics`, el uso de `graphicx` y los casos de exportación que se deben comprobar en Overleaf.
 
 Dentro de la entrada matemática quedan pendientes los alias personales (`imp` → `\Rightarrow`) y mover un bloque de un padre a otro: hoy **Subir** y **Bajar** solo reordenan entre hermanos, y cambiar de padre exige volver a crear el bloque.
 

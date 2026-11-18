@@ -77,7 +77,11 @@ Los scripts se cargan como clásicos **en este orden**. La aplicación usa
 | 5 | `math-symbols.js` | catálogo de símbolos y su búsqueda | no |
 | 6 | `text-insertion.js` | insertar en la posición del cursor | apenas |
 | 7 | `math-preview.js` | extracción y análisis de tramos | no |
-| 8 | `app.js` | interfaz del editor | sí |
+| 8 | `shortcuts.js` | registro de atajos y sus rótulos | no |
+| 9 | `image-options.js` | opciones de imagen y avisos de ruta | no |
+| 10 | `list-outline.js` | lógica de listas | no |
+| 11 | `content-check.js` | comprobación del contenido | no |
+| 12 | `app.js` | interfaz del editor | sí |
 
 Las pruebas de Node ejecutan las funciones puras con `node:vm`. La interacción
 de `app.js` se verifica en el navegador ([DEC-007](../decisiones/DEC-007-sin-dom-en-pruebas.md)).
@@ -100,6 +104,7 @@ Qué exporta cada uno, si necesitas buscar una función:
   `symbolsByGroup`, `normalizeSearchTerm`, `describeCommand`, `symbolAccessibleName`.
 - **`text-insertion.js`**: `insertAtSelection` (pura), `insertIntoField`.
 - **`math-preview.js`**: `mathSegments`, `analyzeContent` con un renderizador inyectado.
+- **`image-options.js`**: `normalizeImageOptions`, `imagePathWarnings`. El árbol y el generador consultan las opciones en `TexNotes` al ejecutar sus funciones.
 - **`file-download.js`**: `sanitizeFilename`, `downloadTex`.
 
 ---
@@ -168,6 +173,9 @@ Dos detalles del recorrido:
 - Los hijos de un bloque que **abre un entorno** se emiten antes de su `\end{…}`;
   los de un bloque de **texto**, después de su propio contenido. Nunca se concatenan
   dentro de `content`.
+- `blockToLatex(block, context)` propaga el entorno LaTeX abierto para decidir
+  si una imagen puede flotar. Un bloque de texto transmite ese contexto a sus
+  hijos.
 - La generación es **determinista**: el mismo estado da la misma cadena, byte a byte.
   Eso es lo que hace posible `examples/calculo-3.tex` como archivo de referencia
   (INV-008).
@@ -190,7 +198,7 @@ deducen leyendo el código: aparecieron al hacerlo.
      heading: "Lema", style: "plain", container: true },
    ```
 
-   `kind` es `"text" | "equation" | "theorem" | "list" | "bibliography"`. `container` decide si admite
+   `kind` es `"text" | "equation" | "theorem" | "list" | "bibliography" | "image"`. `container` decide si admite
    hijos, y lo aplican por igual la interfaz y el generador.
 
 2. **Su `<option>` en `index.html`**, en la misma posición que en la tabla. Una prueba
@@ -216,7 +224,11 @@ deducen leyendo el código: aparecieron al hacerlo.
    **El diff del `.tex` es la revisión.** Para el ejemplo de arriba es exactamente una
    línea, `+\newtheorem{lemma}{Lema}`. Si salen más, tu cambio hizo algo que no creías.
 
-Nada más: el preámbulo, la interfaz y la numeración se derivan solos de la tabla.
+Para un `kind` existente, el preámbulo, la interfaz básica y la numeración se
+rigen por la tabla. Un `kind` nuevo puede necesitar generación y controles
+propios. Por ejemplo, `image` registra `blockFieldHooks` para leer, rellenar,
+limpiar y validar sus campos. También registra `previewRenderers` para la
+miniatura y `blockItemExtensions` para el resumen visible en la estructura.
 
 ### Añadir un símbolo al tablero
 

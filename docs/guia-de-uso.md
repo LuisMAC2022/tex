@@ -134,6 +134,7 @@ ningún paquete ni subir ningún archivo extra.
 | «Lista con viñetas» | Una lista de puntos. |
 | «Lista numerada» | Una lista 1, 2, 3. |
 | «Bibliografía (IEEE)» | Referencias numeradas entre corchetes. |
+| «Imagen» | Una imagen con pie de figura opcional. |
 
 Dos cosas que sorprenden la primera vez:
 
@@ -147,6 +148,15 @@ claves repetidas.
 **Cada tipo lleva su propia cuenta.** `Teorema 1`, `Teorema 2`… van por un lado y
 `Definición 1`, `Definición 2`… por otro. Los números **no se reinician** en cada
 apartado: siguen corridos hasta el final del documento. Es a propósito.
+
+### Insertar y editar una imagen
+
+1. Selecciona «Imagen». En «Opciones de imagen», escribe la ruta en «Archivo de imagen» o usa «Elegir archivo…» para rellenar el nombre y obtener una miniatura local. Sube el archivo al proyecto de Overleaf en esa misma ruta. El borrador guarda la ruta y los ajustes de la imagen.
+2. Escribe el pie en «Título del bloque (opcional)». Ajusta «Ancho de la imagen» con el deslizador o elige «Pequeña» (40 %), «Mediana» (60 %), «Grande» (80 %) o «Ancho completo» (100 %). Si indicas «Altura máxima (cm, opcional)», la escala respeta ambos límites y mantiene las proporciones.
+3. Pulsa «Girar 90°» o ajusta «Ángulo de giro (grados)». Elige «Izquierda», «Centro» o «Derecha» en «Alineación de la imagen» y completa «Posición de la figura» o «Etiqueta de la figura (opcional)» si las necesitas.
+4. Comprueba la ruta o la miniatura en «Vista previa de la imagen» y usa «Añadir bloque». Para volver a cargar sus ajustes, abre «Editar» en el bloque y confirma con «Guardar cambios».
+
+La ruta vacía impide añadir la imagen. Los avisos por espacios, mayúsculas en la extensión o formatos distintos de PNG, JPG, JPEG y PDF permiten guardarla. Al añadir la imagen dentro de un teorema o una lista, aparece en ese sitio y el pie se compone como párrafo. «Posición de la figura» se aplica a las imágenes flotantes.
 
 ---
 
