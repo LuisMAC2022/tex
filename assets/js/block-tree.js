@@ -1,7 +1,8 @@
 /**
  * Árbol de bloques: rutas estables y operaciones puras.
  *
- * Un bloque es { type, title, content, children }, con options en imágenes.
+ * Un bloque es { type, title, content, children }, con options en imágenes
+ * y listFormat en listas.
  * Una ruta es un array de índices ("2.0" = tercer bloque de la raíz, primer
  * hijo). Ningún nodo se identifica por su texto ni por un índice de primer
  * nivel, de modo que mover o eliminar un hermano no invalida la identidad del
@@ -31,9 +32,25 @@
     return block;
   }
 
+  function applyListFormat(block, format, fallback) {
+    const known = format === "flat" || format === "outline" ? format : fallback;
+    if ((known === "flat" || known === "outline") && TexNotes.blockType(block.type)?.kind === "list") block.listFormat = known;
+    else delete block.listFormat;
+    return block;
+  }
+
+  function listFormatAfterEdit(block, content) {
+    if (block?.listFormat !== "flat") return "outline";
+    if (typeof content !== "string") return "flat";
+    return TexNotes.normalizeLineBreaks(content) === TexNotes.normalizeLineBreaks(block.content) ? "flat" : "outline";
+  }
+
   function cloneBlocks(list) {
-    return (Array.isArray(list) ? list : []).map((block) =>
-      applyBlockOptions({ ...block, children: cloneBlocks(block.children) }, block.options));
+    return (Array.isArray(list) ? list : []).map((block) => {
+      const copy = { ...block, children: cloneBlocks(block.children) };
+      applyBlockOptions(copy, block.options);
+      return applyListFormat(copy, block.listFormat);
+    });
   }
 
   /**
@@ -42,17 +59,18 @@
    * hermanos posteriores en vez de perderlos. Así el resto de la aplicación
    * puede dar por cierto que solo un tipo con `container` tiene descendencia.
    */
-  function normalizeBlocks(list) {
+  function normalizeBlocks(list, defaultListFormat = "outline") {
     if (!Array.isArray(list)) return [];
     const blocks = [];
     for (const raw of list) {
       if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
-      const children = normalizeBlocks(raw.children);
+      const children = normalizeBlocks(raw.children, defaultListFormat);
       const hasContent = typeof raw.content === "string";
       if (!hasContent && !children.length) continue;
       const type = typeof raw.type === "string" ? raw.type : "text";
       const block = { type, title: typeof raw.title === "string" ? raw.title : "", content: hasContent ? raw.content : "", children: [] };
-      blocks.push(applyBlockOptions(block, raw.options));
+      applyBlockOptions(block, raw.options);
+      blocks.push(applyListFormat(block, raw.listFormat, defaultListFormat));
       if (TexNotes.acceptsChildren(type)) block.children = children;
       else blocks.push(...children);
     }
@@ -146,10 +164,12 @@
     if (!target) return null;
     const type = typeof patch.type === "string" ? patch.type : target.type;
     if (target.children.length && !TexNotes.acceptsChildren(type)) return null;
+    const listFormat = listFormatAfterEdit(target, patch.content);
     target.type = type;
     if (typeof patch.title === "string") target.title = patch.title;
     if (typeof patch.content === "string") target.content = patch.content;
     applyBlockOptions(target, Object.hasOwn(patch, "options") ? patch.options : target.options);
+    applyListFormat(target, listFormat);
     return next;
   }
 
@@ -255,12 +275,12 @@
     if (!Number.isInteger(version) || version < 1 || version > DRAFT_VERSION) return null;
     if (!raw.metadata || typeof raw.metadata !== "object" || Array.isArray(raw.metadata)) return null;
     const metadata = Object.fromEntries(Object.entries(raw.metadata).filter(([, value]) => typeof value === "string"));
-    return { version, metadata, blocks: normalizeBlocks(raw.blocks) };
+    return { version, metadata, blocks: normalizeBlocks(raw.blocks, "flat") };
   }
 
   Object.assign(TexNotes, {
     DRAFT_VERSION, cloneBlocks, cloneBlock, normalizeBlock, normalizeBlocks, blockAtPath, siblingsAtPath,
     insertBlock, duplicateBlock, updateBlock, removeBlock, moveBlock, moveBlockTo, countBlocks, flattenBlocks,
-    pathToKey, keyToPath, pathLabel, normalizeDraft,
+    pathToKey, keyToPath, pathLabel, normalizeDraft, listFormatAfterEdit,
   });
 })(typeof globalThis !== "undefined" ? globalThis : this);

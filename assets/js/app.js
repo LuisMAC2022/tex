@@ -907,12 +907,20 @@
   const {
     ariaKeyshortcuts: listAriaKeyshortcuts, matchShortcut: matchListShortcut,
     parseListOutline, limitListOutline, listDepthWithEnvironment, listOutlineDepthContext,
-    shiftLines, continueListLine,
+    shiftLines, continueListLine, listFormatAfterEdit,
   } = global.TexNotes;
   const listContent = $("#block-content");
   const listLimit = $("#list-limit");
   const listShortcuts = SHORTCUTS.filter(({ scope }) => scope === "list-editor");
   const listKeyNames = listShortcuts.map(listAriaKeyshortcuts);
+
+  blockFieldHooks.push({
+    read(type) {
+      if (blockType(type)?.kind !== "list") return {};
+      const original = blockAtPath(blocks, editorTarget().editing);
+      return { listFormat: listFormatAfterEdit(original, listContent.value) };
+    },
+  });
 
   function listDepthForPath(parentPath) {
     let depth;
@@ -923,7 +931,7 @@
       const type = blockType(ancestor.type);
       if (type?.kind === "theorem") depth = listDepthWithEnvironment(depth, type.environment);
       if (type?.kind === "list") {
-        depth = listOutlineDepthContext(parseListOutline(ancestor.content, type.listEnvironment), depth);
+        depth = listOutlineDepthContext(parseListOutline(ancestor.content, type.listEnvironment, ancestor.listFormat), depth);
       }
       siblings = ancestor.children;
     }
@@ -938,7 +946,7 @@
   }
 
   previewRenderers.set("list", (container, block, { parentPath, structure }) => {
-    const parsed = parseListOutline(block.content, blockType(block.type).listEnvironment);
+    const parsed = parseListOutline(block.content, blockType(block.type).listEnvironment, block.listFormat);
     const { tree, limited } = limitListOutline(parsed, listDepthForPath(parentPath));
     const analysis = { segments: [], failures: [] };
     function fillItem(item, content) {
@@ -992,11 +1000,16 @@
 
   editorPreviewHooks.push((block) => {
     const isList = blockType(block.type)?.kind === "list";
+    const legacy = block.listFormat === "flat";
     $("#list-tools").hidden = !isList;
     $("#list-help").hidden = !isList;
+    $("#legacy-list-help").hidden = !legacy;
     if (!isList) showListLimit("");
-    const descriptions = isList ? ["list-help", ...(listLimit.hidden ? [] : ["list-limit"])] : [];
-    updateListFieldAttribute("aria-describedby", ["list-help", "list-limit"], descriptions);
+    const descriptions = [];
+    if (legacy) descriptions.push("legacy-list-help");
+    if (isList) descriptions.push("list-help");
+    if (!listLimit.hidden) descriptions.push("list-limit");
+    updateListFieldAttribute("aria-describedby", ["legacy-list-help", "list-help", "list-limit"], descriptions);
     updateListFieldAttribute("aria-keyshortcuts", listKeyNames, isList ? listKeyNames : []);
   });
 

@@ -32,3 +32,13 @@ Alt+Mayús+G y Alt+Mayús+Q sustituyen las combinaciones propuestas con flechas.
 En macOS, Opción+Mayús y las flechas seleccionan hasta el límite de la palabra
 en el campo de texto. Las letras conservan esa función nativa y los atajos se
 aplican solo en «Contenido» al editar una lista.
+
+## Compatibilidad con borradores anteriores
+
+Los borradores anteriores interpretaban cada renglón como un elemento plano,
+con los prefijos como texto y la sangría recortada. Al restaurar un
+borrador de la versión 1 o 2, una lista sin marca de formato conserva esa
+interpretación. La marca se guarda por lista dentro de la versión 2 para poder
+editar, copiar y mover listas antiguas y nuevas en el mismo borrador. Cambiar el
+contenido activa la sintaxis anidada de esa lista. Los saltos de línea que
+normaliza el campo de texto se consideran equivalentes.

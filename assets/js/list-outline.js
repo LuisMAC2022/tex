@@ -9,15 +9,20 @@
     const indent = line.match(/^[ \t]*/)[0];
     const rest = line.slice(indent.length);
     const marker = rest.match(/^([-*]|\d+[.)])([ \t]+)/);
-    return { indent, marker, content: rest.slice(marker?.[0].length || 0).trim() };
+    const text = rest.slice(marker?.[0].length || 0).trimStart();
+    return { indent, marker, content: text.trimEnd(), contentStart: line.length - text.length };
   }
 
-  function parseListOutline(content = "", rootType = "itemize") {
+  /** Las posiciones opcionales señalan el comienzo del texto, en UTF-16 y desde uno. */
+  function parseListOutline(content = "", rootType = "itemize", listFormat, { withPositions = false } = {}) {
     const root = { type: rootType, items: [] };
     const lists = [root];
-    for (const line of String(content).split(/\r\n?|\n/)) {
-      if (!line.trim()) continue;
-      const { indent, marker, content: itemContent } = lineParts(line);
+    for (const [index, line] of String(content).split(/\r\n?|\n/).entries()) {
+      const trimmed = line.trimStart();
+      if (!trimmed) continue;
+      const { indent, marker, content: itemContent, contentStart } = listFormat === "flat"
+        ? { indent: "", content: trimmed.trimEnd(), contentStart: line.length - trimmed.length }
+        : lineParts(line);
       const requested = Math.floor(indent.replace(/\t/g, INDENT).length / INDENT.length);
       const depth = root.items.length ? Math.min(requested, lists.length) : 0;
       if (depth === lists.length) {
@@ -28,7 +33,9 @@
         lists.push(child);
       }
       lists.length = depth + 1;
-      lists[depth].items.push({ content: itemContent, children: null });
+      const item = { content: itemContent, children: null };
+      if (withPositions) Object.assign(item, { line: index + 1, column: contentStart + 1 });
+      lists[depth].items.push(item);
     }
     return root;
   }
@@ -52,7 +59,7 @@
     const pending = [...tree.items].reverse();
     while (pending.length) {
       const item = pending.pop();
-      items.push({ content: item.content, children: null });
+      items.push({ ...item, children: null });
       const children = item.children?.items || [];
       for (let index = children.length - 1; index >= 0; index -= 1) pending.push(children[index]);
     }
@@ -70,7 +77,7 @@
       const items = [];
       for (const item of list.items) {
         const children = item.children ? limitList(item.children, inside) : null;
-        items.push({ content: item.content, children: children?.type ? children : null });
+        items.push({ ...item, children: children?.type ? children : null });
         if (children && !children.type) for (const flat of children.items) items.push(flat);
       }
       return { type: list.type, items };

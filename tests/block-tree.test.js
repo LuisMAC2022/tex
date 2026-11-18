@@ -393,3 +393,39 @@ test("editar normaliza las opciones de imagen y las descarta al cambiar a otro t
   assert.equal(Object.hasOwn(normalizeBlocks([{ type: "text", content: "Prosa", options: { width: 0.5 } }])[0], "options"), false);
   assert.equal(Object.hasOwn(cloneBlock({ type: "text", content: "Prosa", options: { width: 0.5 } }), "options"), false);
 });
+
+test("restaurar listas antiguas de ambas versiones mantiene los prefijos literales y la lista plana", () => {
+  const content = "- Guion literal\r\n  1. Número literal\r\n\t* Asterisco literal";
+  const oldList = { type: "itemize", content };
+  const oldLatex = "\\begin{itemize}\n\\item - Guion literal\n\\item 1. Número literal\n\\item * Asterisco literal\n\\end{itemize}";
+  for (const version of [1, 2]) {
+    const draft = normalizeDraft({ version, metadata: {}, blocks: [oldList] });
+    assert.equal(draft.blocks[0].content, content);
+    assert.equal(blockToLatex(draft.blocks[0]), oldLatex);
+    assert.ok(generateLatex(draft).includes(oldLatex));
+    const unchanged = updateBlock(draft.blocks, [0], { title: "Otro título", content: content.replaceAll("\r\n", "\n") });
+    assert.equal(blockToLatex(unchanged[0]), oldLatex);
+    const changed = updateBlock(unchanged, [0], { content: "- Primer elemento\n  1. Segundo nivel" });
+    assert.equal(blockToLatex(changed[0]), "\\begin{itemize}\n\\item Primer elemento\n  \\begin{enumerate}\n  \\item Segundo nivel\n  \\end{enumerate}\n\\end{itemize}");
+    assert.equal(Object.hasOwn(updateBlock(draft.blocks, [0], { type: "text" })[0], "listFormat"), false);
+  }
+});
+
+test("listas nuevas y antiguas conservan su propio formato al copiar, duplicar, mover, guardar y restaurar", () => {
+  const content = "- Padre\n  1. Hijo";
+  const raw = { type: "itemize", content };
+  const old = normalizeDraft({ version: 2, metadata: {}, blocks: [raw, { type: "text", content: "Destino" }] });
+  const added = insertBlock(old.blocks, [], raw);
+  const duplicated = duplicateBlock(added.blocks, [0]);
+  const pasted = insertBlock(duplicated.blocks, [], cloneBlock(duplicated.blocks[0]));
+  const moved = moveBlockTo(pasted.blocks, [4], [2]);
+  const snapshot = JSON.parse(JSON.stringify({ version: DRAFT_VERSION, metadata: {}, blocks: moved.blocks }));
+  const restored = normalizeDraft(snapshot);
+  assert.equal(restored.version, 2);
+  for (const path of [[0], [1], [2, 0]]) {
+    assert.match(blockToLatex(blockAtPath(restored.blocks, path)), /\\item - Padre\n\\item 1\. Hijo/);
+  }
+  const newLatex = "\\begin{itemize}\n\\item Padre\n  \\begin{enumerate}\n  \\item Hijo\n  \\end{enumerate}\n\\end{itemize}";
+  assert.equal(blockToLatex(restored.blocks[3]), newLatex);
+  assert.equal(blockToLatex(raw), newLatex, "un estado directo usa la sintaxis anidada por defecto");
+});

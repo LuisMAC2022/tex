@@ -153,6 +153,10 @@ niveles del mismo tipo o los seis entornos combinados, verás un aviso junto a
 «Contenido» y los elementos más profundos aparecerán en el último nivel disponible.
 Si el bloque entero alcanza el límite, sus elementos aparecerán como párrafos.
 
+Las listas de un borrador anterior conservan sus guiones, números y demás
+prefijos como texto. Al cambiar su «Contenido» se aplican las reglas de sangría y
+marcadores. Cambiar solo el título, copiar o mover el bloque conserva su formato.
+
 **En la bibliografía, escribe una referencia por línea.** Cada línea con texto
 se convierte en un `\bibitem`. Usa un solo bloque por documento para evitar
 claves repetidas.
