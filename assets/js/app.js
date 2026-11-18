@@ -735,6 +735,171 @@
   /* --- fin [A] --- */
 
   /* --- [B] Imagen --- */
+  const imageFields = $("#image-fields");
+  const imagePath = $("#image-path");
+  const imageFile = $("#image-file");
+  const imageWidth = $("#image-width");
+  const imageHeight = $("#image-height");
+  const imageAngle = $("#image-angle");
+  const imagePlacement = $("#image-placement");
+  const imageLabel = $("#image-label");
+  const imageError = $("#image-error");
+  const imageWarnings = $("#image-warnings");
+  const imagePreviews = new Map();
+  const { normalizeImageOptions, imagePathWarnings } = global.TexNotes;
+  const imageType = (id) => blockType(id)?.kind === "image";
+  const previewTitle = $(".math-preview-panel > summary");
+  const previewHelp = $(".math-preview-panel > p");
+  const originalPreviewTitle = previewTitle.textContent;
+  const originalTitleDescription = $("#block-title").getAttribute("aria-describedby");
+
+  function showImagePathFeedback(message = "") {
+    if (message) imagePath.setAttribute("aria-invalid", "true");
+    else imagePath.removeAttribute("aria-invalid");
+    imageError.textContent = message;
+    imageError.hidden = !message;
+    imageWarnings.textContent = imagePathWarnings(imagePath.value).join(" ");
+    imageWarnings.hidden = !imageWarnings.textContent;
+  }
+
+  function updateImageWidth() {
+    const text = `${imageWidth.value} %`;
+    $("#image-width-value").textContent = text;
+    imageWidth.setAttribute("aria-valuetext", text);
+    return text;
+  }
+
+  function syncImageFields() {
+    const active = imageType($("#block-type").value);
+    imageFields.hidden = !active;
+    $("#block-content").closest(".field").hidden = active;
+    $(".symbol-board").hidden = active;
+    if (active) previewTitle.textContent = "Vista previa de la imagen";
+    else previewTitle.textContent = originalPreviewTitle;
+    previewHelp.hidden = active;
+    if (active) $("#block-title").setAttribute("aria-describedby", "image-caption-help");
+    else if (originalTitleDescription) $("#block-title").setAttribute("aria-describedby", originalTitleDescription);
+    else $("#block-title").removeAttribute("aria-describedby");
+    showImagePathFeedback();
+  }
+
+  function fillImageFields(block = {}) {
+    const { width, height, angle, align, placement, label } = normalizeImageOptions(block.options);
+    imagePath.value = imageType(block.type) ? block.content.trim() : "";
+    imageFile.value = "";
+    imageWidth.value = Math.round(width * 100);
+    imageHeight.value = height ?? "";
+    imageAngle.value = angle;
+    imageFields.querySelector(`input[name="imageAlign"][value="${align}"]`).checked = true;
+    imagePlacement.value = placement;
+    imageLabel.value = label ?? "";
+    updateImageWidth();
+    syncImageFields();
+  }
+
+  blockFieldHooks.push({
+    appliesTo: imageType,
+    read(type) {
+      if (!imageType(type)) return;
+      return {
+        content: imagePath.value.trim(),
+        options: normalizeImageOptions({
+          width: Number(imageWidth.value) / 100,
+          height: imageHeight.value,
+          angle: imageAngle.value,
+          align: imageFields.querySelector('input[name="imageAlign"]:checked')?.value,
+          placement: imagePlacement.value,
+          label: imageLabel.value,
+        }),
+      };
+    },
+    fill: fillImageFields,
+    clear: fillImageFields,
+    validate() {
+      const { editing } = editorTarget();
+      let message = "";
+      if (!imagePath.value.trim()) message = "Escribe la ruta del archivo de imagen.";
+      else if (blockAtPath(blocks, editing)?.children.length) {
+        message = "«Imagen» no admite bloques anidados y este bloque ya tiene. Muévelos o elimínalos antes de cambiar el tipo.";
+      }
+      showImagePathFeedback(message);
+      if (message) {
+        imagePath.focus();
+        announce(message);
+      }
+      return !message;
+    },
+  });
+
+  blockItemExtensions.push((block, path, { article }) => {
+    if (!imageType(block.type)) return;
+    const { width, angle } = normalizeImageOptions(block.options);
+    const summary = document.createElement("p");
+    summary.className = "image-summary";
+    summary.textContent = `${block.content.trim()} · ${Math.round(width * 100)} % · ${angle}°`;
+    article.querySelector(".block-preview").append(summary);
+  });
+
+  previewRenderers.set("image", (container, block, { structure }) => {
+    const path = block.content.trim();
+    const preview = imagePreviews.get(path);
+    const fallback = structure ? "" : path || "Escribe la ruta o elige un archivo de imagen.";
+    container.textContent = fallback;
+    if (preview) {
+      if (preview.pdf) {
+        const pdf = document.createElement("object");
+        pdf.className = "image-thumbnail";
+        pdf.type = "application/pdf";
+        pdf.data = `${preview.url}#toolbar=0&navpanes=0&page=1`;
+        pdf.setAttribute("aria-label", `Vista previa de ${path}`);
+        pdf.tabIndex = -1;
+        pdf.textContent = fallback;
+        container.replaceChildren(pdf);
+      } else {
+        const image = document.createElement("img");
+        image.className = "image-thumbnail";
+        image.alt = `Miniatura de ${path}`;
+        image.addEventListener("error", () => { if (image.parentNode === container) image.replaceWith(fallback); }, { once: true });
+        image.src = preview.url;
+        container.replaceChildren(image);
+      }
+    }
+    return { failures: [] };
+  });
+
+  $("#block-type").addEventListener("change", syncImageFields);
+  imageFields.addEventListener("input", (event) => {
+    if (event.target === imagePath) showImagePathFeedback();
+    if (event.target === imageWidth) updateImageWidth();
+    scheduleEditorPreview();
+  });
+  imageFields.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-image-width]");
+    if (!button) return;
+    imageWidth.value = button.dataset.imageWidth;
+    announce(`Ancho de la imagen: ${updateImageWidth()}.`);
+    renderEditorPreview();
+  });
+  $("#image-turn").addEventListener("click", () => {
+    const { angle } = normalizeImageOptions({ angle: imageAngle.value });
+    imageAngle.value = Number((angle + 90 > 360 ? angle - 270 : angle + 90).toFixed(2));
+    announce(`Ángulo de giro: ${imageAngle.value}°.`);
+    renderEditorPreview();
+  });
+  imageFile.addEventListener("change", () => {
+    const file = imageFile.files[0];
+    if (!file) return;
+    imagePath.value = file.name;
+    const path = file.name.trim();
+    const previous = imagePreviews.get(path);
+    const url = global.URL.createObjectURL(file);
+    imagePreviews.set(path, { url, pdf: file.type === "application/pdf" || /\.pdf$/i.test(path) });
+    if (previous) global.URL.revokeObjectURL(previous.url);
+    showImagePathFeedback();
+    renderEditorPreview();
+    renderBlocks();
+    announce(`Archivo elegido: ${file.name}. Sube este archivo a Overleaf con el mismo nombre.`);
+  });
   /* --- fin [B] --- */
 
   /* --- [C] Listas --- */

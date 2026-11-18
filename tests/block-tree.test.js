@@ -32,7 +32,7 @@ test("la ausencia de children equivale a una lista vacía y el estado plano sigu
 
 test("solo los tipos declarados como contenedores admiten hijos", () => {
   for (const id of ["text", "definition", "theorem", "proposition", "example", "note", "itemize", "enumerate"]) assert.ok(acceptsChildren(id), id);
-  for (const id of ["equation", "math-inline", "bibliography"]) assert.ok(!acceptsChildren(id), id);
+  for (const id of ["equation", "math-inline", "bibliography", "image"]) assert.ok(!acceptsChildren(id), id);
   // Un tipo desconocido cae en "text", igual que en el generador.
   assert.ok(acceptsChildren("inexistente"));
 });
@@ -366,4 +366,30 @@ test("mover un bloque a un teorema emite su contenido literal dentro del entorno
   const original = [node("text", "Se cumple $x_1 = 0$."), node("theorem", "Sea $x_1$ fijo.")];
   const result = moveBlockTo(original, [0], [1]);
   assert.equal(blockToLatex(result.blocks[0]), "\\begin{theorem}\nSea $x_1$ fijo.\n\nSe cumple $x_1 = 0$.\n\\end{theorem}");
+});
+
+test("las opciones de imagen sobreviven a duplicar, copiar, pegar y restaurar la versión 2", () => {
+  const rawImage = { type: "image", content: "figura.png", options: { width: "0.60", height: 3, angle: 90, label: "Gráfica" } };
+  const options = { width: 0.6, height: 3, angle: 90, align: "center", placement: "htbp", label: "fig:grafica" };
+  const original = normalizeBlocks([node("theorem", "Padre", [rawImage])]);
+  const duplicated = duplicateBlock(original, [0, 0]);
+  const copied = cloneBlock(blockAtPath(duplicated.blocks, [0, 1]));
+  const pasted = insertBlock(duplicated.blocks, [], copied);
+  const restored = normalizeDraft(JSON.parse(JSON.stringify({ version: 2, metadata: {}, blocks: pasted.blocks })));
+  assert.equal(restored.version, 2);
+  for (const path of [[0, 0], [0, 1], [1]]) assert.deepEqual(mirror(blockAtPath(restored.blocks, path).options), options);
+  assert.notEqual(blockAtPath(duplicated.blocks, [0, 0]).options, blockAtPath(duplicated.blocks, [0, 1]).options);
+  assert.notEqual(blockAtPath(duplicated.blocks, [0, 1]).options, copied.options);
+  assert.notEqual(blockAtPath(pasted.blocks, [1]).options, copied.options);
+});
+
+test("editar normaliza las opciones de imagen y las descarta al cambiar a otro tipo", () => {
+  const image = [{ type: "image", content: "plano.jpg", children: [] }];
+  assert.equal(Object.hasOwn(normalizeBlocks(image)[0], "options"), false);
+  const edited = updateBlock(image, [0], { options: { width: 0.4, angle: -90 } });
+  assert.equal(edited[0].options.width, 0.4);
+  assert.equal(updateBlock(edited, [0], { title: "Plano" })[0].options.angle, -90);
+  assert.equal(Object.hasOwn(updateBlock(edited, [0], { type: "text", options: { width: 0.5 } })[0], "options"), false);
+  assert.equal(Object.hasOwn(normalizeBlocks([{ type: "text", content: "Prosa", options: { width: 0.5 } }])[0], "options"), false);
+  assert.equal(Object.hasOwn(cloneBlock({ type: "text", content: "Prosa", options: { width: 0.5 } }), "options"), false);
 });

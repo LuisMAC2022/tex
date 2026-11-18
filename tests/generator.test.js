@@ -29,7 +29,7 @@ test("el nombre descargable es portable y tiene alternativa", () => { assert.equ
 
 test("la tabla declara los tipos del temario en el orden de la interfaz", () => {
   assert.deepEqual(BLOCK_TYPES.map((type) => type.id),
-    ["text", "equation", "math-inline", "definition", "theorem", "proposition", "example", "note", "itemize", "enumerate", "bibliography"]);
+    ["text", "equation", "math-inline", "definition", "theorem", "proposition", "example", "note", "itemize", "enumerate", "bibliography", "image"]);
 });
 test("un tipo desconocido no rompe la generación y cae en texto", () => {
   assert.equal(blockToLatex({ type: "inexistente", content: "Hola & adiós" }), "Hola & adiós");
@@ -48,7 +48,7 @@ test("el preámbulo deriva un \\newtheorem por cada tipo declarado", () => {
 test("el preámbulo solo carga paquetes de la lista blanca", () => {
   const packages = [...buildPreamble().matchAll(/^[ \t]*\\usepackage\s*(?:\[[^\]]*\]\s*)?\{([^}]+)\}/gm)]
     .flatMap((match) => match[1].split(",").map((name) => name.trim()));
-  assert.deepEqual(packages, ["fontenc", "inputenc", "babel", "amsmath", "amssymb", "amsthm"]);
+  assert.deepEqual(packages, ["fontenc", "inputenc", "babel", "amsmath", "amssymb", "amsthm", "graphicx"]);
 });
 test("no repite \\theoremstyle al agrupar entornos del mismo estilo", () => {
   const styles = buildTheoremDefs().match(/\\theoremstyle\{(\w+)\}/g) || [];
@@ -141,4 +141,56 @@ test("la bibliografía recorta líneas y ajusta el ancho para diez o más refere
   assert.match(latex, /^\\begin\{thebibliography\}\{99\}\n/);
   assert.match(latex, /\\bibitem\{ref1\} Referencia 1\n/);
   assert.match(latex, /\\bibitem\{ref10\} Referencia 10\n\\end\{thebibliography\}$/);
+});
+
+test("una imagen conserva la ruta literal y escapa el pie de figura", () => {
+  assert.equal(blockToLatex({ type: "image", title: "Gráfica de f_1 & su eje", content: "  figuras/grafica_1.png  ", options: { width: 0.6, angle: 90, label: "Gráfica-1" } }), [
+    "\\begin{figure}[htbp]", "\\centering",
+    "\\includegraphics[width=0.6\\textwidth,angle=90]{figuras/grafica_1.png}",
+    "\\caption{Gráfica de f\\_1 \\& su eje}", "\\label{fig:grafica-1}", "\\end{figure}",
+  ].join("\n"));
+});
+
+test("una imagen sin opciones ni pie usa el ancho por defecto y omite los campos vacíos", () => {
+  assert.equal(blockToLatex({ type: "image", title: "  ", content: "grafica.pdf" }), [
+    "\\begin{figure}[htbp]", "\\centering", "\\includegraphics[width=0.8\\textwidth]{grafica.pdf}", "\\end{figure}",
+  ].join("\n"));
+});
+
+test("la imagen ordena los límites de escala antes del giro y admite alineación lateral", () => {
+  const image = { type: "image", content: "figura.jpg", options: { width: 0.4, height: 3.2, angle: -90, placement: "pt", align: "left" } };
+  assert.equal(blockToLatex(image), [
+    "\\begin{figure}[tp]", "\\raggedright",
+    "\\includegraphics[width=0.4\\textwidth,height=3.2cm,keepaspectratio,angle=-90]{figura.jpg}", "\\end{figure}",
+  ].join("\n"));
+  assert.match(blockToLatex({ ...image, options: { align: "right" } }), /\\raggedleft/);
+});
+
+test("una imagen anidada en un teorema permanece junto al texto y usa un pie como párrafo", () => {
+  const image = { type: "image", title: "Área & perímetro", content: "plano.png", options: { placement: "p" } };
+  assert.equal(blockToLatex({ type: "theorem", content: "Demostración.", children: [{ type: "text", content: "El dibujo", children: [image] }] }), [
+    "\\begin{theorem}", "Demostración.", "", "El dibujo",
+    "\\begin{center}", "\\includegraphics[width=0.8\\textwidth]{plano.png}", "\\par", "Área \\& perímetro", "\\end{center}", "\\end{theorem}",
+  ].join("\n"));
+});
+
+test("una imagen a la derecha en una lista acota su alineación y no abre un flotante", () => {
+  const image = { type: "image", content: "plano.png", options: { align: "right", label: "plano" } };
+  assert.equal(blockToLatex({ type: "itemize", content: "El dibujo", children: [image] }), [
+    "\\begin{itemize}", "\\item El dibujo", "\\par\\begingroup", "\\raggedleft",
+    "\\includegraphics[width=0.8\\textwidth]{plano.png}", "\\refstepcounter{figure}", "\\label{fig:plano}", "\\par\\endgroup", "\\end{itemize}",
+  ].join("\n"));
+});
+
+test("una imagen con etiqueta y sin pie establece la referencia de figura", () => {
+  const image = { type: "image", content: "plano.png", options: { label: "plano" } };
+  assert.match(blockToLatex(image), /\\refstepcounter\{figure\}\n\\label\{fig:plano\}/);
+});
+
+test("los hijos de una imagen con ruta vacía se emiten aunque se omita la imagen", () => {
+  const image = { type: "image", title: "Sin archivo", content: " \n  ", options: { label: "plano" } };
+  assert.equal(blockToLatex(image), "");
+  assert.equal(blockToLatex({ ...image, children: [{ type: "text", content: "Se conserva." }] }), "Se conserva.");
+  assert.equal(blockToLatex({ type: "enumerate", content: " ", children: [{ type: "image", content: "plano.png" }] }),
+    blockToLatex({ type: "image", content: "plano.png" }));
 });

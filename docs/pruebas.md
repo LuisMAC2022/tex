@@ -12,7 +12,7 @@
 - cada decisión citada en el código existe en decisiones/
 - ningún código vivo se apoya en una decisión reemplazada
 
-## `tests/block-tree.test.js` — 36 pruebas
+## `tests/block-tree.test.js` — 38 pruebas
 
 - la ausencia de children equivale a una lista vacía y el estado plano sigue siendo válido
 - solo los tipos declarados como contenedores admiten hijos
@@ -50,6 +50,8 @@
 - mover a la raíz elige por ruta entre hermanos idénticos
 - mover al mismo padre reordena entre hermanos como subir y bajar
 - mover un bloque a un teorema emite su contenido literal dentro del entorno
+- las opciones de imagen sobreviven a duplicar, copiar, pegar y restaurar la versión 2
+- editar normaliza las opciones de imagen y las descarta al cambiar a otro tipo
 
 ## `tests/content-check.test.js` — 11 pruebas
 
@@ -83,7 +85,7 @@
 - ningún índice apunta a una sección que ya no existe
 - cada rótulo que citan las guías sigue existiendo en la interfaz
 
-## `tests/generator.test.js` — 28 pruebas
+## `tests/generator.test.js` — 35 pruebas
 
 - los metadatos y los títulos escapan todos los caracteres reservados
 - el contenido de un bloque no recibe ningún escape
@@ -113,6 +115,20 @@
 - la bibliografía genera claves predecibles y conserva literalmente cada referencia
 - la bibliografía admite una referencia y omite el entorno vacío
 - la bibliografía recorta líneas y ajusta el ancho para diez o más referencias
+- una imagen conserva la ruta literal y escapa el pie de figura
+- una imagen sin opciones ni pie usa el ancho por defecto y omite los campos vacíos
+- la imagen ordena los límites de escala antes del giro y admite alineación lateral
+- una imagen anidada en un teorema permanece junto al texto y usa un pie como párrafo
+- una imagen a la derecha en una lista acota su alineación y no abre un flotante
+- una imagen con etiqueta y sin pie establece la referencia de figura
+- los hijos de una imagen con ruta vacía se emiten aunque se omita la imagen
+
+## `tests/image-options.test.js` — 4 pruebas
+
+- las opciones de imagen tienen valores por defecto sin altura ni etiqueta
+- las opciones de imagen redondean y limitan los valores numéricos
+- las opciones de imagen sanean alineación, posición y etiqueta de forma idempotente
+- los avisos de ruta distinguen espacios, mayúsculas y formatos incompatibles
 
 ## `tests/invariantes.test.js` — 4 pruebas
 
@@ -181,4 +197,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-138 pruebas con `node:test` más la comprobación estructural.
+151 pruebas con `node:test` más la comprobación estructural.

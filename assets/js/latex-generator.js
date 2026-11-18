@@ -61,17 +61,21 @@
   /**
    * Serializa un bloque y su descendencia. Los hijos de un bloque que abre un
    * entorno se emiten antes de su \end{...}; los de un bloque de texto, tras su
-   * propio contenido. Nunca se concatenan dentro de `content`.
+   * propio contenido. El contexto indica el entorno aún abierto para los hijos.
+   * Nunca se concatenan dentro de `content`.
    */
-  function blockToLatex(block = {}, { depthContext } = {}) {
+  function blockToLatex(block = {}, context = {}) {
+    const { depthContext } = context;
     const type = TexNotes.blockType(block.type) || TexNotes.blockType("text");
     const content = contentToLatex(block.content);
     const outline = type.kind === "list" ? TexNotes.parseListOutline(content, type.listEnvironment) : null;
     let childDepth = depthContext;
     if (outline) childDepth = TexNotes.listOutlineDepthContext(outline, depthContext);
     if (type.kind === "theorem") childDepth = TexNotes.listDepthWithEnvironment(depthContext, type.environment);
+    const wrapsChildren = type.kind === "theorem" || (outline && childDepth !== depthContext);
+    const childContext = wrapsChildren ? { parentType: type.id, depthContext: childDepth } : context;
     const children = (Array.isArray(block.children) ? block.children : [])
-      .map((child) => ({ separator: childSeparator(child), latex: blockToLatex(child, { depthContext: childDepth }) }))
+      .map((child) => ({ separator: childSeparator(child), latex: blockToLatex(child, childContext) }))
       .filter((child) => child.latex);
     const withChildren = (base) => children.reduce((text, child) => (text ? `${text}${child.separator}${child.latex}` : child.latex), base);
 
@@ -82,6 +86,30 @@
       // Una fórmula no admite hijos. Si un estado manipulado los trae, se
       // emiten después del cierre; dentro producirían LaTeX inválido.
       return withChildren(math);
+    }
+    if (type.kind === "image") {
+      const path = content.trim();
+      if (!path) return withChildren("");
+      const { width, height, angle, align, placement, label } = TexNotes.normalizeImageOptions(block.options);
+      const limits = [`width=${width}\\textwidth`];
+      if (height) limits.push(`height=${height}cm`, "keepaspectratio");
+      if (angle) limits.push(`angle=${angle}`);
+      const graphics = `\\includegraphics[${limits.join(",")}]{${path}}`;
+      const caption = escapeMetadata(block.title).trim();
+      const anchor = label ? `\\label{${label}}` : "";
+      const countFigure = label ? "\\refstepcounter{figure}" : "";
+      const alignment = { center: "\\centering", left: "\\raggedright", right: "\\raggedleft" }[align];
+      let lines;
+      if (!context.parentType || context.parentType === "text") {
+        lines = [`\\begin{figure}[${placement}]`, alignment, graphics,
+          caption ? `\\caption{${caption}}` : countFigure, anchor, "\\end{figure}"];
+      } else {
+        const body = [graphics, caption && `\\par\n${caption}`, countFigure, anchor];
+        lines = align === "center"
+          ? ["\\begin{center}", ...body, "\\end{center}"]
+          : ["\\par\\begingroup", alignment, ...body, "\\par\\endgroup"];
+      }
+      return withChildren(lines.filter(Boolean).join("\n"));
     }
     if (type.kind === "list") {
       return TexNotes.outlineToLatex(outline, depthContext, withChildren);
@@ -135,6 +163,8 @@
       "\\usepackage{amssymb}",
       "% amsthm permite declarar teoremas y bloques relacionados.",
       "\\usepackage{amsthm}",
+      "% graphicx permite \\includegraphics para insertar imágenes.",
+      "\\usepackage{graphicx}",
       "% Los entornos siguientes se derivan de la tabla de tipos de bloque.",
       buildTheoremDefs(),
     ].join("\n");
