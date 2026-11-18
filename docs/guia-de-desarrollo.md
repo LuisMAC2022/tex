@@ -148,6 +148,10 @@ El borrador se guarda bajo demanda en `localStorage`, con la clave
 tolera datos ausentes, corruptos o mal anidados **a cualquier profundidad y nunca
 lanza**: es entrada no confiable, viene del navegador de alguien.
 
+`listFormat` pertenece a los bloques de lista. Al restaurar un borrador anterior
+sin ese campo, se conserva el modo plano. Un cambio de contenido activa el modo
+por sangría, que se guarda en la misma versión del borrador.
+
 ---
 
 ## 4. Del estado al `.tex`

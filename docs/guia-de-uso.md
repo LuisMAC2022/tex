@@ -268,7 +268,8 @@ en Overleaf comprueba el documento completo.
 
 Debajo de «Contenido» aparecen los avisos de LaTeX después de una pausa al
 escribir. Cada aviso indica la línea y la columna dentro del bloque. La
-estructura muestra el recuento por bloque.
+estructura muestra el recuento por bloque. En listas y bibliografías, abre y
+cierra cada fórmula dentro de un mismo elemento.
 
 Al pulsar «Generar documento», el resumen «Comprobación previa a Overleaf»
 agrupa los avisos. Usa el enlace **Ir al bloque** para enfocar su botón «Editar».

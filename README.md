@@ -33,7 +33,8 @@ El generador recibe un objeto con este contrato conceptual:
       title: "opcional",
       content: "texto",
       children: [ /* bloques con la misma forma, sin profundidad máxima */ ],
-      options: { width: 0.8, angle: 0, align: "center", placement: "htbp" } // opcional, solo en image
+      options: { width: 0.8, angle: 0, align: "center", placement: "htbp" }, // opcional, solo en image
+      listFormat: "flat|outline" // opcional, solo en listas
     }
   ]
 }
@@ -49,6 +50,7 @@ El generador recibe un objeto con este contrato conceptual:
 - El bloque define el tipo de la lista raíz. Al abrir una sublista, el primer elemento fija su tipo con `- ` o `* ` para viñetas y un número seguido de `. ` o `) ` para numeración. Sin marcador hereda el tipo de la lista que la contiene. Los marcadores se consumen en todos los niveles. `{}- ` conserva el guion como parte del elemento.
 - Se permiten hasta cuatro niveles de un mismo tipo y seis entornos combinados, contando los teoremas y las listas envolventes que genera el editor. Los elementos que alcancen el límite se incorporan al último nivel disponible sin alterar su orden. Si el bloque completo ya está en el límite, sus elementos se emiten como párrafos.
 - Una lista plana sin marcadores conserva el formato `.tex` anterior. Cada nivel de sublista añade dos espacios al comienzo de sus líneas. Los bloques de «Añadir dentro» se emiten después de los elementos y antes del cierre de la lista raíz, si la lista puede abrirse.
+- Al restaurar un borrador antiguo, sus listas sin `listFormat` conservan los marcadores literales y se muestran planas. Cambiar su contenido activa la sintaxis por sangría. Las listas nuevas guardan su formato dentro del borrador v2.
 - `bibliography` produce una **bibliografía manual con aspecto IEEE**: cada línea no vacía y recortada del contenido se conserva literalmente y se convierte en un `\bibitem{refN}` dentro de `thebibliography`. Este entorno del núcleo de LaTeX aporta por sí mismo la numeración entre corchetes, sin BibTeX, `natbib`, `IEEEtran` ni paquetes adicionales. El campo `title` no se usa, igual que en las listas. Las claves `ref1`, `ref2`, etc. son predecibles y únicas solo dentro de cada bloque; dos bloques de bibliografía repetirán claves y LaTeX mostrará una advertencia de etiqueta duplicada, una limitación aceptada porque la aplicación no genera `\cite{}`.
 - `image` usa la ruta recortada y literal de `content` y el pie opcional de `title`, escapado. No admite hijos. Sus `options` son opcionales y se guardan en el borrador `version: 2`.
 - `buildTheoremDefs()` deriva las declaraciones `\newtheorem` de esa misma tabla y agrupa los entornos por `\theoremstyle`, de modo que el preámbulo no puede desincronizarse de los tipos disponibles: añadir un tipo es una entrada en la tabla y su `<option>` en `index.html`, y una prueba compara ambas listas.
