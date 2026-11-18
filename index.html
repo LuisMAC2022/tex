@@ -124,6 +124,29 @@
           <ul id="keyboard-shortcuts"></ul>
         </details>
       </form>
+      <dialog id="move-block-dialog" aria-labelledby="move-block-heading" aria-describedby="move-block-subject">
+        <form id="move-block-form" method="dialog">
+          <h2 id="move-block-heading">Mover bloque</h2>
+          <p id="move-block-subject"></p>
+          <p class="field">
+            <label for="move-block-destination">Destino</label>
+            <select id="move-block-destination" autofocus>
+              <option value="">Raíz del documento</option>
+            </select>
+          </p>
+          <p class="field">
+            <label for="move-block-position">Posición</label>
+            <select id="move-block-position">
+              <option value="start">Al principio</option>
+              <option value="end" selected>Al final</option>
+            </select>
+          </p>
+          <menu class="button-row">
+            <li><button id="move-block-cancel" class="secondary" type="button">Cancelar</button></li>
+            <li><button type="submit">Mover bloque</button></li>
+          </menu>
+        </form>
+      </dialog>
       <p id="app-status" class="status" aria-live="polite" aria-atomic="true">Editor listo.</p>
     </main>
     <footer><p>La vista previa orienta sobre modo matemático; la validación y compilación del documento se realizan en Overleaf.</p></footer>

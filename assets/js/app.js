@@ -605,6 +605,57 @@
   /* --- fin [D] --- */
 
   /* --- [E] Mover --- */
+  const { flattenBlocks, moveBlockTo } = global.TexNotes;
+  const moveDialog = $("#move-block-dialog");
+  const moveDestination = $("#move-block-destination");
+  const movePosition = $("#move-block-position");
+  let movingPath = [];
+
+  blockItemExtensions.push((_block, path, { actions, subject }) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Mover a…";
+    button.setAttribute("aria-label", `Mover a… · Bloque ${subject}`);
+    button.setAttribute("aria-haspopup", "dialog");
+    button.addEventListener("click", () => {
+      movingPath = path;
+      const sourceKey = pathToKey(path);
+      const options = [moveDestination.options[0]];
+      for (const { block, path: parentPath } of flattenBlocks(blocks)) {
+        const key = pathToKey(parentPath);
+        if (!acceptsChildren(block.type) || key === sourceKey || key.startsWith(`${sourceKey}.`)) continue;
+        options.push(new Option(describeBlock(block, parentPath), key));
+      }
+      $("#move-block-subject").textContent = `Bloque ${subject}`;
+      moveDestination.replaceChildren(...options);
+      moveDestination.value = pathToKey(path.slice(0, -1));
+      movePosition.value = "end";
+      button.focus();
+      moveDialog.showModal();
+    });
+    actions.append(button);
+  });
+
+  $("#move-block-cancel").addEventListener("click", () => moveDialog.close());
+  $("#move-block-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const position = movePosition.value === "start" ? 0 : undefined;
+    const result = moveBlockTo(blocks, movingPath, keyToPath(moveDestination.value), position);
+    moveDialog.close();
+    if (!result) {
+      announce("No se pudo mover el bloque a ese destino.");
+      return;
+    }
+
+    const previous = editorTarget();
+    const cancelled = cancelEditForStructuralChange();
+    blocks = result.blocks;
+    renderBlocks();
+    setEditorTarget({});
+    focusAction("edit", result.path);
+    const targetReset = previous.parent.length ? " El siguiente bloque se añadirá en la raíz." : "";
+    announce(`Bloque movido de ${pathLabel(movingPath)} a ${pathLabel(result.path)}.${cancelled}${targetReset}`);
+  });
   /* --- fin [E] --- */
 
   function renderShortcutPanel() {

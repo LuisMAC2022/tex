@@ -296,3 +296,74 @@ test("guardar y restaurar después de duplicar mantiene ambas ramas", () => {
   assert.deepEqual(shape(draft.blocks), shape(blocks));
   assert.equal(countBlocks(draft.blocks), 7);
 });
+
+/* --- Mover una rama a otro padre --- */
+
+const { moveBlockTo } = await loadTexNotes(["block-types.js", "block-tree.js"]);
+
+test("mover a otro padre rechaza rutas inexistentes, ciclos y destinos sin hijos", () => {
+  const original = [tree()[0], node("equation", "x=1")];
+  const snapshot = mirror(original);
+  for (const source of [[], [9], [0, 8], [-1], [0.5], Array(1), "0", null]) {
+    assert.equal(moveBlockTo(original, source, []), null);
+  }
+  for (const destination of [[8], [0, 5], [0], [0, 0], [0, 0, 0], [1], [-1], Array(1), "", null]) {
+    assert.equal(moveBlockTo(original, [0], destination), null);
+  }
+  assert.deepEqual(mirror(original), snapshot);
+});
+
+test("mover una rama ajusta la ruta profunda de un destino desplazado y conserva sus hijos", () => {
+  const original = [
+    tree()[0], node("text", "Entre medias"),
+    node("text", "Destino", [node("note", "Sección", [node("text", "Interior", [node("text", "Primero")])])]),
+  ];
+  const snapshot = mirror(original);
+  const source = [0];
+  const destination = [2, 0, 0];
+  const result = moveBlockTo(original, source, destination);
+  assert.deepEqual(mirror(result.path), [1, 0, 0, 1]);
+  const moved = blockAtPath(result.blocks, result.path);
+  assert.deepEqual(mirror(moved), snapshot[0]);
+  assert.notEqual(moved.children, original[0].children);
+  assert.equal(blockAtPath(result.blocks, [1, 0, 0, 0]).content, "Primero");
+  assert.deepEqual(mirror(original), snapshot);
+  assert.deepEqual(source, [0]);
+  assert.deepEqual(destination, [2, 0, 0]);
+});
+
+test("al mover entre ramas solo se ajusta el índice de un hermano del origen", () => {
+  const original = [
+    node("text", "Padre", [node("text", "Mover"), node("text", "Hermano", [node("text", "Destino local")])]),
+    node("text", "Otro padre", [node("text", "Primero"), node("text", "Destino externo")]),
+  ];
+  const local = moveBlockTo(original, [0, 0], [0, 1, 0]);
+  assert.deepEqual(mirror(local.path), [0, 0, 0, 0]);
+  assert.equal(blockAtPath(local.blocks, [0, 0, 0]).content, "Destino local");
+  const external = moveBlockTo(original, [0, 0], [1, 1]);
+  assert.deepEqual(mirror(external.path), [1, 1, 0]);
+  assert.equal(blockAtPath(external.blocks, [1, 1]).content, "Destino externo");
+});
+
+test("mover a la raíz elige por ruta entre hermanos idénticos", () => {
+  const original = [node("text", "Padre", [node("text", "Igual"), node("text", "Entre medias"), node("text", "Igual")])];
+  const result = moveBlockTo(original, [0, 2], [], 0);
+  assert.deepEqual(mirror(result.path), [0]);
+  assert.deepEqual(shape(result.blocks), ["0:Igual", "1:Padre", "1.0:Igual", "1.1:Entre medias"]);
+});
+
+test("mover al mismo padre reordena entre hermanos como subir y bajar", () => {
+  const original = [node("text", "Padre", [node("text", "Uno"), node("text", "Dos")])];
+  const first = moveBlockTo(original, [0, 1], [0], 0);
+  const last = moveBlockTo(original, [0, 0], [0]);
+  assert.deepEqual(mirror(first), mirror(moveBlock(original, [0, 1], -1)));
+  assert.deepEqual(mirror(last), mirror(moveBlock(original, [0, 0], 1)));
+  assert.equal(moveBlock(original, [0, 0], -1), null);
+  assert.equal(moveBlock(original, [0, 1], 1), null);
+});
+
+test("mover un bloque a un teorema emite su contenido literal dentro del entorno", () => {
+  const original = [node("text", "Se cumple $x_1 = 0$."), node("theorem", "Sea $x_1$ fijo.")];
+  const result = moveBlockTo(original, [0], [1]);
+  assert.equal(blockToLatex(result.blocks[0]), "\\begin{theorem}\nSea $x_1$ fijo.\n\nSe cumple $x_1 = 0$.\n\\end{theorem}");
+});
