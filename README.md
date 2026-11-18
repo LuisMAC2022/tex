@@ -1,6 +1,6 @@
 # Notas LaTeX
 
-Aplicación web estática para consolidar apuntes de clase y exportarlos como un archivo LaTeX autocontenido. El editor y el borrador funcionan en el navegador, con KaTeX y sus fuentes incluidos en el sitio.
+Aplicación web estática para consolidar apuntes de clase y exportarlos como un archivo LaTeX para compilar en Overleaf. El editor y el borrador funcionan en el navegador, con KaTeX y sus fuentes incluidos en el sitio.
 
 > Invariantes vigiladas: [`INVARIANTES.md`](INVARIANTES.md) · por qué de cada
 > decisión: [`decisiones/`](decisiones/) · reglas para agentes:
@@ -297,9 +297,14 @@ El MVP está terminado cuando una persona puede, usando solamente el teclado y c
 
 ## Pendiente
 
-Siguen pendientes el **diccionario de macros** (`macros.js` y `validate.js`, con nombres reservados, aridad y renderizado en KaTeX) y el **modelo de documento de tres niveles** (Unidad → Clase → Bloques). Hoy `topic` produce una sola `\section`. Después viene el módulo de apoyo al curso, con cita de asesoría, fechas `.ics` y entregables.
+### Siguiente ronda
 
-Dentro de la entrada matemática quedan pendientes los alias personales (`imp` → `\Rightarrow`).
+- **Macros personales** como `\R` → `\mathbb{R}` en el preámbulo, la vista previa y la categoría **Mis macros**. Requieren ampliar el formato del borrador.
+- **Bloque de tabla o tabla de verdad** con `tabular`, como las del Repaso −1 del temario.
+- **Referencias cruzadas** con etiquetas en teoremas y ecuaciones y una acción para insertar `\ref`.
+- **Alias de escritura** como `imp` → `\Rightarrow`.
+
+También siguen pendientes el **modelo de documento de tres niveles** (Unidad → Clase → Bloques) y el módulo de apoyo al curso con cita de asesoría, fechas `.ics` y entregables. Hoy `topic` produce una sola `\section`.
 
 Quedan expresamente fuera por ahora: TeX en WASM, TikZ/PGFPlots, traducción de errores de TeX, paleta de comandos, buscar y reemplazar, historial de versiones, infraestructura de sincronización y cualquier ida y vuelta desde Overleaf a la aplicación.
 

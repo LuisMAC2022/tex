@@ -4,7 +4,7 @@ status: accepted
 date: 2026-11-18
 project: tex
 tags: [simbolos, teclado, accesibilidad]
-commit: HEAD
+commit: a81b440
 ---
 
 # DEC-010 — Navegar por el tablero de símbolos y volver al campo de origen

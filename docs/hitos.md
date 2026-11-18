@@ -44,3 +44,28 @@ Contenido entregado tal cual —comandos, llaves y matemática delimitada— con
 
 KaTeX local con MathML, representación bajo el editor y en cada bloque, y avisos que permiten seguir exportando el `.tex`.
 </details>
+
+<details><summary><strong>11. Tablero de símbolos por teclado</strong></summary>
+
+Acceso directo al buscador, navegación entre resultados y categorías, retorno al campo de origen y doce símbolos recientes.
+</details>
+
+<details><summary><strong>12. Imágenes en el documento</strong></summary>
+
+Miniatura local, edición de tamaño y alineación, giro y exportación con `graphicx` en la raíz y en bloques anidados.
+</details>
+
+<details><summary><strong>13. Listas anidadas por sangría</strong></summary>
+
+Viñetas y numeración combinadas en un bloque, atajos, continuación con Intro y vista previa con KaTeX.
+</details>
+
+<details><summary><strong>14. Comprobación previa a Overleaf</strong></summary>
+
+Avisos con línea y columna, recuento por bloque y enlaces al editor al generar el documento.
+</details>
+
+<details><summary><strong>15. Traslado de bloques entre padres</strong></summary>
+
+Diálogo con destinos válidos para mover una rama completa y enfocar su nueva posición.
+</details>

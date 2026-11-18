@@ -4,7 +4,7 @@ status: accepted
 date: 2026-11-18
 project: tex
 tags: [bloques, accesibilidad]
-commit: HEAD
+commit: a60c477
 ---
 
 # DEC-014 — Elegir el padre y la posición de un bloque

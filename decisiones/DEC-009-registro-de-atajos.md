@@ -4,7 +4,7 @@ status: accepted
 date: 2026-11-18
 project: tex
 tags: [teclado, accesibilidad]
-commit: HEAD
+commit: 7e84c4c
 ---
 
 # DEC-009 — Atajos de teclado con un registro y sus reglas

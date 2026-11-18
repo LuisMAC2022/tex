@@ -4,6 +4,7 @@ status: accepted
 date: 2026-11-18
 project: tex
 tags: [latex, imagen, borrador]
+commit: 1631982
 ---
 
 # DEC-011 — Imágenes con graphicx y vista previa local

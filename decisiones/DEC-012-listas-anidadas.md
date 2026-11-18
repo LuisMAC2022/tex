@@ -4,7 +4,7 @@ status: accepted
 date: 2026-11-18
 project: tex
 tags: [listas, accesibilidad, latex]
-commit: HEAD
+commit: 82ec9dc
 ---
 
 # DEC-012 — Listas anidadas mediante sangría y marcadores

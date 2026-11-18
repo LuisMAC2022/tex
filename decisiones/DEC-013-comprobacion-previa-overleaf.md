@@ -4,7 +4,7 @@ status: accepted
 date: 2026-11-18
 project: tex
 tags: [latex, comprobación, overleaf]
-commit: HEAD
+commit: c857389
 ---
 
 # DEC-013 — Comprobación previa a Overleaf
