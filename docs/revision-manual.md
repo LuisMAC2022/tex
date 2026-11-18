@@ -35,5 +35,8 @@ por ronda de revisión, no al cambiar código.
 - [ ] Con `file://` y sin conexión, verificar que las fuentes matemáticas cargan y que la vista previa es legible en ambos temas.
 - [ ] Previsualizar `$x \in \mathbb{R}$` en prosa y una ecuación destacada con el teclado. El foco debe permanecer en el editor.
 - [ ] Escribir una fórmula incompleta, comprobar **No se pudo previsualizar** y generar el archivo `.tex`.
+- [ ] En «Lista con viñetas», escribir una lista de tres niveles que combine viñetas, numeración y una fórmula. Usar solo el teclado y un lector de pantalla. Confirmar que lee los niveles y que **Sangrar**, **Quitar sangría**, Intro y Escape conservan el foco esperado.
+- [ ] Probar Alt+Mayús+G y Alt+Mayús+Q con una selección de varias líneas en Chromium y Firefox. Confirmar que no cambia la página y que Tab sale del campo. En macOS, usar ⌥⇧G y ⌥⇧Q y comprobar que ⌥⇧← y ⌥⇧→ siguen seleccionando por palabras.
+- [ ] Superar el límite de anidación en una lista y comprobar que se muestra el aviso y se conservan los elementos. Compilar en Overleaf la lista mixta de tres niveles y una lista al límite.
 - [ ] Pegar en un proyecto vacío de Overleaf un `.tex` con texto mixto y entornos anidados, y comprobar que compila sin añadir paquetes.
 - [ ] Compilar con una bibliografía y comprobar que cada referencia aparece numerada entre corchetes.

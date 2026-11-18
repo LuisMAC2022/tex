@@ -77,7 +77,11 @@ Los scripts se cargan como clásicos **en este orden**. La aplicación usa
 | 5 | `math-symbols.js` | catálogo de símbolos y su búsqueda | no |
 | 6 | `text-insertion.js` | insertar en la posición del cursor | apenas |
 | 7 | `math-preview.js` | extracción y análisis de tramos | no |
-| 8 | `app.js` | interfaz del editor | sí |
+| 8 | `shortcuts.js` | registro de atajos y sus nombres | no |
+| 9 | `image-options.js` | opciones de bloque de imagen | no |
+| 10 | `list-outline.js` | análisis, límites, exportación y edición de listas | no |
+| 11 | `content-check.js` | comprobación del contenido | no |
+| 12 | `app.js` | interfaz del editor | sí |
 
 Las pruebas de Node ejecutan las funciones puras con `node:vm`. La interacción
 de `app.js` se verifica en el navegador ([DEC-007](../decisiones/DEC-007-sin-dom-en-pruebas.md)).
@@ -100,6 +104,10 @@ Qué exporta cada uno, si necesitas buscar una función:
   `symbolsByGroup`, `normalizeSearchTerm`, `describeCommand`, `symbolAccessibleName`.
 - **`text-insertion.js`**: `insertAtSelection` (pura), `insertIntoField`.
 - **`math-preview.js`**: `mathSegments`, `analyzeContent` con un renderizador inyectado.
+- **`list-outline.js`**: `parseListOutline` crea el árbol de elementos. `limitListOutline`
+  aplica los límites de entornos y devuelve los datos para la vista previa.
+  `outlineToLatex` aplica los mismos límites al exportar. `shiftLines` y `continueListLine`
+  reciben el texto y la selección en índices UTF-16 y devuelven el nuevo estado del campo.
 - **`file-download.js`**: `sanitizeFilename`, `downloadTex`.
 
 ---

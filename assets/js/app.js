@@ -599,6 +599,144 @@
   /* --- fin [B] --- */
 
   /* --- [C] Listas --- */
+
+  const {
+    ariaKeyshortcuts: listAriaKeyshortcuts, matchShortcut: matchListShortcut,
+    parseListOutline, limitListOutline, listDepthWithEnvironment, listOutlineDepthContext,
+    shiftLines, continueListLine,
+  } = global.TexNotes;
+  const listContent = $("#block-content");
+  const listLimit = $("#list-limit");
+  const listShortcuts = SHORTCUTS.filter(({ scope }) => scope === "list-editor");
+  const listKeyNames = listShortcuts.map(listAriaKeyshortcuts);
+
+  function listDepthForPath(parentPath) {
+    let depth;
+    let siblings = blocks;
+    for (const index of parentPath) {
+      const ancestor = siblings[index];
+      if (!ancestor) break;
+      const type = blockType(ancestor.type);
+      if (type?.kind === "theorem") depth = listDepthWithEnvironment(depth, type.environment);
+      if (type?.kind === "list") {
+        depth = listOutlineDepthContext(parseListOutline(ancestor.content, type.listEnvironment), depth);
+      }
+      siblings = ancestor.children;
+    }
+    return depth;
+  }
+
+  function showListLimit(message) {
+    if (listLimit.textContent === message) return;
+    listLimit.hidden = !message;
+    listLimit.textContent = message;
+    if (message) announce(message);
+  }
+
+  previewRenderers.set("list", (container, block, { parentPath, structure }) => {
+    const parsed = parseListOutline(block.content, blockType(block.type).listEnvironment);
+    const { tree, limited } = limitListOutline(parsed, listDepthForPath(parentPath));
+    const analysis = { segments: [], failures: [] };
+    function fillItem(item, content) {
+      const formulae = fillMathPreview(item, content, block.type, true);
+      for (const segment of formulae.segments) analysis.segments.push(segment);
+      for (const failure of formulae.failures) analysis.failures.push(failure);
+    }
+    function elementForList(list) {
+      const element = document.createElement(list.type === "enumerate" ? "ol" : "ul");
+      element.className = "outline-preview";
+      for (const { content, children } of list.items) {
+        const item = document.createElement("li");
+        fillItem(item, content);
+        if (children) item.append(elementForList(children));
+        element.append(item);
+      }
+      return element;
+    }
+    container.replaceChildren();
+    if (tree.type) container.append(elementForList(tree));
+    else if (tree.items.length) {
+      for (const { content } of tree.items) {
+        if (!content) continue;
+        const paragraph = document.createElement("p");
+        fillItem(paragraph, content);
+        container.append(paragraph);
+      }
+    } else container.textContent = structure ? "(Bloque vacío)" : "Escribe un elemento para ver aquí la lista.";
+
+    const warning = !limited ? "" : tree.type
+      ? "Se alcanzó el límite de anidación. Los elementos más profundos quedan en el último nivel disponible."
+      : "Se alcanzó el límite de anidación. Los elementos de este bloque se emitirán como párrafos.";
+    if (!structure) showListLimit(warning);
+    else if (warning) {
+      const message = document.createElement("p");
+      message.className = "list-preview-warning";
+      message.textContent = warning;
+      container.append(message);
+    }
+    return analysis;
+  });
+
+  function updateListFieldAttribute(attribute, listValues, visibleValues) {
+    const current = listContent.getAttribute(attribute) || "";
+    const otherValues = current.split(/\s+/).filter((value) => value && !listValues.includes(value));
+    const next = [...otherValues, ...visibleValues].join(" ");
+    if (current === next) return;
+    if (next) listContent.setAttribute(attribute, next);
+    else listContent.removeAttribute(attribute);
+  }
+
+  editorPreviewHooks.push((block) => {
+    const isList = blockType(block.type)?.kind === "list";
+    $("#list-tools").hidden = !isList;
+    $("#list-help").hidden = !isList;
+    if (!isList) showListLimit("");
+    const descriptions = isList ? ["list-help", ...(listLimit.hidden ? [] : ["list-limit"])] : [];
+    updateListFieldAttribute("aria-describedby", ["list-help", "list-limit"], descriptions);
+    updateListFieldAttribute("aria-keyshortcuts", listKeyNames, isList ? listKeyNames : []);
+  });
+
+  function applyListEdit(edit, direction) {
+    if (listContent.value !== edit.value) listContent.value = edit.value;
+    listContent.focus();
+    listContent.setSelectionRange(edit.selectionStart, edit.selectionEnd, direction);
+    scheduleEditorPreview();
+  }
+
+  function shiftListSelection(delta) {
+    const edit = shiftLines(listContent, delta);
+    const changed = edit.value !== listContent.value;
+    applyListEdit(edit, listContent.selectionDirection);
+    if (delta > 0) announce("Se añadió sangría.");
+    else announce(changed ? "Se quitó sangría." : "No hay sangría que quitar.");
+  }
+
+  const listIsMac = /Mac/.test(global.navigator.userAgentData?.platform || global.navigator.platform || "");
+  for (const shortcut of listShortcuts) {
+    const indent = shortcut.id === "list.indent";
+    const button = $(indent ? "#list-indent" : "#list-outdent");
+    button.setAttribute("aria-keyshortcuts", listAriaKeyshortcuts(shortcut));
+    button.title = shortcutLabel(shortcut, listIsMac);
+    button.addEventListener("click", () => shiftListSelection(indent ? 1 : -1));
+    button.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      listContent.focus();
+    });
+  }
+
+  listContent.addEventListener("keydown", (event) => {
+    if (event.defaultPrevented || event.isComposing || blockType($("#block-type").value)?.kind !== "list") return;
+    const shortcut = matchListShortcut(event, "list-editor");
+    if (shortcut) {
+      event.preventDefault();
+      shiftListSelection(shortcut.id === "list.indent" ? 1 : -1);
+    } else if (event.key === "Enter" && !(event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)) {
+      event.preventDefault();
+      applyListEdit(continueListLine(listContent));
+    }
+  });
+
   /* --- fin [C] --- */
 
   /* --- [D] Comprobación --- */

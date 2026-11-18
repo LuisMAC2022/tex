@@ -3,8 +3,8 @@
 
   const SHORTCUTS = Object.freeze([
     { id: "symbols.toggle", code: "KeyS", alt: true, shift: true, ctrl: false, meta: false, scope: "block-editor", label: "Abrir o cerrar el tablero de símbolos", owner: "A" },
-    { id: "list.indent", code: "ArrowRight", alt: true, shift: true, ctrl: false, meta: false, scope: "list-editor", label: "Sangrar elementos de lista", owner: "C" },
-    { id: "list.outdent", code: "ArrowLeft", alt: true, shift: true, ctrl: false, meta: false, scope: "list-editor", label: "Quitar sangría de elementos de lista", owner: "C" },
+    { id: "list.indent", code: "KeyG", alt: true, shift: true, ctrl: false, meta: false, scope: "list-editor", label: "Sangrar elementos de lista", owner: "C" },
+    { id: "list.outdent", code: "KeyQ", alt: true, shift: true, ctrl: false, meta: false, scope: "list-editor", label: "Quitar sangría de elementos de lista", owner: "C" },
   ].map(Object.freeze));
 
   const modifiers = [

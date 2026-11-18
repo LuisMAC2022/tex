@@ -63,7 +63,7 @@
 - ningún índice apunta a una sección que ya no existe
 - cada rótulo que citan las guías sigue existiendo en la interfaz
 
-## `tests/generator.test.js` — 25 pruebas
+## `tests/generator.test.js` — 28 pruebas
 
 - los metadatos y los títulos escapan todos los caracteres reservados
 - el contenido de un bloque no recibe ningún escape
@@ -87,6 +87,9 @@
 - una proposición se combina con fórmulas en línea y destacadas
 - la matemática en línea se conserva literalmente y en una sola línea
 - las listas toman un elemento por línea y conservan su texto
+- una lista anidada cierra sus subniveles antes de emitir los bloques hijos
+- la profundidad de lista sigue los entornos abiertos al atravesar bloques de texto y teoremas
+- una lista completamente recortada conserva sus elementos y sus bloques hijos
 - la bibliografía genera claves predecibles y conserva literalmente cada referencia
 - la bibliografía admite una referencia y omite el entorno vacío
 - la bibliografía recorta líneas y ajusta el ancho para diez o más referencias
@@ -97,6 +100,18 @@
 - cada invariante nombra al menos un guardián
 - cada guardián existe y sigue afirmando lo que se le atribuye
 - INV-006: ni el sitio ni el proyecto cargan nada remoto
+
+## `tests/list-outline.test.js` — 9 pruebas
+
+- la sangría acepta espacios y tabuladores, recorta saltos e ignora líneas vacías y CRLF
+- los marcadores fijan el tipo de un subnivel al abrirlo y se consumen en todos los niveles
+- la salida de una lista mixta sangra solo los subniveles y preserva el contenido literal
+- hay como máximo cuatro listas del mismo tipo y se conservan los elementos recortados en orden
+- el límite total cuenta las listas mixtas y los entornos que ya rodean al bloque
+- sangrar conserva una selección invertida con Unicode y excluye la línea tras su extremo
+- quitar sangría ajusta cursores dentro del prefijo, respeta líneas planas y retira espacios o tabulador
+- Intro conserva el prefijo, aumenta marcadores numerados y reemplaza una selección invertida con Unicode
+- Intro quita un nivel en elementos vacíos y deja un salto normal en la raíz
 
 ## `tests/math-preview.test.js` — 8 pruebas
 
@@ -140,4 +155,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-103 pruebas con `node:test` más la comprobación estructural.
+115 pruebas con `node:test` más la comprobación estructural.
