@@ -73,6 +73,7 @@
               <small id="block-help">El contenido se copia al documento <strong>tal cual</strong>: comandos como <code>\textbf{...}</code> o <code>\mathbb{R}</code>, llaves y matemáticas entre <code>$…$</code> o <code>$$…$$</code> llegan exactamente como los escribes, y la aplicación no inserta ningún carácter de escape. Por eso puedes pegar aquí LaTeX de otro documento sin revisarlo. A cambio, los caracteres reservados de LaTeX son cosa tuya: para que aparezcan impresos escribe <code>\%</code>, <code>\&amp;</code>, <code>\#</code>, <code>\_</code> o <code>\$</code> —un <code>%</code> suelto comenta el resto de su línea—. Se permiten párrafos separados por una línea vacía y una lista toma un elemento por línea. Solo el título del bloque y los metadatos se escapan por completo, porque la aplicación los coloca dentro de un argumento.</small>
               <span id="block-error" class="error" aria-live="polite"></span>
             </p>
+            <p id="editor-content-check" class="editor-content-check" hidden></p>
             <details class="math-preview-panel" open>
               <summary>Vista previa de las matemáticas</summary>
               <p>KaTeX orienta sobre los tramos matemáticos, pero no es LaTeX completo ni reproduce la tipografía del PDF final. No revisa la prosa: un <code>%</code> suelto, un <code>_</code> o <code>&amp;</code> fuera de matemáticas, o un <code>\textbf{</code> sin cerrar pueden fallar en Overleaf aunque esta vista no avise.</p>
@@ -113,6 +114,11 @@
           <h2 id="resultado-heading">Resultado</h2>
           <p>Genera el documento después de modificar sus datos o bloques.</p>
           <button id="generate" type="submit">Generar documento</button>
+          <section id="result-content-check" class="result-content-check" aria-labelledby="content-check-heading" hidden>
+            <h3 id="content-check-heading">Comprobación previa a Overleaf</h3>
+            <p id="content-check-summary"></p>
+            <ul id="content-check-blocks" hidden></ul>
+          </section>
           <p class="field output-field"><label for="latex-output">Código LaTeX</label><textarea id="latex-output" rows="22" readonly spellcheck="false"></textarea></p>
           <menu class="button-row">
             <li><button id="copy-code" type="button">Copiar código</button></li>

@@ -139,6 +139,28 @@ footer { padding-block: .5rem 2rem; }
 /* --- fin [C] --- */
 
 /* --- [D] Comprobación --- */
+.editor-content-check, .block-warning-count {
+  padding: .5rem .75rem;
+  border-inline-start: .25rem solid var(--primary);
+  background: var(--accent-soft);
+}
+.editor-content-check { white-space: pre-line; overflow-wrap: anywhere; }
+.block-warning-count { inline-size: fit-content; font-weight: 650; }
+.result-content-check {
+  margin-block: 1rem;
+  padding: .75rem;
+  box-shadow: none;
+  overflow-wrap: anywhere;
+}
+.result-content-check h3 { margin-block: 0 .5rem; }
+.result-content-check ul { padding-inline-start: 1.25rem; }
+.content-check-link {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2.75rem;
+  min-inline-size: 2.75rem;
+  color: var(--primary);
+}
 /* --- fin [D] --- */
 
 /* --- [E] Mover --- */

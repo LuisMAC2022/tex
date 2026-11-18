@@ -45,6 +45,20 @@
 - copiar sanea lo que entra y rechaza lo que no es un bloque
 - guardar y restaurar después de duplicar mantiene ambas ramas
 
+## `tests/content-check.test.js` — 11 pruebas
+
+- detecta llaves desparejadas y respeta las escapadas
+- detecta los cuatro delimitadores matemáticos sin pareja
+- detecta entornos abiertos, cierres sueltos y cierres con otro nombre
+- el porcentaje sin escapar es un aviso y el resto de su línea se ignora
+- detecta guiones bajos y circunflejos fuera del modo matemático
+- detecta el signo & fuera de matemáticas y tablas
+- detecta un signo # suelto y respeta el signo escapado y un parámetro
+- señala el séptimo entorno literal y respeta seis niveles
+- cuenta los entornos emitidos por el árbol y omite ancestros de texto
+- agrupa por ruta y ordena avisos por línea y columna en español
+- el estado de referencia no produce avisos y una ruta de imagen se revisa aparte
+
 ## `tests/content-literal.test.js` — 8 pruebas
 
 - la barra invertida y las llaves se conservan en todo tipo de prosa
@@ -140,4 +154,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-103 pruebas con `node:test` más la comprobación estructural.
+114 pruebas con `node:test` más la comprobación estructural.

@@ -602,6 +602,82 @@
   /* --- fin [C] --- */
 
   /* --- [D] Comprobación --- */
+  const { checkBlock, checkDocument } = global.TexNotes;
+  const editorContentCheck = $("#editor-content-check");
+  const resultContentCheck = $("#result-content-check");
+  const contentCheckSummary = $("#content-check-summary");
+  const contentCheckBlocks = $("#content-check-blocks");
+  let badgedBlocks = null;
+  let issuesByPath;
+  let generatedBlocks = null;
+
+  function issueCount(count) { return `${count} ${count === 1 ? "aviso" : "avisos"}`; }
+  function issueText({ severity, line, column, message }) {
+    return `${severity === "error" ? "Error" : "Aviso"} en línea ${line}, columna ${column}. ${message}`;
+  }
+  function editButtonId(path) { return `content-check-edit-${pathToKey(path)}`; }
+
+  editorPreviewHooks.push((block, { parentPath }) => {
+    const savedBlock = blockAtPath(blocks, editorTarget().editing);
+    const issues = checkBlock({ ...block, children: savedBlock?.children }, blocks, parentPath);
+    editorContentCheck.textContent = issues.map(issueText).join("\n");
+    editorContentCheck.hidden = !issues.length;
+  });
+
+  blockItemExtensions.push((block, path, { article, actions }) => {
+    const editButton = actions.querySelector('[data-action="edit"]');
+    editButton.id = editButtonId(path);
+    if (badgedBlocks !== blocks) {
+      issuesByPath = new Map(checkDocument({ blocks }).map(({ path: issuePath, issues }) => [pathToKey(issuePath), issues.length]));
+      badgedBlocks = blocks;
+    }
+    const count = issuesByPath.get(pathToKey(path));
+    if (!count) return;
+    const badge = document.createElement("p");
+    badge.className = "block-warning-count";
+    badge.textContent = issueCount(count);
+    article.insertBefore(badge, actions);
+  });
+
+  beforeGenerateHooks.push((documentState) => {
+    const checked = checkDocument(documentState);
+    const total = checked.reduce((count, { issues }) => count + issues.length, 0);
+    generatedBlocks = blocks;
+    contentCheckSummary.textContent = total
+      ? `Se encontraron ${issueCount(total)} en ${checked.length} ${checked.length === 1 ? "bloque" : "bloques"}.`
+      : "No se encontraron avisos.";
+    contentCheckBlocks.replaceChildren();
+    contentCheckBlocks.hidden = !total;
+    for (const { path, issues } of checked) {
+      const item = document.createElement("li");
+      const link = document.createElement("a");
+      link.className = "content-check-link";
+      link.href = `#${editButtonId(path)}`;
+      link.textContent = `Ir al bloque ${pathLabel(path)}`;
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (generatedBlocks === blocks) focusAction("edit", path);
+      });
+      const details = document.createElement("ul");
+      for (const issue of issues) {
+        const detail = document.createElement("li");
+        detail.textContent = issueText(issue);
+        details.append(detail);
+      }
+      item.append(link, details);
+      contentCheckBlocks.append(item);
+    }
+    resultContentCheck.hidden = false;
+    if (total) global.queueMicrotask(() => announce(`Documento generado. Se encontraron ${issueCount(total)}.`));
+  });
+
+  // Las rutas del resumen solo identifican el árbol con el que se generó.
+  new global.MutationObserver(() => {
+    if (generatedBlocks && generatedBlocks !== blocks) {
+      resultContentCheck.hidden = true;
+      generatedBlocks = null;
+    }
+  }).observe(blockList, { childList: true });
   /* --- fin [D] --- */
 
   /* --- [E] Mover --- */

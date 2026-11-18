@@ -102,8 +102,8 @@ El bloque aparece en la lista de abajo con sus botones propios. Repite para el r
 
 ### Generar y llevarlo a Overleaf
 
-1. Pulsa «Generar documento». La vista previa **solo cambia al pulsar este botón**,
-   no mientras escribes: si no ves tu último cambio, es que no lo has pulsado.
+1. Pulsa «Generar documento» para actualizar «Código LaTeX» y el resumen de
+   «Comprobación previa a Overleaf» en «Resultado».
 2. Pulsa «Copiar código». Ya tienes el `.tex` entero en el portapapeles.
    - También puedes pulsar «Descargar .tex» y guardarlo como archivo. El nombre
      sale de tu título.
@@ -227,6 +227,18 @@ bloque guardado. En un párrafo, prueba `Sea $x \in \mathbb{R}$.` El aviso
 **No se pudo previsualizar** permite seguir editando y exportando. La compilación
 en Overleaf comprueba el documento completo.
 
+### Comprobación antes de exportar
+
+Debajo de «Contenido» aparecen los avisos de LaTeX después de una pausa al
+escribir. Cada aviso indica la línea y la columna dentro del bloque. La
+estructura muestra el recuento por bloque.
+
+Al pulsar «Generar documento», el resumen «Comprobación previa a Overleaf»
+agrupa los avisos. Usa el enlace **Ir al bloque** para enfocar su botón «Editar».
+Después de guardar cambios en un bloque o de modificar la estructura, vuelve a
+generar para actualizar el resumen. Puedes copiar o descargar el contenido
+original aunque aparezcan avisos.
+
 ---
 
 ## 7. Guardar el trabajo
@@ -281,7 +293,7 @@ todo lo que le siga en ese renglón. Los demás protestan al compilar, que es me
 
 ## 9. Cuando Overleaf da error
 
-Los seis casos que más aparecen, con lo que suele haberlos causado.
+Estos son los casos más habituales y los que señala la comprobación previa.
 
 ### “Falta un trozo de texto en el PDF, pero no hay ningún error”
 
@@ -290,15 +302,23 @@ ponle la barra: `\%`.
 
 Es el único fallo silencioso de todos, y por eso va el primero.
 
-### `Missing $ inserted`
+### Modo matemático
 
-Has usado fuera de una fórmula algo que solo existe dentro: casi siempre un **`_`**
-o un **`^`**.
+Si ves `Missing $ inserted`, comprueba si has usado fuera de una fórmula algo
+que solo existe dentro, como **`_`** o **`^`**.
 
 - Si querías el guion bajo impreso → `\_`.
 - Si era un subíndice → rodéalo de `$…$`: `$x_1$`.
 
-También sale cuando un **`$` se ha quedado sin pareja**: cuenta los de esa línea.
+Comprueba también las parejas de delimitadores, como `$…$`, `$$…$$`,
+`\(…\)` o `\[…\]`.
+
+### Llaves y caracteres reservados
+
+Cada `{` de un grupo necesita su `}`. Para que se impriman como texto, escribe
+`\{` y `\}`. Escribe `\#` para un numeral impreso y `\&` para un signo
+de unión en prosa. Dentro de un `tabular` o un `align`, usa `&` para separar
+las columnas.
 
 ### `Undefined control sequence`
 
@@ -311,11 +331,17 @@ Overleaf no conoce ese comando. Dos motivos:
   aquí no existe. Añade el paquete a mano en Overleaf, arriba del todo, o usa otro
   comando.
 
-### `\begin{...} ended by \end{...}`
+### Entornos desparejados
 
-Un entorno abierto y no cerrado, o cerrado con otro nombre. Pasa al pegar media tabla
+El error `\begin{...} ended by \end{...}` puede aparecer al pegar media tabla
 o medio `align` desde otro documento. Comprueba que cada `\begin{X}` tenga su
 `\end{X}` con el mismo nombre.
+
+### Profundidad de listas y entornos
+
+La comprobación señala el séptimo entorno anidado, contando los entornos que
+abren los bloques y los que escribes con `\begin`. Si Overleaf indica que hay
+demasiados niveles, reduce la anidación.
 
 ### `Missing \begin{document}` o el PDF sale casi vacío
 

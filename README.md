@@ -156,6 +156,14 @@ compila el documento completo y verifica la prosa, las macros y los entornos.
 KaTeX 0.18.7 se distribuye desde `assets/vendor/katex/` con 20 fuentes WOFF2 y
 su licencia MIT, aproximadamente 600 KB en total. Funciona con `file://` y sin red.
 
+## Comprobación previa a Overleaf
+
+El editor señala posibles errores de LaTeX bajo «Contenido» después de la misma
+pausa que la vista previa. La estructura indica cuántos avisos hay en cada
+bloque. Al generar, «Resultado» muestra las líneas y columnas de los avisos y
+enlaces a los botones «Editar» de sus bloques. El contenido llega al `.tex` tal
+cual, incluso cuando la comprobación encuentra errores.
+
 ## Uso
 
 > Para quien solo va a **usar** la aplicación, sin tocar el código, está la

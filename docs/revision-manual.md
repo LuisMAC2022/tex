@@ -35,5 +35,8 @@ por ronda de revisión, no al cambiar código.
 - [ ] Con `file://` y sin conexión, verificar que las fuentes matemáticas cargan y que la vista previa es legible en ambos temas.
 - [ ] Previsualizar `$x \in \mathbb{R}$` en prosa y una ecuación destacada con el teclado. El foco debe permanecer en el editor.
 - [ ] Escribir una fórmula incompleta, comprobar **No se pudo previsualizar** y generar el archivo `.tex`.
+- [ ] Escribir `50% del total` y `x_1` en un bloque de texto. Comprobar que aparecen después de una pausa dos avisos con línea y columna. Verificar con lector de pantalla que la comprobación no anuncia cada tecla.
+- [ ] Guardar ese bloque como hijo de otro, comprobar la insignia **2 avisos** y generar. Activar con Intro **Ir al bloque 1.1** si esa es la ruta del hijo. Comprobar el foco en **Editar** y que el código incluye literalmente `50% del total` y `x_1`.
+- [ ] Guardar una corrección, comprobar que se retira el resumen anterior y volver a generar. Verificar que el recuento se actualiza y que el nuevo enlace lleva al bloque correcto.
 - [ ] Pegar en un proyecto vacío de Overleaf un `.tex` con texto mixto y entornos anidados, y comprobar que compila sin añadir paquetes.
 - [ ] Compilar con una bibliografía y comprobar que cada referencia aparece numerada entre corchetes.

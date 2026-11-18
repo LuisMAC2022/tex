@@ -77,7 +77,11 @@ Los scripts se cargan como clásicos **en este orden**. La aplicación usa
 | 5 | `math-symbols.js` | catálogo de símbolos y su búsqueda | no |
 | 6 | `text-insertion.js` | insertar en la posición del cursor | apenas |
 | 7 | `math-preview.js` | extracción y análisis de tramos | no |
-| 8 | `app.js` | interfaz del editor | sí |
+| 8 | `shortcuts.js` | registro de atajos | no |
+| 9 | `image-options.js` | opciones de imagen | no |
+| 10 | `list-outline.js` | listas con sangría | no |
+| 11 | `content-check.js` | comprobación previa al generar | no |
+| 12 | `app.js` | interfaz del editor | sí |
 
 Las pruebas de Node ejecutan las funciones puras con `node:vm`. La interacción
 de `app.js` se verifica en el navegador ([DEC-007](../decisiones/DEC-007-sin-dom-en-pruebas.md)).
@@ -100,6 +104,10 @@ Qué exporta cada uno, si necesitas buscar una función:
   `symbolsByGroup`, `normalizeSearchTerm`, `describeCommand`, `symbolAccessibleName`.
 - **`text-insertion.js`**: `insertAtSelection` (pura), `insertIntoField`.
 - **`math-preview.js`**: `mathSegments`, `analyzeContent` con un renderizador inyectado.
+- **`content-check.js`**: `checkContent` para una cadena, `checkBlock` para
+  incluir el contexto de sus bloques padre y `checkDocument` para agrupar los
+  avisos por ruta. La sección D de `app.js` los presenta mediante
+  `editorPreviewHooks`, `blockItemExtensions` y `beforeGenerateHooks`.
 - **`file-download.js`**: `sanitizeFilename`, `downloadTex`.
 
 ---
