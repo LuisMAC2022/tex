@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadTexNotes } from "./load-app.mjs";
 
-const { parseListOutline, outlineToLatex, shiftLines, continueListLine } = await loadTexNotes(["list-outline.js"]);
+const { parseListOutline, limitListOutline, outlineToLatex, shiftLines, continueListLine } = await loadTexNotes(["list-outline.js"]);
 
 const item = (content, children = null) => ({ content, children });
 const list = (type, ...items) => ({ type, items });
@@ -26,6 +26,21 @@ test("los marcadores fijan el tipo de un subnivel al abrirlo y se consumen en to
     item("G", list("enumerate", item("H"), item("I"))),
     item("-"),
   ));
+});
+
+test("las posiciones opcionales apuntan al texto en listas planas y anidadas, incluso al recortar niveles", () => {
+  const content = "- Padre\r\n\r\n  12) $😀$";
+  const annotated = parseListOutline(content, "itemize", "outline", { withPositions: true });
+  const { tree } = limitListOutline(annotated, { total: 5 });
+  assert.deepEqual(plain(tree.items), [
+    { content: "Padre", children: null, line: 1, column: 3 },
+    { content: "$😀$", children: null, line: 3, column: 7 },
+  ]);
+  const flat = parseListOutline(content, "itemize", "flat", { withPositions: true });
+  assert.deepEqual(plain(flat.items), [
+    { content: "- Padre", children: null, line: 1, column: 1 },
+    { content: "12) $😀$", children: null, line: 3, column: 3 },
+  ]);
 });
 
 test("la salida de una lista mixta sangra solo los subniveles y preserva el contenido literal", () => {

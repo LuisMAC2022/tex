@@ -68,7 +68,7 @@
     const { depthContext } = context;
     const type = TexNotes.blockType(block.type) || TexNotes.blockType("text");
     const content = contentToLatex(block.content);
-    const outline = type.kind === "list" ? TexNotes.parseListOutline(content, type.listEnvironment) : null;
+    const outline = type.kind === "list" ? TexNotes.parseListOutline(content, type.listEnvironment, block.listFormat) : null;
     let childDepth = depthContext;
     if (outline) childDepth = TexNotes.listOutlineDepthContext(outline, depthContext);
     if (type.kind === "theorem") childDepth = TexNotes.listDepthWithEnvironment(depthContext, type.environment);

@@ -12,7 +12,7 @@
 - cada decisión citada en el código existe en decisiones/
 - ningún código vivo se apoya en una decisión reemplazada
 
-## `tests/block-tree.test.js` — 38 pruebas
+## `tests/block-tree.test.js` — 40 pruebas
 
 - la ausencia de children equivale a una lista vacía y el estado plano sigue siendo válido
 - solo los tipos declarados como contenedores admiten hijos
@@ -52,6 +52,8 @@
 - mover un bloque a un teorema emite su contenido literal dentro del entorno
 - las opciones de imagen sobreviven a duplicar, copiar, pegar y restaurar la versión 2
 - editar normaliza las opciones de imagen y las descarta al cambiar a otro tipo
+- restaurar listas antiguas de ambas versiones mantiene los prefijos literales y la lista plana
+- listas nuevas y antiguas conservan su propio formato al copiar, duplicar, mover, guardar y restaurar
 
 ## `tests/content-check.test.js` — 11 pruebas
 
@@ -137,10 +139,11 @@
 - cada guardián existe y sigue afirmando lo que se le atribuye
 - INV-006: ni el sitio ni el proyecto cargan nada remoto
 
-## `tests/list-outline.test.js` — 9 pruebas
+## `tests/list-outline.test.js` — 10 pruebas
 
 - la sangría acepta espacios y tabuladores, recorta saltos e ignora líneas vacías y CRLF
 - los marcadores fijan el tipo de un subnivel al abrirlo y se consumen en todos los niveles
+- las posiciones opcionales apuntan al texto en listas planas y anidadas, incluso al recortar niveles
 - la salida de una lista mixta sangra solo los subniveles y preserva el contenido literal
 - hay como máximo cuatro listas del mismo tipo y se conservan los elementos recortados en orden
 - el límite total cuenta las listas mixtas y los entornos que ya rodean al bloque
@@ -197,4 +200,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-151 pruebas con `node:test` más la comprobación estructural.
+154 pruebas con `node:test` más la comprobación estructural.
