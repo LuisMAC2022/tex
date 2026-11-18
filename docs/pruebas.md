@@ -12,7 +12,7 @@
 - cada decisión citada en el código existe en decisiones/
 - ningún código vivo se apoya en una decisión reemplazada
 
-## `tests/block-tree.test.js` — 30 pruebas
+## `tests/block-tree.test.js` — 36 pruebas
 
 - la ausencia de children equivale a una lista vacía y el estado plano sigue siendo válido
 - solo los tipos declarados como contenedores admiten hijos
@@ -44,6 +44,12 @@
 - copiar entrega un bloque suelto e independiente, y cada pegado es otro más
 - copiar sanea lo que entra y rechaza lo que no es un bloque
 - guardar y restaurar después de duplicar mantiene ambas ramas
+- mover a otro padre rechaza rutas inexistentes, ciclos y destinos sin hijos
+- mover una rama ajusta la ruta profunda de un destino desplazado y conserva sus hijos
+- al mover entre ramas solo se ajusta el índice de un hermano del origen
+- mover a la raíz elige por ruta entre hermanos idénticos
+- mover al mismo padre reordena entre hermanos como subir y bajar
+- mover un bloque a un teorema emite su contenido literal dentro del entorno
 
 ## `tests/content-literal.test.js` — 8 pruebas
 
@@ -146,4 +152,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-109 pruebas con `node:test` más la comprobación estructural.
+115 pruebas con `node:test` más la comprobación estructural.

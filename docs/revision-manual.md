@@ -10,6 +10,8 @@ por ronda de revisión, no al cambiar código.
 - [ ] Crear dos tipos de bloque, editarlos, eliminarlos y moverlos, comprobando dónde queda el foco.
 - [ ] Construir un árbol de al menos tres niveles solo con teclado: añadir en la raíz, usar **Añadir dentro** dos veces y comprobar que el texto del formulario dice en todo momento dónde caerá el bloque.
 - [ ] En ese árbol, editar, subir, bajar y eliminar nodos de cada nivel; confirmar que **Subir** y **Bajar** nunca sacan un bloque de su nivel y que el foco queda donde se espera tras cada acción.
+- [ ] Abrir «Mover a…» con teclado desde un bloque con hijos. Verificar que el diálogo enfoca «Destino» y omite el bloque de origen, sus descendientes y los tipos que no aceptan hijos. Cerrar con `Escape` y con «Cancelar» y comprobar que ambos devuelven el foco al botón de origen.
+- [ ] Mover la rama a un contenedor posterior con «Al principio» y devolverla a «Raíz del documento» con «Al final». Confirmar que conserva sus hijos, el foco va a «Editar» en la ruta nueva y el lector de pantalla anuncia ambas rutas. Repetir con una edición en curso y verificar que se cancela.
 - [ ] Eliminar un bloque con descendencia y comprobar el aviso con el número de bloques anidados.
 - [ ] Comprobar con lector de pantalla que se anuncian el nivel y el bloque padre, y que la lista anidada se lee como tal.
 - [ ] Intentar cambiar a **Ecuación destacada** un bloque que ya tiene hijos y confirmar que el error se explica junto al campo.

@@ -91,7 +91,7 @@ Qué exporta cada uno, si necesitas buscar una función:
 
 - **`block-tree.js`**: `normalizeBlock`, `normalizeBlocks`, `normalizeDraft`,
   `blockAtPath`, `siblingsAtPath`, `insertBlock`, `duplicateBlock`, `updateBlock`,
-  `removeBlock`, `moveBlock`, `cloneBlock`, `cloneBlocks`, `countBlocks`,
+  `removeBlock`, `moveBlock`, `moveBlockTo`, `cloneBlock`, `cloneBlocks`, `countBlocks`,
   `flattenBlocks`, `pathToKey`, `keyToPath`, `pathLabel`, `DRAFT_VERSION`.
 - **`latex-generator.js`**: `generateLatex`, `blockToLatex`, `contentToLatex`,
   `escapeMetadata`, `buildPreamble`, `buildTheoremDefs`, `buildMetadata`, `buildBody`,

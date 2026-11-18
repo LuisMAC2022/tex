@@ -171,6 +171,7 @@ su licencia MIT, aproximadamente 600 KB en total. Funciona con `file://` y sin r
 3. Revisa o cambia el orden con **Editar**, **Añadir dentro**, **Eliminar**, **Subir** y **Bajar**. No hay arrastrar y soltar: los controles nativos funcionan con teclado y evitan otra dependencia.
    - **Añadir dentro** fija el texto, lista o entorno de teorema seleccionado como padre de los siguientes bloques. El formulario muestra el destino y **Añadir en la raíz** deshace la elección.
    - **Subir** y **Bajar** mueven el bloque solo entre sus hermanos, nunca fuera de su nivel; en los extremos el botón aparece deshabilitado.
+   - **Mover a…** lleva el bloque y todos sus hijos a la raíz o a otro contenedor, al principio o al final de sus bloques. El foco pasa a **Editar** del bloque movido y se anuncian sus rutas anterior y nueva.
    - Eliminar un bloque con descendencia pide confirmación e indica cuántos bloques anidados se van con él. Si había una edición a medias, se cancela para no escribir sobre un bloque distinto del que se estaba editando.
 4. Para repetir una estructura hay **tres acciones distintas**, a propósito, porque copiar y duplicar no son lo mismo:
    - **Duplicar** deja la copia inmediatamente después del original, entre sus mismos hermanos y en su mismo nivel, con toda su descendencia. Es un atajo de un solo paso: no se elige destino. El foco pasa a **Editar** de la copia y, como cualquier cambio estructural, cancela una edición a medias y lo anuncia.
@@ -246,7 +247,7 @@ Siguen pendientes el **diccionario de macros** (`macros.js` y `validate.js`, con
 
 El bloque de imagen queda pendiente de implementación. El [encargo original](https://github.com/LuisMAC2022/tex/blob/e515a9cece9aad07cdeb2a49d2b274d06cd8844c/agents.md) describe `\includegraphics`, el uso de `graphicx` y los casos de exportación que se deben comprobar en Overleaf.
 
-Dentro de la entrada matemática quedan pendientes los alias personales (`imp` → `\Rightarrow`) y mover un bloque de un padre a otro: hoy **Subir** y **Bajar** solo reordenan entre hermanos, y cambiar de padre exige volver a crear el bloque.
+Dentro de la entrada matemática quedan pendientes los alias personales (`imp` → `\Rightarrow`).
 
 Quedan expresamente fuera por ahora: TeX en WASM, TikZ/PGFPlots, traducción de errores de TeX, paleta de comandos, buscar y reemplazar, historial de versiones, infraestructura de sincronización y cualquier ida y vuelta desde Overleaf a la aplicación.
 

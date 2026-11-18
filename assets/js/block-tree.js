@@ -169,6 +169,38 @@
     return { blocks: next, path: [...path.slice(0, -1), target] };
   }
 
+  /**
+   * Mueve una rama a otro padre ([] = raíz). Como en insertBlock, si no se
+   * indica una posición válida, se añade al final. La posición se cuenta
+   * entre los hermanos que quedan después de retirar la rama.
+   */
+  function moveBlockTo(blocks, fromPath, toParentPath, index = -1) {
+    if (!Array.isArray(fromPath) || !Array.isArray(toParentPath)) return null;
+    const sourcePath = [...fromPath];
+    const destinationPath = [...toParentPath];
+    if (!blockAtPath(blocks, sourcePath) || !isPath(destinationPath)) return null;
+    if (sourcePath.every((part, depth) => part === destinationPath[depth])) return null;
+    if (destinationPath.length) {
+      const parent = blockAtPath(blocks, destinationPath);
+      if (!parent || !TexNotes.acceptsChildren(parent.type)) return null;
+    }
+
+    const next = cloneBlocks(blocks);
+    const sourceParent = sourcePath.slice(0, -1);
+    const depth = sourceParent.length;
+    const sourceIndex = sourcePath[depth];
+    const [block] = siblingsAtPath(next, sourcePath).splice(sourceIndex, 1);
+
+    // Solo cambia la ruta si el destino parte de un hermano posterior.
+    if (sourceParent.every((part, level) => part === destinationPath[level]) && destinationPath[depth] > sourceIndex) {
+      destinationPath[depth] -= 1;
+    }
+    const destination = destinationPath.length ? blockAtPath(next, destinationPath).children : next;
+    const position = Number.isInteger(index) && index >= 0 && index <= destination.length ? index : destination.length;
+    destination.splice(position, 0, block);
+    return { blocks: next, path: [...destinationPath, position] };
+  }
+
   /** Cuenta el bloque y toda su descendencia. */
   function countBlocks(list) {
     return (Array.isArray(list) ? list : []).reduce((total, block) => total + 1 + countBlocks(block.children), 0);
@@ -216,7 +248,7 @@
 
   Object.assign(TexNotes, {
     DRAFT_VERSION, cloneBlocks, cloneBlock, normalizeBlock, normalizeBlocks, blockAtPath, siblingsAtPath,
-    insertBlock, duplicateBlock, updateBlock, removeBlock, moveBlock, countBlocks, flattenBlocks,
+    insertBlock, duplicateBlock, updateBlock, removeBlock, moveBlock, moveBlockTo, countBlocks, flattenBlocks,
     pathToKey, keyToPath, pathLabel, normalizeDraft,
   });
 })(typeof globalThis !== "undefined" ? globalThis : this);

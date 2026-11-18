@@ -175,8 +175,13 @@ depende (`Nivel 2 · dentro de 1 Teorema: Fubini`).
   conserva.
 - «Subir» y «Bajar» lo mueven **solo entre sus iguales**, sin sacarlo de donde
   está. En los extremos el botón aparece apagado.
-  - *Todavía no se puede* mover un bloque de un padre a otro. Hay que volver a
-    crearlo en su sitio —o usar «Copiar bloque», sección siguiente—.
+- «Mover a…» traslada el bloque con todos sus hijos. En «Destino», elige
+  «Raíz del documento» o un bloque que admita hijos. En «Posición», elige
+  «Al principio» o «Al final» y confirma con «Mover bloque». El foco vuelve a
+  «Editar» del bloque movido y se anuncian su ruta anterior y la nueva. Si
+  había una edición en curso, se cancela. El siguiente bloque se añadirá en
+  la raíz. Puedes cerrar el diálogo con «Cancelar» o `Escape` para volver al
+  botón que lo abrió.
 - «Eliminar» pide confirmación y te dice cuántos bloques se van con él.
 
 ---
