@@ -7,6 +7,7 @@ import { loadTexNotes } from "./load-app.mjs";
 const {
   insertAtSelection, MATH_SYMBOLS, MATH_SYMBOL_GROUPS,
   describeCommand, filterMathSymbols, normalizeSearchTerm, symbolAccessibleName, symbolsByGroup,
+  adjacentGroup, recentSymbolIds, symbolGridTarget, SYMBOL_BOARD_GROUPS,
 } = await loadTexNotes(["math-symbols.js", "text-insertion.js"]);
 
 // Lo que devuelve el código cargado en el vm pertenece a otro realm y fallaría en
@@ -120,4 +121,51 @@ test("todo el catálogo se puede representar con KaTeX", async () => {
     const probe = symbol.katexProbe || (symbol.insert ? `${symbol.insert.before}x${symbol.insert.after}` : symbol.command);
     assert.doesNotThrow(() => context.katex.renderToString(probe, { throwOnError: true, strict: false, trust: false }), symbol.id);
   }
+});
+
+test("las flechas horizontales de la rejilla dan la vuelta e Inicio y Fin van a los extremos", () => {
+  const target = (index, key) => symbolGridTarget({ index, count: 8, columns: 3, key });
+  assert.equal(target(0, "ArrowLeft"), 7);
+  assert.equal(target(7, "ArrowRight"), 0);
+  assert.equal(target(5, "Home"), 0);
+  assert.equal(target(2, "End"), 7);
+});
+
+test("la rejilla vuelve al buscador arriba y ajusta la última fila incompleta", () => {
+  const target = (index, key) => symbolGridTarget({ index, count: 8, columns: 3, key });
+  assert.equal(target(2, "ArrowUp"), null);
+  assert.equal(target(4, "ArrowUp"), 1);
+  assert.equal(target(4, "ArrowDown"), 7);
+  assert.equal(target(5, "ArrowDown"), 7);
+  assert.equal(target(6, "ArrowDown"), 6);
+});
+
+test("la navegación admite una sola columna y una rejilla vacía", () => {
+  const target = (index, key) => symbolGridTarget({ index, count: 3, columns: 1, key });
+  assert.equal(target(0, "ArrowUp"), null);
+  assert.equal(target(1, "ArrowUp"), 0);
+  assert.equal(target(1, "ArrowDown"), 2);
+  assert.equal(target(2, "ArrowDown"), 2);
+  for (const key of ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"]) {
+    assert.equal(symbolGridTarget({ index: 0, count: 0, columns: 1, key }), null);
+  }
+});
+
+test("el cambio circular de categoría incluye Recientes al principio", () => {
+  const first = SYMBOL_BOARD_GROUPS[0];
+  const second = SYMBOL_BOARD_GROUPS[1];
+  const last = SYMBOL_BOARD_GROUPS.at(-1);
+  assert.equal(first.label, "Recientes");
+  assert.equal(adjacentGroup(first.id, -1), last.id);
+  assert.equal(adjacentGroup(last.id, 1), first.id);
+  assert.equal(adjacentGroup(first.id, 1), second.id);
+  assert.equal(adjacentGroup(second.id, -1), first.id);
+  assert.equal(adjacentGroup(first.id, -SYMBOL_BOARD_GROUPS.length), first.id);
+});
+
+test("los recientes conservan hasta doce símbolos distintos y conocidos en orden de inserción", () => {
+  const ids = MATH_SYMBOLS.slice(0, 14).map(({ id }) => id);
+  ids.splice(2, 0, ids[0], "desconocido", null);
+  assert.deepEqual([...recentSymbolIds(ids)], MATH_SYMBOLS.slice(0, 12).map(({ id }) => id));
+  assert.deepEqual([...recentSymbolIds(null)], []);
 });

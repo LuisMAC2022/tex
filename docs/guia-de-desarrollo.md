@@ -74,7 +74,7 @@ Los scripts se cargan como clásicos **en este orden**. La aplicación usa
 | 2 | `block-tree.js` | el árbol: rutas y operaciones puras | no |
 | 3 | `latex-generator.js` | el estado → la cadena `.tex` | no |
 | 4 | `file-download.js` | nombre de archivo y descarga | sí |
-| 5 | `math-symbols.js` | catálogo de símbolos y su búsqueda | no |
+| 5 | `math-symbols.js` | catálogo de símbolos, búsqueda y navegación del tablero | no |
 | 6 | `text-insertion.js` | insertar en la posición del cursor | apenas |
 | 7 | `math-preview.js` | extracción y análisis de tramos | no |
 | 8 | `app.js` | interfaz del editor | sí |
@@ -98,6 +98,9 @@ Qué exporta cada uno, si necesitas buscar una función:
   `normalizeLineBreaks`, `METADATA_KEYS`.
 - **`math-symbols.js`**: `MATH_SYMBOLS`, `MATH_SYMBOL_GROUPS`, `filterMathSymbols`,
   `symbolsByGroup`, `normalizeSearchTerm`, `describeCommand`, `symbolAccessibleName`.
+  `SYMBOL_BOARD_GROUPS` comienza por `RECENT_SYMBOL_GROUP`. `symbolGridTarget` y
+  `adjacentGroup` resuelven la navegación. `recentSymbolIds` filtra el historial que
+  `app.js` lee y escribe en `tex-notes:recent-symbols`.
 - **`text-insertion.js`**: `insertAtSelection` (pura), `insertIntoField`.
 - **`math-preview.js`**: `mathSegments`, `analyzeContent` con un renderizador inyectado.
 - **`file-download.js`**: `sanitizeFilename`, `downloadTex`.

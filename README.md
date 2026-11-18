@@ -130,8 +130,10 @@ El archivo exacto producido y comprobado byte a byte es [`examples/calculo-3.tex
 El tablero es un **muelle compacto** unido al campo de contenido y abierto por defecto. Su altura no depende del tamaño del catálogo: no debe superar **20 rem (320 px) en escritorio** ni **25 rem (400 px) bajo 38 rem de ancho**. La rejilla tiene desplazamiento propio y solo muestra una categoría a la vez; una búsqueda suspende esa categoría y consulta el catálogo completo.
 
 - El buscador permanece visible y los botones de categoría indican su estado con `aria-pressed`.
+- `Alt+Mayús+S` (`⌥⇧S` en macOS) o el botón **Buscar** llevan al buscador. El atajo y Escape devuelven el foco al campo de origen con su selección. Si la búsqueda tiene texto, Escape la borra primero.
 - Cada botón nativo mide al menos 44 × 44 px y muestra solo el glifo. Una única línea visual presenta `nombre — comando`; está oculta a lectores de pantalla porque el `aria-label` completo del botón ya comunica ambos datos.
-- La rejilla tiene una sola parada de tabulación. Las flechas horizontales recorren los símbolos de forma circular, las verticales cambian de fila e Inicio y Fin llevan a los extremos.
+- La rejilla tiene una sola parada de tabulación. Las flechas horizontales recorren los símbolos de forma circular, las verticales cambian de fila e Inicio y Fin llevan a los extremos. Re Pág y Av Pág cambian de categoría. Desde la primera fila, ↑ vuelve al buscador. Escribir en la rejilla añade a la búsqueda.
+- En el buscador, ↓ lleva al primer resultado e Intro lo inserta. La categoría **Recientes** conserva los últimos doce símbolos distintos en este navegador, fuera del borrador.
 - El catálogo compatible con `amsmath` y `amssymb` contiene 210 entradas para griegas, lógica, conjuntos, topología, funciones, cálculo, vectores y estructura.
 - Un símbolo sencillo inserta `command`. Una plantilla puede declarar `insert: { before, after }`: envuelve una selección o, si no existe, deja el cursor entre ambas partes.
 

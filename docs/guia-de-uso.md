@@ -205,17 +205,23 @@ Sobre la bandeja:
 
 ## 6. Símbolos matemáticos
 
-El panel «Símbolos matemáticos» inserta comandos en el campo «Contenido»,
-**justo donde tengas el cursor**.
+Desde «Contenido» o desde otro campo del bloque, pulsa `Alt+Mayús+S` (`⌥⇧S` en
+macOS). También puedes activar «Buscar» junto a «Símbolos matemáticos». El foco
+va a «Buscar símbolo», que acepta nombres como “para todo” y comandos
+como `forall`. `↓` pasa al primer resultado e `Intro` lo inserta directamente.
 
-- Hay doce categorías: griegas, lógica, conjuntos, relaciones, topología, funciones y
-  límites, derivadas, integrales, operadores, vectores y matrices, y estructura.
-- El buscador acepta **el nombre en castellano** —“para todo”, “implica”,
-  “conjunción”— y también el comando, si ya lo sabes (“forall”).
-- Al elegir un símbolo verás su nombre y su comando antes de insertarlo.
-- Si ya conoces el comando, escríbelo directamente. Es lo mismo.
-- Todo se recorre con el teclado: flechas para moverte por la rejilla, `Inicio` y
-  `Fin` para los extremos.
+- Usa las flechas en la rejilla para recorrer los símbolos, e `Inicio` y `Fin` para
+  ir a los extremos. `Re Pág` y `Av Pág` cambian de categoría. `↑` desde la primera
+  fila vuelve al buscador. Escribir en la rejilla añade texto a la búsqueda.
+- Activa un símbolo con `Intro`, `Espacio` o un clic. Se inserta donde estaba el
+  cursor y vuelve el foco. Si abriste el tablero desde un control como «Tipo de bloque»,
+  el símbolo va a «Contenido» y el foco vuelve al control.
+- Desde la rejilla, `Escape` vuelve al campo con su selección. Desde el buscador,
+  el primer `Escape` borra el texto de la búsqueda. Si ya está vacía, vuelve al
+  campo. `Alt+Mayús+S` o `⌥⇧S` vuelven directamente desde cualquier parte del tablero.
+- **Recientes** es la primera categoría y reúne los últimos doce símbolos distintos
+  que insertaste. El historial se conserva en este navegador fuera del borrador.
+- Consulta «Atajos de teclado» al final del formulario para ver las combinaciones.
 
 Los símbolos funcionan igual dentro y fuera de los bloques de ecuación. Dentro de un
 párrafo normal, rodea la fórmula de `$…$` para que salga bien.

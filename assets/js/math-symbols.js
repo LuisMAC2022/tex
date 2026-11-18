@@ -286,8 +286,43 @@
     return symbols.filter((symbol) => symbol.group === groupId);
   }
 
+  const RECENT_SYMBOL_GROUP = { id: "recent", label: "Recientes" };
+  const SYMBOL_BOARD_GROUPS = [RECENT_SYMBOL_GROUP, ...MATH_SYMBOL_GROUPS];
+
+  function adjacentGroup(groupId, delta) {
+    const index = SYMBOL_BOARD_GROUPS.findIndex((group) => group.id === groupId);
+    if (index < 0) return SYMBOL_BOARD_GROUPS[0].id;
+    const count = SYMBOL_BOARD_GROUPS.length;
+    return SYMBOL_BOARD_GROUPS[((index + delta) % count + count) % count].id;
+  }
+
+  /** null indica que la rejilla está vacía o que el foco debe volver al buscador. */
+  function symbolGridTarget({ index, count, columns, key }) {
+    if (count === 0) return null;
+    switch (key) {
+      case "Home": return 0;
+      case "End": return count - 1;
+      case "ArrowLeft": return (index + count - 1) % count;
+      case "ArrowRight": return (index + 1) % count;
+      case "ArrowUp": return index < columns ? null : index - columns;
+      case "ArrowDown": {
+        const nextRow = index - index % columns + columns;
+        return nextRow < count ? Math.min(index + columns, count - 1) : index;
+      }
+      default: return index;
+    }
+  }
+
+  const symbolIds = new Set(MATH_SYMBOLS.map(({ id }) => id));
+
+  function recentSymbolIds(ids) {
+    if (!Array.isArray(ids)) return [];
+    return [...new Set(ids.filter((id) => symbolIds.has(id)))].slice(0, 12);
+  }
+
   Object.assign(TexNotes, {
     MATH_SYMBOL_GROUPS, MATH_SYMBOLS, describeCommand, symbolAccessibleName,
     normalizeSearchTerm, filterMathSymbols, symbolsByGroup,
+    RECENT_SYMBOL_GROUP, SYMBOL_BOARD_GROUPS, adjacentGroup, symbolGridTarget, recentSymbolIds,
   });
 })(typeof globalThis !== "undefined" ? globalThis : this);

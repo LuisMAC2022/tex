@@ -463,6 +463,32 @@
 
   /* --- [A] Atajos del tablero --- */
 
+  const {
+    adjacentGroup, ariaKeyshortcuts, matchShortcut, recentSymbolIds,
+    RECENT_SYMBOL_GROUP, SYMBOL_BOARD_GROUPS, symbolGridTarget,
+  } = global.TexNotes;
+  const symbolBoard = $(".symbol-board");
+  const symbolDetails = $("#symbol-details");
+  const symbolSearch = $("#symbol-search");
+  const symbolGrid = $("#symbol-groups");
+  const categoryPicker = $("#symbol-category-picker");
+  const symbolDetail = $("#symbol-detail");
+  const symbolDetailPlaceholder = symbolDetail.textContent;
+  const blockContent = $("#block-content");
+  const blockEditor = blockContent.closest("fieldset");
+  const symbolCatalog = new Map(MATH_SYMBOLS.map((symbol) => [symbol.id, symbol]));
+  const recentSymbolStorageKey = "tex-notes:recent-symbols";
+  let activeSymbolGroup = MATH_SYMBOL_GROUPS[0].id;
+  let recentSymbols = [];
+  let lastBlockField = blockContent;
+  let symbolOrigin;
+
+  try {
+    recentSymbols = recentSymbolIds(JSON.parse(global.localStorage.getItem(recentSymbolStorageKey)));
+  } catch {
+    // El catálogo sigue disponible si el navegador impide leer el historial.
+  }
+
   function symbolButton(symbol) {
     const button = document.createElement("button");
     button.type = "button";
@@ -471,49 +497,45 @@
     button.dataset.symbolId = symbol.id;
     button.tabIndex = -1;
     button.setAttribute("aria-label", symbolAccessibleName(symbol));
-    // La casilla mide lo mismo para todos, pero los glifos no: «negrita» o
-    // «d²f/dx²» al tamaño de una letra griega se salían sobre las casillas
-    // vecinas. La longitud en puntos de código elige el tramo de tamaño en CSS.
-    button.dataset.glyphLength = String(Math.min([...String(symbol.symbol)].length, 7));
-    const glyph = document.createElement("span"); glyph.className = "symbol-glyph"; glyph.textContent = symbol.symbol;
+    // La longitud del glifo elige su tamaño dentro de una casilla fija.
+    button.dataset.glyphLength = String(Math.min([...symbol.symbol].length, 7));
+    const glyph = document.createElement("span");
+    glyph.className = "symbol-glyph";
+    glyph.textContent = symbol.symbol;
     button.append(glyph);
     return button;
   }
 
-  let activeSymbolGroup = MATH_SYMBOL_GROUPS[0].id;
-
-  function renderCategoryPicker(searching = false) {
-    const picker = $("#symbol-category-picker");
-    picker.replaceChildren();
-    for (const group of MATH_SYMBOL_GROUPS) {
+  function renderSymbolBoard() {
+    for (const group of SYMBOL_BOARD_GROUPS) {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "symbol-category";
       button.dataset.groupId = group.id;
       button.textContent = group.label;
-      button.setAttribute("aria-pressed", String(!searching && group.id === activeSymbolGroup));
-      picker.append(button);
+      categoryPicker.append(button);
     }
+    const shortcut = SHORTCUTS.find(({ id }) => id === "symbols.toggle");
+    const isMac = /Mac/.test(global.navigator.userAgentData?.platform || global.navigator.platform || "");
+    $("#symbol-shortcut-label").textContent = shortcutLabel(shortcut, isMac);
+    for (const field of [blockContent, symbolSearch]) {
+      field.setAttribute("aria-keyshortcuts", ariaKeyshortcuts(shortcut));
+    }
+    applySymbolFilter();
   }
 
-  // El texto base se toma del propio HTML para que no haya dos redacciones que
-  // mantener en paralelo.
-  const SYMBOL_DETAIL_PLACEHOLDER = $("#symbol-detail").textContent;
-
-  function resetSymbolDetail() {
-    $("#symbol-detail").textContent = SYMBOL_DETAIL_PLACEHOLDER;
+  function symbolCategoryLabel() {
+    if (symbolSearch.value.trim()) return "búsqueda";
+    return SYMBOL_BOARD_GROUPS.find(({ id }) => id === activeSymbolGroup).label;
   }
 
-  function renderSymbolBoard() {
-    renderCategoryPicker();
-    applySymbolFilter("");
-  }
-
-  function applySymbolFilter(query) {
-    const container = $("#symbol-groups");
-    const searching = Boolean(query.trim());
-    const visible = searching ? filterMathSymbols(query) : symbolsByGroup(activeSymbolGroup);
-    container.replaceChildren(...visible.map((symbol, index) => {
+  function applySymbolFilter() {
+    const query = symbolSearch.value.trim();
+    const category = activeSymbolGroup === RECENT_SYMBOL_GROUP.id
+      ? recentSymbols.map((id) => symbolCatalog.get(id))
+      : symbolsByGroup(activeSymbolGroup);
+    const visible = query ? filterMathSymbols(query) : category;
+    symbolGrid.replaceChildren(...visible.map((symbol, index) => {
       const item = document.createElement("li");
       item.setAttribute("role", "presentation");
       const button = symbolButton(symbol);
@@ -521,76 +543,193 @@
       item.append(button);
       return item;
     }));
-    renderCategoryPicker(searching);
-    // La rejilla se rehízo: el detalle ya no describe nada visible.
-    resetSymbolDetail();
-    const activeGroup = MATH_SYMBOL_GROUPS.find((group) => group.id === activeSymbolGroup);
-    const activeLabel = activeGroup ? activeGroup.label : MATH_SYMBOL_GROUPS[0].label;
-    container.setAttribute("aria-label", searching ? "Resultados de símbolos" : `Símbolos: ${activeLabel}`);
-    $("#symbol-empty").hidden = visible.length > 0;
-    // El recuento solo se escribe tras una búsqueda: así la región activa no anuncia nada al cargar.
+    symbolGrid.scrollTop = 0;
+    for (const button of categoryPicker.children) {
+      button.setAttribute("aria-pressed", String(!query && button.dataset.groupId === activeSymbolGroup));
+    }
+    symbolDetail.textContent = symbolDetailPlaceholder;
+    symbolGrid.setAttribute("aria-label", query ? "Resultados de símbolos" : `Símbolos: ${symbolCategoryLabel()}`);
+    const empty = $("#symbol-empty");
+    empty.hidden = visible.length > 0;
+    empty.textContent = query ? "Ningún símbolo coincide con la búsqueda." : "Aún no has insertado símbolos.";
     const results = $("#symbol-results");
-    if (!query.trim() && !results.textContent) return;
-    results.textContent = query.trim()
-      ? `${visible.length} ${visible.length === 1 ? "símbolo coincide" : "símbolos coinciden"} con la búsqueda.`
-      : `Se muestran ${visible.length} símbolos de ${activeLabel}.`;
+    results.hidden = !query || !visible.length;
+    results.textContent = `${visible.length} ${visible.length === 1 ? "resultado" : "resultados"}`;
   }
 
-  $("#symbol-search").addEventListener("input", (event) => applySymbolFilter(event.currentTarget.value));
-  $("#symbol-category-picker").addEventListener("click", (event) => {
+  function announceSymbolCount(instructions = "") {
+    const count = symbolGrid.childElementCount;
+    announce(`Tablero de símbolos: ${symbolCategoryLabel()}, ${count} ${count === 1 ? "símbolo" : "símbolos"}.${instructions}`);
+  }
+
+  function updateSymbolSearch() {
+    applySymbolFilter();
+    announceSymbolCount();
+  }
+
+  function selectSymbolCategory(id) {
+    activeSymbolGroup = id;
+    symbolSearch.value = "";
+    applySymbolFilter();
+    categoryPicker.querySelector('[aria-pressed="true"]').scrollIntoView({ block: "nearest", inline: "nearest" });
+    announceSymbolCount();
+  }
+
+  function captureSymbolOrigin(field) {
+    const selection = typeof field.selectionStart === "number"
+      ? [field.selectionStart, field.selectionEnd, field.selectionDirection]
+      : null;
+    return { field, selection };
+  }
+
+  function returnToSymbolOrigin() {
+    const { field, selection } = symbolOrigin ?? captureSymbolOrigin(lastBlockField);
+    symbolOrigin = null;
+    field.focus();
+    if (selection) field.setSelectionRange(...selection);
+  }
+
+  function openSymbolSearch(field) {
+    symbolOrigin = field ? captureSymbolOrigin(field) : symbolOrigin ?? captureSymbolOrigin(lastBlockField);
+    symbolDetails.open = true;
+    symbolSearch.focus();
+    symbolSearch.select();
+    announceSymbolCount(" Escape vuelve al contenido.");
+  }
+
+  function insertSymbol(id) {
+    const symbol = symbolCatalog.get(id);
+    const { field, selection } = symbolOrigin ?? captureSymbolOrigin(lastBlockField);
+    const destination = selection && !field.readOnly ? field : blockContent;
+    if (destination === field) destination.setSelectionRange(...selection);
+    insertIntoField(destination, symbol.insert || symbol.command);
+    symbolOrigin = null;
+    if (destination !== field) field.focus();
+    if (destination === blockContent) scheduleEditorPreview();
+
+    recentSymbols = recentSymbolIds([id, ...recentSymbols]);
+    try {
+      global.localStorage.setItem(recentSymbolStorageKey, JSON.stringify(recentSymbols));
+    } catch {
+      // Los recientes se conservan en memoria mientras la página siga abierta.
+    }
+    if (activeSymbolGroup === RECENT_SYMBOL_GROUP.id && !symbolSearch.value.trim()) applySymbolFilter();
+    announce(`Símbolo insertado: ${symbol.name}.`);
+  }
+
+  function focusSymbolAt(index) {
+    const button = symbolGrid.children[index]?.firstElementChild;
+    if (!button) {
+      symbolGrid.focus();
+      return;
+    }
+    symbolGrid.querySelector('[tabindex="0"]')?.setAttribute("tabindex", "-1");
+    button.tabIndex = 0;
+    button.focus();
+  }
+
+  function navigateSymbolGrid(event) {
+    const shortcut = matchShortcut(event, "symbol-grid-widget");
+    const count = symbolGrid.childElementCount;
+    const index = [...symbolGrid.children].indexOf(event.target.closest("li"));
+    if (shortcut?.id === "symbols.previousGroup" || shortcut?.id === "symbols.nextGroup") {
+      event.preventDefault();
+      selectSymbolCategory(adjacentGroup(activeSymbolGroup, shortcut.id === "symbols.previousGroup" ? -1 : 1));
+      focusSymbolAt(Math.max(0, Math.min(index, symbolGrid.childElementCount - 1)));
+      return;
+    }
+
+    const unmodified = !(event.altKey || event.ctrlKey || event.metaKey || event.shiftKey);
+    if (unmodified && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) {
+      event.preventDefault();
+      if (index < 0 && shortcut?.id !== "symbols.search") return;
+      const columns = Math.max(1, getComputedStyle(symbolGrid).gridTemplateColumns.split(" ").filter(Boolean).length);
+      const next = symbolGridTarget({ index, count, columns, key: event.key });
+      if (next === null) symbolSearch.focus();
+      else focusSymbolAt(next);
+      return;
+    }
+
+    const canType = event.getModifierState("AltGraph") || !(event.altKey || event.ctrlKey || event.metaKey);
+    if (canType && event.key !== " " && [...event.key].length === 1) {
+      event.preventDefault();
+      symbolSearch.focus();
+      symbolSearch.value += event.key;
+      updateSymbolSearch();
+    }
+  }
+
+  function navigateSymbolSearch(event) {
+    const first = symbolGrid.firstElementChild?.firstElementChild;
+    if (matchShortcut(event, "symbol-search-widget")?.id === "symbols.firstResult") {
+      event.preventDefault();
+      if (first) focusSymbolAt(0);
+    } else if (event.key === "Enter" && !(event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)) {
+      event.preventDefault();
+      if (first) insertSymbol(first.dataset.symbolId);
+    }
+  }
+
+  blockEditor.addEventListener("focusin", (event) => {
+    if (symbolBoard.contains(event.target)) {
+      symbolOrigin ??= captureSymbolOrigin(lastBlockField);
+      return;
+    }
+    symbolOrigin = null;
+    if (event.target.matches("input, select, textarea")) lastBlockField = event.target;
+  });
+
+  symbolBoard.addEventListener("focusout", (event) => {
+    if (event.relatedTarget && !symbolBoard.contains(event.relatedTarget)) symbolOrigin = null;
+  });
+
+  blockEditor.addEventListener("keydown", (event) => {
+    if (event.defaultPrevented || event.isComposing || symbolBoard.hidden) return;
+    const inBoard = symbolBoard.contains(event.target);
+    if ((inBoard || event.target.matches("input, select, textarea"))
+        && matchShortcut(event, "block-editor")?.id === "symbols.toggle") {
+      event.preventDefault();
+      if (event.repeat) return;
+      if (inBoard) returnToSymbolOrigin();
+      else openSymbolSearch(event.target);
+      return;
+    }
+    if (!inBoard) return;
+    if (matchShortcut(event, "symbol-widget")?.id === "symbols.escape") {
+      event.preventDefault();
+      if (event.target === symbolSearch && symbolSearch.value) {
+        symbolSearch.value = "";
+        updateSymbolSearch();
+      } else {
+        returnToSymbolOrigin();
+      }
+    } else if (event.target === symbolSearch) {
+      navigateSymbolSearch(event);
+    } else if (symbolGrid.contains(event.target)) {
+      navigateSymbolGrid(event);
+    }
+  });
+
+  $("#symbol-toggle").addEventListener("click", () => openSymbolSearch());
+  symbolSearch.addEventListener("input", updateSymbolSearch);
+  categoryPicker.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-group-id]");
-    if (!button) return;
-    activeSymbolGroup = button.dataset.groupId;
-    $("#symbol-search").value = "";
-    applySymbolFilter("");
+    if (button) selectSymbolCategory(button.dataset.groupId);
   });
-  function updateSymbolDetail(button) {
-    const symbol = MATH_SYMBOLS.find((candidate) => candidate.id === button.dataset.symbolId);
-    if (symbol) $("#symbol-detail").textContent = `${symbol.name} — ${symbol.command}`;
-  }
-  $("#symbol-groups").addEventListener("mouseover", (event) => {
+  function updateSymbolDetail(event) {
     const button = event.target.closest("button[data-symbol-id]");
-    if (button) updateSymbolDetail(button);
-  });
-  $("#symbol-groups").addEventListener("focusin", (event) => {
-    const button = event.target.closest("button[data-symbol-id]");
-    if (button) updateSymbolDetail(button);
-  });
-  /** Columnas que el grid resolvió para el ancho actual; nunca menos de una. */
-  function symbolGridColumns(container) {
-    const columns = getComputedStyle(container).gridTemplateColumns.split(" ").filter(Boolean).length;
-    return Math.max(1, columns);
-  }
-
-  $("#symbol-groups").addEventListener("keydown", (event) => {
-    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
-    const buttons = [...event.currentTarget.querySelectorAll("button[data-symbol-id]")];
-    if (!buttons.length) return;
-    event.preventDefault();
-    const last = buttons.length - 1;
-    const current = Math.max(0, buttons.indexOf(document.activeElement));
-    const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1
-      : symbolGridColumns(event.currentTarget) * (event.key === 'ArrowDown' ? 1 : -1);
-    // Las flechas horizontales dan la vuelta; las verticales se detienen en los
-    // extremos para que la última fila incompleta no mande el foco al principio.
-    const next = event.key === 'Home' ? 0 : event.key === 'End' ? last
-      : event.key === 'ArrowUp' || event.key === 'ArrowDown' ? Math.min(Math.max(current + step, 0), last)
-      : (current + step + buttons.length) % buttons.length;
-    buttons.forEach((button, index) => { button.tabIndex = index === next ? 0 : -1; });
-    buttons[next].focus();
-  });
-  // El puntero salió del tablero: si nadie tiene el foco dentro, el detalle
-  // vuelve a su texto base en lugar de congelar el último símbolo señalado.
-  $("#symbol-groups").addEventListener("mouseleave", (event) => {
-    if (!event.currentTarget.contains(document.activeElement)) resetSymbolDetail();
-  });
-  $("#symbol-groups").addEventListener("click", (event) => {
-    const button = event.target.closest("button[data-command]");
     if (!button) return;
-    const symbol = MATH_SYMBOLS.find((candidate) => candidate.id === button.dataset.symbolId);
-    insertIntoField($("#block-content"), symbol?.insert || button.dataset.command);
-    scheduleEditorPreview();
-    announce(`Símbolo insertado en el contenido: ${symbol ? symbol.name : button.dataset.command}.`);
+    const symbol = symbolCatalog.get(button.dataset.symbolId);
+    symbolDetail.textContent = `${symbol.name} — ${symbol.command}`;
+  }
+  symbolGrid.addEventListener("mouseover", updateSymbolDetail);
+  symbolGrid.addEventListener("focusin", updateSymbolDetail);
+  symbolGrid.addEventListener("mouseleave", () => {
+    if (!symbolGrid.contains(document.activeElement)) symbolDetail.textContent = symbolDetailPlaceholder;
+  });
+  symbolGrid.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-symbol-id]");
+    if (button) insertSymbol(button.dataset.symbolId);
   });
 
   /* --- fin [A] --- */
