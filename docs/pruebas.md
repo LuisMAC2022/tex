@@ -123,12 +123,13 @@
 - una imagen con etiqueta y sin pie establece la referencia de figura
 - los hijos de una imagen con ruta vacía se emiten aunque se omita la imagen
 
-## `tests/image-options.test.js` — 4 pruebas
+## `tests/image-options.test.js` — 5 pruebas
 
 - las opciones de imagen tienen valores por defecto sin altura ni etiqueta
 - las opciones de imagen redondean y limitan los valores numéricos
 - las opciones de imagen sanean alineación, posición y etiqueta de forma idempotente
 - los avisos de ruta distinguen espacios, mayúsculas y formatos incompatibles
+- avisa si el nombre contiene caracteres reservados de LaTeX
 
 ## `tests/invariantes.test.js` — 4 pruebas
 
@@ -197,4 +198,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-151 pruebas con `node:test` más la comprobación estructural.
+152 pruebas con `node:test` más la comprobación estructural.

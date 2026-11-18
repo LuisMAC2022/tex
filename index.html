@@ -112,7 +112,8 @@
               </div>
               <p class="field">
                 <label for="image-height">Altura máxima (cm, opcional)</label>
-                <input id="image-height" type="number" min="0.01" step="0.01" inputmode="decimal">
+                <input id="image-height" type="number" min="0.01" step="0.01" inputmode="decimal" aria-describedby="image-height-help">
+                <small id="image-height-help">El ancho y la altura se limitan antes de girar la imagen.</small>
               </p>
               <div class="field">
                 <label for="image-angle">Ángulo de giro (grados)</label>

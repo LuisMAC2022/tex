@@ -1170,6 +1170,7 @@
     blocks = result.blocks;
     renderBlocks();
     setEditorTarget({});
+    renderEditorPreview();
     focusAction("edit", result.path);
     const targetReset = previous.parent.length ? " El siguiente bloque se añadirá en la raíz." : "";
     announce(`Bloque movido de ${pathLabel(movingPath)} a ${pathLabel(result.path)}.${cancelled}${targetReset}`);

@@ -36,3 +36,9 @@ test("los avisos de ruta distinguen espacios, mayúsculas y formatos incompatibl
   assert.equal(imagePathWarnings("figuras/grafica 1.GIF").length, 3);
   assert.equal(imagePathWarnings("figuras.png/grafica").length, 1);
 });
+
+test("avisa si el nombre contiene caracteres reservados de LaTeX", () => {
+  for (const character of ["%", "#", "{", "}", "\\"]) {
+    assert.match(imagePathWarnings(`figura${character}2026.pdf`).join(" "), /impedir la compilación/);
+  }
+});

@@ -39,6 +39,7 @@
     const extension = /\.([^./\\]+)$/.exec(path)?.[1] || "";
     const warnings = [];
     if (/\s/.test(path)) warnings.push("La ruta contiene espacios.");
+    if (/[\\%#{}]/.test(path)) warnings.push("La ruta contiene caracteres que pueden impedir la compilación en LaTeX.");
     if (extension !== extension.toLowerCase()) warnings.push("La extensión contiene mayúsculas.");
     if (!["png", "jpg", "jpeg", "pdf"].includes(extension.toLowerCase())) {
       warnings.push("pdfLaTeX admite archivos PNG, JPG, JPEG y PDF.");
