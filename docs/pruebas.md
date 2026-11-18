@@ -55,16 +55,19 @@
 - restaurar listas antiguas de ambas versiones mantiene los prefijos literales y la lista plana
 - listas nuevas y antiguas conservan su propio formato al copiar, duplicar, mover, guardar y restaurar
 
-## `tests/content-check.test.js` — 11 pruebas
+## `tests/content-check.test.js` — 14 pruebas
 
 - detecta llaves desparejadas y respeta las escapadas
 - detecta los cuatro delimitadores matemáticos sin pareja
+- las parejas matemáticas de listas y bibliografías se cierran dentro de cada elemento
 - detecta entornos abiertos, cierres sueltos y cierres con otro nombre
 - el porcentaje sin escapar es un aviso y el resto de su línea se ignora
 - detecta guiones bajos y circunflejos fuera del modo matemático
 - detecta el signo & fuera de matemáticas y tablas
 - detecta un signo # suelto y respeta el signo escapado y un parámetro
 - señala el séptimo entorno literal y respeta seis niveles
+- la profundidad de un entorno literal suma los niveles efectivos de su elemento
+- conserva la posición de un entorno literal en un elemento recortado
 - cuenta los entornos emitidos por el árbol y omite ancestros de texto
 - agrupa por ruta y ordena avisos por línea y columna en español
 - el estado de referencia no produce avisos y una ruta de imagen se revisa aparte
@@ -201,4 +204,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-155 pruebas con `node:test` más la comprobación estructural.
+158 pruebas con `node:test` más la comprobación estructural.

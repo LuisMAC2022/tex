@@ -25,6 +25,17 @@ test("detecta los cuatro delimitadores matemáticos sin pareja", () => {
   assert.deepEqual(codes(checkContent(String.raw`\(x_1`, "math-inline")), ["math-delimiter"]);
 });
 
+test("las parejas matemáticas de listas y bibliografías se cierran dentro de cada elemento", () => {
+  const content = "A $x\r\n  - 📐 y$";
+  assert.deepEqual(codes(checkContent(content, "text")), []);
+  for (const type of ["itemize", "enumerate", "bibliography"]) {
+    const issues = checkContent(content, type);
+    assert.deepEqual(codes(issues), ["math-delimiter", "math-delimiter"]);
+    assert.deepEqual(Array.from(issues, ({ line, column }) => [line, column]), [[1, 3], [2, 8]]);
+    assert.deepEqual(codes(checkContent("A $x_1$\n  - B $$y^2$$", type)), []);
+  }
+});
+
 test("detecta entornos abiertos, cierres sueltos y cierres con otro nombre", () => {
   assert.deepEqual(codes(checkContent(String.raw`\begin{align}x &= y`, "text")), ["environment"]);
   assert.deepEqual(codes(checkContent(String.raw`\end{align}`, "text")), ["environment"]);
@@ -71,6 +82,36 @@ test("señala el séptimo entorno literal y respeta seis niveles", () => {
   assert.deepEqual(codes(issues), ["depth"]);
   assert.equal(issues[0].line, 7);
   assert.equal(issues[0].severity, "aviso");
+});
+
+test("la profundidad de un entorno literal suma los niveles efectivos de su elemento", () => {
+  const quote = String.raw`\begin{quote}Texto\end{quote}`;
+  const items = ["A", "  - B", "    1. C", "      - D", "        1. E", "          - F"];
+  const depth = (prefix, last) => [...items.slice(0, prefix), last].join("\n");
+  const mixed = depth(5, "          - " + quote);
+  const issues = checkContent(mixed, "enumerate");
+  assert.deepEqual(codes(issues), ["depth"]);
+  assert.deepEqual([issues[0].line, issues[0].column], [6, 13]);
+  assert.deepEqual(codes(checkBlock({ type: "enumerate", content: mixed, listFormat: "flat" })), []);
+
+  const withParent = { type: "enumerate", content: depth(4, "        1. " + quote) };
+  assert.deepEqual(codes(checkBlock(withParent)), []);
+  const blocks = [{ type: "theorem", children: [withParent] }];
+  const results = checkDocument({ blocks });
+  assert.equal(results.length, 1);
+  assert.deepEqual(Array.from(results[0].path), [0, 0]);
+  assert.deepEqual(codes(results[0].issues), ["depth"]);
+});
+
+test("conserva la posición de un entorno literal en un elemento recortado", () => {
+  const quote = String.raw`\begin{quote}Texto\end{quote}`;
+  const items = (markers) => markers.map((marker, index) => "  ".repeat(index) + marker + " ").join("\n") + quote;
+  const mixed = items(["1. A", "- B", "1. C", "- D", "1. E", "- F", "1."]);
+  const issues = checkContent(mixed, "enumerate");
+  assert.deepEqual(codes(issues), ["depth"]);
+  assert.deepEqual([issues[0].line, issues[0].column], [7, 16]);
+  const sameType = items(["- A", "- B", "- C", "- D", "- E", "- F", "-"]);
+  assert.deepEqual(codes(checkContent(sameType, "itemize")), []);
 });
 
 test("cuenta los entornos emitidos por el árbol y omite ancestros de texto", () => {

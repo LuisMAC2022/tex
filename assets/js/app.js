@@ -1097,9 +1097,10 @@
   beforeGenerateHooks.push((documentState) => {
     const checked = checkDocument(documentState);
     const total = checked.reduce((count, { issues }) => count + issues.length, 0);
+    const found = `Se ${total === 1 ? "encontró" : "encontraron"} ${issueCount(total)}`;
     generatedBlocks = blocks;
     contentCheckSummary.textContent = total
-      ? `Se encontraron ${issueCount(total)} en ${checked.length} ${checked.length === 1 ? "bloque" : "bloques"}.`
+      ? `${found} en ${checked.length} ${checked.length === 1 ? "bloque" : "bloques"}.`
       : "No se encontraron avisos.";
     contentCheckBlocks.replaceChildren();
     contentCheckBlocks.hidden = !total;
@@ -1123,7 +1124,7 @@
       contentCheckBlocks.append(item);
     }
     resultContentCheck.hidden = false;
-    if (total) global.queueMicrotask(() => announce(`Documento generado. Se encontraron ${issueCount(total)}.`));
+    if (total) global.queueMicrotask(() => announce(`Documento generado. ${found}.`));
   });
 
   // Las rutas del resumen solo identifican el árbol con el que se generó.
