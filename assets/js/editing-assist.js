@@ -90,6 +90,9 @@
       : [...text.matchAll(/\{\}/g)].filter(m => !T.isEscaped(text, m.index)).map(m => m.index + 1);
     return { text, holes, final: final === null ? text.length : final };
   }
+  function pairsAfterReplacement(state, pending, start, end) {
+    return activePairs(state, pending).filter(pair => pair.start < start && state.value.length - pair.distance >= end);
+  }
   function snippetEdit(state, source, wrapMath = false) {
     const snippet = parseSnippet(source);
     const prefix = wrapMath ? "$" : "", suffix = wrapMath ? "$" : "";
@@ -118,6 +121,6 @@
     if (!/^\s*$/.test(state.value.slice(state.selectionStart, closeAt))) return null;
     return { edit: { ...state, selectionStart: closeAt + pair.close.length, selectionEnd: closeAt + pair.close.length }, pending: pairs.slice(0, -1) };
   }
-  Object.assign(T, { parseSnippet, snippetEdit, activeSnippet, nextSnippetHole, skipPendingClose });
+  Object.assign(T, { parseSnippet, pairsAfterReplacement, snippetEdit, activeSnippet, nextSnippetHole, skipPendingClose });
   Object.assign(T, { replaceSelection, activePairs, autoPair, deleteEmptyPair, completeEnvironment });
 })(typeof globalThis !== "undefined" ? globalThis : this);

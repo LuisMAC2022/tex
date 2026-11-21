@@ -56,7 +56,7 @@
 - listas nuevas y antiguas conservan su propio formato al copiar, duplicar, mover, guardar y restaurar
 - una sesión vacía no borra el autoguardado y el bloque en curso cuenta como trabajo
 
-## `tests/completion.test.js` — 9 pruebas
+## `tests/completion.test.js` — 10 pruebas
 
 - los fragmentos ordenan marcadores numéricos, preservan escapes y encuentran llaves vacías
 - los huecos permanecen estables al escribir y Tab termina en la posición final
@@ -67,6 +67,7 @@
 - los alias solo coinciden con un token Unicode completo que no sea un comando
 - los alias predeterminados son válidos y no invaden palabras cortas del español
 - la configuración se valida completa antes de aplicar cambios
+- completar un entorno descarta el cierre consumido y conserva los pares exteriores
 
 ## `tests/content-check.test.js` — 14 pruebas
 
@@ -257,4 +258,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-196 pruebas con `node:test` más la comprobación estructural.
+197 pruebas con `node:test` más la comprobación estructural.

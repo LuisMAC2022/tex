@@ -90,3 +90,11 @@ política no permite file://. No se intentaron vías alternativas al bloqueo.
 No se afirma revisión visual, de NVDA, Windows, Overleaf ni el objetivo de
 rendimiento de 60 ms. Estas comprobaciones quedan pendientes de un entorno
 que las permita; no se añadieron dependencias al proyecto.
+
+### P3 — Revisión de integración
+
+Se añadió la regla pura pairsAfterReplacement: completar un entorno puede
+consumir la llave automática de begin. Esa llave se descarta, mientras se
+conservan los pares exteriores; de otro modo podría confundirse con la última
+llave del nuevo cierre de entorno. Caso anidado cubierto por prueba. Suite e
+inventario actualizados; no cambia el contenido generado ni los guardianes.

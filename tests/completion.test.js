@@ -68,3 +68,16 @@ test("la configuración se valida completa antes de aplicar cambios", () => {
  assert.deepEqual(plain(T.validateConfiguration(config)),[]);
  for(const c of [{...config,version:2},{...config,aliases:[{trigger:'en'}]},{...config,prefs:{}},{...config,templates:[null]},{...config,macros:[null]}]) assert.ok(T.validateConfiguration(c).length);
 });
+
+test("completar un entorno descarta el cierre consumido y conserva los pares exteriores", () => {
+ const value=String.raw`{\begin{al}}`, cursor=value.length-2;
+ const current={value,selectionStart:cursor,selectionEnd:cursor};
+ const outer={start:0,open:'{',close:'}',key:'}',distance:1};
+ const inner={start:7,open:'{',close:'}',key:'}',distance:2};
+ const kept=T.pairsAfterReplacement(current,[outer,inner],1,value.length-1);
+ assert.deepEqual(plain(kept),[outer]);
+ const completed=T.snippetEdit({...current,selectionStart:1,selectionEnd:value.length-1},String.raw`\begin{align}
+#1
+\end{align}#0`);
+ assert.equal(T.activePairs(completed.edit,kept).length,1);
+});

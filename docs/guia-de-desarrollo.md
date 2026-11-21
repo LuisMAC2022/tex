@@ -510,3 +510,7 @@ según el título y enfoca un control visible.
 secundarias a more. `focusAction` abre los details antecesores antes de enfocar
 y recurre a Editar si falla. `editing-keys` describe teclas de edición sin
 registrar Tab ni Intro sin modificadores en SHORTCUTS.
+
+Al sustituir un token por un fragmento, `pairsAfterReplacement` conserva solo
+los pares exteriores. Los cierres consumidos por la sustitución se descartan,
+incluso si el nuevo texto termina casualmente en el mismo carácter.

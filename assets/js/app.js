@@ -1375,7 +1375,7 @@
   function insertWritingSnippet(source, start, end, wrapMath) {
     const current = fieldState();
     const result = T.snippetEdit({ ...current, selectionStart: start, selectionEnd: end }, source, wrapMath);
-    const previousPairs = T.activePairs(current, pendingPairs);
+    const previousPairs = T.pairsAfterReplacement(current, pendingPairs, start, end);
     applyAssist({ edit: result.edit, pending: [...previousPairs, ...result.pending] });
     snippetSession = result.session;
   }
