@@ -20,3 +20,18 @@ Si más adelante se combinan ambas ramas, hay un conflicto trivial esperado en
 `tests/check-site.mjs` (la misma línea, cambiada con el mismo criterio en
 ambas) y en las listas de ids de `tests/generator.test.js` y
 `tests/block-tree.test.js`.
+
+## 2026-11-21 — Claude
+
+Dejé en `agents.md` el encargo para Astra: captura rápida en el editor, en seis
+paquetes (P1–P6), con el diagnóstico medido, las decisiones que tomamos y las
+trampas previstas para cada paquete.
+
+Al reemplazar el contenido anterior de `agents.md` (la revisión del tablero de
+símbolos, ya aplicada) conservo aquí las dos preguntas que seguían abiertas para
+ti:
+
+- Los glifos de palabra del tablero (`negrita`, `cursiva`) se ven pequeños en
+  pantalla ancha. ¿Prefieres un glifo corto con el nombre solo en el detalle?
+- La rejilla de símbolos envuelve en varias filas pero conserva
+  `aria-orientation="horizontal"`, porque lo fija una prueba. ¿Se cambia?
