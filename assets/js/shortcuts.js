@@ -2,6 +2,7 @@
   "use strict";
 
   const SHORTCUTS = Object.freeze([
+    { id: "block.commit", code: "Enter", ctrl: true, alt: false, shift: false, meta: false, mod: true, scope: "block-editor", label: "Añadir el bloque o guardar los cambios" },
     { id: "symbols.toggle", code: "KeyS", alt: true, shift: true, ctrl: false, meta: false, scope: "block-editor", label: "Ir al tablero de símbolos o volver al campo", owner: "A" },
     { id: "symbols.escape", code: "Escape", alt: false, shift: false, ctrl: false, meta: false, scope: "symbol-widget", label: "Borrar la búsqueda o volver al campo desde el tablero", owner: "A" },
     { id: "symbols.firstResult", code: "ArrowDown", alt: false, shift: false, ctrl: false, meta: false, scope: "symbol-search-widget", label: "Ir al primer símbolo desde la búsqueda", owner: "A" },
@@ -20,23 +21,23 @@
   ];
   const names = {
     ArrowLeft: "←", ArrowRight: "→", ArrowUp: "↑", ArrowDown: "↓",
-    PageUp: "Re Pág", PageDown: "Av Pág", Escape: "Escape",
+    PageUp: "Re Pág", PageDown: "Av Pág", Escape: "Escape", Enter: "Intro",
   };
 
   function keyName(code) {
     return code.replace(/^(Key|Digit)(?=[A-Z0-9]$)/, "");
   }
-  function matchShortcut(event, scope) {
+  function matchShortcut(event, scope, isMac = false) {
     if (event.isComposing || event.getModifierState?.("AltGraph")) return undefined;
     return SHORTCUTS.find((shortcut) => shortcut.scope === scope && shortcut.code === event.code
-      && modifiers.every(([name]) => Boolean(event[name + "Key"]) === shortcut[name]));
+      && modifiers.every(([name]) => Boolean(event[name + "Key"]) === Boolean(shortcut.mod && isMac ? (name === "meta" ? true : name === "ctrl" ? false : shortcut[name]) : shortcut[name])));
   }
   function shortcutLabel(shortcut, isMac = false) {
-    const parts = modifiers.filter(([name]) => shortcut[name]).map((item) => item[isMac ? 2 : 1]);
+    const parts = modifiers.filter(([name]) => shortcut.mod && isMac ? (name === "meta" || (name !== "ctrl" && shortcut[name])) : shortcut[name]).map((item) => item[isMac ? 2 : 1]);
     return [...parts, names[shortcut.code] || keyName(shortcut.code)].join(isMac ? "" : "+");
   }
-  function ariaKeyshortcuts(shortcut) {
-    const parts = modifiers.filter(([name]) => shortcut[name]).map((item) => item[3]);
+  function ariaKeyshortcuts(shortcut, isMac = false) {
+    const parts = modifiers.filter(([name]) => shortcut.mod && isMac ? (name === "meta" || (name !== "ctrl" && shortcut[name])) : shortcut[name]).map((item) => item[3]);
     return [...parts, keyName(shortcut.code)].join("+");
   }
 

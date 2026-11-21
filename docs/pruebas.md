@@ -12,7 +12,7 @@
 - cada decisión citada en el código existe en decisiones/
 - ningún código vivo se apoya en una decisión reemplazada
 
-## `tests/block-tree.test.js` — 40 pruebas
+## `tests/block-tree.test.js` — 41 pruebas
 
 - la ausencia de children equivale a una lista vacía y el estado plano sigue siendo válido
 - solo los tipos declarados como contenedores admiten hijos
@@ -54,6 +54,7 @@
 - editar normaliza las opciones de imagen y las descarta al cambiar a otro tipo
 - restaurar listas antiguas de ambas versiones mantiene los prefijos literales y la lista plana
 - listas nuevas y antiguas conservan su propio formato al copiar, duplicar, mover, guardar y restaurar
+- una sesión vacía no borra el autoguardado y el bloque en curso cuenta como trabajo
 
 ## `tests/content-check.test.js` — 14 pruebas
 
@@ -167,12 +168,13 @@
 - todos los kinds no matemáticos extraen tramos delimitados
 - analyzeContent clasifica resultados y fallos del renderizador inyectado
 
-## `tests/shortcuts.test.js` — 4 pruebas
+## `tests/shortcuts.test.js` — 5 pruebas
 
 - los atajos tienen identificadores y combinaciones por ámbito únicos
 - los atajos respetan AltGr, las teclas de los widgets y las combinaciones del navegador
 - los atajos usan el código físico y muestran teclas legibles y accesibles
 - los atajos internos del tablero se limitan a la búsqueda y la rejilla
+- Ctrl+Intro incorpora bloques y en macOS usa Meta sin confundir AltGr
 
 ## `tests/symbols.test.js` — 21 pruebas
 
@@ -204,4 +206,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-158 pruebas con `node:test` más la comprobación estructural.
+160 pruebas con `node:test` más la comprobación estructural.

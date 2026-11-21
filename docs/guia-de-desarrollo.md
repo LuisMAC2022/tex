@@ -422,3 +422,16 @@ deployment**, elige **GitHub Actions**.
 Todas las rutas del sitio son relativas (INV-007), así que funciona igual en un dominio
 raíz que en una subruta de proyecto. Y como no carga nada remoto (INV-006), funciona
 igual abierto por doble clic y sin red.
+
+## Edición y autoguardado
+
+`diffEdit` calcula el reemplazo mínimo sin dividir pares UTF-16.
+`applyFieldEdit` aplica cualquier edición del contenido y conserva la selección;
+`isApplyingFieldEdit()` permite ignorar los eventos que produce la propia app.
+Solo cargar y vaciar el editor asignan directamente su valor. Véase DEC-016.
+
+`renderBlockPreview` memoriza nodos de estructura por tipo, formato, contenido,
+contexto de profundidad y versión de vista previa; las imágenes quedan fuera.
+El autoguardado usa `tex-notes:autosave:v1`, con una copia anterior en
+`tex-notes:autosave:previous`. Los eventos input/change tienen retardo de 800 ms;
+pagehide y visibilitychange guardan de inmediato. Véase DEC-019.

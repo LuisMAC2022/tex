@@ -398,3 +398,17 @@ aplicación en un proyecto en blanco, en vez de subir un archivo.
 Fíjate en el **número de línea** que da Overleaf y mira esa línea en el editor: casi
 siempre el problema está ahí o en la anterior. Y recuerda que a partir de la primera
 corrección seria conviene seguir en Overleaf, no aquí.
+
+## Captura continua y recuperación
+
+Ctrl+Intro (⌘+Intro en macOS) activa «Añadir bloque» o «Guardar cambios» desde
+cualquier control del editor. Después de añadir, el foco vuelve a «Contenido»;
+en imágenes pasa a «Archivo de imagen». Intro desde el título del bloque
+pasa al contenido. La fila de acciones queda antes de la vista previa. La
+explicación extensa está plegada en «Ayuda del contenido».
+
+Las inserciones del tablero y las ediciones de listas conservan el historial
+nativo de deshacer cuando el navegador admite insertText. La sesión se guarda
+al editar y al ocultar o cerrar la pestaña, incluido el bloque sin incorporar.
+Al volver, «Recuperar sesión» recupera ese trabajo y «Descartar» elimina la
+oferta. «Guardar borrador» sigue siendo un punto de restauración independiente.

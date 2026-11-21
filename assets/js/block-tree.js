@@ -278,8 +278,14 @@
     return { version, metadata, blocks: normalizeBlocks(raw.blocks, "flat") };
   }
 
+  function sessionHasContent(session) {
+    const nonempty = (value) => typeof value === "string" && Boolean(value.trim());
+    return Boolean(session && ((Array.isArray(session.blocks) && session.blocks.some((block) => block && typeof block === "object"))
+      || nonempty(session.editor?.content) || nonempty(session.editor?.title) || nonempty(session.editor?.image?.content)));
+  }
+
   Object.assign(TexNotes, {
-    DRAFT_VERSION, cloneBlocks, cloneBlock, normalizeBlock, normalizeBlocks, blockAtPath, siblingsAtPath,
+    DRAFT_VERSION, sessionHasContent, cloneBlocks, cloneBlock, normalizeBlock, normalizeBlocks, blockAtPath, siblingsAtPath,
     insertBlock, duplicateBlock, updateBlock, removeBlock, moveBlock, moveBlockTo, countBlocks, flattenBlocks,
     pathToKey, keyToPath, pathLabel, normalizeDraft, listFormatAfterEdit,
   });

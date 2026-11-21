@@ -324,3 +324,10 @@ o hace falta una bitácora aparte. De momento basta.
 Limitación conocida: la huella de los bloques `@decision` colapsa los espacios pero no
 los elimina, así que un formateador automático (Prettier o similar) movería todas las
 anclas a la vez. Si algún día se adopta uno, hay que endurecer la normalización antes.
+
+## Captura continua
+
+Ctrl+Intro (⌘+Intro en macOS) añade el bloque o guarda sus cambios. El foco
+permite encadenar bloques desde Contenido. El autoguardado independiente incluye
+el bloque en curso, ofrece recuperarlo al abrir y conserva una sesión anterior.
+Las vistas previas de la estructura se reutilizan por contenido y profundidad.

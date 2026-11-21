@@ -51,3 +51,12 @@ por ronda de revisión, no al cambiar código.
 - [ ] Seleccionar **Imagen** y pulsar **Añadir bloque** con la ruta vacía. Comprobar el error junto a **Archivo de imagen** y el foco. Probar una ruta con espacios y extensión `.GIF` en mayúsculas y comprobar que se muestran avisos y se puede guardar.
 - [ ] Elegir un PNG local, comprobar la miniatura en el editor y la estructura, seleccionar **Mediana** y pulsar **Girar 90°**. Editar el bloque y comprobar que recupera la ruta, el 60 %, el giro y las demás opciones. Guardar el borrador, recargar y restaurar para comprobar que ahora se muestra la ruta con sus ajustes.
 - [ ] Subir un PNG a Overleaf con el nombre indicado en la ruta. Compilar un documento con una imagen raíz, otra girada y otra dentro de un teorema. Confirmar el giro, el pie escapado y la posición de la imagen anidada.
+
+## Captura rápida: P1
+
+- [ ] Intro en título pasa al contenido y no genera; en campos de imagen no envía.
+- [ ] Ctrl+Intro añade desde cualquier control; ⌘+Intro en macOS.
+- [ ] El foco queda en Contenido o Archivo de imagen después de añadir.
+- [ ] Ctrl+Z deshace una inserción del tablero y una edición de lista.
+- [ ] Cerrar y recuperar conserva el bloque en curso, la selección de destino y las opciones de imagen.
+- [ ] Escribir sin recuperar conserva la sesión anterior en la clave de respaldo.

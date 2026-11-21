@@ -23,6 +23,8 @@
   const beforeGenerateHooks = [];
   const editorPreviewHooks = [];
   let blocks = [];
+  let previewVersion = 0;
+  const structurePreviewCache = new Map();
   /**
    * Bandeja de copia: un bloque suelto, fuera del árbol, a la espera de que la
    * persona elija dónde pegarlo. Deliberadamente NO es el portapapeles del
@@ -70,11 +72,21 @@
   }
 
   function renderBlockPreview(container, block, context) {
+    const cacheable = context.structure && blockType(block.type)?.kind !== "image";
+    const depthKey = listDepthForPath(context.parentPath);
+    const key = JSON.stringify([block.type, block.listFormat, block.content, depthKey, previewVersion]);
+    const cached = cacheable && structurePreviewCache.get(key);
+    if (cached) { container.replaceChildren(cached.node.cloneNode(true)); return cached.analysis; }
     const renderer = previewRenderers.get(blockType(block.type)?.kind);
-    if (renderer) return renderer(container, block, context);
     const content = context.structure ? (block.content || "").trim() : block.content;
-    const analysis = fillMathPreview(container, content, block.type, context.structure);
-    if (context.structure && !content) container.textContent = "(Bloque vacío)";
+    const analysis = renderer ? renderer(container, block, context) : fillMathPreview(container, content, block.type, context.structure);
+    if (!renderer && context.structure && !content) container.textContent = "(Bloque vacío)";
+    if (cacheable) {
+      const node = document.createDocumentFragment();
+      for (const child of container.childNodes) node.append(child.cloneNode(true));
+      if (structurePreviewCache.size >= 1000) structurePreviewCache.clear();
+      structurePreviewCache.set(key, { node, analysis });
+    }
     return analysis;
   }
 
@@ -228,6 +240,7 @@
     blockList.replaceChildren();
     $("#empty-blocks").hidden = blocks.length > 0;
     blocks.forEach((block, index) => blockList.append(blockItem(block, [index], null, [], blocks.length)));
+    saveSession();
   }
 
   /** Devuelve true si existe y es enfocable; permite encadenar alternativas. */
@@ -329,7 +342,7 @@
     // El destino se conserva para encadenar varios hijos del mismo padre.
     setEditorTarget({ parent });
     renderBlocks();
-    $("#block-type").focus();
+    focusBlockContent();
     announce(`Bloque ${pathLabel(result.path)} añadido ${parent.length ? `dentro de ${describeBlock(blockAtPath(blocks, parent), parent)}` : "en la raíz"}.`);
   });
 
@@ -460,6 +473,10 @@
     if (!output.value) { announce("Genera el documento antes de copiarlo."); $("#generate").focus(); return; }
     try { await copyToClipboard(output.value, output); announce("Código LaTeX copiado."); } catch { announce("No se pudo copiar el código; permanece disponible para seleccionarlo manualmente."); }
   });
+
+  function focusBlockContent() { $(blockType($("#block-type").value)?.kind === "image" ? "#image-path" : "#block-content").focus(); }
+  // Se amplía en [F] cuando hay un menú de escritura.
+  let closeAssistMenu = () => {};
 
   /* --- [A] Atajos del tablero --- */
 
@@ -684,7 +701,18 @@
   });
 
   blockEditor.addEventListener("keydown", (event) => {
-    if (event.defaultPrevented || event.isComposing || symbolBoard.hidden) return;
+    if (event.defaultPrevented || event.isComposing) return;
+    const shortcut = matchShortcut(event, "block-editor", listIsMac);
+    if (shortcut?.id === "block.commit") {
+      event.preventDefault();
+      if (!event.repeat) { closeAssistMenu(); $("#add-block").click(); }
+      return;
+    }
+    if (event.key === "Enter" && !(event.ctrlKey || event.metaKey || event.altKey || event.shiftKey)) {
+      if (event.target.id === "block-title") { event.preventDefault(); focusBlockContent(); return; }
+      if (event.target.matches('#image-fields input[type="text"], #image-fields input[type="number"]')) { event.preventDefault(); return; }
+    }
+    if (symbolBoard.hidden) return;
     const inBoard = symbolBoard.contains(event.target);
     if ((inBoard || event.target.matches("input, select, textarea"))
         && matchShortcut(event, "block-editor")?.id === "symbols.toggle") {
@@ -1014,9 +1042,7 @@
   });
 
   function applyListEdit(edit, direction) {
-    if (listContent.value !== edit.value) listContent.value = edit.value;
-    listContent.focus();
-    listContent.setSelectionRange(edit.selectionStart, edit.selectionEnd, direction);
+    global.TexNotes.applyFieldEdit(listContent, { ...edit, selectionDirection: direction });
     scheduleEditorPreview();
   }
 
@@ -1041,6 +1067,15 @@
       listContent.focus();
     });
   }
+
+  $("#list-tools").addEventListener("keydown", (event) => {
+    if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+    event.preventDefault();
+    const buttons = [...$("#list-tools").querySelectorAll("button")];
+    const next = buttons.find((button) => button !== event.target);
+    for (const button of buttons) button.tabIndex = button === next ? 0 : -1;
+    next?.focus();
+  });
 
   listContent.addEventListener("keydown", (event) => {
     if (event.defaultPrevented || event.isComposing || blockType($("#block-type").value)?.kind !== "list") return;
@@ -1205,6 +1240,67 @@
 
   $("#block-content").addEventListener("input", scheduleEditorPreview);
   $("#block-type").addEventListener("change", renderEditorPreview);
+
+  /* --- Autoguardado separado del borrador explícito --- */
+  const AUTOSAVE_KEY = "tex-notes:autosave:v1";
+  let pendingSession = null;
+  let autosaveTimer;
+  let autosaveReady = false;
+  let backedUpSession = false;
+  let announcedStorageError = false;
+  try { const raw = JSON.parse(global.localStorage.getItem(AUTOSAVE_KEY)); const draft = normalizeDraft(raw); pendingSession = draft ? { ...raw, ...draft } : null; } catch { /* sin almacenamiento */ }
+  const hasSessionContent = global.TexNotes.sessionHasContent;
+  /* @decision DEC-019 ancla:0b9a8596 tramo:19
+   * El autoguardado no escribe sesiones vacías ni reemplaza el borrador elegido.
+   * Antes del primer reemplazo conserva la sesión anterior en una clave aparte.
+   */
+  function saveSession() {
+    if (!autosaveReady) return;
+    const type = $("#block-type").value;
+    const session = { version: DRAFT_VERSION, savedAt: new Date().toISOString(), ...state(), editor: {
+      type, title: $("#block-title").value, content: blockContent.value,
+      editingPath: editorTarget().editing, parentPath: editorTarget().parent,
+      image: blockFieldHooks.find((hook) => hook.appliesTo?.("image"))?.read("image"),
+    } };
+    if (!hasSessionContent(session)) return;
+    try {
+      if (!backedUpSession && hasSessionContent(pendingSession)) global.localStorage.setItem("tex-notes:autosave:previous", JSON.stringify(pendingSession));
+      global.localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(session));
+      backedUpSession = true;
+    } catch {
+      if (!announcedStorageError) { announce("No se pudo autoguardar la sesión; guarda o descarga tu trabajo."); announcedStorageError = true; }
+    }
+  }
+  function scheduleSessionSave() { global.clearTimeout(autosaveTimer); autosaveTimer = global.setTimeout(saveSession, 800); }
+  form.addEventListener("input", scheduleSessionSave);
+  form.addEventListener("change", scheduleSessionSave);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) saveSession(); });
+  global.addEventListener("pagehide", saveSession);
+  if (hasSessionContent(pendingSession) && normalizeDraft(pendingSession)) {
+    $("#autosave-banner").hidden = false;
+    const date = new Date(pendingSession.savedAt).toLocaleString("es-MX");
+    $("#autosave-message").textContent = `Hay una sesión sin guardar del ${date} con ${countBlocks(pendingSession.blocks)} bloques.`;
+  }
+  $("#recover-session").addEventListener("click", () => {
+    const draft = normalizeDraft(pendingSession);
+    if (!draft) { announce("No hay una sesión válida para recuperar."); return; }
+    setMetadata(draft.metadata); blocks = draft.blocks;
+    const editor = pendingSession.editor || {};
+    $("#block-type").value = blockType(editor.type) ? editor.type : "text";
+    $("#block-title").value = typeof editor.title === "string" ? editor.title : "";
+    blockContent.value = typeof editor.content === "string" ? editor.content : "";
+    const paths = { editing: Array.isArray(editor.editingPath) ? editor.editingPath : [], parent: Array.isArray(editor.parentPath) ? editor.parentPath : [] };
+    if (paths.parent.length && !acceptsChildren(blockAtPath(blocks, paths.parent)?.type)) paths.parent = [];
+    for (const hook of blockFieldHooks) hook.fill?.({ ...blockDraft(), ...(editor.image || {}), type: $("#block-type").value });
+    setEditorTarget(paths); renderBlocks(); renderEditorPreview(); focusBlockContent();
+    $("#autosave-banner").hidden = true;
+    announce("Sesión recuperada, incluido el bloque a medio escribir.");
+  });
+  $("#discard-session").addEventListener("click", () => {
+    try { global.localStorage.removeItem(AUTOSAVE_KEY); } catch { /* la aplicación sigue disponible */ }
+    pendingSession = null; $("#autosave-banner").hidden = true; focusBlockContent(); announce("Sesión anterior descartada.");
+  });
+  autosaveReady = true;
 
   renderShortcutPanel();
   renderSymbolBoard();
