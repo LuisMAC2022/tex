@@ -116,7 +116,20 @@
     return Object.fromEntries(METADATA_KEYS.map((name) => [name, form.elements[name].value]));
   }
   function state() { return { metadata: metadata(), blocks: cloneBlocks(blocks), macros: macros.map(m => ({ ...m })) }; }
-  function announce(message) { status.textContent = message; }
+  /**
+   * Toda acción se anuncia en #app-status. Además se muestra unos segundos
+   * como aviso flotante, salvo los anuncios que acompañan a la escritura o a un
+   * control que ya muestra su propio estado (toast: false), que serían ruido.
+   */
+  let statusTimer;
+  let statusToastReady = false;
+  function announce(message, { toast = true } = {}) {
+    status.textContent = message;
+    if (!toast || !statusToastReady) return;
+    status.classList.add("is-visible");
+    global.clearTimeout(statusTimer);
+    statusTimer = global.setTimeout(() => status.classList.remove("is-visible"), Math.min(8000, 2500 + message.length * 40));
+  }
   function setMetadata(values = {}) {
     for (const name of METADATA_KEYS) form.elements[name].value = typeof values[name] === "string" ? values[name] : "";
     syncMetadataSummary(true);
@@ -214,23 +227,38 @@
     actions.append(actionButton("Editar", "edit", path, `Editar ${subject}`));
     if (acceptsChildren(block.type)) actions.append(actionButton("Añadir dentro", "child", path, `Añadir un bloque dentro de ${subject}`));
     const disclosure = document.createElement("details"), summary = document.createElement("summary"), more = document.createElement("div");
-    disclosure.className = "block-more"; summary.textContent = "Más acciones"; summary.setAttribute("aria-label", `Más acciones para ${subject}`); more.className = "block-more-actions";
-    more.append(
-      actionButton("Duplicar", "duplicate", path, `Duplicar ${subject}: la copia queda justo después`),
-      actionButton("Copiar bloque", "copy", path, `Copiar ${subject} a la bandeja, para pegarlo donde elijas`),
-      actionButton("Copiar texto", "copy-text", path, `Copiar al portapapeles el texto de ${subject}`),
-      actionButton("Eliminar", "delete", path, `Eliminar ${subject}`),
+    // Con el mismo name, abrir un desplegable cierra el que estuviera abierto.
+    disclosure.className = "block-more"; disclosure.setAttribute("name", "block-more");
+    summary.textContent = "Más acciones"; summary.setAttribute("aria-label", `Más acciones para ${subject}`); more.className = "block-more-actions";
+    const group = (label) => {
+      const element = document.createElement("div");
+      element.className = "block-more-group";
+      if (label) { element.setAttribute("role", "group"); element.setAttribute("aria-label", label); }
+      return element;
+    };
+    // Tres grupos: mover, copiar y, aparte y al final, la única acción destructiva.
+    const moveActions = group("Mover"), copyActions = group("Copiar"), dangerActions = group();
+    moveActions.append(
       actionButton("Subir", "up", path, `Subir ${subject}, entre sus hermanos`, position === 0),
       actionButton("Bajar", "down", path, `Bajar ${subject}, entre sus hermanos`, position === siblings - 1),
     );
+    copyActions.append(
+      actionButton("Duplicar", "duplicate", path, `Duplicar ${subject}: la copia queda justo después`),
+      actionButton("Copiar bloque", "copy", path, `Copiar ${subject} a la bandeja, para pegarlo donde elijas`),
+      actionButton("Copiar texto", "copy-text", path, `Copiar al portapapeles el texto de ${subject}`),
+    );
+    const remove = actionButton("Eliminar", "delete", path, `Eliminar ${subject}`);
+    remove.className = "secondary danger";
+    dangerActions.append(remove);
+    more.append(moveActions, copyActions, dangerActions);
     disclosure.append(summary, more); actions.append(disclosure);
     article.append(heading, meta, preview, actions);
-    for (const extend of blockItemExtensions) extend(block, path, { article, actions, more, subject });
+    for (const extend of blockItemExtensions) extend(block, path, { article, actions, more, moveActions, copyActions, subject });
     item.append(article);
 
     if (block.children.length) {
       const nested = document.createElement("ol");
-      nested.className = "block-children";
+      nested.className = "block-children"; nested.setAttribute("role", "list");
       nested.setAttribute("aria-label", `Bloques dentro de ${describeBlock(block, path)}`);
       block.children.forEach((child, index) => nested.append(blockItem(child, [...path, index], block, path, block.children.length)));
       item.append(nested);
@@ -242,6 +270,7 @@
     blockList.replaceChildren();
     $("#empty-blocks").hidden = blocks.length > 0;
     blocks.forEach((block, index) => blockList.append(blockItem(block, [index], null, [], blocks.length)));
+    updateNavCount();
     saveSession();
   }
 
@@ -372,6 +401,29 @@
     announce(cancelled ? "Edición cancelada." : "El siguiente bloque se añadirá en la raíz.");
   });
 
+  /**
+   * En una sola columna, el editor queda muy por encima de la tarjeta pulsada.
+   * Se lleva su comienzo a la vista —con el destino y el tipo— y solo después
+   * se enfoca, para que el navegador no deje el campo pegado al borde inferior.
+   * En dos columnas el editor ya está a la vista y no se desplaza nada.
+   */
+  function revealEditor(field = $("#block-type")) {
+    const editor = $("#editor");
+    const { top } = editor.getBoundingClientRect();
+    if (top < 0 || top > global.innerHeight / 2) editor.scrollIntoView({ block: "start" });
+    field.focus({ preventScroll: true });
+  }
+
+  // Escape cierra el desplegable «Más acciones» y devuelve el foco a su resumen.
+  blockList.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || event.defaultPrevented) return;
+    const disclosure = event.target.closest(".block-more[open]");
+    if (!disclosure) return;
+    event.preventDefault();
+    disclosure.open = false;
+    disclosure.querySelector("summary").focus();
+  });
+
   blockList.addEventListener("click", async (event) => {
     const button = event.target.closest("button[data-action]");
     if (!button) return;
@@ -385,14 +437,14 @@
       $("#block-type").value = block.type; $("#block-title").value = block.title; $("#block-content").value = block.content;
       for (const hook of blockFieldHooks) hook.fill?.(block);
       $("#block-error").textContent = ""; $("#block-content").removeAttribute("aria-invalid");
-      setEditorTarget({ editing: path }); $("#block-type").focus();
+      setEditorTarget({ editing: path }); revealEditor();
       renderEditorPreview();
       announce(`Editando ${describeBlock(block, path)}.`);
       return;
     }
     if (action === "child") {
       cancelTemplateForStructuralChange();
-      clearBlockFields(); setEditorTarget({ parent: path }); $("#block-type").focus();
+      clearBlockFields(); setEditorTarget({ parent: path }); revealEditor();
       announce(`El siguiente bloque se añadirá dentro de ${describeBlock(block, path)}, en el nivel ${path.length + 1}.`);
       return;
     }
@@ -588,7 +640,7 @@
 
   function announceSymbolCount(instructions = "") {
     const count = symbolGrid.childElementCount;
-    announce(`Tablero de símbolos: ${symbolCategoryLabel()}, ${count} ${count === 1 ? "símbolo" : "símbolos"}.${instructions}`);
+    announce(`Tablero de símbolos: ${symbolCategoryLabel()}, ${count} ${count === 1 ? "símbolo" : "símbolos"}.${instructions}`, { toast: false });
   }
 
   function updateSymbolSearch() {
@@ -920,13 +972,13 @@
     const button = event.target.closest("button[data-image-width]");
     if (!button) return;
     imageWidth.value = button.dataset.imageWidth;
-    announce(`Ancho de la imagen: ${updateImageWidth()}.`);
+    announce(`Ancho de la imagen: ${updateImageWidth()}.`, { toast: false });
     renderEditorPreview();
   });
   $("#image-turn").addEventListener("click", () => {
     const { angle } = normalizeImageOptions({ angle: imageAngle.value });
     imageAngle.value = Number((angle + 90 > 360 ? angle - 270 : angle + 90).toFixed(2));
-    announce(`Ángulo de giro: ${imageAngle.value}°.`);
+    announce(`Ángulo de giro: ${imageAngle.value}°.`, { toast: false });
     renderEditorPreview();
   });
   imageFile.addEventListener("change", () => {
@@ -1068,8 +1120,8 @@
     const edit = shiftLines(listContent, delta);
     const changed = edit.value !== listContent.value;
     applyListEdit(edit, listContent.selectionDirection);
-    if (delta > 0) announce("Se añadió sangría.");
-    else announce(changed ? "Se quitó sangría." : "No hay sangría que quitar.");
+    if (delta > 0) announce("Se añadió sangría.", { toast: false });
+    else announce(changed ? "Se quitó sangría." : "No hay sangría que quitar.", { toast: false });
   }
 
   const listIsMac = /Mac/.test(global.navigator.userAgentData?.platform || global.navigator.platform || "");
@@ -1196,7 +1248,7 @@
   const movePosition = $("#move-block-position");
   let movingPath = [];
 
-  blockItemExtensions.push((_block, path, { more, subject }) => {
+  blockItemExtensions.push((_block, path, { moveActions, subject }) => {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = "Mover a…";
@@ -1218,7 +1270,7 @@
       button.focus();
       moveDialog.showModal();
     });
-    more.append(button);
+    moveActions.append(button);
   });
 
   $("#move-block-cancel").addEventListener("click", () => moveDialog.close());
@@ -1343,7 +1395,7 @@
     const active = assistList.children[assistState.index];
     blockContent.setAttribute("aria-activedescendant", active.id);
     active.scrollIntoView({ block: "nearest" });
-    if (speak) announce(`${assistState.entries[assistState.index].label}. ${assistState.index + 1} de ${assistState.entries.length}.`);
+    if (speak) announce(`${assistState.entries[assistState.index].label}. ${assistState.index + 1} de ${assistState.entries.length}.`, { toast: false });
   }
   function openAssistMenu(entries, token, mode) {
     if (!entries.length) { closeAssistMenu(); return; }
@@ -1361,7 +1413,7 @@
     assistList.hidden = false;
     blockContent.setAttribute("aria-autocomplete", "list"); blockContent.setAttribute("aria-controls", "assist-list");
     selectAssist(0, false); positionAssistMenu();
-    if (opened) announce(`${entries.length} sugerencias. ${entries[0].label}.`);
+    if (opened) announce(`${entries.length} sugerencias. ${entries[0].label}.`, { toast: false });
   }
   function updateAssistMenu(event) {
     if (T.isApplyingFieldEdit()) return;
@@ -1568,7 +1620,7 @@
   $("#cancel-template").addEventListener("click", () => {
     templateSession = null; renderTemplateProgress(); focusBlockContent(); announce("Plantilla cancelada; el contenido del paso actual se conserva.");
   });
-  blockItemExtensions.push((block, path, { more, subject }) => {
+  blockItemExtensions.push((block, path, { copyActions, subject }) => {
     const button = document.createElement("button"); button.type = "button"; button.textContent = "Guardar como plantilla";
     button.setAttribute("aria-label", `Guardar como plantilla ${subject}`); button.setAttribute("aria-haspopup", "dialog");
     button.addEventListener("click", () => {
@@ -1576,7 +1628,7 @@
       $("#template-name").value = block.title || blockLabel(block.type); $("#template-trigger").value = ""; $("#template-error").textContent = "";
       templateDialog.showModal();
     });
-    more.append(button);
+    copyActions.append(button);
   });
   refreshTemplates = () => {
     $("#own-template-list").replaceChildren(...ownTemplates.map((template, index) => {
@@ -1760,9 +1812,70 @@
   });
   autosaveReady = true;
 
+  /* --- [I] Barra de secciones --- */
+
+  const navLinks = [...document.querySelectorAll('.app-nav a[href^="#"]')];
+  const navTargets = navLinks.map((link) => document.getElementById(link.hash.slice(1)));
+  // Se busca en cada llamada: renderBlocks() puede ejecutarse antes de esta sección.
+  function updateNavCount() {
+    const navCount = $("#nav-block-count");
+    const total = countBlocks(blocks);
+    const label = document.createElement("span");
+    label.className = "visually-hidden";
+    label.textContent = total === 1 ? " bloque" : " bloques";
+    navCount.hidden = total === 0;
+    navCount.replaceChildren(String(total), label);
+  }
+  function reducedMotion() { return global.matchMedia?.("(prefers-reduced-motion: reduce)").matches; }
+  /**
+   * La sección actual es la que cruza una línea a un tercio de la ventana. En
+   * dos columnas, editor y estructura la cruzan a la vez y ambos se marcan.
+   * Sobre la cabecera, por encima de la primera sección, no se marca ninguna.
+   * Al llegar al final de la página se marca la última sección visible, que
+   * puede ser demasiado baja para alcanzar la línea.
+   */
+  function updateCurrentSection() {
+    const line = global.innerHeight / 3;
+    const atBottom = global.scrollY + global.innerHeight >= document.documentElement.scrollHeight - 4;
+    const rects = navTargets.map((target) => target.getBoundingClientRect());
+    let current = rects.map((rect) => rect.top <= line && rect.bottom > line);
+    // En el margen entre dos secciones sigue marcada la anterior, sin parpadeo.
+    if (!current.includes(true)) {
+      const previous = rects.findLastIndex((rect) => rect.top <= line);
+      current = rects.map((_, index) => index === previous);
+    }
+    if (atBottom) {
+      const last = rects.findLastIndex((rect) => rect.top < global.innerHeight && rect.bottom > 0);
+      current = rects.map((_, index) => index === last);
+    }
+    navLinks.forEach((link, index) => {
+      if (current[index]) link.setAttribute("aria-current", "location");
+      else link.removeAttribute("aria-current");
+    });
+  }
+  let navFrame = 0;
+  function scheduleCurrentSection() {
+    if (navFrame) return;
+    navFrame = global.requestAnimationFrame(() => { navFrame = 0; updateCurrentSection(); });
+  }
+  global.addEventListener("scroll", scheduleCurrentSection, { passive: true });
+  global.addEventListener("resize", scheduleCurrentSection);
+  // El enlace nativo ya desplaza y enfoca el destino; aquí solo se suaviza el
+  // desplazamiento y se evita una entrada de historial por cada salto.
+  $(".app-nav").addEventListener("click", (event) => {
+    const link = event.target.closest('a[href^="#"]');
+    const target = link && document.getElementById(link.hash.slice(1));
+    if (!target || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    target.scrollIntoView({ block: "start", behavior: reducedMotion() ? "auto" : "smooth" });
+    target.focus({ preventScroll: true });
+  });
+
   renderShortcutPanel();
   renderSymbolBoard();
   renderBlocks();
   setEditorTarget({});
   renderEditorPreview();
+  updateCurrentSection();
+  statusToastReady = true;
 })(typeof globalThis !== "undefined" ? globalThis : this);

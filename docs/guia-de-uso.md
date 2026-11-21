@@ -500,8 +500,36 @@ En pantallas menores se usa una sola columna. «Datos del documento» se puede
 plegar; su resumen muestra el título, curso y fecha. Al restaurar un documento
 con título queda plegado y el foco puede volver a su resumen.
 
-Las tarjetas mantienen «Editar» y «Añadir dentro» a la vista. Abre «Más acciones»
-para duplicar, copiar, eliminar, subir, bajar, mover o guardar una plantilla.
-Después de mover con sus botones, el desplegable del bloque destino se abre
-para conservar el foco. «Atajos de teclado» incluye la prioridad de Tab,
-Escape, navegación del menú, Retroceso y los comandos /.
+Las tarjetas mantienen «Editar» y «Añadir dentro» a la vista. «Más acciones»
+agrupa primero lo que mueve el bloque («Subir», «Bajar», «Mover a…»), después
+lo que lo copia («Duplicar», «Copiar bloque», «Copiar texto», «Guardar como
+plantilla») y, aparte y al final, «Eliminar». Solo queda abierto un desplegable
+a la vez, y `Escape` lo cierra y devuelve el foco a «Más acciones». Después de
+mover con sus botones, el desplegable del bloque destino se abre para conservar
+el foco. En «Ajustes», «Atajos de teclado» incluye la prioridad de Tab, Escape,
+navegación del menú, Retroceso y los comandos /.
+
+Las explicaciones largas están plegadas: «Cómo se añaden bloques» en el
+contenido, «Qué hace cada acción» en la estructura y «Qué revisa esta vista» en
+la vista previa de las matemáticas.
+
+## Navegación y uso en el celular
+
+La barra de secciones lleva a «Datos», «Editor», «Estructura», «Resultado» y
+«Ajustes». Resalta la sección que estás viendo y, junto a «Estructura», muestra
+cuántos bloques tiene la nota. En una pantalla ancha queda fija arriba; en el
+celular, abajo, al alcance del pulgar. Con dos columnas, «Editor» y
+«Estructura» se resaltan a la vez porque ambos están a la vista.
+
+En el celular:
+
+- Mientras escribes en un campo, la barra se retira para dejar sitio al
+  teclado. Vuelve al tocar fuera del campo.
+- «Añadir bloque» (o «Guardar cambios» y «Cancelar edición») acompaña al campo
+  de contenido mientras lo escribes. En Android queda justo encima del teclado.
+  En iPhone, cierra el teclado para verlo.
+- «Editar» y «Añadir dentro» suben hasta el comienzo del editor, donde la frase
+  de destino dice qué bloque editas o dónde caerá el siguiente.
+- Cada acción muestra unos segundos un aviso con su resultado, por ejemplo
+  “Bloque 3 añadido en la raíz.”. Aparece encima de la barra o, mientras
+  escribes, arriba de la pantalla.

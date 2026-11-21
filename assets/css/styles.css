@@ -21,7 +21,7 @@
 * { box-sizing: border-box; }
 html { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.5; }
 body { margin: 0; color: var(--text); background: var(--background); }
-.skip-link { position: absolute; left: 1rem; top: -5rem; z-index: 2; padding: .75rem 1rem; color: var(--on-primary); background: var(--primary); }
+.skip-link { position: absolute; left: 1rem; top: -5rem; z-index: 20; padding: .75rem 1rem; color: var(--on-primary); background: var(--primary); }
 .skip-link:focus { top: 1rem; }
 .site-header, main, footer { width: min(100% - 2rem, 70rem); margin-inline: auto; }
 /* tabindex permite que el enlace de salto lleve el foco al contenido en todos
@@ -44,7 +44,11 @@ textarea { resize: vertical; }
 button { padding: .65rem 1rem; border: 2px solid var(--primary); border-radius: .35rem; color: var(--on-primary); background: var(--primary); cursor: pointer; font-weight: 700; }
 button:hover { background: var(--primary-hover); }
 button.secondary { color: var(--primary); background: var(--surface); }
+/* Sin esto, el fondo oscuro de button:hover dejaba el texto azul de un botón
+   secundario casi invisible mientras el puntero estaba encima. */
+button.secondary:hover { background: var(--accent-soft); }
 button.danger { color: var(--danger); border-color: var(--danger); }
+button.danger:hover { background: var(--error-bg); }
 button:disabled { cursor: not-allowed; opacity: .55; }
 :where(a, button, input, select, textarea):focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 .button-row { display: flex; flex-wrap: wrap; gap: .65rem; margin: 1rem 0 0; padding: 0; list-style: none; }
@@ -79,6 +83,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .symbol-board .field input { min-height: 2.75rem; }
 .symbol-categories { display: flex; gap: .35rem; margin-block: .3rem; padding-block-end: .15rem; overflow-x: auto; }
 .symbol-category { flex: 0 0 auto; min-height: 2.75rem; padding: .35rem .65rem; color: var(--primary); background: var(--surface); font-size: .85rem; }
+.symbol-category:hover { background: var(--accent-soft); }
 .symbol-category[aria-pressed="true"] { color: var(--on-primary); background: var(--primary); }
 #symbol-detail { min-height: 1.5rem; margin-block: .15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9rem; }
 #symbol-results:empty { display: none; }
@@ -107,12 +112,12 @@ footer { padding-block: .5rem 2rem; }
   .form-grid { grid-template-columns: 1fr; }
   .field-wide { grid-column: auto; }
   section { padding: 1rem; }
-  .button-row > li, .button-row button { width: 100%; }
+  .button-row > li { flex: 1 1 8rem; }
+  .button-row button { width: 100%; }
   .symbol-board > details > .symbol-grid { max-block-size: 12rem; }
   /* A 320 px la sangría por nivel se reduce para que un bloque de nivel 3 siga
      siendo legible sin desplazamiento horizontal. */
   .block-list, .block-children { padding-inline-start: .85rem; }
-  .block-actions button { flex: 1 1 8rem; }
   .symbol-board > details > :not(summary) { margin-inline: .75rem; }
   .symbol-board .field { grid-template-columns: 1fr; }
 }
@@ -244,10 +249,122 @@ summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 #save-template-dialog::backdrop { background: var(--background); opacity: .75; }
 @media (min-width: 75rem) {
   .editor-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 1.5rem; }
-  .block-editor { position: sticky; top: .5rem; max-block-size: calc(100dvh - 1rem); overflow: auto; margin-block-start: 0; }
+  .block-editor { position: sticky; top: calc(var(--nav-size) + .5rem); max-block-size: calc(100dvh - var(--nav-size) - 1rem); overflow: auto; margin-block-start: 0; }
   .structure-panel > h3 { margin-block-start: 0; }
 }
 @media (max-width: 38rem) {
-  .block-actions { flex-direction: column; align-items: stretch; }
   .block-children { padding-inline-start: .65rem; }
 }
+
+/* --- [I] Navegación y celular --- */
+/* Fuera de :root a propósito: allí solo viven los tokens de color, que
+   tests/check-site.mjs empareja uno a uno con el tema oscuro. */
+html { --nav-size: 3.5rem; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+.app-nav { z-index: 5; background: var(--surface); }
+.app-nav ul { display: flex; margin: 0; padding: 0; list-style: none; }
+.app-nav li { flex: 1 1 0; min-inline-size: 0; }
+.app-nav a { position: relative; display: flex; align-items: center; justify-content: center; gap: .4rem; min-block-size: 2.75rem; padding: .35rem .7rem; color: var(--muted); border-radius: .35rem; font-weight: 650; text-decoration: none; }
+.app-nav a:hover { color: var(--primary); background: var(--accent-soft); }
+.app-nav a[aria-current] { color: var(--primary); background: var(--accent-soft); font-weight: 750; }
+.nav-icon { flex: none; inline-size: 1.3rem; block-size: 1.3rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.nav-count { min-inline-size: 1.35rem; padding-inline: .3rem; color: var(--on-primary); background: var(--primary); border-radius: 1rem; font-size: .75rem; font-weight: 700; line-height: 1.35rem; text-align: center; }
+
+/* Destinos de la barra: reciben el foco sin entrar en el recorrido con Tab. */
+:is(#datos, #editor, #estructura, #resultado, #ajustes):focus { outline: none; }
+:is(#datos, #editor, #estructura, #resultado, #ajustes):focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+.section-help { margin-block: 0 .75rem; }
+.section-help > summary { inline-size: fit-content; min-block-size: 2.75rem; padding-block: .55rem; color: var(--primary); cursor: pointer; font-weight: 650; }
+.section-help > p { margin-block: .25rem .75rem; }
+.math-preview-panel .section-help { margin-block: .25rem .5rem; }
+
+/* La fila de «Añadir bloque» acompaña al campo mientras se escribe: en el
+   celular, el botón queda a la vista sin cerrar el teclado. */
+/* Un <li> cuyo botón está oculto ocupaba sitio en la fila y la descuadraba. */
+.button-row > li:has(> [hidden]) { display: none; }
+.editor-actions { position: sticky; inset-block-end: 0; z-index: 3; margin-block-start: .75rem; padding-block: .6rem; background: var(--surface); border-block-start: 1px solid var(--border-soft); }
+
+/* El número jerárquico del encabezado («1.2 Teorema») ya identifica cada
+   bloque; el marcador de la lista lo repetía y robaba ancho. role="list"
+   conserva la semántica en WebKit cuando se quita list-style. */
+.block-list, .block-children { list-style: none; }
+.block-list { padding-inline-start: 0; }
+.block-children { padding-inline-start: 1.25rem; }
+
+/* «Más acciones»: mover, copiar y, aparte y al final, eliminar. */
+.block-more-actions { display: grid; gap: .5rem; }
+.block-more-group { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0; padding: 0; border: 0; }
+.block-more-group + .block-more-group { padding-block-start: .5rem; border-block-start: 1px solid var(--border-soft); }
+.block-more-actions button:not(.danger) { color: var(--primary); background: var(--surface); }
+.block-more-actions button:not(.danger):hover { background: var(--accent-soft); }
+
+/* Avisos: la región aria-live estaba al final de la página, fuera de la
+   vista. Se muestra unos segundos sin dejar nunca el árbol de accesibilidad:
+   solo cambian la opacidad y la posición, no display ni visibility. */
+#app-status { position: fixed; z-index: 15; inset-inline: 1rem; inset-block-end: 1rem; max-inline-size: 36rem; margin: 0 auto; border: 1px solid var(--border-soft); border-inline-start: .35rem solid var(--primary); border-radius: .5rem; box-shadow: var(--shadow); opacity: 0; transform: translateY(.5rem); transition: opacity .2s ease, transform .2s ease; pointer-events: none; }
+#app-status.is-visible { opacity: 1; transform: none; }
+
+@media (min-width: 48rem) {
+  html { scroll-padding-block-start: calc(var(--nav-size) + .75rem); }
+  .app-nav { position: sticky; top: 0; border-block-end: 1px solid var(--border-soft); box-shadow: var(--shadow); }
+  .app-nav ul { width: min(100% - 2rem, 110rem); margin-inline: auto; gap: .25rem; padding-block: .35rem; }
+  .app-nav li { flex: 0 1 auto; }
+  .app-nav a[aria-current] { box-shadow: inset 0 -3px 0 var(--primary); }
+}
+
+@media (max-width: 47.99rem) {
+  html { --nav-size: 3.75rem; scroll-padding-block-end: calc(var(--nav-size) + 1rem); }
+  body { padding-block-end: calc(var(--nav-size) + env(safe-area-inset-bottom, 0px)); }
+  /* Barra inferior: al alcance del pulgar. */
+  .app-nav { position: fixed; inset-inline: 0; inset-block-end: 0; padding-block-end: env(safe-area-inset-bottom, 0px); border-block-start: 1px solid var(--border-soft); transition: transform .2s ease, visibility .2s; }
+  .app-nav a { flex-direction: column; gap: .1rem; min-block-size: var(--nav-size); padding: .35rem .1rem; border-radius: 0; font-size: .75rem; line-height: 1.2; }
+  .app-nav a[aria-current] { box-shadow: inset 0 3px 0 var(--primary); }
+  .nav-label { max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nav-count { position: absolute; inset-block-start: .2rem; inset-inline-start: calc(50% + .4rem); min-inline-size: 1.15rem; font-size: .7rem; line-height: 1.15rem; }
+  .editor-actions { inset-block-end: calc(var(--nav-size) + env(safe-area-inset-bottom, 0px)); }
+  /* Con el teclado en pantalla, la barra ocuparía el poco espacio que queda:
+     se retira mientras un campo de texto tiene el foco y la fila de acciones
+     baja al borde. */
+  body:has(:is(textarea, input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="date"])):focus) .app-nav { visibility: hidden; transform: translateY(100%); }
+  body:has(:is(textarea, input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="date"])):focus) .editor-actions { inset-block-end: 0; }
+  /* Encima de la barra; mientras se escribe, encima de la fila de acciones.
+     Arriba tapaba el comienzo del editor justo después de pulsar «Editar». */
+  #app-status { inset-block-end: calc(var(--nav-size) + env(safe-area-inset-bottom, 0px) + .5rem); }
+  /* Mientras se escribe, abajo quedan el teclado y la fila de acciones. */
+  body:has(:is(textarea, input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="date"])):focus) #app-status { inset-block: calc(env(safe-area-inset-top, 0px) + .5rem) auto; }
+}
+@media (max-width: 22rem) {
+  .app-nav a { font-size: .6875rem; }
+}
+/* Sin teclado físico, las combinaciones de teclas son ruido junto a los botones. */
+@media (hover: none) and (pointer: coarse) {
+  #symbol-shortcut-label { display: none; }
+}
+
+@media (max-width: 38rem) {
+  .site-header { padding-block: 1rem .25rem; }
+  .site-header h1 { font-size: 1.75rem; }
+  .site-header > p:last-child { margin-block: .35rem 0; font-size: .95rem; }
+  .eyebrow { margin-block: 0 .2rem; font-size: .75rem; }
+  section { padding: 1rem .85rem; }
+  fieldset { padding: .75rem; }
+  .block-editor { padding-inline: .65rem; }
+  #metadata-details > summary h2 { font-size: 1.15rem; }
+  .output-field textarea { min-height: 14rem; font-size: 1rem; }
+  /* Dos columnas en vez de una pila: «Editar» y «Añadir dentro» comparten
+     fila y «Más acciones» ocupa la siguiente. */
+  .block-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr)); }
+  .block-more { grid-column: 1 / -1; }
+  .block-more-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .block-list article { padding: .7rem; }
+  /* «Guardar cambios» y «Cancelar edición» caben en una fila fija. */
+  .editor-actions button { padding-inline: .6rem; font-size: .9rem; }
+}
+@media (min-width: 75rem) {
+  /* Chrome resta el relleno del fieldset al fijar la fila: sin esto, el
+     contenido desplazado asomaba en el hueco bajo «Añadir bloque». */
+  .block-editor > .editor-actions { inset-block-end: -1rem; }
+}
+/* --- fin [I] --- */

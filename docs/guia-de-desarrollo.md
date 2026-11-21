@@ -506,8 +506,11 @@ ambas columnas usan mínimos cero. El resumen de metadatos se actualiza sin
 plegar los campos mientras se escriben. Una restauración ajusta su apertura
 según el título y enfoca un control visible.
 
-`blockItemExtensions` recibe article, actions, more y subject. Añade acciones
-secundarias a more. `focusAction` abre los details antecesores antes de enfocar
+`blockItemExtensions` recibe article, actions, more, moveActions, copyActions y
+subject. Una acción secundaria se añade al grupo que le corresponde: moveActions
+para lo que cambia la posición del bloque y copyActions para lo que lo
+reproduce. «Eliminar» se añade después de las extensiones y queda siempre el
+último. `focusAction` abre los details antecesores antes de enfocar
 y recurre a Editar si falla. `editing-keys` describe teclas de edición sin
 registrar Tab ni Intro sin modificadores en SHORTCUTS.
 
@@ -518,6 +521,17 @@ incluso si el nuevo texto termina casualmente en el mismo carácter.
 El gancho de carga de listas conserva el bloque fuente al cargar un paso de
 plantilla. `listFormatAfterEdit` mantiene flat si el contenido sigue igual y
 activa outline cuando se modifica, como al editar un bloque del árbol.
+
+La sección [I] de `styles.css` y la de `app.js` llevan la barra de secciones.
+Cada enlace de `.app-nav` apunta a un id con `tabindex="-1"`; para añadir un
+destino, se añaden el enlace y ese id, y `tests/check-site.mjs` comprueba ambos.
+`--nav-size` se declara en `html` y no en `:root`, que es solo para colores. El
+editor fijo de dos columnas lo descuenta de su `top` y de su altura máxima.
+`announce(message, { toast: false })` anuncia sin mostrar el aviso flotante:
+úsalo en los anuncios que acompañan a la escritura o a un control con estado
+propio. `revealEditor()` lleva el editor a la vista antes de enfocar uno de sus
+campos. La fila `.editor-actions` es `sticky`; en el editor de dos columnas
+compensa con `-1rem` el relleno del fieldset. Véase DEC-021.
 
 El título de la nota y el del bloque cuentan como trabajo para autoguardar,
 aunque aún no haya bloques incorporados. Los metadatos precargados de curso,

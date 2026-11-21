@@ -101,6 +101,7 @@ test("cada rótulo que citan las guías sigue existiendo en la interfaz", () => 
   // Solo texto que el navegador PINTA como rótulo: nunca la prosa de una ayuda.
   const etiquetas = [
     ...html.matchAll(/>([^<>{}]{2,80})<\/(?:button|label|legend|option|summary|h1|h2|h3)>/g),
+    ...html.matchAll(/<span class="nav-label">([^<]{2,80})<\/span>/g),
     ...app.matchAll(/textContent\s*=\s*"([^"]{2,80})"/g),
     ...app.matchAll(/actionButton\("([^"]+)"/g),
   ].map(([, texto]) => texto.trim());

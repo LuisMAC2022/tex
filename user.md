@@ -35,3 +35,12 @@ ti:
   pantalla ancha. ¿Prefieres un glifo corto con el nombre solo en el detalle?
 - La rejilla de símbolos envuelve en varias filas pero conserva
   `aria-orientation="horizontal"`, porque lo fija una prueba. ¿Se cambia?
+
+## 2026-11-21 — Claude: navegación y celular
+
+Barra de secciones (abajo en el celular, arriba en pantalla ancha), tarjetas de
+bloque compactas, «Más acciones» agrupado, fila de «Añadir bloque» fija al
+escribir y avisos visibles. Probado en Chromium emulando iPhone 13, 320 px,
+tableta y escritorio, en temas claro y oscuro. **Falta probarlo en un teléfono
+real**, sobre todo con el teclado abierto en iPhone: la lista está en
+`docs/revision-manual.md`, sección «Navegación y celular». Por qué: DEC-021.

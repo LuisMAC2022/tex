@@ -260,7 +260,7 @@ El flujo [`.github/workflows/pages.yml`](.github/workflows/pages.yml) prueba y p
 
 ## Accesibilidad y diseño
 
-La interfaz sigue semántica HTML nativa: un único `main` y `h1`, secciones tituladas, `form`/`fieldset`, **listas ordenadas anidadas** para la jerarquía de bloques y botones reales. Incluye enlace de salto visible al foco cuyo destino puede recibir foco sin añadir una parada al recorrido con `Tab`, encabezados sin saltos, etiquetas visibles enlazadas por `for`/`id`, ayudas mediante `aria-describedby` solo donde aportan contexto, errores junto al campo y regiones `aria-live` para resultados. El foco visible en el contenido confirma también que el enlace de salto cambió el contexto. El orden DOM coincide con el visual.
+La interfaz sigue semántica HTML nativa: un único `main` y `h1`, secciones tituladas, `form`/`fieldset`, **listas ordenadas anidadas** para la jerarquía de bloques y botones reales. Incluye enlace de salto visible al foco cuyo destino puede recibir foco sin añadir una parada al recorrido con `Tab`, encabezados sin saltos, etiquetas visibles enlazadas por `for`/`id`, ayudas mediante `aria-describedby` solo donde aportan contexto, errores junto al campo y regiones `aria-live` para resultados. El foco visible en el contenido confirma también que el enlace de salto cambió el contexto. El orden DOM coincide con el visual, salvo la barra de secciones, que en pantallas estrechas se dibuja abajo.
 
 La estructura de bloques se representa con un `<ol>` dentro del `<li>` de su padre, de modo que el lector de pantalla anuncia el anidamiento por sí mismo. Además, **el nivel y el padre se escriben, no solo se sugieren**: cada bloque muestra «Nivel 2 · dentro de 1 Teorema: Fubini» y su numeración jerárquica («1.1.2»), y cada botón lleva un nombre accesible completo —acción, bloque, nivel y padre—, como `Editar 1.1.1 Texto, nivel 3, dentro de 1.1 Lista con viñetas`. La sangría y el filete lateral son un refuerzo visual, nunca la única señal. Tras cada alta, edición, movimiento o borrado el foco queda en un control previsible —el bloque afectado, el hermano que ocupa su lugar, su padre o el alta de bloque— y el resultado se anuncia en la región `aria-live` existente.
 
@@ -370,4 +370,12 @@ tex-notes:macros-default:v1 y se incluyen en la configuración portátil.
 Desde 75 rem se muestran dos columnas: editor con desplazamiento propio y
 estructura. Los metadatos se pueden plegar y su resumen identifica el documento.
 Las tarjetas mantienen Editar y Añadir dentro visibles y agrupan el resto en
-Más acciones. El panel de teclado describe el asistente y la navegación nativa.
+Más acciones: mover, copiar y, aparte, eliminar. El panel de teclado describe
+el asistente y la navegación nativa.
+
+Una barra de secciones enlaza Datos, Editor, Estructura, Resultado y Ajustes,
+marca la sección visible y cuenta los bloques. Queda fija arriba desde 48 rem y
+abajo por debajo de esa anchura. En pantallas estrechas se retira mientras un
+campo de texto tiene el foco. La fila de Añadir bloque es fija dentro del
+editor, y los anuncios de `#app-status` se muestran unos segundos como aviso
+flotante sin salir del árbol de accesibilidad. Por qué: DEC-021.

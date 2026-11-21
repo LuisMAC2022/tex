@@ -54,11 +54,23 @@ for (const [id, texto] of [["block-help", help[1]], ["symbol-board-intro", html.
 assert(ids.has("paste-block"), "Falta el botón de pegar el bloque de la bandeja");
 assert(ids.has("tray-summary"), "Falta el resumen visible de la bandeja de copia");
 assert.match(html, /<button id="paste-block"[^>]*\bhidden\b[^>]*>Pegar bloque<\/button>/, "«Pegar bloque» debe existir oculto hasta que haya algo en la bandeja");
-const estructura = html.match(/<h3>Estructura actual<\/h3>\s*<p>([\s\S]*?)<\/p>/);
+const estructura = html.match(/<h3 id="estructura-heading">Estructura actual<\/h3>[\s\S]*?<p id="structure-help">([\s\S]*?)<\/p>/);
 assert(estructura, "Falta la explicación de la estructura actual");
 for (const accion of ["Duplicar", "Copiar bloque", "Copiar texto", "Pegar bloque"]) {
   assert(estructura[1].includes(accion), `La explicación de la estructura debe distinguir «${accion}»`);
 }
+
+// La barra de secciones solo enlaza a destinos que existen y que pueden recibir
+// el foco sin entrar en el recorrido con Tab, como el destino del enlace de salto.
+const nav = html.match(/<nav class="app-nav" aria-label="[^"]+">([\s\S]*?)<\/nav>/);
+assert(nav, "Falta la barra de secciones con nombre accesible");
+const destinos = [...nav[1].matchAll(/<a href="#([^"]+)">/g)].map((match) => match[1]);
+assert.deepEqual(destinos, ["datos", "editor", "estructura", "resultado", "ajustes"], "La barra de secciones debe enlazar las cinco secciones en el orden de la página");
+for (const destino of destinos) {
+  assert.match(html, new RegExp(`<[a-z]+ id="${destino}"[^>]*\\btabindex="-1"`), `El destino «${destino}» de la barra debe poder recibir foco sin entrar en la secuencia de Tab`);
+}
+assert(ids.has("nav-block-count"), "Falta el recuento de bloques de la barra de secciones");
+assert.match(html, /<p id="app-status" class="status" aria-live="polite" aria-atomic="true">/, "Los avisos deben seguir en la región aria-live aunque también se muestren flotando");
 
 // Todo tipo ofrecido por la interfaz tiene que producir salida en el generador.
 // La paridad entre el selector y la tabla la comprueba tests/generator.test.js.
@@ -107,4 +119,4 @@ const sinColor = new Set(["--shadow"]);
 const faltantes = [...nombres(claro)].filter((token) => !nombres(oscuro).has(token) && !sinColor.has(token));
 assert.deepEqual(faltantes, [], `El bloque oscuro no redefine: ${faltantes.join(", ")}`);
 
-console.log("HTML estructural, tipos de bloque, anidamiento, copia de bloques, tablero de símbolos y rutas internas: correctos");
+console.log("HTML estructural, barra de secciones, tipos de bloque, anidamiento, copia de bloques, tablero de símbolos y rutas internas: correctos");

@@ -99,3 +99,9 @@ macros predeterminadas y error katex-only en la comprobación previa a Overleaf.
 
 Dos columnas desde 75 rem, editor fijo con altura limitada, metadatos plegables,
 tarjetas con acciones secundarias desplegables y ayuda de teclado junto al flujo.
+
+## Hito 22 — Navegación y uso en el celular
+
+Barra de secciones con sección actual y recuento de bloques, abajo en el celular;
+fila de Añadir bloque fija mientras se escribe, avisos visibles, tarjetas
+compactas con acciones agrupadas y ayudas largas plegadas.

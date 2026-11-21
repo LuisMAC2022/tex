@@ -2,7 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
     <meta name="description" content="Editor accesible para crear y descargar notas en LaTeX.">
     <title>Notas LaTeX</title>
     <link rel="stylesheet" href="assets/css/styles.css">
@@ -16,10 +16,20 @@
       <p>Crea una nota estructurada y copia o descarga su código para pegarlo en Overleaf.</p>
     </header>
 
+    <nav class="app-nav" aria-label="Secciones de la página">
+      <ul>
+        <li><a href="#datos"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 3h7l5 5v13H7z M14 3v5h5 M10 13h6 M10 17h6"/></svg><span class="nav-label">Datos</span></a></li>
+        <li><a href="#editor"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 20h4L19 9l-4-4L4 16z M13.5 6.5l4 4"/></svg><span class="nav-label">Editor</span></a></li>
+        <li><a href="#estructura"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h.01 M8 6h12 M4 12h.01 M8 12h12 M4 18h.01 M8 18h12"/></svg><span class="nav-label">Estructura</span> <span id="nav-block-count" class="nav-count" hidden></span></a></li>
+        <li><a href="#resultado"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4v11 M7 10l5 5 5-5 M5 20h14"/></svg><span class="nav-label">Resultado</span></a></li>
+        <li><a href="#ajustes"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h9 M17 7h3 M15 5v4 M4 17h3 M11 17h9 M9 15v4"/></svg><span class="nav-label">Ajustes</span></a></li>
+      </ul>
+    </nav>
+
     <main id="contenido-principal" tabindex="-1">
       <p id="autosave-banner" hidden><span id="autosave-message"></span> <button id="recover-session" type="button">Recuperar sesión</button> <button id="discard-session" type="button" class="secondary">Descartar</button></p>
       <form id="document-form" novalidate>
-        <section aria-labelledby="datos-heading">
+        <section id="datos" tabindex="-1" aria-labelledby="datos-heading">
           <details id="metadata-details" open>
           <summary><h2 id="datos-heading">Datos del documento</h2></summary>
           <p>El título es el único dato obligatorio. Los borradores permanecen únicamente en este dispositivo.</p>
@@ -59,9 +69,11 @@
 
         <section aria-labelledby="contenido-heading">
           <h2 id="contenido-heading">Contenido</h2>
+          <details class="section-help"><summary>Cómo se añaden bloques</summary>
           <p>Completa un bloque y usa «Añadir bloque». El contenido de cualquier bloque llega al documento exactamente como lo escribes: la aplicación no añade caracteres de escape. Un bloque puede contener otros bloques: usa «Añadir dentro» en el bloque que quieras como padre, sin límite de niveles.</p>
+          </details>
           <div class="editor-workspace">
-          <fieldset class="block-editor">
+          <fieldset id="editor" class="block-editor" tabindex="-1">
             <legend id="block-form-heading">Nuevo bloque</legend>
             <input id="editing-path" type="hidden" value="">
             <input id="parent-path" type="hidden" value="">
@@ -162,14 +174,16 @@
                 <small id="image-label-help">Se guarda con el prefijo <code>fig:</code>, por ejemplo <code>fig:grafica</code>.</small>
               </p>
             </fieldset>
-            <menu class="button-row">
+            <menu class="button-row editor-actions">
               <li><button id="add-block" type="button">Añadir bloque</button></li>
               <li><button id="paste-block" class="secondary" type="button" hidden>Pegar bloque</button></li>
               <li><button id="cancel-edit" class="secondary" type="button" hidden>Cancelar edición</button></li>
             </menu>
             <details class="math-preview-panel" open>
               <summary>Vista previa de las matemáticas</summary>
+              <details class="section-help"><summary>Qué revisa esta vista</summary>
               <p>KaTeX orienta sobre los tramos matemáticos, pero no es LaTeX completo ni reproduce la tipografía del PDF final. No revisa la prosa: un <code>%</code> suelto, un <code>_</code> o <code>&amp;</code> fuera de matemáticas, o un <code>\textbf{</code> sin cerrar pueden fallar en Overleaf aunque esta vista no avise.</p>
+              </details>
               <div id="math-preview"></div>
               <p id="math-preview-status" class="preview-status" aria-live="polite" aria-atomic="true"></p>
             </details>
@@ -196,16 +210,18 @@
 
           </fieldset>
 
-          <div class="structure-panel">
-          <h3>Estructura actual</h3>
-          <p>Cada bloque indica su nivel y su bloque padre. «Subir» y «Bajar» mueven el bloque solo entre sus hermanos, sin sacarlo de su nivel. Para repetir una estructura hay tres acciones distintas: <strong>«Duplicar»</strong> deja una copia justo después del original; <strong>«Copiar bloque»</strong> lo guarda en una bandeja y luego eliges el destino con «Pegar bloque», las veces que haga falta; <strong>«Copiar texto»</strong> lleva su contenido al portapapeles del sistema para pegarlo donde quieras, dentro o fuera de la aplicación.</p>
+          <div id="estructura" class="structure-panel" tabindex="-1" role="region" aria-labelledby="estructura-heading">
+          <h3 id="estructura-heading">Estructura actual</h3>
+          <details class="section-help"><summary>Qué hace cada acción</summary>
+          <p id="structure-help">Cada bloque indica su nivel y su bloque padre. «Subir» y «Bajar» mueven el bloque solo entre sus hermanos, sin sacarlo de su nivel. Para repetir una estructura hay tres acciones distintas: <strong>«Duplicar»</strong> deja una copia justo después del original; <strong>«Copiar bloque»</strong> lo guarda en una bandeja y luego eliges el destino con «Pegar bloque», las veces que haga falta; <strong>«Copiar texto»</strong> lleva su contenido al portapapeles del sistema para pegarlo donde quieras, dentro o fuera de la aplicación.</p>
+          </details>
           <p id="empty-blocks">Todavía no hay bloques.</p>
-          <ol id="block-list" class="block-list"></ol>
+          <ol id="block-list" class="block-list" role="list"></ol>
           </div>
           </div>
         </section>
 
-        <section aria-labelledby="resultado-heading">
+        <section id="resultado" tabindex="-1" aria-labelledby="resultado-heading">
           <h2 id="resultado-heading">Resultado</h2>
           <p>Genera el documento después de modificar sus datos o bloques.</p>
           <button id="generate" type="submit">Generar documento</button>
@@ -220,8 +236,8 @@
             <li><button id="download-tex" type="button">Descargar .tex</button></li>
           </menu>
         </section>
-        <section aria-labelledby="writing-heading">
-          <h2 id="writing-heading">Preferencias de escritura</h2>
+        <section id="ajustes" tabindex="-1" aria-labelledby="ajustes-heading">
+          <h2 id="ajustes-heading">Ajustes</h2>
           <details id="writing-preferences">
             <summary>Preferencias de escritura</summary>
             <label class="check-field"><input id="auto-pair" type="checkbox" checked> Cerrar automáticamente llaves y delimitadores</label>
@@ -239,19 +255,19 @@
             <p><button id="export-config" type="button">Exportar configuración</button></p>
             <p class="field"><label for="import-config">Importar configuración</label><input id="import-config" type="file" accept="application/json,.json"></p>
           </details>
+          <details class="shortcut-panel">
+            <summary>Atajos de teclado</summary>
+            <ul id="editing-keys">
+              <li><kbd id="commit-key-label">Ctrl+Intro</kbd>: añadir el bloque o guardar sus cambios.</li>
+              <li>En Contenido, Tab acepta el menú, pasa al siguiente hueco, salta un cierre o expande un alias, en ese orden. Sin nada pendiente, sale del campo.</li>
+              <li>Escape cierra el menú o termina la sesión de huecos sin mover el cursor.</li>
+              <li>↑ y ↓ recorren el menú; Intro acepta la opción.</li>
+              <li>Retroceso borra un par automático vacío.</li>
+              <li>En Contenido vacío, / abre comandos de tipo y plantillas: /teo, /ec, /lista o /ejres.</li>
+            </ul>
+            <ul id="keyboard-shortcuts"></ul>
+          </details>
         </section>
-        <details class="shortcut-panel">
-          <summary>Atajos de teclado</summary>
-          <ul id="editing-keys">
-            <li><kbd id="commit-key-label">Ctrl+Intro</kbd>: añadir el bloque o guardar sus cambios.</li>
-            <li>En Contenido, Tab acepta el menú, pasa al siguiente hueco, salta un cierre o expande un alias, en ese orden. Sin nada pendiente, sale del campo.</li>
-            <li>Escape cierra el menú o termina la sesión de huecos sin mover el cursor.</li>
-            <li>↑ y ↓ recorren el menú; Intro acepta la opción.</li>
-            <li>Retroceso borra un par automático vacío.</li>
-            <li>En Contenido vacío, / abre comandos de tipo y plantillas: /teo, /ec, /lista o /ejres.</li>
-          </ul>
-          <ul id="keyboard-shortcuts"></ul>
-        </details>
       </form>
       <dialog id="move-block-dialog" aria-labelledby="move-block-heading" aria-describedby="move-block-subject">
         <form id="move-block-form" method="dialog">

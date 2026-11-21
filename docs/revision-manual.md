@@ -100,3 +100,15 @@ por ronda de revisión, no al cambiar código.
 - [ ] Ctrl+Z inmediatamente tras: tablero, autocierre, salto de cierre, Retroceso en par, sugerencia, alias, edición en hueco, begin con Intro, continuación de lista y sangría. Comprobar el alcance de cada deshacer.
 - [ ] Cerrar la pestaña con un bloque a medias y recuperar; empezar a escribir sin recuperar y verificar autosave:previous.
 - [ ] Con NVDA comprobar opciones activas, recuento del menú y salida nativa con Tab cuando no hay nada pendiente.
+
+## Navegación y celular
+
+- [ ] En un teléfono Android real, con el teclado abierto en «Contenido», comprobar que «Añadir bloque» queda encima del teclado y que la barra de secciones no aparece. Añadir tres bloques sin cerrar el teclado.
+- [ ] En un iPhone real, repetir lo anterior y anotar en claude.md si la barra o el aviso flotante quedan mal colocados con el teclado abierto o tras cerrarlo.
+- [ ] Recorrer la barra de secciones con el dedo y con `Tab` e `Intro`: cada destino queda arriba, recibe el foco (con contorno visible si se usó el teclado) y se resalta en la barra. Con NVDA o VoiceOver, comprobar que se anuncia como navegación y que la sección actual se identifica.
+- [ ] Con un lector de pantalla, añadir, mover y eliminar bloques: cada anuncio se oye una sola vez, aunque también aparezca el aviso flotante. Escribir con el menú de sugerencias abierto y comprobar que no aparece ningún aviso flotante.
+- [ ] Pulsar «Editar» en el último bloque de una nota larga en el celular: el editor queda a la vista desde su leyenda y el foco está en «Tipo de bloque». Guardar y comprobar que el foco vuelve a «Editar» del bloque.
+- [ ] Abrir «Más acciones» en dos bloques seguidos: el primero se cierra. Pulsar `Escape` dentro del desplegable y comprobar que se cierra y el foco vuelve a su resumen.
+- [ ] A 320 px, en orientación horizontal y con zoom al 200 %, sin desplazamiento horizontal; las cinco etiquetas de la barra se leen y la barra no tapa el pie de página.
+- [ ] En escritorio de dos columnas, desplazar el editor hasta abajo: «Añadir bloque» queda fijo y no asoma contenido bajo su fila.
+- [ ] Revisar contraste de la barra, su indicador de sección actual y el aviso flotante en temas claro y oscuro.
