@@ -29,7 +29,7 @@ test("el nombre descargable es portable y tiene alternativa", () => { assert.equ
 
 test("la tabla declara los tipos del temario en el orden de la interfaz", () => {
   assert.deepEqual(BLOCK_TYPES.map((type) => type.id),
-    ["text", "equation", "math-inline", "definition", "theorem", "proposition", "example", "note", "itemize", "enumerate", "bibliography", "image"]);
+    ["text", "equation", "math-inline", "definition", "theorem", "proposition", "proof", "example", "note", "itemize", "enumerate", "bibliography", "image"]);
 });
 test("un tipo desconocido no rompe la generación y cae en texto", () => {
   assert.equal(blockToLatex({ type: "inexistente", content: "Hola & adiós" }), "Hola & adiós");
@@ -40,7 +40,7 @@ test("el bloque nota usa su propio entorno", () => {
 
 test("el preámbulo deriva un \\newtheorem por cada tipo declarado", () => {
   const defs = buildTheoremDefs();
-  const declared = BLOCK_TYPES.filter((type) => type.kind === "theorem");
+  const declared = BLOCK_TYPES.filter((type) => type.kind === "theorem" && !type.predefined);
   for (const type of declared) assert.match(defs, new RegExp(`\\\\newtheorem\\{${type.environment}\\}\\{${type.heading}\\}`));
   assert.equal((defs.match(/\\newtheorem/g) || []).length, declared.length);
   assert.ok(buildPreamble().includes(defs), "el preámbulo debe incluir las declaraciones derivadas");
@@ -193,4 +193,10 @@ test("los hijos de una imagen con ruta vacía se emiten aunque se omita la image
   assert.equal(blockToLatex({ ...image, children: [{ type: "text", content: "Se conserva." }] }), "Se conserva.");
   assert.equal(blockToLatex({ type: "enumerate", content: " ", children: [{ type: "image", content: "plano.png" }] }),
     blockToLatex({ type: "image", content: "plano.png" }));
+});
+
+test("Demostración usa proof predefinido y su título opcional sin redeclararlo", () => {
+ const proof=blockToLatex({type:'proof',title:'Prueba & caso',content:'Es cierto.',children:[]});
+ assert.equal(proof, '\\begin{proof}[Prueba \\& caso]\nEs cierto.\n\\end{proof}');
+ assert.doesNotMatch(buildPreamble(),/\\newtheorem\{proof\}/);
 });

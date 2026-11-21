@@ -421,11 +421,17 @@ test("listas nuevas y antiguas conservan su propio formato al copiar, duplicar, 
   const moved = moveBlockTo(pasted.blocks, [4], [2]);
   const snapshot = JSON.parse(JSON.stringify({ version: DRAFT_VERSION, metadata: {}, blocks: moved.blocks }));
   const restored = normalizeDraft(snapshot);
-  assert.equal(restored.version, 2);
+  assert.equal(restored.version, DRAFT_VERSION);
   for (const path of [[0], [1], [2, 0]]) {
     assert.match(blockToLatex(blockAtPath(restored.blocks, path)), /\\item - Padre\n\\item 1\. Hijo/);
   }
   const newLatex = "\\begin{itemize}\n\\item Padre\n  \\begin{enumerate}\n  \\item Hijo\n  \\end{enumerate}\n\\end{itemize}";
   assert.equal(blockToLatex(restored.blocks[3]), newLatex);
   assert.equal(blockToLatex(raw), newLatex, "un estado directo usa la sintaxis anidada por defecto");
+});
+
+test("una sesión vacía no borra el autoguardado y el bloque en curso cuenta como trabajo", async () => {
+ const {sessionHasContent}=await loadTexNotes();
+ for(const session of [null,{}, {metadata:{title:'',course:'Cálculo III'},blocks:[],editor:{type:'text',title:'',content:''}}, {editor:{content:23,title:{}}}]) assert.equal(sessionHasContent(session),false);
+ for(const session of [{blocks:[{content:'x'}]},{metadata:{title:'Notas de clase'}},{editor:{title:'En curso'}},{editor:{content:'$x'}},{editor:{image:{content:'grafica.png'}}}]) assert.equal(sessionHasContent(session),true);
 });

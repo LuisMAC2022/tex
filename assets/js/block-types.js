@@ -8,7 +8,7 @@
   "use strict";
   const TexNotes = global.TexNotes || (global.TexNotes = {});
 
-  /** @decision DEC-005 ancla:17212e05 tramo:14
+  /** @decision DEC-005 ancla:17be566b tramo:15
    * kind: "text" | "equation" | "theorem" | "list" | "bibliography" | "image".
    * Los tipos "theorem" declaran un entorno amsthm; buildTheoremDefs() agrupa
    * sus \newtheorem por style para no repetir \theoremstyle.
@@ -24,23 +24,27 @@
    * de thebibliography solo deben aparecer sus propios \bibitem. Una imagen
    * representa una sola figura y sus opciones no afectan a otros bloques.
    *
+   * predefined excluye los entornos ya definidos por amsthm del preámbulo.
+   * slash declara los comandos del menú desde esta misma tabla.
+   *
    * Numeración: cada entorno declarado con \newtheorem lleva un contador propio,
    * independiente y continuo en todo el documento. "proposition" no comparte
    * contador con "theorem" ni se reinicia por sección.
    */
   const BLOCK_TYPES = [
-    { id: "text", label: "Texto", kind: "text", container: true },
-    { id: "equation", label: "Ecuación destacada", kind: "equation", delimiters: ["\\[", "\\]"] },
-    { id: "math-inline", label: "Expresión matemática en línea", kind: "equation", delimiters: ["\\(", "\\)"], inline: true },
-    { id: "definition", label: "Definición", kind: "theorem", environment: "definition", heading: "Definición", style: "definition", container: true },
-    { id: "theorem", label: "Teorema", kind: "theorem", environment: "theorem", heading: "Teorema", style: "plain", container: true },
-    { id: "proposition", label: "Proposición", kind: "theorem", environment: "proposition", heading: "Proposición", style: "plain", container: true },
-    { id: "example", label: "Ejemplo", kind: "theorem", environment: "example", heading: "Ejemplo", style: "definition", container: true },
-    { id: "note", label: "Nota", kind: "theorem", environment: "note", heading: "Nota", style: "remark", container: true },
-    { id: "itemize", label: "Lista con viñetas", kind: "list", listEnvironment: "itemize", container: true },
-    { id: "enumerate", label: "Lista numerada", kind: "list", listEnvironment: "enumerate", container: true },
-    { id: "bibliography", label: "Bibliografía (IEEE)", kind: "bibliography", container: false },
-    { id: "image", label: "Imagen", kind: "image", container: false },
+    { id: "text", label: "Texto", kind: "text", container: true, slash: ["txt", "texto"] },
+    { id: "equation", label: "Ecuación destacada", kind: "equation", delimiters: ["\\[", "\\]"], slash: ["ec"] },
+    { id: "math-inline", label: "Expresión matemática en línea", kind: "equation", delimiters: ["\\(", "\\)"], inline: true, slash: ["el"] },
+    { id: "definition", label: "Definición", kind: "theorem", environment: "definition", heading: "Definición", style: "definition", container: true, slash: ["def"] },
+    { id: "theorem", label: "Teorema", kind: "theorem", environment: "theorem", heading: "Teorema", style: "plain", container: true, slash: ["teo"] },
+    { id: "proposition", label: "Proposición", kind: "theorem", environment: "proposition", heading: "Proposición", style: "plain", container: true, slash: ["prop"] },
+    { id: "proof", label: "Demostración", kind: "theorem", environment: "proof", heading: "Demostración", style: "plain", predefined: true, container: true, slash: ["dem"] },
+    { id: "example", label: "Ejemplo", kind: "theorem", environment: "example", heading: "Ejemplo", style: "definition", container: true, slash: ["ej"] },
+    { id: "note", label: "Nota", kind: "theorem", environment: "note", heading: "Nota", style: "remark", container: true, slash: ["nota"] },
+    { id: "itemize", label: "Lista con viñetas", kind: "list", listEnvironment: "itemize", container: true, slash: ["lista", "vi"] },
+    { id: "enumerate", label: "Lista numerada", kind: "list", listEnvironment: "enumerate", container: true, slash: ["enum", "num"] },
+    { id: "bibliography", label: "Bibliografía (IEEE)", kind: "bibliography", container: false, slash: ["bib"] },
+    { id: "image", label: "Imagen", kind: "image", container: false, slash: ["img"] },
   ];
 
   TexNotes.BLOCK_TYPES = BLOCK_TYPES;

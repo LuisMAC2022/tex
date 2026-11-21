@@ -12,7 +12,7 @@
 - cada decisión citada en el código existe en decisiones/
 - ningún código vivo se apoya en una decisión reemplazada
 
-## `tests/block-tree.test.js` — 40 pruebas
+## `tests/block-tree.test.js` — 41 pruebas
 
 - la ausencia de children equivale a una lista vacía y el estado plano sigue siendo válido
 - solo los tipos declarados como contenedores admiten hijos
@@ -54,6 +54,20 @@
 - editar normaliza las opciones de imagen y las descarta al cambiar a otro tipo
 - restaurar listas antiguas de ambas versiones mantiene los prefijos literales y la lista plana
 - listas nuevas y antiguas conservan su propio formato al copiar, duplicar, mover, guardar y restaurar
+- una sesión vacía no borra el autoguardado y el bloque en curso cuenta como trabajo
+
+## `tests/completion.test.js` — 10 pruebas
+
+- los fragmentos ordenan marcadores numéricos, preservan escapes y encuentran llaves vacías
+- los huecos permanecen estables al escribir y Tab termina en la posición final
+- aceptar matemáticas en prosa envuelve el fragmento y registra su cierre pendiente
+- el ranking usa el catálogo real, acentos, cuatro niveles y desempates deterministas
+- el uso decae por semanas, se limita a 300 y descarta datos corruptos
+- solo una barra sin escapar y letras abren sugerencias, también los nombres de entorno
+- los alias solo coinciden con un token Unicode completo que no sea un comando
+- los alias predeterminados son válidos y no invaden palabras cortas del español
+- la configuración se valida completa antes de aplicar cambios
+- completar un entorno descarta el cierre consumido y conserva los pares exteriores
 
 ## `tests/content-check.test.js` — 14 pruebas
 
@@ -90,7 +104,21 @@
 - ningún índice apunta a una sección que ya no existe
 - cada rótulo que citan las guías sigue existiendo en la interfaz
 
-## `tests/generator.test.js` — 35 pruebas
+## `tests/editing-assist.test.js` — 11 pruebas
+
+- el contexto matemático incluye aperturas incompletas, escapes, entornos y comentarios
+- autocierra llaves literales y escapadas, delimitadores y left en su contexto
+- el autocierre respeta prosa, comentarios, escapes y el carácter siguiente
+- un segundo dólar convierte un par vacío en fórmula destacada y el siguiente salta
+- la llave explícita tras un superíndice automático no se duplica
+- el autocierre envuelve selecciones y conserva el texto seleccionado
+- las dobles barras de un salto no abren delimitador matemático en prosa
+- el guion literal de lista se escribe con llaves automáticas y salto del cierre
+- los cierres conservan su distancia, se validan y se descartan al salir
+- Retroceso elimina un par vacío pendiente y no toca un par con contenido
+- Intro completa entornos con argumentos y no actúa en listas, bibliografía ni pares cerrados
+
+## `tests/generator.test.js` — 36 pruebas
 
 - los metadatos y los títulos escapan todos los caracteres reservados
 - el contenido de un bloque no recibe ningún escape
@@ -127,6 +155,7 @@
 - una imagen a la derecha en una lista acota su alineación y no abre un flotante
 - una imagen con etiqueta y sin pie establece la referencia de figura
 - los hijos de una imagen con ruta vacía se emiten aunque se omita la imagen
+- Demostración usa proof predefinido y su título opcional sin redeclararlo
 
 ## `tests/image-options.test.js` — 5 pruebas
 
@@ -156,6 +185,17 @@
 - Intro conserva el prefijo, aumenta marcadores numerados y reemplaza una selección invertida con Unicode
 - Intro quita un nivel en elementos vacíos y deja un salto normal en la raíz
 
+## `tests/macros.test.js` — 8 pruebas
+
+- borrador v3 conserva macros, migra v1/v2 sin macros y rechaza v4
+- el preámbulo añade newcommand literal tras graphicx y no cambia sin macros
+- la validación de macros protege nombres reservados del catálogo y entornos
+- la definición de macro valida llaves, escapes, una línea y parámetros declarados
+- la vista previa consume todos los argumentos y aísla gdef entre llamadas
+- cada comando de katex-only es aceptado por el KaTeX incluido y se señala como error
+- las macros del documento suprimen katex-only y empty/th conservan avisos de significado
+- las macros aparecen antes del catálogo y se validan al importar configuración
+
 ## `tests/math-preview.test.js` — 8 pruebas
 
 - extrae cada delimitador y conserva posiciones y prosa literal
@@ -167,12 +207,13 @@
 - todos los kinds no matemáticos extraen tramos delimitados
 - analyzeContent clasifica resultados y fallos del renderizador inyectado
 
-## `tests/shortcuts.test.js` — 4 pruebas
+## `tests/shortcuts.test.js` — 5 pruebas
 
 - los atajos tienen identificadores y combinaciones por ámbito únicos
 - los atajos respetan AltGr, las teclas de los widgets y las combinaciones del navegador
 - los atajos usan el código físico y muestran teclas legibles y accesibles
 - los atajos internos del tablero se limitan a la búsqueda y la rejilla
+- Ctrl+Intro incorpora bloques y en macOS usa Meta sin confundir AltGr
 
 ## `tests/symbols.test.js` — 21 pruebas
 
@@ -198,10 +239,24 @@
 - el cambio circular de categoría incluye Recientes al principio
 - los recientes conservan hasta doce símbolos distintos y conocidos en orden de inserción
 
+## `tests/templates.test.js` — 6 pruebas
+
+- las once plantillas incluidas son válidas, renderizan sus fórmulas y no producen errores previos
+- las plantillas rechazan saltos de profundidad, padres incompatibles, tipos y comandos duplicados
+- el menú / deriva tipos de la tabla, tolera acentos y separa el título
+- la cola usa las rutas insertadas y el teorema y su demostración son hermanos
+- omitir un padre omite su descendencia y capturar una rama conserva opciones de imagen
+- una plantilla conserva el formato de una lista antigua hasta que se modifica el contenido
+
+## `tests/text-insertion.test.js` — 2 pruebas
+
+- diffEdit calcula inserciones, borrados y reemplazos mínimos sin cambios ficticios
+- diffEdit nunca divide un par sustituto UTF-16 en sus límites
+
 ## `tests/check-site.mjs` — comprobación estructural
 
 No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, un solo `main` y `h1`, enlace de salto, orden de los scripts clásicos, rutas relativas, etiquetas asociadas y ayudas visibles). Se ejecuta con `npm test`.
 
 ---
 
-158 pruebas con `node:test` más la comprobación estructural.
+198 pruebas con `node:test` más la comprobación estructural.

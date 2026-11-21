@@ -81,7 +81,11 @@ Los scripts se cargan como clásicos **en este orden**. La aplicación usa
 | 9 | `image-options.js` | opciones de imagen y avisos de ruta | no |
 | 10 | `list-outline.js` | análisis, límites, exportación y edición de listas | no |
 | 11 | `content-check.js` | comprobación del contenido | no |
-| 12 | `app.js` | interfaz del editor | sí |
+| 12 | `editing-assist.js` | pares, fragmentos y sesiones de huecos | no |
+| 13 | `completion.js` | sugerencias, uso, alias y configuración | no |
+| 14 | `templates.js` | plantillas por pasos y comandos / | no |
+| 15 | `macros.js` | validación y adaptación de macros a KaTeX | no |
+| 16 | `app.js` | interfaz del editor | sí |
 
 Las pruebas de Node ejecutan las funciones puras con `node:vm`. La interacción
 de `app.js` se verifica en el navegador ([DEC-007](../decisiones/DEC-007-sin-dom-en-pruebas.md)).
@@ -144,7 +148,7 @@ Tres reglas del árbol que conviene tener presentes:
   anterior sigue siendo válido; `normalizeDraft` lo migra y lo dice.
 
 El borrador se guarda bajo demanda en `localStorage`, con la clave
-`tex-notes:draft:v2` y la forma `{ version: 2, metadata, blocks }`. `normalizeDraft`
+`tex-notes:draft:v2` y la forma `{ version: 3, metadata, blocks, macros }`. `normalizeDraft`
 tolera datos ausentes, corruptos o mal anidados **a cualquier profundidad y nunca
 lanza**: es entrada no confiable, viene del navegador de alguien.
 
@@ -422,3 +426,99 @@ deployment**, elige **GitHub Actions**.
 Todas las rutas del sitio son relativas (INV-007), así que funciona igual en un dominio
 raíz que en una subruta de proyecto. Y como no carga nada remoto (INV-006), funciona
 igual abierto por doble clic y sin red.
+
+## Edición y autoguardado
+
+`diffEdit` calcula el reemplazo mínimo sin dividir pares UTF-16.
+`applyFieldEdit` aplica cualquier edición del contenido y conserva la selección;
+`isApplyingFieldEdit()` permite ignorar los eventos que produce la propia app.
+Solo cargar y vaciar el editor asignan directamente su valor. Véase DEC-016.
+
+`renderBlockPreview` memoriza nodos de estructura por tipo, formato, contenido,
+contexto de profundidad y versión de vista previa; las imágenes quedan fuera.
+El autoguardado usa `tex-notes:autosave:v1`, con una copia anterior en
+`tex-notes:autosave:previous`. Los eventos input/change tienen retardo de 800 ms;
+pagehide y visibilitychange guardan de inmediato. Véase DEC-019.
+
+## Contexto y autocierre
+
+`math-preview.js` mantiene la única lista `MATH_ENVIRONMENTS` y expone
+`mathContextAt` e `isEscaped`. `editing-assist.js` contiene `autoPair`,
+`activePairs`, `deleteEmptyPair` y `completeEnvironment`, todas puras.
+Los cierres se guardan por distancia al final y se validan contra el texto.
+`app.js` atiende caracteres en beforeinput y navegación en captura del fieldset.
+La preferencia se guarda en `tex-notes:prefs:v1`; puede funcionar sin almacenamiento.
+
+## Ampliar sugerencias y alias
+
+Añade un alias predeterminado a `DEFAULT_ALIASES` de `completion.js` con
+trigger, expansion y mode; ejecuta `validateAlias` y las pruebas. Evita las
+palabras de `SHORT_WORDS`. Los comandos de texto viven en `TEXT_COMMANDS`; los
+símbolos se derivan del catálogo y los entornos de `MATH_ENVIRONMENTS`.
+`rankCompletions` recibe el instante y el historial para ser determinista.
+`parseSnippet` acepta texto o before/after, y `snippetEdit` devuelve la edición,
+los huecos y los cierres. Su sesión almacena distancias al final, no índices
+que se desplacen al escribir. La navegación condicional se rige por DEC-015.
+
+`validateConfiguration` valida el sobre y todos sus elementos antes de cualquier
+reemplazo. Alias, uso y preferencias tienen claves separadas con sufijo v1.
+La exportación es JSON; no modifica el borrador ni el contenido del documento.
+
+## Tipos con comandos y plantillas
+
+Cada entrada de `BLOCK_TYPES` declara `slash`, un array de comandos sin barra.
+Añadir un comando es editar esa tabla, no el menú. `predefined: true` omite
+entornos como proof de `buildTheoremDefs`; su generación sigue el kind theorem.
+Actualiza las opciones HTML, la prueba del orden, ambas guías, el tramo y el
+ancla de DEC-005. Regenera el ejemplo y comprueba su diff.
+
+Añade una plantilla incluida a `BUILTIN_TEMPLATES` en `templates.js`, con id,
+name, trigger y steps. Cada paso tiene depth y block; empieza en profundidad 0
+y solo puede subir un nivel, con un padre que admita hijos. `validateTemplate`
+comprueba también comandos duplicados. El contenido usa la sintaxis de huecos.
+`templateParent` y `advanceTemplate` resuelven rutas desde los resultados de
+`insertBlock`; omitir un padre omite su descendencia. `templateFromBranch`
+recorre una copia de la rama en preorden y conserva las opciones. La interfaz
+cancela la cola ante cambios estructurales y guarda las propias en
+`tex-notes:templates:v1`. Véanse DEC-018 y DEC-020.
+
+## Macros y borradores v3
+
+`normalizeMacros` aplica el saneado estructural del borrador: nombre latino,
+params entero entre 0 y 9 y body cadena. `normalizeDraft` migra v1/v2 con macros
+vacías y rechaza v4. La clave histórica del borrador se conserva; cambia la
+versión del sobre. `macrosToPreamble` vive en el generador, sin depender de la
+interfaz, y emite newcommand con cuerpo literal. Sin macros no añade líneas.
+
+`macros.js` valida nombres de catálogo, lista reservada y entornos, unicidad,
+argumentos, llaves y parámetros. La vista previa recibe un objeto de macros
+nuevo por llamada; las definiciones explícitas consumen incluso argumentos
+no usados en el cuerpo. `setDocumentMacros` incrementa previewVersion y vuelve
+a calcular vistas y avisos. `checkBlock` acepta opciones en el cuarto argumento
+para reconocer macros, y checkDocument las toma del estado. El historial de uso
+identifica sugerencias personales por macro:nombre. Véase DEC-017.
+
+## Interfaz adaptable
+
+`.editor-workspace` organiza editor y estructura a partir de 75 rem. El
+fieldset `.block-editor` limita su altura al viewport antes de aplicar sticky;
+ambas columnas usan mínimos cero. El resumen de metadatos se actualiza sin
+plegar los campos mientras se escriben. Una restauración ajusta su apertura
+según el título y enfoca un control visible.
+
+`blockItemExtensions` recibe article, actions, more y subject. Añade acciones
+secundarias a more. `focusAction` abre los details antecesores antes de enfocar
+y recurre a Editar si falla. `editing-keys` describe teclas de edición sin
+registrar Tab ni Intro sin modificadores en SHORTCUTS.
+
+Al sustituir un token por un fragmento, `pairsAfterReplacement` conserva solo
+los pares exteriores. Los cierres consumidos por la sustitución se descartan,
+incluso si el nuevo texto termina casualmente en el mismo carácter.
+
+El gancho de carga de listas conserva el bloque fuente al cargar un paso de
+plantilla. `listFormatAfterEdit` mantiene flat si el contenido sigue igual y
+activa outline cuando se modifica, como al editar un bloque del árbol.
+
+El título de la nota y el del bloque cuentan como trabajo para autoguardar,
+aunque aún no haya bloques incorporados. Los metadatos precargados de curso,
+profesor y fecha no convierten una sesión vacía en una sesión recuperable.

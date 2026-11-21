@@ -9,7 +9,7 @@
   } = global.TexNotes;
 
   // El borrador v1 era una lista plana. Se sigue leyendo para migrarlo; lo que
-  // se guarda a partir de ahora es el árbol de la v2.
+  // se guarda es el árbol v3 con macros; se conserva la clave histórica v2.
   const STORAGE_KEY = "tex-notes:draft:v2";
   const LEGACY_STORAGE_KEY = "tex-notes:draft:v1";
   const $ = (selector) => document.querySelector(selector);
@@ -23,6 +23,9 @@
   const beforeGenerateHooks = [];
   const editorPreviewHooks = [];
   let blocks = [];
+  let macros = [];
+  let previewVersion = 0;
+  const structurePreviewCache = new Map();
   /**
    * Bandeja de copia: un bloque suelto, fuera del árbol, a la espera de que la
    * persona elija dónde pegarlo. Deliberadamente NO es el portapapeles del
@@ -33,9 +36,10 @@
   let previewTimer = null;
   let announcedPreviewFailures = null;
 
-  function katexRender(math, displayMode) {
+  function katexRender(math, displayMode, macroList = macros) {
     try {
-      return { ok: true, html: global.katex.renderToString(math, {
+      return { ok: true, html: global.katex.renderToString(global.TexNotes.macroPreviewDefinitions(macroList) + math, {
+        macros: global.TexNotes.katexMacros(macroList),
         displayMode, throwOnError: true, strict: false, trust: false, output: "htmlAndMathml",
       }) };
     } catch (error) {
@@ -70,11 +74,21 @@
   }
 
   function renderBlockPreview(container, block, context) {
+    const cacheable = context.structure && blockType(block.type)?.kind !== "image";
+    const depthKey = listDepthForPath(context.parentPath);
+    const key = JSON.stringify([block.type, block.listFormat, block.content, depthKey, previewVersion]);
+    const cached = cacheable && structurePreviewCache.get(key);
+    if (cached) { container.replaceChildren(cached.node.cloneNode(true)); return cached.analysis; }
     const renderer = previewRenderers.get(blockType(block.type)?.kind);
-    if (renderer) return renderer(container, block, context);
     const content = context.structure ? (block.content || "").trim() : block.content;
-    const analysis = fillMathPreview(container, content, block.type, context.structure);
-    if (context.structure && !content) container.textContent = "(Bloque vacío)";
+    const analysis = renderer ? renderer(container, block, context) : fillMathPreview(container, content, block.type, context.structure);
+    if (!renderer && context.structure && !content) container.textContent = "(Bloque vacío)";
+    if (cacheable) {
+      const node = document.createDocumentFragment();
+      for (const child of container.childNodes) node.append(child.cloneNode(true));
+      if (structurePreviewCache.size >= 1000) structurePreviewCache.clear();
+      structurePreviewCache.set(key, { node, analysis });
+    }
     return analysis;
   }
 
@@ -101,10 +115,11 @@
   function metadata() {
     return Object.fromEntries(METADATA_KEYS.map((name) => [name, form.elements[name].value]));
   }
-  function state() { return { metadata: metadata(), blocks: cloneBlocks(blocks) }; }
+  function state() { return { metadata: metadata(), blocks: cloneBlocks(blocks), macros: macros.map(m => ({ ...m })) }; }
   function announce(message) { status.textContent = message; }
   function setMetadata(values = {}) {
     for (const name of METADATA_KEYS) form.elements[name].value = typeof values[name] === "string" ? values[name] : "";
+    syncMetadataSummary(true);
   }
 
   /* --- Nombres de cada nodo, compartidos por la vista y por los anuncios --- */
@@ -160,9 +175,10 @@
    * dice: nunca se escribe sobre un bloque distinto del que se estaba editando.
    */
   function cancelEditForStructuralChange() {
-    if (!editorTarget().editing.length) return "";
+    const templateCancelled = cancelTemplateForStructuralChange();
+    if (!editorTarget().editing.length) return templateCancelled;
     resetBlockEditor();
-    return " Se canceló la edición en curso porque cambió la estructura.";
+    return " Se canceló la edición en curso porque cambió la estructura." + templateCancelled;
   }
 
   /* --- Lista anidada --- */
@@ -195,23 +211,21 @@
     const actions = document.createElement("menu");
     actions.className = "block-actions";
     actions.setAttribute("aria-label", `Acciones para el bloque ${describeBlock(block, path)}`);
-    actions.append(
-      actionButton("Editar", "edit", path, `Editar ${subject}`),
-      // Tres operaciones distintas, con nombres distintos a propósito:
-      // duplicar deja la copia aquí mismo; copiar la guarda para elegir destino;
-      // copiar texto saca el contenido de la aplicación.
+    actions.append(actionButton("Editar", "edit", path, `Editar ${subject}`));
+    if (acceptsChildren(block.type)) actions.append(actionButton("Añadir dentro", "child", path, `Añadir un bloque dentro de ${subject}`));
+    const disclosure = document.createElement("details"), summary = document.createElement("summary"), more = document.createElement("div");
+    disclosure.className = "block-more"; summary.textContent = "Más acciones"; summary.setAttribute("aria-label", `Más acciones para ${subject}`); more.className = "block-more-actions";
+    more.append(
       actionButton("Duplicar", "duplicate", path, `Duplicar ${subject}: la copia queda justo después`),
       actionButton("Copiar bloque", "copy", path, `Copiar ${subject} a la bandeja, para pegarlo donde elijas`),
       actionButton("Copiar texto", "copy-text", path, `Copiar al portapapeles el texto de ${subject}`),
-    );
-    if (acceptsChildren(block.type)) actions.append(actionButton("Añadir dentro", "child", path, `Añadir un bloque dentro de ${subject}`));
-    actions.append(
       actionButton("Eliminar", "delete", path, `Eliminar ${subject}`),
       actionButton("Subir", "up", path, `Subir ${subject}, entre sus hermanos`, position === 0),
       actionButton("Bajar", "down", path, `Bajar ${subject}, entre sus hermanos`, position === siblings - 1),
     );
+    disclosure.append(summary, more); actions.append(disclosure);
     article.append(heading, meta, preview, actions);
-    for (const extend of blockItemExtensions) extend(block, path, { article, actions, subject });
+    for (const extend of blockItemExtensions) extend(block, path, { article, actions, more, subject });
     item.append(article);
 
     if (block.children.length) {
@@ -228,14 +242,17 @@
     blockList.replaceChildren();
     $("#empty-blocks").hidden = blocks.length > 0;
     blocks.forEach((block, index) => blockList.append(blockItem(block, [index], null, [], blocks.length)));
+    saveSession();
   }
 
   /** Devuelve true si existe y es enfocable; permite encadenar alternativas. */
   function focusAction(action, path) {
     const button = blockList.querySelector(`button[data-action="${action}"][data-path="${pathToKey(path)}"]`);
     if (!button || button.disabled) return false;
+    let disclosure = button.closest("details");
+    while (disclosure) { disclosure.open = true; disclosure = disclosure.parentElement.closest("details"); }
     button.focus();
-    return true;
+    return document.activeElement === button || (action !== "edit" && focusAction("edit", path));
   }
   /** Tras eliminar: hermano que ocupa el hueco, anterior, padre o alta de bloque. */
   function focusAfterRemoval(path) {
@@ -329,8 +346,9 @@
     // El destino se conserva para encadenar varios hijos del mismo padre.
     setEditorTarget({ parent });
     renderBlocks();
-    $("#block-type").focus();
-    announce(`Bloque ${pathLabel(result.path)} añadido ${parent.length ? `dentro de ${describeBlock(blockAtPath(blocks, parent), parent)}` : "en la raíz"}.`);
+    focusBlockContent();
+    const templateMessage = commitTemplateStep(result.path);
+    announce(`Bloque ${pathLabel(result.path)} añadido ${parent.length ? `dentro de ${describeBlock(blockAtPath(blocks, parent), parent)}` : "en la raíz"}.${templateMessage ? ` ${templateMessage}` : ""}`);
   });
 
   $("#paste-block").addEventListener("click", () => {
@@ -341,13 +359,15 @@
     const result = insertBlock(blocks, parent, cloneBlock(tray.block));
     if (!result) { renderBlocks(); setEditorTarget(editorTarget()); announce("No se pudo pegar el bloque en ese destino; la lista se actualizó."); return; }
     const label = trayLabel();
+    const cancelled = cancelEditForStructuralChange();
     blocks = result.blocks; renderBlocks(); setEditorTarget(editorTarget());
     if (!focusAction("edit", result.path)) $("#add-block").focus();
-    announce(`${label} pegado como bloque ${pathLabel(result.path)} ${describeLocation(parent)}. Sigue en la bandeja para pegarlo otra vez.`);
+    announce(`${label} pegado como bloque ${pathLabel(result.path)} ${describeLocation(parent)}. Sigue en la bandeja para pegarlo otra vez.${cancelled}`);
   });
 
   $("#cancel-edit").addEventListener("click", () => {
     const cancelled = editorTarget().editing.length;
+    cancelTemplateForStructuralChange();
     resetBlockEditor(); $("#block-type").focus();
     announce(cancelled ? "Edición cancelada." : "El siguiente bloque se añadirá en la raíz.");
   });
@@ -361,6 +381,7 @@
     const action = button.dataset.action;
 
     if (action === "edit") {
+      cancelTemplateForStructuralChange();
       $("#block-type").value = block.type; $("#block-title").value = block.title; $("#block-content").value = block.content;
       for (const hook of blockFieldHooks) hook.fill?.(block);
       $("#block-error").textContent = ""; $("#block-content").removeAttribute("aria-invalid");
@@ -370,6 +391,7 @@
       return;
     }
     if (action === "child") {
+      cancelTemplateForStructuralChange();
       clearBlockFields(); setEditorTarget({ parent: path }); $("#block-type").focus();
       announce(`El siguiente bloque se añadirá dentro de ${describeBlock(block, path)}, en el nivel ${path.length + 1}.`);
       return;
@@ -431,7 +453,7 @@
 
   form.addEventListener("submit", (event) => {
     event.preventDefault(); const title = $("#note-title");
-    if (!title.value.trim()) { $("#title-error").textContent = "Escribe un título para generar el documento."; title.setAttribute("aria-invalid", "true"); title.focus(); announce("No se generó el documento: falta el título."); return; }
+    if (!title.value.trim()) { $("#metadata-details").open = true; $("#title-error").textContent = "Escribe un título para generar el documento."; title.setAttribute("aria-invalid", "true"); title.focus(); announce("No se generó el documento: falta el título."); return; }
     $("#title-error").textContent = "";
     title.removeAttribute("aria-invalid");
     const documentState = state();
@@ -447,8 +469,11 @@
       draft = normalizeDraft(JSON.parse(raw));
     } catch { draft = null; }
     if (!draft) { $("#restore-draft").focus(); announce("No hay un borrador válido para restaurar."); return; }
-    setMetadata(draft.metadata); blocks = draft.blocks; resetBlockEditor(); renderBlocks(); $("#note-title").focus();
+    const cancelled = cancelTemplateForStructuralChange();
+    setDocumentMacros(draft.macros, false);
+    setMetadata(draft.metadata); blocks = draft.blocks; resetBlockEditor(); renderBlocks(); focusMetadata();
     announce(draft.version < DRAFT_VERSION ? "Borrador restaurado y convertido al formato con bloques anidados." : "Borrador restaurado.");
+    if (cancelled) announce("Borrador restaurado." + cancelled);
   });
   $("#delete-draft").addEventListener("click", () => {
     if (!confirm("¿Borrar el borrador guardado en este dispositivo?")) { $("#delete-draft").focus(); announce("No se borró el borrador."); return; }
@@ -460,6 +485,10 @@
     if (!output.value) { announce("Genera el documento antes de copiarlo."); $("#generate").focus(); return; }
     try { await copyToClipboard(output.value, output); announce("Código LaTeX copiado."); } catch { announce("No se pudo copiar el código; permanece disponible para seleccionarlo manualmente."); }
   });
+
+  function focusBlockContent() { $(blockType($("#block-type").value)?.kind === "image" ? "#image-path" : "#block-content").focus(); }
+  // Se amplía en [F] cuando hay un menú de escritura.
+  let closeAssistMenu = () => {};
 
   /* --- [A] Atajos del tablero --- */
 
@@ -607,6 +636,7 @@
     if (destination !== field) field.focus();
     if (destination === blockContent) scheduleEditorPreview();
 
+    noteUsage(`symbol:${id}`);
     recentSymbols = recentSymbolIds([id, ...recentSymbols]);
     try {
       global.localStorage.setItem(recentSymbolStorageKey, JSON.stringify(recentSymbols));
@@ -684,12 +714,24 @@
   });
 
   blockEditor.addEventListener("keydown", (event) => {
-    if (event.defaultPrevented || event.isComposing || symbolBoard.hidden) return;
+    if (event.defaultPrevented || event.isComposing) return;
+    const shortcut = matchShortcut(event, "block-editor", listIsMac);
+    if (shortcut?.id === "block.commit") {
+      event.preventDefault();
+      if (!event.repeat) { closeAssistMenu(); $("#add-block").click(); }
+      return;
+    }
+    if (event.key === "Enter" && !(event.ctrlKey || event.metaKey || event.altKey || event.shiftKey)) {
+      if (event.target.id === "block-title") { event.preventDefault(); focusBlockContent(); return; }
+      if (event.target.matches('#image-fields input[type="text"], #image-fields input[type="number"]')) { event.preventDefault(); return; }
+    }
+    if (symbolBoard.hidden) return;
     const inBoard = symbolBoard.contains(event.target);
     if ((inBoard || event.target.matches("input, select, textarea"))
         && matchShortcut(event, "block-editor")?.id === "symbols.toggle") {
       event.preventDefault();
       if (event.repeat) return;
+      closeAssistMenu();
       if (inBoard) returnToSymbolOrigin();
       else openSymbolSearch(event.target);
       return;
@@ -771,6 +813,7 @@
 
   function syncImageFields() {
     const active = imageType($("#block-type").value);
+    $("#proof-help").hidden = $("#block-type").value !== "proof";
     imageFields.hidden = !active;
     $("#block-content").closest(".field").hidden = active;
     $(".symbol-board").hidden = active;
@@ -912,12 +955,15 @@
   const listContent = $("#block-content");
   const listLimit = $("#list-limit");
   const listShortcuts = SHORTCUTS.filter(({ scope }) => scope === "list-editor");
-  const listKeyNames = listShortcuts.map(listAriaKeyshortcuts);
+  const listKeyNames = listShortcuts.map(shortcut => listAriaKeyshortcuts(shortcut));
+  let loadedListBlock = null;
 
   blockFieldHooks.push({
+    fill(block) { loadedListBlock = blockType(block.type)?.kind === "list" ? block : null; },
+    clear() { loadedListBlock = null; },
     read(type) {
       if (blockType(type)?.kind !== "list") return {};
-      const original = blockAtPath(blocks, editorTarget().editing);
+      const original = blockAtPath(blocks, editorTarget().editing) || loadedListBlock;
       return { listFormat: listFormatAfterEdit(original, listContent.value) };
     },
   });
@@ -1014,9 +1060,7 @@
   });
 
   function applyListEdit(edit, direction) {
-    if (listContent.value !== edit.value) listContent.value = edit.value;
-    listContent.focus();
-    listContent.setSelectionRange(edit.selectionStart, edit.selectionEnd, direction);
+    global.TexNotes.applyFieldEdit(listContent, { ...edit, selectionDirection: direction });
     scheduleEditorPreview();
   }
 
@@ -1041,6 +1085,15 @@
       listContent.focus();
     });
   }
+
+  $("#list-tools").addEventListener("keydown", (event) => {
+    if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+    event.preventDefault();
+    const buttons = [...$("#list-tools").querySelectorAll("button")];
+    const next = buttons.find((button) => button !== event.target);
+    for (const button of buttons) button.tabIndex = button === next ? 0 : -1;
+    next?.focus();
+  });
 
   listContent.addEventListener("keydown", (event) => {
     if (event.defaultPrevented || event.isComposing || blockType($("#block-type").value)?.kind !== "list") return;
@@ -1074,7 +1127,7 @@
 
   editorPreviewHooks.push((block, { parentPath }) => {
     const savedBlock = blockAtPath(blocks, editorTarget().editing);
-    const issues = checkBlock({ ...block, children: savedBlock?.children }, blocks, parentPath);
+    const issues = checkBlock({ ...block, children: savedBlock?.children }, blocks, parentPath, { macros });
     editorContentCheck.textContent = issues.map(issueText).join("\n");
     editorContentCheck.hidden = !issues.length;
   });
@@ -1083,7 +1136,7 @@
     const editButton = actions.querySelector('[data-action="edit"]');
     editButton.id = editButtonId(path);
     if (badgedBlocks !== blocks) {
-      issuesByPath = new Map(checkDocument({ blocks }).map(({ path: issuePath, issues }) => [pathToKey(issuePath), issues.length]));
+      issuesByPath = new Map(checkDocument({ blocks, macros }).map(({ path: issuePath, issues }) => [pathToKey(issuePath), issues.length]));
       badgedBlocks = blocks;
     }
     const count = issuesByPath.get(pathToKey(path));
@@ -1143,7 +1196,7 @@
   const movePosition = $("#move-block-position");
   let movingPath = [];
 
-  blockItemExtensions.push((_block, path, { actions, subject }) => {
+  blockItemExtensions.push((_block, path, { more, subject }) => {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = "Mover a…";
@@ -1165,7 +1218,7 @@
       button.focus();
       moveDialog.showModal();
     });
-    actions.append(button);
+    more.append(button);
   });
 
   $("#move-block-cancel").addEventListener("click", () => moveDialog.close());
@@ -1191,8 +1244,445 @@
   });
   /* --- fin [E] --- */
 
+  /* --- [F] Asistente de escritura --- */
+  const T = global.TexNotes;
+  let pendingPairs = [];
+  let prefs = { autoPair: true };
+  try { const saved = JSON.parse(global.localStorage.getItem("tex-notes:prefs:v1")); if (typeof saved?.autoPair === "boolean") prefs.autoPair = saved.autoPair; } catch { /* valores predeterminados */ }
+  $("#auto-pair").checked = prefs.autoPair;
+  $("#auto-pair").addEventListener("change", () => {
+    prefs.autoPair = $("#auto-pair").checked;
+    pendingPairs = [];
+    try { global.localStorage.setItem("tex-notes:prefs:v1", JSON.stringify(prefs)); } catch { /* preferencia en memoria */ }
+  });
+  function fieldState() { return { value: blockContent.value, selectionStart: blockContent.selectionStart, selectionEnd: blockContent.selectionEnd }; }
+  function applyAssist(result) {
+    T.applyFieldEdit(blockContent, result.edit || result);
+    if (result.pending) pendingPairs = result.pending;
+    scheduleEditorPreview(); scheduleSessionSave();
+  }
+  blockFieldHooks.push({ fill() { pendingPairs = []; }, clear() { pendingPairs = []; } });
+  blockContent.addEventListener("beforeinput", (event) => {
+    if (event.defaultPrevented || T.isApplyingFieldEdit() || event.isComposing || event.inputType !== "insertText" || event.data?.length !== 1) return;
+    if (assistState?.token.kind === "slash") return;
+    if (assistState && !/[A-Za-z]/.test(event.data)) closeAssistMenu();
+    if (!prefs.autoPair) return;
+    const current = fieldState();
+    const result = T.autoPair(current, event.data, { mode: T.mathContextAt(current.value, current.selectionStart, $("#block-type").value), pending: pendingPairs });
+    if (result) { event.preventDefault(); applyAssist(result); }
+  });
+  /* @decision DEC-016 ancla:3d5a2b69 tramo:14
+   * La captura en el fieldset antecede al manejador de Intro de listas. Solo
+   * se consume la tecla cuando existe una edición del asistente aplicable.
+   */
+  blockEditor.addEventListener("keydown", (event) => {
+    if (event.target !== blockContent || event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || !prefs.autoPair) return;
+    if (assistState) { handleWritingKey(event); if (event.defaultPrevented) return; }
+    const current = fieldState();
+    const result = event.key === "Backspace" ? T.deleteEmptyPair(current, pendingPairs)
+      : event.key === "Enter" ? T.completeEnvironment(current, $("#block-type").value) : null;
+    if (result) { event.preventDefault(); applyAssist(result); }
+  }, true);
+  function prunePairs() { if (!T.isApplyingFieldEdit()) pendingPairs = T.activePairs(fieldState(), pendingPairs); }
+  blockContent.addEventListener("input", prunePairs);
+  blockContent.addEventListener("select", prunePairs);
+  blockContent.addEventListener("keyup", prunePairs);
+  blockContent.addEventListener("click", prunePairs);
+  blockContent.addEventListener("blur", () => { pendingPairs = []; });
+  function readWritingStorage(key, fallback) {
+    try { return JSON.parse(global.localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
+  }
+  function writeWritingStorage(key, value) {
+    try { global.localStorage.setItem(key, JSON.stringify(value)); } catch { announce("No se pudo guardar la configuración; se conserva mientras esta pestaña siga abierta."); }
+  }
+  let usage = T.recordUsage(readWritingStorage("tex-notes:usage:v1", {}), null, Date.now());
+  function noteUsage(key) { usage = T.recordUsage(usage, key, Date.now()); writeWritingStorage("tex-notes:usage:v1", usage); }
+  let aliases = readWritingStorage("tex-notes:aliases:v1", T.DEFAULT_ALIASES);
+  if (!Array.isArray(aliases) || aliases.some((a, i) => T.validateAlias(a, aliases.slice(0, i)).length)) aliases = T.DEFAULT_ALIASES.map(a => ({ ...a }));
+  aliases = aliases.map(a => ({ ...a }));
+  let ownTemplates = [];
+  let getCompletionMacros = () => [];
+  let getConfigMacros = () => [];
+  let setConfigMacros = () => {};
+  let refreshTemplates = () => {};
+  let specialCompletions = () => null;
+  let acceptSpecialCompletion = () => false;
+  let snippetSession = null;
+  let assistState = null;
+  const assistList = $("#assist-list");
+  closeAssistMenu = () => {
+    assistState = null; assistList.hidden = true; assistList.replaceChildren();
+    for (const name of ["aria-autocomplete", "aria-controls", "aria-activedescendant"]) blockContent.removeAttribute(name);
+  };
+  function writingMode() { return T.mathContextAt(blockContent.value, blockContent.selectionStart, $("#block-type").value); }
+  function positionAssistMenu() {
+    if (!assistState) return;
+    const rect = blockContent.getBoundingClientRect();
+    const narrow = global.matchMedia("(max-width: 38rem)").matches;
+    let x = rect.left, y = rect.bottom;
+    if (!narrow) {
+      const mirror = document.createElement("div"), marker = document.createElement("span");
+      const style = getComputedStyle(blockContent);
+      for (const key of ["font", "lineHeight", "letterSpacing", "padding", "border", "boxSizing", "tabSize", "textIndent"]) mirror.style[key] = style[key];
+      Object.assign(mirror.style, { position: "fixed", visibility: "hidden", whiteSpace: "pre-wrap", overflowWrap: "break-word", width: `${rect.width}px`, left: `${rect.left}px`, top: `${rect.top}px` });
+      mirror.textContent = blockContent.value.slice(0, blockContent.selectionStart);
+      marker.textContent = "\u200b"; mirror.append(marker); document.body.append(mirror);
+      const caret = marker.getBoundingClientRect();
+      x = caret.left - blockContent.scrollLeft; y = caret.bottom - blockContent.scrollTop;
+      mirror.remove();
+    }
+    assistList.style.width = `${Math.max(0, Math.min(narrow ? rect.width : 420, global.innerWidth - 16))}px`;
+    const width = assistList.offsetWidth, height = assistList.offsetHeight;
+    assistList.style.left = `${Math.max(8, Math.min(x, global.innerWidth - width - 8))}px`;
+    assistList.style.top = `${Math.max(8, Math.min(y, global.innerHeight - height - 8))}px`;
+  }
+  function selectAssist(index, speak = true) {
+    if (!assistState) return;
+    assistState.index = (index + assistState.entries.length) % assistState.entries.length;
+    for (const [i, option] of [...assistList.children].entries()) option.setAttribute("aria-selected", String(i === assistState.index));
+    const active = assistList.children[assistState.index];
+    blockContent.setAttribute("aria-activedescendant", active.id);
+    active.scrollIntoView({ block: "nearest" });
+    if (speak) announce(`${assistState.entries[assistState.index].label}. ${assistState.index + 1} de ${assistState.entries.length}.`);
+  }
+  function openAssistMenu(entries, token, mode) {
+    if (!entries.length) { closeAssistMenu(); return; }
+    const opened = !assistState;
+    assistState = { entries, token: { ...token, cursor: blockContent.selectionStart }, mode, index: 0 };
+    assistList.replaceChildren(...entries.map((entry, i) => {
+      const option = document.createElement("li");
+      option.id = `assist-option-${i}`; option.setAttribute("role", "option");
+      const name = document.createElement("strong"), detail = document.createElement("span");
+      name.textContent = entry.label; detail.textContent = entry.detail || entry.trigger;
+      option.append(name, detail);
+      option.addEventListener("pointerdown", (event) => { event.preventDefault(); acceptAssist(i); });
+      return option;
+    }));
+    assistList.hidden = false;
+    blockContent.setAttribute("aria-autocomplete", "list"); blockContent.setAttribute("aria-controls", "assist-list");
+    selectAssist(0, false); positionAssistMenu();
+    if (opened) announce(`${entries.length} sugerencias. ${entries[0].label}.`);
+  }
+  function updateAssistMenu(event) {
+    if (T.isApplyingFieldEdit()) return;
+    if (event.isComposing || event.inputType !== "insertText" || event.data?.length !== 1) { closeAssistMenu(); return; }
+    const current = fieldState(), mode = writingMode();
+    if (mode === "comment") { closeAssistMenu(); return; }
+    const special = specialCompletions(current, event);
+    if (special) { openAssistMenu(special.entries, special.token, mode); return; }
+    const token = T.completionToken(current);
+    if (!token) { closeAssistMenu(); return; }
+    const entries = T.completionEntries(getCompletionMacros()).filter(e => (e.kind === "environment") === (token.kind === "environment"));
+    openAssistMenu(T.rankCompletions(token.query, entries, usage, Date.now(), mode), token, mode);
+  }
+  function insertWritingSnippet(source, start, end, wrapMath) {
+    const current = fieldState();
+    const result = T.snippetEdit({ ...current, selectionStart: start, selectionEnd: end }, source, wrapMath);
+    const previousPairs = T.pairsAfterReplacement(current, pendingPairs, start, end);
+    applyAssist({ edit: result.edit, pending: [...previousPairs, ...result.pending] });
+    snippetSession = result.session;
+  }
+  function acceptAssist(index = assistState?.index) {
+    if (!assistState) return;
+    const { entries, token, mode } = assistState, entry = entries[index];
+    closeAssistMenu();
+    if (acceptSpecialCompletion(entry, token)) return;
+    insertWritingSnippet(entry.insert, token.start, token.end, mode === "text" && entry.mode === "math");
+    noteUsage(entry.key);
+  }
+  function expandAlias(current) {
+    const mode = writingMode(), found = T.aliasAt(current, aliases, mode);
+    if (!found) return false;
+    insertWritingSnippet(found.alias.expansion, found.start, found.end, mode === "text" && found.alias.mode === "math");
+    noteUsage(`alias:${found.alias.trigger}`); return true;
+  }
+  /* @decision DEC-015 ancla:369b59aa tramo:28
+   * Tab se consume solo con una sugerencia, hueco, cierre o alias pendiente.
+   * Escape cancela sin mover el cursor. El resto conserva la navegación nativa.
+   */
+  function handleWritingKey(event) {
+    if (event.target !== blockContent || event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (assistState && ["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"].includes(event.key)) {
+      event.preventDefault();
+      if (event.key === "Escape") { closeAssistMenu(); event.stopPropagation(); }
+      else if (event.key === "ArrowDown" || event.key === "ArrowUp") selectAssist(assistState.index + (event.key === "ArrowDown" ? 1 : -1));
+      else acceptAssist();
+      return;
+    }
+    if (event.key === "Escape" && snippetSession) { event.preventDefault(); snippetSession = null; return; }
+    if (event.key !== "Tab") return;
+    const current = fieldState();
+    const hole = T.nextSnippetHole(current, snippetSession);
+    if (hole) { event.preventDefault(); T.applyFieldEdit(blockContent, hole.edit); snippetSession = hole.session; return; }
+    snippetSession = null;
+    const close = T.skipPendingClose(current, pendingPairs);
+    if (close) { event.preventDefault(); applyAssist(close); return; }
+    if (expandAlias(current)) event.preventDefault();
+  }
+  blockEditor.addEventListener("keydown", handleWritingKey, true);
+  blockContent.addEventListener("input", updateAssistMenu);
+  function pruneWritingSessions() {
+    if (T.isApplyingFieldEdit()) return;
+    snippetSession = T.activeSnippet(fieldState(), snippetSession);
+    if (assistState && (blockContent.selectionStart !== assistState.token.cursor || blockContent.selectionStart !== blockContent.selectionEnd)) closeAssistMenu();
+  }
+  blockContent.addEventListener("select", pruneWritingSessions);
+  blockContent.addEventListener("keyup", pruneWritingSessions);
+  blockContent.addEventListener("click", pruneWritingSessions);
+  blockContent.addEventListener("blur", closeAssistMenu);
+  blockContent.addEventListener("scroll", positionAssistMenu);
+  global.addEventListener("resize", positionAssistMenu);
+  document.addEventListener("scroll", positionAssistMenu, true);
+  blockFieldHooks.push({ fill() { snippetSession = null; closeAssistMenu(); }, clear() { snippetSession = null; closeAssistMenu(); } });
+
+  let editingAlias = -1;
+  function renderAliases() {
+    $("#alias-list").replaceChildren(...aliases.map((alias, index) => {
+      const row = document.createElement("tr");
+      for (const value of [alias.trigger, alias.expansion, alias.mode === "math" ? "Matemáticas" : alias.mode === "text" ? "Texto" : "Cualquier contexto"]) {
+        const cell = document.createElement("td"); cell.textContent = value; row.append(cell);
+      }
+      const cell = document.createElement("td"), edit = document.createElement("button"), remove = document.createElement("button");
+      edit.type = remove.type = "button"; edit.textContent = "Editar alias"; remove.textContent = "Borrar alias";
+      edit.setAttribute("aria-label", `Editar alias ${alias.trigger}`); remove.setAttribute("aria-label", `Borrar alias ${alias.trigger}`);
+      edit.addEventListener("click", () => { editingAlias = index; $("#alias-trigger").value = alias.trigger; $("#alias-expansion").value = alias.expansion; $("#alias-mode").value = alias.mode; $("#alias-trigger").focus(); });
+      remove.addEventListener("click", () => { aliases.splice(index, 1); editingAlias = -1; persistAliases(); $("#alias-trigger").focus(); announce("Alias borrado."); });
+      cell.append(edit, remove); row.append(cell); return row;
+    }));
+  }
+  function persistAliases() { writeWritingStorage("tex-notes:aliases:v1", aliases); renderAliases(); }
+  function saveAlias() {
+    const alias = { trigger: $("#alias-trigger").value.trim(), expansion: $("#alias-expansion").value, mode: $("#alias-mode").value };
+    const errors = T.validateAlias(alias, aliases.filter((a, i) => i !== editingAlias));
+    $("#alias-error").textContent = errors.join(" ");
+    if (errors.length) { announce(errors[0]); return; }
+    if (editingAlias >= 0) aliases[editingAlias] = alias; else aliases.push(alias);
+    editingAlias = -1; persistAliases(); $("#alias-trigger").value = ""; $("#alias-expansion").value = ""; $("#alias-trigger").focus(); announce("Alias guardado.");
+  }
+  $("#save-alias").addEventListener("click", saveAlias);
+  $("#alias-fields").addEventListener("keydown", (event) => { if (event.key === "Enter" && event.target.tagName !== "TEXTAREA" && !event.isComposing) { event.preventDefault(); saveAlias(); } });
+  $("#cancel-alias").addEventListener("click", () => { editingAlias = -1; $("#alias-trigger").value = ""; $("#alias-expansion").value = ""; $("#alias-error").textContent = ""; });
+  $("#reset-aliases").addEventListener("click", () => { aliases = T.DEFAULT_ALIASES.map(a => ({ ...a })); editingAlias = -1; persistAliases(); announce("Alias predeterminados restaurados."); });
+  $("#export-config").addEventListener("click", () => {
+    const data = { kind: "notas-latex-config", version: 1, aliases, templates: ownTemplates, prefs, macros: getConfigMacros() };
+    const url = global.URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+    const link = document.createElement("a"); link.href = url; link.download = "notas-latex-configuracion.json"; document.body.append(link); link.click(); link.remove();
+    global.setTimeout(() => global.URL.revokeObjectURL(url), 0); announce("Configuración exportada.");
+  });
+  $("#import-config").addEventListener("change", async (event) => {
+    const file = event.target.files[0]; if (!file) return;
+    try {
+      const data = JSON.parse(await file.text()), errors = T.validateConfiguration(data);
+      if (errors.length) { announce(errors.join(" ")); return; }
+      if (!global.confirm("¿Reemplazar tus alias, plantillas, preferencias y macros predeterminadas con esta configuración?")) return;
+      aliases = data.aliases; ownTemplates = data.templates; prefs = { autoPair: data.prefs.autoPair }; editingAlias = -1;
+      persistAliases(); writeWritingStorage("tex-notes:prefs:v1", prefs); writeWritingStorage("tex-notes:templates:v1", ownTemplates);
+      $("#auto-pair").checked = prefs.autoPair; pendingPairs = []; setConfigMacros(data.macros); refreshTemplates();
+      announce("Configuración importada.");
+    } catch { announce("No se pudo leer la configuración. Comprueba que sea un archivo JSON válido."); }
+    finally { event.target.value = ""; }
+  });
+  renderAliases();
+  /* --- fin [F] --- */
+
+  /* --- [G] Comandos / y plantillas --- */
+  let slashSession = false;
+  let templateSession = null;
+  let renamingTemplate = -1;
+  let savedTemplateBranch = null;
+  const templateDialog = $("#save-template-dialog");
+  const storedTemplates = readWritingStorage("tex-notes:templates:v1", []);
+  if (Array.isArray(storedTemplates)) {
+    for (const template of storedTemplates) if (!T.validateTemplate(template, [...T.BUILTIN_TEMPLATES, ...ownTemplates]).length) ownTemplates.push(template);
+  }
+  const closeCompletionMenu = closeAssistMenu;
+  closeAssistMenu = () => { slashSession = false; closeCompletionMenu(); };
+  blockContent.addEventListener("beforeinput", (event) => {
+    if (!T.isApplyingFieldEdit() && !event.isComposing && event.inputType === "insertText" && event.data === "/" && !blockContent.value) slashSession = true;
+  });
+  specialCompletions = (current) => {
+    if (!slashSession) return null;
+    const result = T.slashCompletions(current, [...T.BUILTIN_TEMPLATES, ...ownTemplates]);
+    if (!result || !result.entries.length) { closeAssistMenu(); return { entries: [], token: { kind: "slash" } }; }
+    return result;
+  };
+  /* @decision DEC-018 ancla:a8b1aa78 tramo:4
+   * Asignar el selector no emite change. El evento explícito sincroniza imagen,
+   * herramientas de listas y vista previa cuando el tipo viene del menú /.
+   */
+  function selectBlockType(typeId) {
+    $("#block-type").value = typeId;
+    $("#block-type").dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  acceptSpecialCompletion = (entry, token) => {
+    if (entry.kind === "template") {
+      const target = editorTarget();
+      templateSession = { template: entry.template, index: 0, basePath: target.editing.length ? target.editing.slice(0, -1) : target.parent, paths: [] };
+      noteUsage(entry.key); loadTemplateStep(); return true;
+    }
+    if (entry.kind !== "type") return false;
+    selectBlockType(entry.typeId);
+    if (token.title !== undefined) $("#block-title").value = token.title;
+    applyAssist({ value: "", selectionStart: 0, selectionEnd: 0 });
+    snippetSession = null; pendingPairs = []; renderEditorPreview(); focusBlockContent(); noteUsage(entry.key);
+    announce(`Tipo: ${blockLabel(entry.typeId)}.${token.title ? ` Título: ${token.title}.` : ""}`);
+    return true;
+  };
+  function renderTemplateProgress() {
+    const progress = $("#template-progress");
+    progress.hidden = !templateSession;
+    if (!templateSession) return;
+    const { template, index } = templateSession, next = template.steps[index + 1];
+    $("#template-progress-text").textContent = `Plantilla «${template.name}»: paso ${index + 1} de ${template.steps.length}${next ? ` · Siguiente: ${blockLabel(next.block.type)}` : " · Último paso"}.`;
+  }
+  function loadTemplateStep() {
+    const { block } = templateSession.template.steps[templateSession.index];
+    const parent = T.templateParent(templateSession);
+    if (!parent) { cancelTemplateForStructuralChange(); announce("La plantilla perdió su destino y se canceló."); return; }
+    setEditorTarget({ parent }); selectBlockType(block.type);
+    $("#block-title").value = block.title;
+    for (const hook of blockFieldHooks) hook.fill?.(block);
+    insertWritingSnippet(block.content, 0, blockContent.value.length, false);
+    renderEditorPreview(); renderTemplateProgress(); focusBlockContent(); saveSession();
+    announce($("#template-progress-text").textContent);
+  }
+  function commitTemplateStep(path) {
+    if (!templateSession) return "";
+    const name = templateSession.template.name;
+    templateSession = T.advanceTemplate(templateSession, path);
+    renderTemplateProgress();
+    if (templateSession) { loadTemplateStep(); return `Sigue la plantilla ${name}.`; }
+    return `Plantilla ${name} completada.`;
+  }
+  function cancelTemplateForStructuralChange() {
+    if (!templateSession) return "";
+    templateSession = null; renderTemplateProgress();
+    return " Se canceló la plantilla porque cambió la estructura o el destino.";
+  }
+  $("#skip-template-step").addEventListener("click", () => {
+    if (!templateSession) return;
+    templateSession = T.advanceTemplate(templateSession, null); renderTemplateProgress();
+    if (templateSession) loadTemplateStep();
+    else { clearBlockFields(); focusBlockContent(); announce("Plantilla terminada; se omitió el paso y su descendencia."); }
+  });
+  $("#cancel-template").addEventListener("click", () => {
+    templateSession = null; renderTemplateProgress(); focusBlockContent(); announce("Plantilla cancelada; el contenido del paso actual se conserva.");
+  });
+  blockItemExtensions.push((block, path, { more, subject }) => {
+    const button = document.createElement("button"); button.type = "button"; button.textContent = "Guardar como plantilla";
+    button.setAttribute("aria-label", `Guardar como plantilla ${subject}`); button.setAttribute("aria-haspopup", "dialog");
+    button.addEventListener("click", () => {
+      renamingTemplate = -1; savedTemplateBranch = cloneBlock(block);
+      $("#template-name").value = block.title || blockLabel(block.type); $("#template-trigger").value = ""; $("#template-error").textContent = "";
+      templateDialog.showModal();
+    });
+    more.append(button);
+  });
+  refreshTemplates = () => {
+    $("#own-template-list").replaceChildren(...ownTemplates.map((template, index) => {
+      const item = document.createElement("li"), rename = document.createElement("button"), remove = document.createElement("button");
+      rename.type = remove.type = "button"; rename.textContent = "Renombrar plantilla"; remove.textContent = "Borrar plantilla";
+      rename.setAttribute("aria-label", `Renombrar plantilla ${template.name}`); remove.setAttribute("aria-label", `Borrar plantilla ${template.name}`);
+      rename.addEventListener("click", () => { renamingTemplate = index; $("#template-name").value = template.name; $("#template-trigger").value = template.trigger; $("#template-error").textContent = ""; templateDialog.showModal(); });
+      remove.addEventListener("click", () => { ownTemplates.splice(index, 1); writeWritingStorage("tex-notes:templates:v1", ownTemplates); refreshTemplates(); $("#writing-preferences > summary").focus(); announce("Plantilla borrada."); });
+      item.append(`${template.name} · /${template.trigger} `, rename, remove); return item;
+    }));
+  };
+  $("#save-template-cancel").addEventListener("click", () => templateDialog.close());
+  $("#save-template-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const values = { name: $("#template-name").value.trim(), trigger: $("#template-trigger").value.trim() };
+    const template = renamingTemplate >= 0 ? { ...ownTemplates[renamingTemplate], ...values }
+      : T.templateFromBranch(savedTemplateBranch, { ...values, id: `personal-${Date.now().toString(36)}-${ownTemplates.length}` });
+    const existing = [...T.BUILTIN_TEMPLATES, ...ownTemplates.filter((t, i) => i !== renamingTemplate)];
+    const errors = T.validateTemplate(template, existing); $("#template-error").textContent = errors.join(" ");
+    if (errors.length) { announce(errors[0]); return; }
+    if (renamingTemplate >= 0) ownTemplates[renamingTemplate] = template; else ownTemplates.push(template);
+    writeWritingStorage("tex-notes:templates:v1", ownTemplates); refreshTemplates(); templateDialog.close(); announce("Plantilla guardada.");
+  });
+  refreshTemplates();
+  /* --- fin [G] --- */
+
+  /* --- [H] Macros del documento --- */
+  let editingMacro = -1;
+  let defaultMacros = [];
+  for (const macro of T.normalizeMacros(readWritingStorage("tex-notes:macros-default:v1", []))) {
+    if (!T.validateMacro(macro, defaultMacros).length) defaultMacros.push(macro);
+  }
+  const existingSnapshot = [STORAGE_KEY, LEGACY_STORAGE_KEY, "tex-notes:autosave:v1"].some(key => normalizeDraft(readWritingStorage(key, null)));
+  if (!existingSnapshot) macros = defaultMacros.map(m => ({ ...m }));
+  getCompletionMacros = () => macros;
+  getConfigMacros = () => defaultMacros;
+  setConfigMacros = (next) => {
+    defaultMacros = next.map(m => ({ ...m })); writeWritingStorage("tex-notes:macros-default:v1", defaultMacros);
+    if (!blocks.length && !blockContent.value.trim() && !$("#block-title").value.trim() && !$("#note-title").value.trim()) setDocumentMacros(defaultMacros);
+  };
+  function setDocumentMacros(next, draw = true) {
+    macros = next.map(m => ({ ...m })); previewVersion++; badgedBlocks = null;
+    renderMacroList();
+    if (draw) { closeAssistMenu(); renderBlocks(); renderEditorPreview(); saveSession(); }
+  }
+  function macroCandidate() { return { name: $("#macro-name").value.trim(), params: Number($("#macro-params").value), body: $("#macro-body").value }; }
+  function updateMacroPreview() {
+    const candidate = macroCandidate(), existing = macros.filter((m, i) => i !== editingMacro);
+    const errors = T.validateMacroFields(candidate, existing);
+    for (const field of ["name", "params", "body"]) {
+      const shown = candidate.name || candidate.body ? errors[field].join(" ") : "";
+      $("#macro-" + field + "-error").textContent = shown;
+      if (shown) $("#macro-" + field).setAttribute("aria-invalid", "true"); else $("#macro-" + field).removeAttribute("aria-invalid");
+    }
+    const preview = $("#macro-preview");
+    if (Object.values(errors).some(list => list.length)) { preview.textContent = "Completa una macro válida para ver su vista previa."; return; }
+    const example = "\\" + candidate.name + Array.from({ length: candidate.params }, (_, i) => `{${String.fromCharCode(120 + i % 3)}}`).join("");
+    const rendered = katexRender(example, false, [...existing, candidate]);
+    if (rendered.ok) preview.innerHTML = rendered.html; else preview.textContent = `No se pudo previsualizar: ${rendered.message}`;
+  }
+  function clearMacroForm() {
+    editingMacro = -1; $("#macro-name").value = ""; $("#macro-body").value = ""; $("#macro-params").value = "0"; updateMacroPreview();
+  }
+  function renderMacroList() {
+    $("#macro-list").replaceChildren(...macros.map((macro, index) => {
+      const item = document.createElement("li"), text = document.createElement("code"), edit = document.createElement("button"), remove = document.createElement("button");
+      text.textContent = `\\${macro.name}${macro.params ? `[${macro.params}]` : ""} = ${macro.body}`;
+      edit.type = remove.type = "button"; edit.textContent = "Editar macro"; remove.textContent = "Borrar macro";
+      edit.setAttribute("aria-label", `Editar macro ${macro.name}`); remove.setAttribute("aria-label", `Borrar macro ${macro.name}`);
+      edit.addEventListener("click", () => {
+        editingMacro = index; $("#macro-name").value = macro.name; $("#macro-params").value = macro.params; $("#macro-body").value = macro.body; updateMacroPreview(); $("#macro-name").focus();
+      });
+      remove.addEventListener("click", () => { const next = macros.filter((m, i) => i !== index); clearMacroForm(); setDocumentMacros(next); $("#macro-name").focus(); announce("Macro borrada; se actualizaron las vistas previas y la comprobación."); });
+      item.append(text, " ", edit, " ", remove); return item;
+    }));
+  }
+  function saveMacro() {
+    const candidate = macroCandidate(), errors = T.validateMacro(candidate, macros.filter((m, i) => i !== editingMacro));
+    updateMacroPreview();
+    if (errors.length) { announce(errors[0]); return; }
+    const next = macros.map(m => ({ ...m }));
+    if (editingMacro >= 0) next[editingMacro] = candidate; else next.push(candidate);
+    clearMacroForm(); setDocumentMacros(next); $("#macro-name").focus(); announce("Macro guardada en el documento.");
+  }
+  $("#save-macro").addEventListener("click", saveMacro);
+  $("#cancel-macro").addEventListener("click", clearMacroForm);
+  $("#macro-fields").addEventListener("input", updateMacroPreview);
+  $("#macro-fields").addEventListener("keydown", (event) => { if (event.key === "Enter" && !event.isComposing) { event.preventDefault(); saveMacro(); } });
+  $("#use-default-macros").addEventListener("click", () => { defaultMacros = macros.map(m => ({ ...m })); writeWritingStorage("tex-notes:macros-default:v1", defaultMacros); announce("Macros predeterminadas guardadas para documentos nuevos."); });
+  renderMacroList(); updateMacroPreview();
+  /* --- fin [H] --- */
+
+  function syncMetadataSummary(reset = false) {
+    const data = metadata(), parts = [data.title, data.course, data.date].map(value => value.trim()).filter(Boolean);
+    $("#datos-heading").textContent = ["Datos del documento", ...parts].join(" · ");
+    if (reset || !data.title.trim()) $("#metadata-details").open = !data.title.trim();
+  }
+  function focusMetadata() { $( $("#metadata-details").open ? "#note-title" : "#metadata-details > summary").focus(); }
+  $("#metadata-details").addEventListener("input", () => syncMetadataSummary());
+  syncMetadataSummary(true);
+
   function renderShortcutPanel() {
     const isMac = /Mac/.test(global.navigator.userAgentData?.platform || global.navigator.platform || "");
+    const commitShortcut = SHORTCUTS.find(s => s.id === "block.commit");
+    $("#commit-key-label").textContent = shortcutLabel(commitShortcut, isMac);
+    $("#add-block").setAttribute("aria-keyshortcuts", ariaKeyshortcuts(commitShortcut, isMac));
     const items = SHORTCUTS.map((shortcut) => {
       const item = document.createElement("li");
       const keys = document.createElement("kbd");
@@ -1205,6 +1695,70 @@
 
   $("#block-content").addEventListener("input", scheduleEditorPreview);
   $("#block-type").addEventListener("change", renderEditorPreview);
+
+  /* --- Autoguardado separado del borrador explícito --- */
+  const AUTOSAVE_KEY = "tex-notes:autosave:v1";
+  let pendingSession = null;
+  let autosaveTimer;
+  let autosaveReady = false;
+  let backedUpSession = false;
+  let announcedStorageError = false;
+  try { const raw = JSON.parse(global.localStorage.getItem(AUTOSAVE_KEY)); const draft = normalizeDraft(raw); pendingSession = draft ? { ...raw, ...draft } : null; } catch { /* sin almacenamiento */ }
+  const hasSessionContent = global.TexNotes.sessionHasContent;
+  /* @decision DEC-019 ancla:0b9a8596 tramo:19
+   * El autoguardado no escribe sesiones vacías ni reemplaza el borrador elegido.
+   * Antes del primer reemplazo conserva la sesión anterior en una clave aparte.
+   */
+  function saveSession() {
+    if (!autosaveReady) return;
+    const type = $("#block-type").value;
+    const session = { version: DRAFT_VERSION, savedAt: new Date().toISOString(), ...state(), editor: {
+      type, title: $("#block-title").value, content: blockContent.value,
+      editingPath: editorTarget().editing, parentPath: editorTarget().parent,
+      image: blockFieldHooks.find((hook) => hook.appliesTo?.("image"))?.read("image"),
+    } };
+    if (!hasSessionContent(session)) return;
+    try {
+      if (!backedUpSession && hasSessionContent(pendingSession)) global.localStorage.setItem("tex-notes:autosave:previous", JSON.stringify(pendingSession));
+      global.localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(session));
+      backedUpSession = true;
+    } catch {
+      if (!announcedStorageError) { announce("No se pudo autoguardar la sesión; guarda o descarga tu trabajo."); announcedStorageError = true; }
+    }
+  }
+  function scheduleSessionSave() { global.clearTimeout(autosaveTimer); autosaveTimer = global.setTimeout(saveSession, 800); }
+  form.addEventListener("input", scheduleSessionSave);
+  form.addEventListener("change", scheduleSessionSave);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) saveSession(); });
+  global.addEventListener("pagehide", saveSession);
+  if (hasSessionContent(pendingSession) && normalizeDraft(pendingSession)) {
+    $("#autosave-banner").hidden = false;
+    const savedDate = new Date(pendingSession.savedAt);
+    const date = Number.isFinite(savedDate.getTime()) ? savedDate.toLocaleString("es-MX") : "fecha desconocida";
+    $("#autosave-message").textContent = `Hay una sesión sin guardar del ${date} con ${countBlocks(pendingSession.blocks)} bloques.`;
+  }
+  $("#recover-session").addEventListener("click", () => {
+    const draft = normalizeDraft(pendingSession);
+    if (!draft) { announce("No hay una sesión válida para recuperar."); return; }
+    cancelTemplateForStructuralChange();
+    setDocumentMacros(draft.macros, false);
+    setMetadata(draft.metadata); blocks = draft.blocks;
+    const editor = pendingSession.editor || {};
+    $("#block-type").value = blockType(editor.type) ? editor.type : "text";
+    $("#block-title").value = typeof editor.title === "string" ? editor.title : "";
+    blockContent.value = typeof editor.content === "string" ? editor.content : "";
+    const paths = { editing: Array.isArray(editor.editingPath) ? editor.editingPath : [], parent: Array.isArray(editor.parentPath) ? editor.parentPath : [] };
+    if (paths.parent.length && !acceptsChildren(blockAtPath(blocks, paths.parent)?.type)) paths.parent = [];
+    for (const hook of blockFieldHooks) hook.fill?.({ ...blockDraft(), ...(editor.image || {}), type: $("#block-type").value });
+    setEditorTarget(paths); renderBlocks(); renderEditorPreview(); focusBlockContent();
+    $("#autosave-banner").hidden = true;
+    announce("Sesión recuperada, incluido el bloque a medio escribir.");
+  });
+  $("#discard-session").addEventListener("click", () => {
+    try { global.localStorage.removeItem(AUTOSAVE_KEY); } catch { /* la aplicación sigue disponible */ }
+    pendingSession = null; $("#autosave-banner").hidden = true; focusBlockContent(); announce("Sesión anterior descartada.");
+  });
+  autosaveReady = true;
 
   renderShortcutPanel();
   renderSymbolBoard();

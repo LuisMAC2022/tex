@@ -44,3 +44,17 @@ test("los atajos internos del tablero se limitan a la búsqueda y la rejilla", (
   assert.equal(matchShortcut({ code: "PageDown" }, "symbol-search-widget"), undefined);
   assert.equal(matchShortcut({ code: "Tab" }, "symbol-widget"), undefined);
 });
+
+test("Ctrl+Intro incorpora bloques y en macOS usa Meta sin confundir AltGr", () => {
+ const ctrl = { code: 'Enter', ctrlKey: true };
+ const meta = { code: 'Enter', metaKey: true };
+ assert.equal(matchShortcut(ctrl, 'block-editor').id, 'block.commit');
+ assert.equal(matchShortcut(meta, 'block-editor', true).id, 'block.commit');
+ assert.equal(matchShortcut(ctrl, 'block-editor', true), undefined);
+ assert.equal(matchShortcut(meta, 'block-editor'), undefined);
+ assert.equal(matchShortcut({...ctrl,altKey:true},'block-editor'),undefined);
+ assert.equal(matchShortcut({...ctrl,getModifierState:n=>n==='AltGraph'},'block-editor'),undefined);
+ const s=SHORTCUTS.find(s=>s.id==='block.commit');
+ assert.equal(shortcutLabel(s),'Ctrl+Intro'); assert.equal(shortcutLabel(s,true),'⌘Intro');
+ assert.equal(ariaKeyshortcuts(s),'Control+Enter'); assert.equal(ariaKeyshortcuts(s,true),'Meta+Enter');
+});

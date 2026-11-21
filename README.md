@@ -27,9 +27,10 @@ El generador recibe un objeto con este contrato conceptual:
     date: "AAAA-MM-DD, opcional",
     topic: "Tema o unidad, opcional"
   },
+  macros: [{ name: "R", params: 0, body: "\\mathbb{R}" }],
   blocks: [
     {
-      type: "text|equation|math-inline|definition|theorem|proposition|example|note|itemize|enumerate|bibliography|image",
+      type: "text|equation|math-inline|definition|theorem|proposition|proof|example|note|itemize|enumerate|bibliography|image",
       title: "opcional",
       content: "texto",
       children: [ /* bloques con la misma forma, sin profundidad máxima */ ],
@@ -44,16 +45,16 @@ El generador recibe un objeto con este contrato conceptual:
 - El **tema o unidad** produce una `\section` cuando no está vacío.
 - `blocks` es una lista ordenada **de árboles**. Su orden determina exactamente el orden del cuerpo del documento, y el de `children` el de cada rama.
 - `children` es opcional: **su ausencia equivale a `children: []`**, así que un estado plano escrito para la versión anterior sigue siendo válido y no hay que reescribirlo.
-- Los tipos de bloque viven en una sola tabla, [`assets/js/block-types.js`](assets/js/block-types.js). Los bloques `definition`, `theorem`, `proposition`, `example` y `note` se convierten en sus entornos homónimos; `text` es texto normal y, si tiene título, comienza con `\subsection`.
+- Los tipos de bloque viven en una sola tabla, [`assets/js/block-types.js`](assets/js/block-types.js). Los bloques `definition`, `theorem`, `proposition`, `proof`, `example` y `note` se convierten en sus entornos homónimos; `text` es texto normal y, si tiene título, comienza con `\subsection`.
 - Hay **dos tipos de contenido matemático**, deliberadamente separados del texto: `equation` queda delimitado por `\[` y `\]` en líneas propias, y `math-inline` por `\(` y `\)` en una sola línea. Ambos conservan literalmente lo escrito y solo se diferencian por sus delimitadores en la tabla.
 - `itemize` y `enumerate` producen listas. Cada línea no vacía da un `\item`. Dos espacios o un tabulador forman un nivel de sangría, y cada línea puede bajar hasta un nivel respecto de la anterior. La primera línea comienza en el nivel raíz.
 - El bloque define el tipo de la lista raíz. Al abrir una sublista, el primer elemento fija su tipo con `- ` o `* ` para viñetas y un número seguido de `. ` o `) ` para numeración. Sin marcador hereda el tipo de la lista que la contiene. Los marcadores se consumen en todos los niveles. `{}- ` conserva el guion como parte del elemento.
 - Se permiten hasta cuatro niveles de un mismo tipo y seis entornos combinados, contando los teoremas y las listas envolventes que genera el editor. Los elementos que alcancen el límite se incorporan al último nivel disponible sin alterar su orden. Si el bloque completo ya está en el límite, sus elementos se emiten como párrafos.
 - Una lista plana sin marcadores conserva el formato `.tex` anterior. Cada nivel de sublista añade dos espacios al comienzo de sus líneas. Los bloques de «Añadir dentro» se emiten después de los elementos y antes del cierre de la lista raíz, si la lista puede abrirse.
-- Al restaurar un borrador antiguo, sus listas sin `listFormat` conservan los marcadores literales y se muestran planas. Cambiar su contenido activa la sintaxis por sangría. Las listas nuevas guardan su formato dentro del borrador v2.
+- Al restaurar un borrador antiguo, sus listas sin `listFormat` conservan los marcadores literales y se muestran planas. Cambiar su contenido activa la sintaxis por sangría. Las listas nuevas guardan su formato dentro del borrador v3.
 - `bibliography` produce una **bibliografía manual con aspecto IEEE**: cada línea no vacía y recortada del contenido se conserva literalmente y se convierte en un `\bibitem{refN}` dentro de `thebibliography`. Este entorno del núcleo de LaTeX aporta por sí mismo la numeración entre corchetes, sin BibTeX, `natbib`, `IEEEtran` ni paquetes adicionales. El campo `title` no se usa, igual que en las listas. Las claves `ref1`, `ref2`, etc. son predecibles y únicas solo dentro de cada bloque; dos bloques de bibliografía repetirán claves y LaTeX mostrará una advertencia de etiqueta duplicada, una limitación aceptada porque la aplicación no genera `\cite{}`.
-- `image` usa la ruta recortada y literal de `content` y el pie opcional de `title`, escapado. No admite hijos. Sus `options` son opcionales y se guardan en el borrador `version: 2`.
-- `buildTheoremDefs()` deriva las declaraciones `\newtheorem` de esa misma tabla y agrupa los entornos por `\theoremstyle`, de modo que el preámbulo no puede desincronizarse de los tipos disponibles: añadir un tipo es una entrada en la tabla y su `<option>` en `index.html`, y una prueba compara ambas listas.
+- `image` usa la ruta recortada y literal de `content` y el pie opcional de `title`, escapado. No admite hijos. Sus `options` son opcionales y se guardan en el borrador `version: 3`.
+- `buildTheoremDefs()` deriva las declaraciones `\newtheorem` de esa misma tabla, omite los tipos predefinidos como proof y agrupa los entornos por `\theoremstyle`, de modo que el preámbulo no puede desincronizarse de los tipos disponibles: añadir un tipo es una entrada en la tabla y su `<option>` en `index.html`, y una prueba compara ambas listas.
 - **Regla de numeración:** cada entorno declarado con `\newtheorem` mantiene un contador propio, independiente y continuo en todo el documento. `proposition` comparte `\theoremstyle{plain}` con `theorem`, pero **no comparte contador** ni se reinicia por sección. Cambiar esa regla es editar una sola entrada de la tabla, y es un cambio de contrato que debe documentarse aquí.
 - **El contenido de un bloque llega al `.tex` tal cual se escribió.** La aplicación no inserta ningún carácter de escape en `content`: ni en prosa, ni en los entornos tipo teorema, ni en los elementos de lista, ni por supuesto en los bloques matemáticos. Escribir `\forall x \in \mathbb{R}` produce exactamente eso, y un fragmento de LaTeX pegado desde otro documento —un `align`, un `tabular`— llega intacto.
 - **Los metadatos y los títulos sí se escapan por completo** (`#`, `$`, `%`, `&`, `_`, `{`, `}`, `~`, `^` y `\`). Son valores que la aplicación interpola dentro de un argumento que ella misma genera —`\title{}`, `\section{}`, `\begin{theorem}[…]`—, donde un carácter reservado rompe el argumento y quien escribe no tiene forma de repararlo desde la interfaz. Son dos funciones distintas y con nombres distintos: `contentToLatex()` y `escapeMetadata()`.
@@ -83,7 +84,7 @@ El único caso que falla en silencio es `%`: no da error, simplemente hace desap
 ### Bloques anidados
 
 - Cada bloque puede contener otros mediante `children`, sin profundidad máxima. Los hijos **nunca se concatenan dentro de `content`**: siguen siendo nodos editables e independientes.
-- El campo `container` de la tabla de tipos define cuáles admiten hijos. La interfaz y el generador aplican la misma regla. Los bloques de texto, los cinco entornos tipo teorema y las dos listas admiten hijos. En un borrador que trae hijos en una fórmula, una imagen o una bibliografía, estos se conservan como hermanos posteriores.
+- El campo `container` de la tabla de tipos define cuáles admiten hijos. La interfaz y el generador aplican la misma regla. Los bloques de texto, los entornos tipo teorema y las dos listas admiten hijos. En un borrador que trae hijos en una fórmula, una imagen o una bibliografía, estos se conservan como hermanos posteriores.
 - Los hijos de un bloque que **abre un entorno** se emiten antes de su `\end{...}`, en orden. Los de un bloque de **texto**, después de su propio contenido.
 - Separación determinista: un hijo de prosa abre párrafo y va precedido de una línea en blanco; un hijo que abre entorno o fórmula se pega a la línea anterior. En la raíz, los bloques siempre se separan por una línea en blanco.
 - Un entorno de lista sin ningún `\item` no se emite —no compilaría—: en ese caso sus hijos se emiten por sí solos.
@@ -236,7 +237,7 @@ cual, incluso cuando la comprobación encuentra errores.
    - La bandeja vive solo en la pestaña abierta: no se guarda en el borrador ni cambia su versión, porque no forma parte del documento.
 5. Pulsa **Generar documento** para actualizar el código `.tex` completo.
 6. Copia o descarga el resultado y pégalo en Overleaf. Si la API moderna del portapapeles no está disponible, se utiliza selección y copia del `textarea` como alternativa.
-7. **Guardar borrador** escribe bajo demanda `{ version: 2, metadata, blocks }` en `localStorage` con la clave `tex-notes:draft:v2`. **Restaurar** lee esa clave y, si no existe, la antigua `tex-notes:draft:v1` con su lista plana: la convierte al árbol y lo dice en el anuncio. La restauración normaliza `type`, `title`, `content` y `children` de forma recursiva, tolera datos ausentes, corruptos o mal anidados a cualquier profundidad y nunca lanza. Borrar retira ambas claves, pide confirmación y nunca borra el formulario abierto.
+7. **Guardar borrador** escribe bajo demanda `{ version: 3, metadata, blocks, macros }` en `localStorage` con la clave `tex-notes:draft:v2`. **Restaurar** lee esa clave y, si no existe, la antigua `tex-notes:draft:v1` con su lista plana: la convierte al árbol y lo dice en el anuncio. La restauración normaliza `type`, `title`, `content` y `children` de forma recursiva, tolera datos ausentes, corruptos o mal anidados a cualquier profundidad y nunca lanza. Borrar retira ambas claves, pide confirmación y nunca borra el formulario abierto.
 
 ### Apertura directa con `file://`
 
@@ -301,10 +302,8 @@ El MVP está terminado cuando una persona puede, usando solamente el teclado y c
 
 ### Siguiente ronda
 
-- **Macros personales** como `\R` → `\mathbb{R}` en el preámbulo, la vista previa y la categoría **Mis macros**. Requieren ampliar el formato del borrador.
 - **Bloque de tabla o tabla de verdad** con `tabular`, como las del Repaso −1 del temario.
 - **Referencias cruzadas** con etiquetas en teoremas y ecuaciones y una acción para insertar `\ref`.
-- **Alias de escritura** como `imp` → `\Rightarrow`.
 
 También siguen pendientes el **modelo de documento de tres niveles** (Unidad → Clase → Bloques) y el módulo de apoyo al curso con cita de asesoría, fechas `.ics` y entregables. Hoy `topic` produce una sola `\section`.
 
@@ -324,3 +323,51 @@ o hace falta una bitácora aparte. De momento basta.
 Limitación conocida: la huella de los bloques `@decision` colapsa los espacios pero no
 los elimina, así que un formateador automático (Prettier o similar) movería todas las
 anclas a la vez. Si algún día se adopta uno, hay que endurecer la normalización antes.
+
+## Captura continua
+
+Ctrl+Intro (⌘+Intro en macOS) añade el bloque o guarda sus cambios. El foco
+permite encadenar bloques desde Contenido. El autoguardado independiente incluye
+el bloque en curso, ofrece recuperarlo al abrir y conserva una sesión anterior.
+Las vistas previas de la estructura se reutilizan por contenido y profundidad.
+
+## Asistente de escritura
+
+En Contenido, una barra seguida de letras abre sugerencias locales del catálogo.
+Las fórmulas aceptadas desde prosa se envuelven en dólares. Los fragmentos
+admiten huecos #1 a #9 y una posición final #0. Tab acepta el menú, avanza huecos,
+salta cierres o expande alias; sin trabajo pendiente conserva la navegación.
+Escape cierra el menú o termina los huecos. Las preferencias incluyen gestión
+de alias y exportación/importación de configuración entre navegadores.
+
+## Comandos y plantillas
+
+El menú / al comienzo de Contenido vacío cambia el tipo y permite escribir un
+título tras el comando: /teo Fubini, /ec, /lista o /dem. Demostración usa el
+entorno proof predefinido de amsthm, sin newtheorem; su título opcional sustituye
+el encabezado. Las once plantillas incluidas se aplican como una cola de pasos
+que se confirman con Ctrl+Intro, con destino y profundidad relativos. Se pueden
+omitir pasos, cancelar la cola y guardar una rama como plantilla personal.
+Las plantillas personales viajan en la configuración y se gestionan en preferencias.
+
+## Macros del documento y borrador v3
+
+`macros` es un array de `{ name, params, body }`. El nombre usa letras latinas,
+params es un entero de 0 a 9 y body es literal. `buildPreamble(macros)` emite
+newcommand después de graphicx; sin macros la salida de referencia no cambia.
+La vista previa emplea las mismas definiciones, aisladas entre renderizados.
+La comprobación previa distingue comandos exclusivos de KaTeX y reconoce las
+macros del documento.
+
+Los borradores v1 y v2 se normalizan con macros vacías; el v3 las conserva.
+Las versiones futuras se rechazan. La clave histórica tex-notes:draft:v2 se
+mantiene con un sobre version:3, que las aplicaciones anteriores rechazan.
+El autoguardado también incorpora macros. Las predeterminadas se guardan en
+tex-notes:macros-default:v1 y se incluyen en la configuración portátil.
+
+## Distribución del editor
+
+Desde 75 rem se muestran dos columnas: editor con desplazamiento propio y
+estructura. Los metadatos se pueden plegar y su resumen identifica el documento.
+Las tarjetas mantienen Editar y Añadir dentro visibles y agrupan el resto en
+Más acciones. El panel de teclado describe el asistente y la navegación nativa.

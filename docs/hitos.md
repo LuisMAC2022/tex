@@ -69,3 +69,33 @@ Avisos con línea y columna, recuento por bloque y enlaces al editor al generar 
 
 Diálogo con destinos válidos para mover una rama completa y enfocar su nueva posición.
 </details>
+
+## Hito 16 — Captura sin fricción
+
+Ctrl+Intro, foco continuo, ayuda plegable, acciones antes del tablero, ediciones
+con deshacer nativo, caché de vistas previas y recuperación de sesión en curso.
+
+## Hito 17 — Autocierre y contexto matemático
+
+Contexto de escritura con comentarios y argumentos textuales; pares, exponentes,
+selecciones, salto de cierre, Retroceso y cierre de entornos con preferencia local.
+
+## Hito 18 — Sugerencias, huecos y alias
+
+Menú accesible único junto al cursor, clasificación por comandos y términos en
+español, historial con decaimiento, huecos, alias con Tab y configuración portátil.
+
+## Hito 19 — Comandos /, Demostración y plantillas
+
+Tipos y títulos desde el contenido vacío, proof predefinido, once plantillas de
+Cálculo III por pasos y captura de ramas personales con configuración portátil.
+
+## Hito 20 — Macros del documento
+
+Borrador v3, preámbulo literal con newcommand, validación y vista previa aislada,
+macros predeterminadas y error katex-only en la comprobación previa a Overleaf.
+
+## Hito 21 — Interfaz de captura
+
+Dos columnas desde 75 rem, editor fijo con altura limitada, metadatos plegables,
+tarjetas con acciones secundarias desplegables y ayuda de teclado junto al flujo.

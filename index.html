@@ -17,9 +17,11 @@
     </header>
 
     <main id="contenido-principal" tabindex="-1">
+      <p id="autosave-banner" hidden><span id="autosave-message"></span> <button id="recover-session" type="button">Recuperar sesión</button> <button id="discard-session" type="button" class="secondary">Descartar</button></p>
       <form id="document-form" novalidate>
         <section aria-labelledby="datos-heading">
-          <h2 id="datos-heading">Datos del documento</h2>
+          <details id="metadata-details" open>
+          <summary><h2 id="datos-heading">Datos del documento</h2></summary>
           <p>El título es el único dato obligatorio. Los borradores permanecen únicamente en este dispositivo.</p>
           <fieldset class="form-grid">
             <legend>Metadatos</legend>
@@ -34,21 +36,37 @@
             <p class="field"><label for="date">Fecha</label><input id="date" name="date" type="date" value="2026-09-13"></p>
             <p class="field field-wide"><label for="topic">Tema o unidad</label><input id="topic" name="topic" type="text"></p>
           </fieldset>
+          <details id="document-macros">
+            <summary>Macros del documento</summary>
+            <p>Las macros viajan con el borrador y se definen en el preámbulo del documento.</p>
+            <ul id="macro-list"></ul>
+            <fieldset id="macro-fields"><legend>Añadir o editar una macro</legend>
+              <p class="field"><label for="macro-name">Nombre</label><input id="macro-name" type="text" autocomplete="off" spellcheck="false" aria-describedby="macro-name-error"><span id="macro-name-error" class="error"></span></p>
+              <p class="field"><label for="macro-params">Número de argumentos</label><input id="macro-params" type="number" min="0" max="9" step="1" value="0" aria-describedby="macro-params-error"><span id="macro-params-error" class="error"></span></p>
+              <p class="field"><label for="macro-body">Definición</label><input id="macro-body" type="text" spellcheck="false" aria-describedby="macro-body-error"><span id="macro-body-error" class="error"></span></p>
+              <div id="macro-preview" aria-label="Vista previa de la macro"></div>
+              <button id="save-macro" type="button">Guardar macro</button> <button id="cancel-macro" type="button" class="secondary">Cancelar macro</button>
+            </fieldset>
+            <button id="use-default-macros" type="button" class="secondary">Usar como mis macros predeterminadas</button>
+          </details>
           <menu class="button-row" aria-label="Acciones del borrador">
             <li><button id="save-draft" type="button">Guardar borrador</button></li>
             <li><button id="restore-draft" type="button">Restaurar borrador</button></li>
             <li><button id="delete-draft" class="secondary danger" type="button">Borrar borrador</button></li>
           </menu>
+          </details>
         </section>
 
         <section aria-labelledby="contenido-heading">
           <h2 id="contenido-heading">Contenido</h2>
           <p>Completa un bloque y usa «Añadir bloque». El contenido de cualquier bloque llega al documento exactamente como lo escribes: la aplicación no añade caracteres de escape. Un bloque puede contener otros bloques: usa «Añadir dentro» en el bloque que quieras como padre, sin límite de niveles.</p>
-          <fieldset>
+          <div class="editor-workspace">
+          <fieldset class="block-editor">
             <legend id="block-form-heading">Nuevo bloque</legend>
             <input id="editing-path" type="hidden" value="">
             <input id="parent-path" type="hidden" value="">
             <p id="block-target" class="block-target">El bloque se añadirá al final de la raíz del documento.</p>
+            <p id="template-progress" hidden><span id="template-progress-text"></span> <button id="skip-template-step" type="button" class="secondary">Omitir paso</button> <button id="cancel-template" type="button" class="secondary">Cancelar plantilla</button></p>
             <p id="tray-summary" class="block-target" hidden></p>
             <p class="field">
               <label for="block-type">Tipo de bloque</label>
@@ -59,6 +77,7 @@
                 <option value="definition">Definición</option>
                 <option value="theorem">Teorema</option>
                 <option value="proposition">Proposición</option>
+                <option value="proof">Demostración</option>
                 <option value="example">Ejemplo</option>
                 <option value="note">Nota</option>
                 <option value="itemize">Lista con viñetas</option>
@@ -68,14 +87,17 @@
               </select>
             </p>
             <p class="field"><label for="block-title">Título del bloque (opcional)</label><input id="block-title" name="blockTitle" type="text"></p>
-            <p class="field">
+            <small id="proof-help" hidden>En Demostración, el título opcional sustituye al encabezado Demostración en el PDF.</small>
+            <div class="field">
+              <details class="field-help"><summary>Ayuda del contenido</summary>
+              <small id="block-help">El contenido se copia al documento <strong>tal cual</strong>: comandos como <code>\textbf{...}</code> o <code>\mathbb{R}</code>, llaves y matemáticas entre <code>$…$</code> o <code>$$…$$</code> llegan exactamente como los escribes, y la aplicación no inserta ningún carácter de escape. Por eso puedes pegar aquí LaTeX de otro documento sin revisarlo. A cambio, los caracteres reservados de LaTeX son cosa tuya: para que aparezcan impresos escribe <code>\%</code>, <code>\&amp;</code>, <code>\#</code>, <code>\_</code> o <code>\$</code> —un <code>%</code> suelto comenta el resto de su línea—. Se permiten párrafos separados por una línea vacía y una lista toma un elemento por línea. Solo el título del bloque y los metadatos se escapan por completo, porque la aplicación los coloca dentro de un argumento.</small>
+              </details>
               <label for="block-content">Contenido</label>
               <textarea id="block-content" name="blockContent" rows="6" aria-describedby="block-help block-error"></textarea>
-              <small id="block-help">El contenido se copia al documento <strong>tal cual</strong>: comandos como <code>\textbf{...}</code> o <code>\mathbb{R}</code>, llaves y matemáticas entre <code>$…$</code> o <code>$$…$$</code> llegan exactamente como los escribes, y la aplicación no inserta ningún carácter de escape. Por eso puedes pegar aquí LaTeX de otro documento sin revisarlo. A cambio, los caracteres reservados de LaTeX son cosa tuya: para que aparezcan impresos escribe <code>\%</code>, <code>\&amp;</code>, <code>\#</code>, <code>\_</code> o <code>\$</code> —un <code>%</code> suelto comenta el resto de su línea—. Se permiten párrafos separados por una línea vacía y una lista toma un elemento por línea. Solo el título del bloque y los metadatos se escapan por completo, porque la aplicación los coloca dentro de un argumento.</small>
               <span id="block-error" class="error" aria-live="polite"></span>
-              <span id="list-tools" hidden>
+              <span id="list-tools" role="toolbar" aria-label="Sangría de lista" hidden>
                 <button id="list-indent" class="secondary" type="button">Sangrar</button>
-                <button id="list-outdent" class="secondary" type="button">Quitar sangría</button>
+                <button id="list-outdent" class="secondary" type="button" tabindex="-1">Quitar sangría</button>
               </span>
               <small id="list-help" hidden>Escribe un elemento por línea y usa dos espacios o un tabulador por nivel. Los marcadores iniciales dan forma a la lista. Escribe <code>{}- </code> para empezar el elemento con un guion literal. Este ejemplo combina viñetas y numeración:
                 <code class="list-example">- Tema
@@ -84,7 +106,7 @@
               </small>
               <small id="legacy-list-help" hidden>Esta lista viene de un borrador anterior. Conserva sus prefijos literales hasta que edites su contenido.</small>
               <small id="list-limit" hidden></small>
-            </p>
+            </div>
             <p id="editor-content-check" class="editor-content-check" hidden></p>
             <fieldset id="image-fields" hidden>
               <legend>Opciones de imagen</legend>
@@ -140,6 +162,11 @@
                 <small id="image-label-help">Se guarda con el prefijo <code>fig:</code>, por ejemplo <code>fig:grafica</code>.</small>
               </p>
             </fieldset>
+            <menu class="button-row">
+              <li><button id="add-block" type="button">Añadir bloque</button></li>
+              <li><button id="paste-block" class="secondary" type="button" hidden>Pegar bloque</button></li>
+              <li><button id="cancel-edit" class="secondary" type="button" hidden>Cancelar edición</button></li>
+            </menu>
             <details class="math-preview-panel" open>
               <summary>Vista previa de las matemáticas</summary>
               <p>KaTeX orienta sobre los tramos matemáticos, pero no es LaTeX completo ni reproduce la tipografía del PDF final. No revisa la prosa: un <code>%</code> suelto, un <code>_</code> o <code>&amp;</code> fuera de matemáticas, o un <code>\textbf{</code> sin cerrar pueden fallar en Overleaf aunque esta vista no avise.</p>
@@ -166,17 +193,16 @@
                 <menu id="symbol-groups" class="symbol-grid" role="toolbar" aria-orientation="horizontal" aria-label="Símbolos matemáticos" tabindex="-1"></menu>
               </details>
             </section>
-            <menu class="button-row">
-              <li><button id="add-block" type="button">Añadir bloque</button></li>
-              <li><button id="paste-block" class="secondary" type="button" hidden>Pegar bloque</button></li>
-              <li><button id="cancel-edit" class="secondary" type="button" hidden>Cancelar edición</button></li>
-            </menu>
+
           </fieldset>
 
+          <div class="structure-panel">
           <h3>Estructura actual</h3>
           <p>Cada bloque indica su nivel y su bloque padre. «Subir» y «Bajar» mueven el bloque solo entre sus hermanos, sin sacarlo de su nivel. Para repetir una estructura hay tres acciones distintas: <strong>«Duplicar»</strong> deja una copia justo después del original; <strong>«Copiar bloque»</strong> lo guarda en una bandeja y luego eliges el destino con «Pegar bloque», las veces que haga falta; <strong>«Copiar texto»</strong> lleva su contenido al portapapeles del sistema para pegarlo donde quieras, dentro o fuera de la aplicación.</p>
           <p id="empty-blocks">Todavía no hay bloques.</p>
           <ol id="block-list" class="block-list"></ol>
+          </div>
+          </div>
         </section>
 
         <section aria-labelledby="resultado-heading">
@@ -194,8 +220,36 @@
             <li><button id="download-tex" type="button">Descargar .tex</button></li>
           </menu>
         </section>
+        <section aria-labelledby="writing-heading">
+          <h2 id="writing-heading">Preferencias de escritura</h2>
+          <details id="writing-preferences">
+            <summary>Preferencias de escritura</summary>
+            <label class="check-field"><input id="auto-pair" type="checkbox" checked> Cerrar automáticamente llaves y delimitadores</label>
+            <h3>Mis plantillas</h3><ul id="own-template-list"></ul>
+            <h3>Mis alias</h3>
+            <div class="table-scroll"><table><thead><tr><th>Disparador</th><th>Expansión</th><th>Modo</th><th>Acciones</th></tr></thead><tbody id="alias-list"></tbody></table></div>
+            <fieldset id="alias-fields"><legend>Añadir o editar un alias</legend>
+              <p class="field"><label for="alias-trigger">Disparador</label><input id="alias-trigger" type="text" autocomplete="off" aria-describedby="alias-error"></p>
+              <p class="field"><label for="alias-expansion">Expansión</label><textarea id="alias-expansion" rows="2" spellcheck="false" aria-describedby="alias-error"></textarea></p>
+              <p class="field"><label for="alias-mode">Modo del alias</label><select id="alias-mode"><option value="math">Matemáticas</option><option value="text">Texto</option><option value="any">Cualquier contexto</option></select></p>
+              <p id="alias-error" class="error"></p>
+              <button id="save-alias" type="button">Guardar alias</button> <button id="cancel-alias" type="button" class="secondary">Cancelar alias</button>
+            </fieldset>
+            <button id="reset-aliases" type="button" class="secondary">Restablecer alias predeterminados</button>
+            <p><button id="export-config" type="button">Exportar configuración</button></p>
+            <p class="field"><label for="import-config">Importar configuración</label><input id="import-config" type="file" accept="application/json,.json"></p>
+          </details>
+        </section>
         <details class="shortcut-panel">
           <summary>Atajos de teclado</summary>
+          <ul id="editing-keys">
+            <li><kbd id="commit-key-label">Ctrl+Intro</kbd>: añadir el bloque o guardar sus cambios.</li>
+            <li>En Contenido, Tab acepta el menú, pasa al siguiente hueco, salta un cierre o expande un alias, en ese orden. Sin nada pendiente, sale del campo.</li>
+            <li>Escape cierra el menú o termina la sesión de huecos sin mover el cursor.</li>
+            <li>↑ y ↓ recorren el menú; Intro acepta la opción.</li>
+            <li>Retroceso borra un par automático vacío.</li>
+            <li>En Contenido vacío, / abre comandos de tipo y plantillas: /teo, /ec, /lista o /ejres.</li>
+          </ul>
           <ul id="keyboard-shortcuts"></ul>
         </details>
       </form>
@@ -222,6 +276,16 @@
           </menu>
         </form>
       </dialog>
+      <dialog id="save-template-dialog" aria-labelledby="save-template-heading">
+        <form id="save-template-form" method="dialog">
+          <h2 id="save-template-heading">Guardar como plantilla</h2>
+          <p class="field"><label for="template-name">Nombre de la plantilla</label><input id="template-name" type="text" autofocus aria-describedby="template-error"></p>
+          <p class="field"><label for="template-trigger">Comando</label><input id="template-trigger" type="text" aria-describedby="template-error" autocomplete="off"></p>
+          <p id="template-error" class="error"></p>
+          <menu class="button-row"><li><button id="save-template-cancel" type="button" class="secondary">Cancelar</button></li><li><button type="submit">Guardar plantilla</button></li></menu>
+        </form>
+      </dialog>
+      <ul role="listbox" id="assist-list" aria-label="Sugerencias de escritura" hidden></ul>
       <p id="app-status" class="status" aria-live="polite" aria-atomic="true">Editor listo.</p>
     </main>
     <footer><p>La vista previa orienta sobre modo matemático; la validación y compilación del documento se realizan en Overleaf.</p></footer>
@@ -237,6 +301,10 @@
     <script src="assets/js/image-options.js"></script>
     <script src="assets/js/list-outline.js"></script>
     <script src="assets/js/content-check.js"></script>
+    <script src="assets/js/editing-assist.js"></script>
+    <script src="assets/js/completion.js"></script>
+    <script src="assets/js/templates.js"></script>
+    <script src="assets/js/macros.js"></script>
     <script src="assets/js/app.js"></script>
   </body>
 </html>

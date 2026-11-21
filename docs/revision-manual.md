@@ -51,3 +51,52 @@ por ronda de revisión, no al cambiar código.
 - [ ] Seleccionar **Imagen** y pulsar **Añadir bloque** con la ruta vacía. Comprobar el error junto a **Archivo de imagen** y el foco. Probar una ruta con espacios y extensión `.GIF` en mayúsculas y comprobar que se muestran avisos y se puede guardar.
 - [ ] Elegir un PNG local, comprobar la miniatura en el editor y la estructura, seleccionar **Mediana** y pulsar **Girar 90°**. Editar el bloque y comprobar que recupera la ruta, el 60 %, el giro y las demás opciones. Guardar el borrador, recargar y restaurar para comprobar que ahora se muestra la ruta con sus ajustes.
 - [ ] Subir un PNG a Overleaf con el nombre indicado en la ruta. Compilar un documento con una imagen raíz, otra girada y otra dentro de un teorema. Confirmar el giro, el pie escapado y la posición de la imagen anidada.
+
+## Captura rápida: P1
+
+- [ ] Intro en título pasa al contenido y no genera; en campos de imagen no envía.
+- [ ] Ctrl+Intro añade desde cualquier control; ⌘+Intro en macOS.
+- [ ] El foco queda en Contenido o Archivo de imagen después de añadir.
+- [ ] Ctrl+Z deshace una inserción del tablero y una edición de lista.
+- [ ] Cerrar y recuperar conserva el bloque en curso, la selección de destino y las opciones de imagen.
+- [ ] Escribir sin recuperar conserva la sesión anterior en la clave de respaldo.
+
+## Captura rápida: P2
+
+- [ ] En Windows latinoamericano escribir barra con AltGr, llaves, corchetes, ^, ~, á y ñ en prosa y fórmulas. Repetir con teclado EE. UU.
+- [ ] AltGr nunca activa Ctrl+Intro; verificar la preferencia de autocierre apagada.
+- [ ] Ctrl+Z tras autocierre, salto, Retroceso en par vacío y apertura de entorno con Intro.
+- [ ] Salir del par, perder foco y cargar otro bloque descartan cierres pendientes.
+
+## Captura rápida: P3
+
+- [ ] NVDA anuncia el recuento al abrir sugerencias y cada opción activa.
+- [ ] Tab sin menú, huecos, cierres ni alias sale de Contenido; Escape termina los huecos.
+- [ ] Ctrl+Z devuelve el disparador después de un alias y deshace una sugerencia aceptada.
+- [ ] Tocar una opción mantiene el foco en el campo; el menú cabe a 320 px en ambos temas.
+- [ ] Exportar e importar entre dos navegadores conserva los alias y la preferencia.
+
+## Captura rápida: P4
+
+- [ ] Simular diez bloques con /teo Título, /ec y /lista, confirmando con Ctrl+Intro y manteniendo el foco en Contenido.
+- [ ] Completar ejres, repetir omitiendo un paso y repetir moviendo un bloque para cancelar la cola.
+- [ ] /img muestra opciones y enfoca Archivo de imagen; /dem admite un título que sustituye al encabezado.
+- [ ] Guardar una rama con imagen como plantilla y reutilizarla; renombrar, exportar e importar.
+
+## Captura rápida: P5
+
+- [ ] Definir R, usarla en una fórmula, generar y compilar en Overleaf. Borrar la macro y comprobar el error katex-only.
+- [ ] Guardar y restaurar borrador v3 conserva macros; un v2 restaura con lista vacía.
+- [ ] Guardar predeterminadas y comenzar sin borrador ni autoguardado las carga; no sustituyen las de un documento abierto.
+- [ ] Cambiar una macro actualiza tanto el editor como las vistas previas de todos los bloques.
+
+## Captura rápida: P6 y revisión completa
+
+- [ ] A 1366 × 768, editor fijo y estructura paralela; alcanzar la parte inferior del editor con su propio desplazamiento.
+- [ ] A 320 px y con zoom al 200 %, no hay desplazamiento horizontal de la página y el menú se puede tocar.
+- [ ] Revisar contraste, foco visible y objetivos de 44 × 44 px en temas claro y oscuro.
+- [ ] Subir, Bajar y Duplicar conservan el foco; el desplegable de destino se abre si hace falta.
+- [ ] Con distribuciones latinoamericana y EE. UU. instaladas en Windows, probar Alt+Mayús+S, G y Q y anotar en claude.md si cambian la distribución.
+- [ ] Ctrl+Z inmediatamente tras: tablero, autocierre, salto de cierre, Retroceso en par, sugerencia, alias, edición en hueco, begin con Intro, continuación de lista y sangría. Comprobar el alcance de cada deshacer.
+- [ ] Cerrar la pestaña con un bloque a medias y recuperar; empezar a escribir sin recuperar y verificar autosave:previous.
+- [ ] Con NVDA comprobar opciones activas, recuento del menú y salida nativa con Tab cuando no hay nada pendiente.

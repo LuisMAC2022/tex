@@ -129,6 +129,7 @@ con imágenes, sube también los archivos de imagen a las rutas indicadas en el 
 | «Definición» | Un recuadro `Definición 1`, numerado. |
 | «Teorema» | `Teorema 1`. |
 | «Proposición» | `Proposición 1`. |
+| «Demostración» | Entorno proof; el título opcional sustituye a su encabezado. |
 | «Ejemplo» | `Ejemplo 1`. |
 | «Nota» | `Nota 1`. |
 | «Lista con viñetas» | Una lista de puntos. |
@@ -281,7 +282,7 @@ original aunque aparezcan avisos.
 
 ## 7. Guardar el trabajo
 
-**No se guarda solo.** Pulsa «Guardar borrador» cuando quieras conservar lo que
+La sesión se autoguarda, incluido el bloque en curso. Pulsa «Guardar borrador» cuando quieras conservar un punto de restauración de lo que
 llevas. Se guarda en este navegador y en este aparato, y así te lo dice el aviso.
 
 - «Restaurar borrador» recupera lo último que guardaste. También entiende borradores
@@ -398,3 +399,109 @@ aplicación en un proyecto en blanco, en vez de subir un archivo.
 Fíjate en el **número de línea** que da Overleaf y mira esa línea en el editor: casi
 siempre el problema está ahí o en la anterior. Y recuerda que a partir de la primera
 corrección seria conviene seguir en Overleaf, no aquí.
+
+## Captura continua y recuperación
+
+Ctrl+Intro (⌘+Intro en macOS) activa «Añadir bloque» o «Guardar cambios» desde
+cualquier control del editor. Después de añadir, el foco vuelve a «Contenido»;
+en imágenes pasa a «Archivo de imagen». Intro desde el título del bloque
+pasa al contenido. La fila de acciones queda antes de la vista previa. La
+explicación extensa está plegada en «Ayuda del contenido».
+
+Las inserciones del tablero y las ediciones de listas conservan el historial
+nativo de deshacer cuando el navegador admite insertText. La sesión se guarda
+al editar y al ocultar o cerrar la pestaña, incluido el bloque sin incorporar.
+Al volver, «Recuperar sesión» recupera ese trabajo y «Descartar» elimina la
+oferta. «Guardar borrador» sigue siendo un punto de restauración independiente.
+
+## Autocierre en Contenido
+
+En «Preferencias de escritura», «Cerrar automáticamente llaves y delimitadores»
+activa el cierre de llaves y fórmulas. Paréntesis, corchetes y exponentes se
+completan solo en matemáticas. Las llaves envuelven la selección; un cierre ya
+pendiente se salta al teclearlo. Retroceso elimina un par automático vacío.
+Intro tras una apertura de entorno añade su cierre salvo en listas y bibliografía.
+Los comentarios, las teclas muertas y la composición conservan la escritura normal.
+
+## Sugerencias, huecos y alias
+
+Escribe una barra y al menos una letra en «Contenido». El menú propone hasta
+ocho comandos según el texto, sus nombres en español y el uso reciente. ↑ y ↓
+cambian de opción; Intro, Tab o tocar una opción la insertan. Escape cierra el
+menú sin borrar lo escrito. En prosa, aceptar matemáticas añade sus dólares.
+Tras una apertura de entorno también se sugieren nombres.
+
+Los fragmentos tienen huecos: Tab pasa al siguiente y después a la posición
+final. Escape termina la sesión sin mover el cursor. La prioridad de Tab es:
+menú, hueco, cierre pendiente (permitiendo espacios antes), alias y navegación
+nativa. El asistente se limita a Contenido.
+
+En «Mis alias», completa «Disparador», «Expansión» y «Modo del alias»; usa
+«Guardar alias», «Editar alias» o «Borrar alias». «Cancelar alias» abandona la
+edición. Los marcadores #1 a #9 definen huecos y #0 la posición final; sin
+marcadores, cada par de llaves vacío es un hueco. Un signo de número literal
+se escribe escapado. Los alias solo se expanden con Tab: RR da el conjunto de
+reales; fr una fracción; pd una derivada parcial. Las tildes forman parte del
+disparador, por lo que “lím” no activa “lim”.
+
+«Restablecer alias predeterminados» repone la lista incluida. «Exportar configuración» descarga notas-latex-configuracion.json; «Importar configuración»
+valida el archivo completo y pide confirmación antes de reemplazar tus preferencias.
+El historial de **Recientes** del tablero sigue siendo independiente.
+
+## Comandos de tipo y plantillas
+
+En Contenido vacío escribe / y el comando: /txt o /texto, /ec, /el, /def, /teo,
+/prop, /dem, /ej, /nota, /lista o /vi, /enum o /num, /bib, /img. Puedes buscar
+por nombre sin distinguir acentos. Escribe el título después de un espacio,
+por ejemplo /teo Fubini. Intro o Tab aplica; Escape conserva lo escrito. Al
+seleccionar imagen, el foco pasa a su archivo. «Demostración» usa proof: si
+pones un título, reemplaza el encabezado habitual en el PDF.
+
+El mismo menú ofrece teodem, ejres, limite, parcial, grad, lagrange, fubini,
+polares, esfericas, taylor y preclase. Carga un paso cada vez: escribe en sus
+huecos y confirma con Ctrl+Intro. El aviso de plantilla indica el siguiente
+paso. «Omitir paso» omite el paso y sus descendientes; «Cancelar plantilla»
+conserva lo que haya en el editor. Mover, borrar, duplicar, pegar o restaurar
+cancela la cola y lo anuncia. Teorema y demostración se añaden como hermanos.
+
+«Guardar como plantilla» guarda una rama entera, incluidas opciones de imagen,
+con «Nombre de la plantilla» y «Comando». «Guardar plantilla» confirma.
+En «Mis plantillas», «Renombrar plantilla» cambia nombre y comando, y
+«Borrar plantilla» la retira. La exportación de configuración incluye esta lista.
+
+## Macros del documento
+
+En «Datos del documento», abre «Macros del documento». Escribe el «Nombre» sin
+barra, el «Número de argumentos» (0 a 9) y la «Definición» literal en una sola
+línea. Por ejemplo, R con cero argumentos y definición \mathbb{R}. Para abs,
+un argumento y definición \left|#1\right|. La vista previa muestra una llamada
+de ejemplo y los errores aparecen junto a cada campo. «Guardar macro» la
+incorpora; «Editar macro», «Borrar macro» y «Cancelar macro» permiten gestionarla.
+
+Las macros se guardan con el documento en borradores v3 y sesiones recuperables.
+Se definen con newcommand en el preámbulo y encabezan las sugerencias al escribir.
+«Usar como mis macros predeterminadas» guarda una copia para documentos nuevos
+sin borrador ni sesión pendiente. La exportación de configuración incluye esas
+macros predeterminadas; importarla no sustituye las de un documento en curso.
+
+## Comandos que solo entiende KaTeX
+
+Un error katex-only indica que la vista previa acepta un comando que el
+preámbulo de LaTeX no define. Por ejemplo, sustituye \R por \mathbb{R}, \infin
+por \infty, \isin por \in o define una macro del documento. Los avisos sobre
+\empty y \th indican que tienen otro significado en LaTeX: usa \emptyset para
+el conjunto vacío. Al borrar una macro se actualizan la vista previa y los avisos.
+
+## Distribución y acciones de los bloques
+
+En pantallas de al menos 75 rem, el editor queda a la izquierda y la estructura
+a la derecha. El editor tiene desplazamiento propio para llegar a sus controles.
+En pantallas menores se usa una sola columna. «Datos del documento» se puede
+plegar; su resumen muestra el título, curso y fecha. Al restaurar un documento
+con título queda plegado y el foco puede volver a su resumen.
+
+Las tarjetas mantienen «Editar» y «Añadir dentro» a la vista. Abre «Más acciones»
+para duplicar, copiar, eliminar, subir, bajar, mover o guardar una plantilla.
+Después de mover con sus botones, el desplegable del bloque destino se abre
+para conservar el foco. «Atajos de teclado» incluye la prioridad de Tab,
+Escape, navegación del menú, Retroceso y los comandos /.
