@@ -9,7 +9,7 @@
   } = global.TexNotes;
 
   // El borrador v1 era una lista plana. Se sigue leyendo para migrarlo; lo que
-  // se guarda a partir de ahora es el árbol de la v2.
+  // se guarda es el árbol v3 con macros; se conserva la clave histórica v2.
   const STORAGE_KEY = "tex-notes:draft:v2";
   const LEGACY_STORAGE_KEY = "tex-notes:draft:v1";
   const $ = (selector) => document.querySelector(selector);
@@ -23,6 +23,7 @@
   const beforeGenerateHooks = [];
   const editorPreviewHooks = [];
   let blocks = [];
+  let macros = [];
   let previewVersion = 0;
   const structurePreviewCache = new Map();
   /**
@@ -35,9 +36,10 @@
   let previewTimer = null;
   let announcedPreviewFailures = null;
 
-  function katexRender(math, displayMode) {
+  function katexRender(math, displayMode, macroList = macros) {
     try {
-      return { ok: true, html: global.katex.renderToString(math, {
+      return { ok: true, html: global.katex.renderToString(global.TexNotes.macroPreviewDefinitions(macroList) + math, {
+        macros: global.TexNotes.katexMacros(macroList),
         displayMode, throwOnError: true, strict: false, trust: false, output: "htmlAndMathml",
       }) };
     } catch (error) {
@@ -113,7 +115,7 @@
   function metadata() {
     return Object.fromEntries(METADATA_KEYS.map((name) => [name, form.elements[name].value]));
   }
-  function state() { return { metadata: metadata(), blocks: cloneBlocks(blocks) }; }
+  function state() { return { metadata: metadata(), blocks: cloneBlocks(blocks), macros: macros.map(m => ({ ...m })) }; }
   function announce(message) { status.textContent = message; }
   function setMetadata(values = {}) {
     for (const name of METADATA_KEYS) form.elements[name].value = typeof values[name] === "string" ? values[name] : "";
@@ -467,6 +469,7 @@
     } catch { draft = null; }
     if (!draft) { $("#restore-draft").focus(); announce("No hay un borrador válido para restaurar."); return; }
     const cancelled = cancelTemplateForStructuralChange();
+    setDocumentMacros(draft.macros, false);
     setMetadata(draft.metadata); blocks = draft.blocks; resetBlockEditor(); renderBlocks(); $("#note-title").focus();
     announce(draft.version < DRAFT_VERSION ? "Borrador restaurado y convertido al formato con bloques anidados." : "Borrador restaurado.");
     if (cancelled) announce("Borrador restaurado." + cancelled);
@@ -1120,7 +1123,7 @@
 
   editorPreviewHooks.push((block, { parentPath }) => {
     const savedBlock = blockAtPath(blocks, editorTarget().editing);
-    const issues = checkBlock({ ...block, children: savedBlock?.children }, blocks, parentPath);
+    const issues = checkBlock({ ...block, children: savedBlock?.children }, blocks, parentPath, { macros });
     editorContentCheck.textContent = issues.map(issueText).join("\n");
     editorContentCheck.hidden = !issues.length;
   });
@@ -1129,7 +1132,7 @@
     const editButton = actions.querySelector('[data-action="edit"]');
     editButton.id = editButtonId(path);
     if (badgedBlocks !== blocks) {
-      issuesByPath = new Map(checkDocument({ blocks }).map(({ path: issuePath, issues }) => [pathToKey(issuePath), issues.length]));
+      issuesByPath = new Map(checkDocument({ blocks, macros }).map(({ path: issuePath, issues }) => [pathToKey(issuePath), issues.length]));
       badgedBlocks = blocks;
     }
     const count = issuesByPath.get(pathToKey(path));
@@ -1596,6 +1599,72 @@
   refreshTemplates();
   /* --- fin [G] --- */
 
+  /* --- [H] Macros del documento --- */
+  let editingMacro = -1;
+  let defaultMacros = [];
+  for (const macro of T.normalizeMacros(readWritingStorage("tex-notes:macros-default:v1", []))) {
+    if (!T.validateMacro(macro, defaultMacros).length) defaultMacros.push(macro);
+  }
+  const existingSnapshot = [STORAGE_KEY, LEGACY_STORAGE_KEY, "tex-notes:autosave:v1"].some(key => normalizeDraft(readWritingStorage(key, null)));
+  if (!existingSnapshot) macros = defaultMacros.map(m => ({ ...m }));
+  getCompletionMacros = () => macros;
+  getConfigMacros = () => defaultMacros;
+  setConfigMacros = (next) => {
+    defaultMacros = next.map(m => ({ ...m })); writeWritingStorage("tex-notes:macros-default:v1", defaultMacros);
+    if (!blocks.length && !blockContent.value.trim() && !$("#block-title").value.trim() && !$("#note-title").value.trim()) setDocumentMacros(defaultMacros);
+  };
+  function setDocumentMacros(next, draw = true) {
+    macros = next.map(m => ({ ...m })); previewVersion++; badgedBlocks = null;
+    renderMacroList();
+    if (draw) { closeAssistMenu(); renderBlocks(); renderEditorPreview(); saveSession(); }
+  }
+  function macroCandidate() { return { name: $("#macro-name").value.trim(), params: Number($("#macro-params").value), body: $("#macro-body").value }; }
+  function updateMacroPreview() {
+    const candidate = macroCandidate(), existing = macros.filter((m, i) => i !== editingMacro);
+    const errors = T.validateMacroFields(candidate, existing);
+    for (const field of ["name", "params", "body"]) {
+      const shown = candidate.name || candidate.body ? errors[field].join(" ") : "";
+      $("#macro-" + field + "-error").textContent = shown;
+      if (shown) $("#macro-" + field).setAttribute("aria-invalid", "true"); else $("#macro-" + field).removeAttribute("aria-invalid");
+    }
+    const preview = $("#macro-preview");
+    if (Object.values(errors).some(list => list.length)) { preview.textContent = "Completa una macro válida para ver su vista previa."; return; }
+    const example = "\\" + candidate.name + Array.from({ length: candidate.params }, (_, i) => `{${String.fromCharCode(120 + i % 3)}}`).join("");
+    const rendered = katexRender(example, false, [...existing, candidate]);
+    if (rendered.ok) preview.innerHTML = rendered.html; else preview.textContent = `No se pudo previsualizar: ${rendered.message}`;
+  }
+  function clearMacroForm() {
+    editingMacro = -1; $("#macro-name").value = ""; $("#macro-body").value = ""; $("#macro-params").value = "0"; updateMacroPreview();
+  }
+  function renderMacroList() {
+    $("#macro-list").replaceChildren(...macros.map((macro, index) => {
+      const item = document.createElement("li"), text = document.createElement("code"), edit = document.createElement("button"), remove = document.createElement("button");
+      text.textContent = `\\${macro.name}${macro.params ? `[${macro.params}]` : ""} = ${macro.body}`;
+      edit.type = remove.type = "button"; edit.textContent = "Editar macro"; remove.textContent = "Borrar macro";
+      edit.setAttribute("aria-label", `Editar macro ${macro.name}`); remove.setAttribute("aria-label", `Borrar macro ${macro.name}`);
+      edit.addEventListener("click", () => {
+        editingMacro = index; $("#macro-name").value = macro.name; $("#macro-params").value = macro.params; $("#macro-body").value = macro.body; updateMacroPreview(); $("#macro-name").focus();
+      });
+      remove.addEventListener("click", () => { const next = macros.filter((m, i) => i !== index); clearMacroForm(); setDocumentMacros(next); $("#macro-name").focus(); announce("Macro borrada; se actualizaron las vistas previas y la comprobación."); });
+      item.append(text, " ", edit, " ", remove); return item;
+    }));
+  }
+  function saveMacro() {
+    const candidate = macroCandidate(), errors = T.validateMacro(candidate, macros.filter((m, i) => i !== editingMacro));
+    updateMacroPreview();
+    if (errors.length) { announce(errors[0]); return; }
+    const next = macros.map(m => ({ ...m }));
+    if (editingMacro >= 0) next[editingMacro] = candidate; else next.push(candidate);
+    clearMacroForm(); setDocumentMacros(next); $("#macro-name").focus(); announce("Macro guardada en el documento.");
+  }
+  $("#save-macro").addEventListener("click", saveMacro);
+  $("#cancel-macro").addEventListener("click", clearMacroForm);
+  $("#macro-fields").addEventListener("input", updateMacroPreview);
+  $("#macro-fields").addEventListener("keydown", (event) => { if (event.key === "Enter" && !event.isComposing) { event.preventDefault(); saveMacro(); } });
+  $("#use-default-macros").addEventListener("click", () => { defaultMacros = macros.map(m => ({ ...m })); writeWritingStorage("tex-notes:macros-default:v1", defaultMacros); announce("Macros predeterminadas guardadas para documentos nuevos."); });
+  renderMacroList(); updateMacroPreview();
+  /* --- fin [H] --- */
+
   function renderShortcutPanel() {
     const isMac = /Mac/.test(global.navigator.userAgentData?.platform || global.navigator.platform || "");
     const items = SHORTCUTS.map((shortcut) => {
@@ -1655,6 +1724,7 @@
     const draft = normalizeDraft(pendingSession);
     if (!draft) { announce("No hay una sesión válida para recuperar."); return; }
     cancelTemplateForStructuralChange();
+    setDocumentMacros(draft.macros, false);
     setMetadata(draft.metadata); blocks = draft.blocks;
     const editor = pendingSession.editor || {};
     $("#block-type").value = blockType(editor.type) ? editor.type : "text";

@@ -184,6 +184,17 @@
 - Intro conserva el prefijo, aumenta marcadores numerados y reemplaza una selección invertida con Unicode
 - Intro quita un nivel en elementos vacíos y deja un salto normal en la raíz
 
+## `tests/macros.test.js` — 8 pruebas
+
+- borrador v3 conserva macros, migra v1/v2 sin macros y rechaza v4
+- el preámbulo añade newcommand literal tras graphicx y no cambia sin macros
+- la validación de macros protege nombres reservados del catálogo y entornos
+- la definición de macro valida llaves, escapes, una línea y parámetros declarados
+- la vista previa consume todos los argumentos y aísla gdef entre llamadas
+- cada comando de katex-only es aceptado por el KaTeX incluido y se señala como error
+- las macros del documento suprimen katex-only y empty/th conservan avisos de significado
+- las macros aparecen antes del catálogo y se validan al importar configuración
+
 ## `tests/math-preview.test.js` — 8 pruebas
 
 - extrae cada delimitador y conserva posiciones y prosa literal
@@ -246,4 +257,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-188 pruebas con `node:test` más la comprobación estructural.
+196 pruebas con `node:test` más la comprobación estructural.

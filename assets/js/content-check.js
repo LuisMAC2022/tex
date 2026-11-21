@@ -5,6 +5,8 @@
   const MAX_DEPTH = 6;
   const GUIDE = "docs/guia-de-uso.md#";
   const RULES = {
+    "katex-only": ["error", "comandos-que-solo-entiende-katex"],
+    "katex-meaning": ["aviso", "comandos-que-solo-entiende-katex"],
     "brace": ["error", "llaves-y-caracteres-reservados"],
     "math-delimiter": ["error", "modo-matemático"],
     "environment": ["error", "entornos-desparejados"],
@@ -17,6 +19,13 @@
   };
   const MATH_DELIMITERS = new Set(["$", "$$", "\\(", "\\)", "\\[", "\\]"]);
   const MATH_ENVIRONMENTS = TexNotes.MATH_ENVIRONMENTS;
+  const KATEX_ONLY = "R N Z Reals reals Complex natnums cnums Alpha Beta Epsilon Zeta Eta Iota Kappa Mu Nu Omicron Rho Tau Chi bull infin isin exist lang rang larr rarr lArr rArr Larr Rarr harr hArr Harr lrarr Lrarr uarr darr sub sube supe plusmn sdot alef alefsym image real weierp thetasym clubs diamonds hearts spades sect Dagger arcctg arctg ch cosec cotg cth sh tg ctg argmax Bbb bold".split(" ");
+  const KATEX_ONLY_NAMES = new Set(KATEX_ONLY);
+  const KATEX_REPLACEMENTS = {
+    R: "\\mathbb{R}", N: "\\mathbb{N}", Z: "\\mathbb{Z}", Reals: "\\mathbb{R}", reals: "\\mathbb{R}", Complex: "\\mathbb{C}",
+    empty: "\\emptyset", infin: "\\infty", isin: "\\in", exist: "\\exists", lang: "\\langle", rang: "\\rangle", rArr: "\\Rightarrow",
+    sub: "\\subset", sube: "\\subseteq", plusmn: "\\pm", sdot: "\\cdot", alef: "\\aleph",
+  };
   const ALIGNMENT_ENVIRONMENTS = new Set(["tabular", "tabularx", "longtable"]);
 
   function hasBlockEnvironment(block, type) {
@@ -70,7 +79,7 @@
     });
   }
 
-  function inspectBlock(block, depthContext = {}) {
+  function inspectBlock(block, depthContext = {}, { macros = [] } = {}) {
     const type = TexNotes.blockType(block.type);
     // El contenido de una imagen es una ruta. Su campo ya comprueba ese formato.
     if (block.type === "image") return [];
@@ -97,6 +106,14 @@
         report(start + index, "comment", "El % comenta el resto de la línea. Escribe \\% si quieres imprimirlo.");
         return " ".repeat(token.length);
       });
+      const defined = new Set((Array.isArray(macros) ? macros : []).map(m => m.name));
+      for (const command of uncommented.matchAll(/\\([A-Za-z]+)|\\[^\n]/g)) {
+        const name = command[1];
+        if (!name || defined.has(name)) continue;
+        const replacement = KATEX_REPLACEMENTS[name];
+        if (KATEX_ONLY_NAMES.has(name)) report(start + command.index, "katex-only", `KaTeX acepta \\${name}, pero el preámbulo no lo define.${replacement ? ` Usa ${replacement} o define una macro del documento.` : " Define una macro del documento o usa un comando de LaTeX."}`);
+        else if (name === "empty" || name === "th") report(start + command.index, "katex-meaning", `\\${name} tiene otro significado en LaTeX.${replacement ? ` Usa ${replacement}.` : " En LaTeX es la letra þ."}`);
+      }
       // La ecuación aporta su propio modo matemático. Aquí se buscan los tramos
       // escritos a mano, separados por los elementos que genera la aplicación.
       const segments = TexNotes.mathSegments(uncommented, "text");
@@ -155,11 +172,11 @@
     return locateIssues(content, issues);
   }
 
-  function checkContent(content, typeId) {
-    return inspectBlock({ type: typeId, content });
+  function checkContent(content, typeId, options = {}) {
+    return inspectBlock({ type: typeId, content }, {}, options);
   }
 
-  function checkBlock(block, blocks = [], parentPath = []) {
+  function checkBlock(block, blocks = [], parentPath = [], options = {}) {
     let siblings = blocks;
     let depthContext = {};
     for (const index of parentPath) {
@@ -174,17 +191,17 @@
       }
       siblings = parent.children || [];
     }
-    return inspectBlock(block, depthContext);
+    return inspectBlock(block, depthContext, options);
   }
 
   function checkDocument(state = {}) {
     const results = [];
     for (const { block, path, parentPath } of TexNotes.flattenBlocks(state.blocks)) {
-      const issues = checkBlock(block, state.blocks, parentPath);
+      const issues = checkBlock(block, state.blocks, parentPath, { macros: state.macros });
       if (issues.length) results.push({ path, issues });
     }
     return results;
   }
 
-  Object.assign(TexNotes, { checkContent, checkBlock, checkDocument });
+  Object.assign(TexNotes, { KATEX_ONLY, checkContent, checkBlock, checkDocument });
 })(typeof globalThis !== "undefined" ? globalThis : this);

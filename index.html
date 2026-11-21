@@ -35,6 +35,19 @@
             <p class="field"><label for="date">Fecha</label><input id="date" name="date" type="date" value="2026-09-13"></p>
             <p class="field field-wide"><label for="topic">Tema o unidad</label><input id="topic" name="topic" type="text"></p>
           </fieldset>
+          <details id="document-macros">
+            <summary>Macros del documento</summary>
+            <p>Las macros viajan con el borrador y se definen en el preámbulo del documento.</p>
+            <ul id="macro-list"></ul>
+            <fieldset id="macro-fields"><legend>Añadir o editar una macro</legend>
+              <p class="field"><label for="macro-name">Nombre</label><input id="macro-name" type="text" autocomplete="off" spellcheck="false" aria-describedby="macro-name-error"><span id="macro-name-error" class="error"></span></p>
+              <p class="field"><label for="macro-params">Número de argumentos</label><input id="macro-params" type="number" min="0" max="9" step="1" value="0" aria-describedby="macro-params-error"><span id="macro-params-error" class="error"></span></p>
+              <p class="field"><label for="macro-body">Definición</label><input id="macro-body" type="text" spellcheck="false" aria-describedby="macro-body-error"><span id="macro-body-error" class="error"></span></p>
+              <div id="macro-preview" aria-label="Vista previa de la macro"></div>
+              <button id="save-macro" type="button">Guardar macro</button> <button id="cancel-macro" type="button" class="secondary">Cancelar macro</button>
+            </fieldset>
+            <button id="use-default-macros" type="button" class="secondary">Usar como mis macros predeterminadas</button>
+          </details>
           <menu class="button-row" aria-label="Acciones del borrador">
             <li><button id="save-draft" type="button">Guardar borrador</button></li>
             <li><button id="restore-draft" type="button">Restaurar borrador</button></li>
@@ -277,6 +290,7 @@
     <script src="assets/js/editing-assist.js"></script>
     <script src="assets/js/completion.js"></script>
     <script src="assets/js/templates.js"></script>
+    <script src="assets/js/macros.js"></script>
     <script src="assets/js/app.js"></script>
   </body>
 </html>

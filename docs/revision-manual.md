@@ -82,3 +82,10 @@ por ronda de revisión, no al cambiar código.
 - [ ] Completar ejres, repetir omitiendo un paso y repetir moviendo un bloque para cancelar la cola.
 - [ ] /img muestra opciones y enfoca Archivo de imagen; /dem admite un título que sustituye al encabezado.
 - [ ] Guardar una rama con imagen como plantilla y reutilizarla; renombrar, exportar e importar.
+
+## Captura rápida: P5
+
+- [ ] Definir R, usarla en una fórmula, generar y compilar en Overleaf. Borrar la macro y comprobar el error katex-only.
+- [ ] Guardar y restaurar borrador v3 conserva macros; un v2 restaura con lista vacía.
+- [ ] Guardar predeterminadas y comenzar sin borrador ni autoguardado las carga; no sustituyen las de un documento abierto.
+- [ ] Cambiar una macro actualiza tanto el editor como las vistas previas de todos los bloques.

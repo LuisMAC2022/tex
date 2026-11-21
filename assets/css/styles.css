@@ -223,3 +223,6 @@ td button { margin: .2rem; }
 #assist-list > li { display: grid; min-block-size: 2.75rem; padding: .5rem .65rem; cursor: pointer; overflow-wrap: anywhere; }
 #assist-list > li > span { color: var(--muted); font-size: .9rem; }
 #assist-list > li[aria-selected="true"] { background: var(--accent-soft); outline: 2px solid var(--primary); outline-offset: -2px; }
+#macro-preview { min-block-size: 3rem; padding: .5rem; overflow: auto; }
+#macro-list { padding-inline-start: 1.25rem; }
+#macro-list li { margin-block: .5rem; overflow-wrap: anywhere; }

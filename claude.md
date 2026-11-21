@@ -59,3 +59,18 @@ archivo de ejemplo se regeneró y no tiene cambios. Se revisó el comentario y
 tramo de DEC-005 para predefined/slash y se bendijo su ancla junto con DEC-018.
 No se han comprobado teclados físicos, NVDA ni la clase simulada en navegador;
 quedan en la lista manual. Sin dependencias nuevas.
+
+## P5 — Macros del documento
+
+Implementados macros del estado, saneado estructural del borrador v3,
+migraciones v1/v2 con lista vacía y rechazo v4, preámbulo newcommand literal,
+validación pura, interfaz y errores por campo, vista previa, predeterminadas y
+configuración. Se conserva la clave histórica draft:v2 con sobre v3: la app
+anterior lo rechaza en vez de perder macros. KaTeX recibe un objeto nuevo por
+llamada; las definiciones explícitas consumen también argumentos que el cuerpo
+no usa. Cambiar macros invalida vistas y avisos. Se implementa y prueba toda la
+lista katex-only contra la copia local de KaTeX, con avisos aparte para empty/th.
+El ejemplo sin macros se regenera sin cambios. La aserción de versión actual
+de la prueba de listas se actualiza a DRAFT_VERSION; no cambia ningún guardián
+literal. Revisada y bendecida el ancla DEC-017. Falta compilar manualmente en
+Overleaf; el navegador y los teclados físicos siguen sin verificación.

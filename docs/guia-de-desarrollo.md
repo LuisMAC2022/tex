@@ -81,7 +81,11 @@ Los scripts se cargan como clásicos **en este orden**. La aplicación usa
 | 9 | `image-options.js` | opciones de imagen y avisos de ruta | no |
 | 10 | `list-outline.js` | análisis, límites, exportación y edición de listas | no |
 | 11 | `content-check.js` | comprobación del contenido | no |
-| 12 | `app.js` | interfaz del editor | sí |
+| 12 | `editing-assist.js` | pares, fragmentos y sesiones de huecos | no |
+| 13 | `completion.js` | sugerencias, uso, alias y configuración | no |
+| 14 | `templates.js` | plantillas por pasos y comandos / | no |
+| 15 | `macros.js` | validación y adaptación de macros a KaTeX | no |
+| 16 | `app.js` | interfaz del editor | sí |
 
 Las pruebas de Node ejecutan las funciones puras con `node:vm`. La interacción
 de `app.js` se verifica en el navegador ([DEC-007](../decisiones/DEC-007-sin-dom-en-pruebas.md)).
@@ -144,7 +148,7 @@ Tres reglas del árbol que conviene tener presentes:
   anterior sigue siendo válido; `normalizeDraft` lo migra y lo dice.
 
 El borrador se guarda bajo demanda en `localStorage`, con la clave
-`tex-notes:draft:v2` y la forma `{ version: 2, metadata, blocks }`. `normalizeDraft`
+`tex-notes:draft:v2` y la forma `{ version: 3, metadata, blocks, macros }`. `normalizeDraft`
 tolera datos ausentes, corruptos o mal anidados **a cualquier profundidad y nunca
 lanza**: es entrada no confiable, viene del navegador de alguien.
 
@@ -477,3 +481,19 @@ comprueba también comandos duplicados. El contenido usa la sintaxis de huecos.
 recorre una copia de la rama en preorden y conserva las opciones. La interfaz
 cancela la cola ante cambios estructurales y guarda las propias en
 `tex-notes:templates:v1`. Véanse DEC-018 y DEC-020.
+
+## Macros y borradores v3
+
+`normalizeMacros` aplica el saneado estructural del borrador: nombre latino,
+params entero entre 0 y 9 y body cadena. `normalizeDraft` migra v1/v2 con macros
+vacías y rechaza v4. La clave histórica del borrador se conserva; cambia la
+versión del sobre. `macrosToPreamble` vive en el generador, sin depender de la
+interfaz, y emite newcommand con cuerpo literal. Sin macros no añade líneas.
+
+`macros.js` valida nombres de catálogo, lista reservada y entornos, unicidad,
+argumentos, llaves y parámetros. La vista previa recibe un objeto de macros
+nuevo por llamada; las definiciones explícitas consumen incluso argumentos
+no usados en el cuerpo. `setDocumentMacros` incrementa previewVersion y vuelve
+a calcular vistas y avisos. `checkBlock` acepta opciones en el cuarto argumento
+para reconocer macros, y checkDocument las toma del estado. El historial de uso
+identifica sugerencias personales por macro:nombre. Véase DEC-017.

@@ -421,7 +421,7 @@ test("listas nuevas y antiguas conservan su propio formato al copiar, duplicar, 
   const moved = moveBlockTo(pasted.blocks, [4], [2]);
   const snapshot = JSON.parse(JSON.stringify({ version: DRAFT_VERSION, metadata: {}, blocks: moved.blocks }));
   const restored = normalizeDraft(snapshot);
-  assert.equal(restored.version, 2);
+  assert.equal(restored.version, DRAFT_VERSION);
   for (const path of [[0], [1], [2, 0]]) {
     assert.match(blockToLatex(blockAtPath(restored.blocks, path)), /\\item - Padre\n\\item 1\. Hijo/);
   }

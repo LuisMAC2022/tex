@@ -468,3 +468,26 @@ cancela la cola y lo anuncia. Teorema y demostración se añaden como hermanos.
 con «Nombre de la plantilla» y «Comando». «Guardar plantilla» confirma.
 En «Mis plantillas», «Renombrar plantilla» cambia nombre y comando, y
 «Borrar plantilla» la retira. La exportación de configuración incluye esta lista.
+
+## Macros del documento
+
+En «Datos del documento», abre «Macros del documento». Escribe el «Nombre» sin
+barra, el «Número de argumentos» (0 a 9) y la «Definición» literal en una sola
+línea. Por ejemplo, R con cero argumentos y definición \mathbb{R}. Para abs,
+un argumento y definición \left|#1\right|. La vista previa muestra una llamada
+de ejemplo y los errores aparecen junto a cada campo. «Guardar macro» la
+incorpora; «Editar macro», «Borrar macro» y «Cancelar macro» permiten gestionarla.
+
+Las macros se guardan con el documento en borradores v3 y sesiones recuperables.
+Se definen con newcommand en el preámbulo y encabezan las sugerencias al escribir.
+«Usar como mis macros predeterminadas» guarda una copia para documentos nuevos
+sin borrador ni sesión pendiente. La exportación de configuración incluye esas
+macros predeterminadas; importarla no sustituye las de un documento en curso.
+
+## Comandos que solo entiende KaTeX
+
+Un error katex-only indica que la vista previa acepta un comando que el
+preámbulo de LaTeX no define. Por ejemplo, sustituye \R por \mathbb{R}, \infin
+por \infty, \isin por \in o define una macro del documento. Los avisos sobre
+\empty y \th indican que tienen otro significado en LaTeX: usa \emptyset para
+el conjunto vacío. Al borrar una macro se actualizan la vista previa y los avisos.

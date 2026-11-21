@@ -89,3 +89,8 @@ español, historial con decaimiento, huecos, alias con Tab y configuración port
 
 Tipos y títulos desde el contenido vacío, proof predefinido, once plantillas de
 Cálculo III por pasos y captura de ramas personales con configuración portátil.
+
+## Hito 20 — Macros del documento
+
+Borrador v3, preámbulo literal con newcommand, validación y vista previa aislada,
+macros predeterminadas y error katex-only en la comprobación previa a Overleaf.

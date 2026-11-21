@@ -17,7 +17,7 @@
   const TexNotes = global.TexNotes || (global.TexNotes = {});
 
   /** Versión del borrador persistido. La 1 era una lista plana sin children. */
-  const DRAFT_VERSION = 2;
+  const DRAFT_VERSION = 3;
 
   function isPath(path) {
     return Array.isArray(path) && path.every((index) => Number.isInteger(index) && index >= 0);
@@ -265,8 +265,8 @@
   const pathLabel = (path) => (isPath(path) ? path.map((index) => index + 1).join(".") : "");
 
   /**
-   * Acepta un borrador plano de la versión 1 y el árbol de la versión 2, y
-   * devuelve siempre { version, metadata, blocks } o null. No lanza: un valor
+   * Acepta un borrador plano de la versión 1 y los árboles de las versiones 2 y 3, y
+   * devuelve siempre { version, metadata, blocks, macros } o null. No lanza: un valor
    * mal formado a cualquier profundidad se descarta al normalizar.
    */
   function normalizeDraft(raw) {
@@ -275,7 +275,13 @@
     if (!Number.isInteger(version) || version < 1 || version > DRAFT_VERSION) return null;
     if (!raw.metadata || typeof raw.metadata !== "object" || Array.isArray(raw.metadata)) return null;
     const metadata = Object.fromEntries(Object.entries(raw.metadata).filter(([, value]) => typeof value === "string"));
-    return { version, metadata, blocks: normalizeBlocks(raw.blocks, "flat") };
+    return { version, metadata, blocks: normalizeBlocks(raw.blocks, "flat"), macros: version >= 3 ? normalizeMacros(raw.macros) : [] };
+  }
+
+  function normalizeMacros(raw) {
+    return (Array.isArray(raw) ? raw : []).filter(m => m && typeof m.name === "string" && /^[A-Za-z]+$/.test(m.name)
+      && Number.isInteger(m.params) && m.params >= 0 && m.params <= 9 && typeof m.body === "string")
+      .map(({ name, params, body }) => ({ name, params, body }));
   }
 
   function sessionHasContent(session) {
@@ -285,7 +291,7 @@
   }
 
   Object.assign(TexNotes, {
-    DRAFT_VERSION, sessionHasContent, cloneBlocks, cloneBlock, normalizeBlock, normalizeBlocks, blockAtPath, siblingsAtPath,
+    DRAFT_VERSION, normalizeMacros, sessionHasContent, cloneBlocks, cloneBlock, normalizeBlock, normalizeBlocks, blockAtPath, siblingsAtPath,
     insertBlock, duplicateBlock, updateBlock, removeBlock, moveBlock, moveBlockTo, countBlocks, flattenBlocks,
     pathToKey, keyToPath, pathLabel, normalizeDraft, listFormatAfterEdit,
   });

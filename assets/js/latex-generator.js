@@ -148,7 +148,12 @@
     return lines.join("\n");
   }
 
-  function buildPreamble() {
+  function macrosToPreamble(macros = []) {
+    if (!Array.isArray(macros) || !macros.length) return "";
+    return ["% Macros personales definidas en el editor.", ...macros.map(m => `\\newcommand{\\${m.name}}${m.params ? `[${m.params}]` : ""}{${m.body}}`)].join("\n");
+  }
+
+  function buildPreamble(macros = []) {
     return [
       "\\documentclass[11pt]{article}",
       "% fontenc genera PDF con caracteres latinos copiables.",
@@ -165,6 +170,7 @@
       "\\usepackage{amsthm}",
       "% graphicx permite \\includegraphics para insertar imágenes.",
       "\\usepackage{graphicx}",
+      ...(macrosToPreamble(macros) ? [macrosToPreamble(macros)] : []),
       "% Los entornos siguientes se derivan de la tabla de tipos de bloque.",
       buildTheoremDefs(),
     ].join("\n");
@@ -189,11 +195,11 @@
 
   /** El archivo resultante es autocontenido: no depende de ningún .sty externo. */
   function generateLatex(state = {}) {
-    return `${buildPreamble()}\n\n${buildMetadata(state.metadata)}\n\n${buildBody(state)}\n\n${buildDocumentEnd()}\n`;
+    return `${buildPreamble(state.macros)}\n\n${buildMetadata(state.metadata)}\n\n${buildBody(state)}\n\n${buildDocumentEnd()}\n`;
   }
 
   Object.assign(TexNotes, {
     METADATA_KEYS, normalizeLineBreaks, escapeMetadata, contentToLatex, blockToLatex,
-    buildTheoremDefs, buildPreamble, buildMetadata, buildBody, buildDocumentEnd, generateLatex,
+    macrosToPreamble, buildTheoremDefs, buildPreamble, buildMetadata, buildBody, buildDocumentEnd, generateLatex,
   });
 })(typeof globalThis !== "undefined" ? globalThis : this);
