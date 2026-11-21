@@ -94,3 +94,8 @@ Cálculo III por pasos y captura de ramas personales con configuración portáti
 
 Borrador v3, preámbulo literal con newcommand, validación y vista previa aislada,
 macros predeterminadas y error katex-only en la comprobación previa a Overleaf.
+
+## Hito 21 — Interfaz de captura
+
+Dos columnas desde 75 rem, editor fijo con altura limitada, metadatos plegables,
+tarjetas con acciones secundarias desplegables y ayuda de teclado junto al flujo.

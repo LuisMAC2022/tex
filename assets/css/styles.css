@@ -226,3 +226,28 @@ td button { margin: .2rem; }
 #macro-preview { min-block-size: 3rem; padding: .5rem; overflow: auto; }
 #macro-list { padding-inline-start: 1.25rem; }
 #macro-list li { margin-block: .5rem; overflow-wrap: anywhere; }
+
+main { width: min(100% - 2rem, 110rem); }
+#metadata-details > summary { min-block-size: 2.75rem; cursor: pointer; }
+#metadata-details > summary h2 { display: inline; font-size: 1.35rem; overflow-wrap: anywhere; }
+summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.structure-panel, .editor-workspace { min-inline-size: 0; }
+.block-more { min-inline-size: 0; max-inline-size: 100%; }
+.block-more > summary { min-block-size: 2.75rem; padding: .5rem .65rem; cursor: pointer; color: var(--primary); border: 1px solid var(--border); border-radius: .35rem; font-weight: 650; }
+.block-more-actions { display: flex; flex-wrap: wrap; gap: .5rem; padding-block-start: .5rem; }
+.block-more[open] { flex-basis: 100%; }
+.block-actions button { max-inline-size: 100%; overflow-wrap: anywhere; }
+.block-list { overflow-wrap: anywhere; }
+.symbol-category { font-size: .875rem; }
+#editing-keys li { margin-block: .5rem; }
+#save-template-dialog { width: min(100% - 2rem, 36rem); max-block-size: calc(100dvh - 2rem); overflow: auto; color: var(--text); background: var(--surface); border: 2px solid var(--border); border-radius: .5rem; }
+#save-template-dialog::backdrop { background: var(--background); opacity: .75; }
+@media (min-width: 75rem) {
+  .editor-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 1.5rem; }
+  .block-editor { position: sticky; top: .5rem; max-block-size: calc(100dvh - 1rem); overflow: auto; margin-block-start: 0; }
+  .structure-panel > h3 { margin-block-start: 0; }
+}
+@media (max-width: 38rem) {
+  .block-actions { flex-direction: column; align-items: stretch; }
+  .block-children { padding-inline-start: .65rem; }
+}

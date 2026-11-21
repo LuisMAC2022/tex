@@ -74,3 +74,19 @@ El ejemplo sin macros se regenera sin cambios. La aserción de versión actual
 de la prueba de listas se actualiza a DRAFT_VERSION; no cambia ningún guardián
 literal. Revisada y bendecida el ancla DEC-017. Falta compilar manualmente en
 Overleaf; el navegador y los teclados físicos siguen sin verificación.
+
+## P6 — Interfaz
+
+Implementadas dos columnas desde 75 rem, main hasta 110 rem, editor sticky con
+altura máxima y desplazamiento propio, metadatos plegables con resumen,
+tarjetas compactas y more en las extensiones, apertura del destino antes de
+reenfocar y lista fija de teclas de edición. Se mantienen los límites del
+tablero y los tokens de ambos temas. Las pruebas estructurales y de sintaxis
+pasan y la lista manual recoge toda la revisión solicitada.
+
+Límite de verificación: además del error de sockets al lanzar Chromium con
+Playwright, el navegador compartido rechazó abrir el archivo local porque su
+política no permite file://. No se intentaron vías alternativas al bloqueo.
+No se afirma revisión visual, de NVDA, Windows, Overleaf ni el objetivo de
+rendimiento de 60 ms. Estas comprobaciones quedan pendientes de un entorno
+que las permita; no se añadieron dependencias al proyecto.

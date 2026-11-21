@@ -119,6 +119,7 @@
   function announce(message) { status.textContent = message; }
   function setMetadata(values = {}) {
     for (const name of METADATA_KEYS) form.elements[name].value = typeof values[name] === "string" ? values[name] : "";
+    syncMetadataSummary(true);
   }
 
   /* --- Nombres de cada nodo, compartidos por la vista y por los anuncios --- */
@@ -210,23 +211,21 @@
     const actions = document.createElement("menu");
     actions.className = "block-actions";
     actions.setAttribute("aria-label", `Acciones para el bloque ${describeBlock(block, path)}`);
-    actions.append(
-      actionButton("Editar", "edit", path, `Editar ${subject}`),
-      // Tres operaciones distintas, con nombres distintos a propósito:
-      // duplicar deja la copia aquí mismo; copiar la guarda para elegir destino;
-      // copiar texto saca el contenido de la aplicación.
+    actions.append(actionButton("Editar", "edit", path, `Editar ${subject}`));
+    if (acceptsChildren(block.type)) actions.append(actionButton("Añadir dentro", "child", path, `Añadir un bloque dentro de ${subject}`));
+    const disclosure = document.createElement("details"), summary = document.createElement("summary"), more = document.createElement("div");
+    disclosure.className = "block-more"; summary.textContent = "Más acciones"; summary.setAttribute("aria-label", `Más acciones para ${subject}`); more.className = "block-more-actions";
+    more.append(
       actionButton("Duplicar", "duplicate", path, `Duplicar ${subject}: la copia queda justo después`),
       actionButton("Copiar bloque", "copy", path, `Copiar ${subject} a la bandeja, para pegarlo donde elijas`),
       actionButton("Copiar texto", "copy-text", path, `Copiar al portapapeles el texto de ${subject}`),
-    );
-    if (acceptsChildren(block.type)) actions.append(actionButton("Añadir dentro", "child", path, `Añadir un bloque dentro de ${subject}`));
-    actions.append(
       actionButton("Eliminar", "delete", path, `Eliminar ${subject}`),
       actionButton("Subir", "up", path, `Subir ${subject}, entre sus hermanos`, position === 0),
       actionButton("Bajar", "down", path, `Bajar ${subject}, entre sus hermanos`, position === siblings - 1),
     );
+    disclosure.append(summary, more); actions.append(disclosure);
     article.append(heading, meta, preview, actions);
-    for (const extend of blockItemExtensions) extend(block, path, { article, actions, subject });
+    for (const extend of blockItemExtensions) extend(block, path, { article, actions, more, subject });
     item.append(article);
 
     if (block.children.length) {
@@ -250,8 +249,10 @@
   function focusAction(action, path) {
     const button = blockList.querySelector(`button[data-action="${action}"][data-path="${pathToKey(path)}"]`);
     if (!button || button.disabled) return false;
+    let disclosure = button.closest("details");
+    while (disclosure) { disclosure.open = true; disclosure = disclosure.parentElement.closest("details"); }
     button.focus();
-    return true;
+    return document.activeElement === button || (action !== "edit" && focusAction("edit", path));
   }
   /** Tras eliminar: hermano que ocupa el hueco, anterior, padre o alta de bloque. */
   function focusAfterRemoval(path) {
@@ -452,7 +453,7 @@
 
   form.addEventListener("submit", (event) => {
     event.preventDefault(); const title = $("#note-title");
-    if (!title.value.trim()) { $("#title-error").textContent = "Escribe un título para generar el documento."; title.setAttribute("aria-invalid", "true"); title.focus(); announce("No se generó el documento: falta el título."); return; }
+    if (!title.value.trim()) { $("#metadata-details").open = true; $("#title-error").textContent = "Escribe un título para generar el documento."; title.setAttribute("aria-invalid", "true"); title.focus(); announce("No se generó el documento: falta el título."); return; }
     $("#title-error").textContent = "";
     title.removeAttribute("aria-invalid");
     const documentState = state();
@@ -470,7 +471,7 @@
     if (!draft) { $("#restore-draft").focus(); announce("No hay un borrador válido para restaurar."); return; }
     const cancelled = cancelTemplateForStructuralChange();
     setDocumentMacros(draft.macros, false);
-    setMetadata(draft.metadata); blocks = draft.blocks; resetBlockEditor(); renderBlocks(); $("#note-title").focus();
+    setMetadata(draft.metadata); blocks = draft.blocks; resetBlockEditor(); renderBlocks(); focusMetadata();
     announce(draft.version < DRAFT_VERSION ? "Borrador restaurado y convertido al formato con bloques anidados." : "Borrador restaurado.");
     if (cancelled) announce("Borrador restaurado." + cancelled);
   });
@@ -1192,7 +1193,7 @@
   const movePosition = $("#move-block-position");
   let movingPath = [];
 
-  blockItemExtensions.push((_block, path, { actions, subject }) => {
+  blockItemExtensions.push((_block, path, { more, subject }) => {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = "Mover a…";
@@ -1214,7 +1215,7 @@
       button.focus();
       moveDialog.showModal();
     });
-    actions.append(button);
+    more.append(button);
   });
 
   $("#move-block-cancel").addEventListener("click", () => moveDialog.close());
@@ -1564,7 +1565,7 @@
   $("#cancel-template").addEventListener("click", () => {
     templateSession = null; renderTemplateProgress(); focusBlockContent(); announce("Plantilla cancelada; el contenido del paso actual se conserva.");
   });
-  blockItemExtensions.push((block, path, { actions, subject }) => {
+  blockItemExtensions.push((block, path, { more, subject }) => {
     const button = document.createElement("button"); button.type = "button"; button.textContent = "Guardar como plantilla";
     button.setAttribute("aria-label", `Guardar como plantilla ${subject}`); button.setAttribute("aria-haspopup", "dialog");
     button.addEventListener("click", () => {
@@ -1572,7 +1573,7 @@
       $("#template-name").value = block.title || blockLabel(block.type); $("#template-trigger").value = ""; $("#template-error").textContent = "";
       templateDialog.showModal();
     });
-    actions.append(button);
+    more.append(button);
   });
   refreshTemplates = () => {
     $("#own-template-list").replaceChildren(...ownTemplates.map((template, index) => {
@@ -1665,8 +1666,20 @@
   renderMacroList(); updateMacroPreview();
   /* --- fin [H] --- */
 
+  function syncMetadataSummary(reset = false) {
+    const data = metadata(), parts = [data.title, data.course, data.date].map(value => value.trim()).filter(Boolean);
+    $("#datos-heading").textContent = ["Datos del documento", ...parts].join(" · ");
+    if (reset || !data.title.trim()) $("#metadata-details").open = !data.title.trim();
+  }
+  function focusMetadata() { $( $("#metadata-details").open ? "#note-title" : "#metadata-details > summary").focus(); }
+  $("#metadata-details").addEventListener("input", () => syncMetadataSummary());
+  syncMetadataSummary(true);
+
   function renderShortcutPanel() {
     const isMac = /Mac/.test(global.navigator.userAgentData?.platform || global.navigator.platform || "");
+    const commitShortcut = SHORTCUTS.find(s => s.id === "block.commit");
+    $("#commit-key-label").textContent = shortcutLabel(commitShortcut, isMac);
+    $("#add-block").setAttribute("aria-keyshortcuts", ariaKeyshortcuts(commitShortcut, isMac));
     const items = SHORTCUTS.map((shortcut) => {
       const item = document.createElement("li");
       const keys = document.createElement("kbd");

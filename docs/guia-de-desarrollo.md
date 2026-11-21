@@ -497,3 +497,16 @@ no usados en el cuerpo. `setDocumentMacros` incrementa previewVersion y vuelve
 a calcular vistas y avisos. `checkBlock` acepta opciones en el cuarto argumento
 para reconocer macros, y checkDocument las toma del estado. El historial de uso
 identifica sugerencias personales por macro:nombre. Véase DEC-017.
+
+## Interfaz adaptable
+
+`.editor-workspace` organiza editor y estructura a partir de 75 rem. El
+fieldset `.block-editor` limita su altura al viewport antes de aplicar sticky;
+ambas columnas usan mínimos cero. El resumen de metadatos se actualiza sin
+plegar los campos mientras se escriben. Una restauración ajusta su apertura
+según el título y enfoca un control visible.
+
+`blockItemExtensions` recibe article, actions, more y subject. Añade acciones
+secundarias a more. `focusAction` abre los details antecesores antes de enfocar
+y recurre a Editar si falla. `editing-keys` describe teclas de edición sin
+registrar Tab ni Intro sin modificadores en SHORTCUTS.

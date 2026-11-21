@@ -364,3 +364,10 @@ Las versiones futuras se rechazan. La clave histórica tex-notes:draft:v2 se
 mantiene con un sobre version:3, que las aplicaciones anteriores rechazan.
 El autoguardado también incorpora macros. Las predeterminadas se guardan en
 tex-notes:macros-default:v1 y se incluyen en la configuración portátil.
+
+## Distribución del editor
+
+Desde 75 rem se muestran dos columnas: editor con desplazamiento propio y
+estructura. Los metadatos se pueden plegar y su resumen identifica el documento.
+Las tarjetas mantienen Editar y Añadir dentro visibles y agrupan el resto en
+Más acciones. El panel de teclado describe el asistente y la navegación nativa.

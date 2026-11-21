@@ -491,3 +491,17 @@ preámbulo de LaTeX no define. Por ejemplo, sustituye \R por \mathbb{R}, \infin
 por \infty, \isin por \in o define una macro del documento. Los avisos sobre
 \empty y \th indican que tienen otro significado en LaTeX: usa \emptyset para
 el conjunto vacío. Al borrar una macro se actualizan la vista previa y los avisos.
+
+## Distribución y acciones de los bloques
+
+En pantallas de al menos 75 rem, el editor queda a la izquierda y la estructura
+a la derecha. El editor tiene desplazamiento propio para llegar a sus controles.
+En pantallas menores se usa una sola columna. «Datos del documento» se puede
+plegar; su resumen muestra el título, curso y fecha. Al restaurar un documento
+con título queda plegado y el foco puede volver a su resumen.
+
+Las tarjetas mantienen «Editar» y «Añadir dentro» a la vista. Abre «Más acciones»
+para duplicar, copiar, eliminar, subir, bajar, mover o guardar una plantilla.
+Después de mover con sus botones, el desplegable del bloque destino se abre
+para conservar el foco. «Atajos de teclado» incluye la prioridad de Tab,
+Escape, navegación del menú, Retroceso y los comandos /.

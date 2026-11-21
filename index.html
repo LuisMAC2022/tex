@@ -20,7 +20,8 @@
       <p id="autosave-banner" hidden><span id="autosave-message"></span> <button id="recover-session" type="button">Recuperar sesión</button> <button id="discard-session" type="button" class="secondary">Descartar</button></p>
       <form id="document-form" novalidate>
         <section aria-labelledby="datos-heading">
-          <h2 id="datos-heading">Datos del documento</h2>
+          <details id="metadata-details" open>
+          <summary><h2 id="datos-heading">Datos del documento</h2></summary>
           <p>El título es el único dato obligatorio. Los borradores permanecen únicamente en este dispositivo.</p>
           <fieldset class="form-grid">
             <legend>Metadatos</legend>
@@ -53,12 +54,14 @@
             <li><button id="restore-draft" type="button">Restaurar borrador</button></li>
             <li><button id="delete-draft" class="secondary danger" type="button">Borrar borrador</button></li>
           </menu>
+          </details>
         </section>
 
         <section aria-labelledby="contenido-heading">
           <h2 id="contenido-heading">Contenido</h2>
           <p>Completa un bloque y usa «Añadir bloque». El contenido de cualquier bloque llega al documento exactamente como lo escribes: la aplicación no añade caracteres de escape. Un bloque puede contener otros bloques: usa «Añadir dentro» en el bloque que quieras como padre, sin límite de niveles.</p>
-          <fieldset>
+          <div class="editor-workspace">
+          <fieldset class="block-editor">
             <legend id="block-form-heading">Nuevo bloque</legend>
             <input id="editing-path" type="hidden" value="">
             <input id="parent-path" type="hidden" value="">
@@ -193,10 +196,13 @@
 
           </fieldset>
 
+          <div class="structure-panel">
           <h3>Estructura actual</h3>
           <p>Cada bloque indica su nivel y su bloque padre. «Subir» y «Bajar» mueven el bloque solo entre sus hermanos, sin sacarlo de su nivel. Para repetir una estructura hay tres acciones distintas: <strong>«Duplicar»</strong> deja una copia justo después del original; <strong>«Copiar bloque»</strong> lo guarda en una bandeja y luego eliges el destino con «Pegar bloque», las veces que haga falta; <strong>«Copiar texto»</strong> lleva su contenido al portapapeles del sistema para pegarlo donde quieras, dentro o fuera de la aplicación.</p>
           <p id="empty-blocks">Todavía no hay bloques.</p>
           <ol id="block-list" class="block-list"></ol>
+          </div>
+          </div>
         </section>
 
         <section aria-labelledby="resultado-heading">
@@ -236,6 +242,14 @@
         </section>
         <details class="shortcut-panel">
           <summary>Atajos de teclado</summary>
+          <ul id="editing-keys">
+            <li><kbd id="commit-key-label">Ctrl+Intro</kbd>: añadir el bloque o guardar sus cambios.</li>
+            <li>En Contenido, Tab acepta el menú, pasa al siguiente hueco, salta un cierre o expande un alias, en ese orden. Sin nada pendiente, sale del campo.</li>
+            <li>Escape cierra el menú o termina la sesión de huecos sin mover el cursor.</li>
+            <li>↑ y ↓ recorren el menú; Intro acepta la opción.</li>
+            <li>Retroceso borra un par automático vacío.</li>
+            <li>En Contenido vacío, / abre comandos de tipo y plantillas: /teo, /ec, /lista o /ejres.</li>
+          </ul>
           <ul id="keyboard-shortcuts"></ul>
         </details>
       </form>

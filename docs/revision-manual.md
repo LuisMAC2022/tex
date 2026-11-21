@@ -89,3 +89,14 @@ por ronda de revisión, no al cambiar código.
 - [ ] Guardar y restaurar borrador v3 conserva macros; un v2 restaura con lista vacía.
 - [ ] Guardar predeterminadas y comenzar sin borrador ni autoguardado las carga; no sustituyen las de un documento abierto.
 - [ ] Cambiar una macro actualiza tanto el editor como las vistas previas de todos los bloques.
+
+## Captura rápida: P6 y revisión completa
+
+- [ ] A 1366 × 768, editor fijo y estructura paralela; alcanzar la parte inferior del editor con su propio desplazamiento.
+- [ ] A 320 px y con zoom al 200 %, no hay desplazamiento horizontal de la página y el menú se puede tocar.
+- [ ] Revisar contraste, foco visible y objetivos de 44 × 44 px en temas claro y oscuro.
+- [ ] Subir, Bajar y Duplicar conservan el foco; el desplegable de destino se abre si hace falta.
+- [ ] Con distribuciones latinoamericana y EE. UU. instaladas en Windows, probar Alt+Mayús+S, G y Q y anotar en claude.md si cambian la distribución.
+- [ ] Ctrl+Z inmediatamente tras: tablero, autocierre, salto de cierre, Retroceso en par, sugerencia, alias, edición en hueco, begin con Intro, continuación de lista y sangría. Comprobar el alcance de cada deshacer.
+- [ ] Cerrar la pestaña con un bloque a medias y recuperar; empezar a escribir sin recuperar y verificar autosave:previous.
+- [ ] Con NVDA comprobar opciones activas, recuento del menú y salida nativa con Tab cuando no hay nada pendiente.
