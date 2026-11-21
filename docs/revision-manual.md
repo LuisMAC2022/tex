@@ -67,3 +67,11 @@ por ronda de revisión, no al cambiar código.
 - [ ] AltGr nunca activa Ctrl+Intro; verificar la preferencia de autocierre apagada.
 - [ ] Ctrl+Z tras autocierre, salto, Retroceso en par vacío y apertura de entorno con Intro.
 - [ ] Salir del par, perder foco y cargar otro bloque descartan cierres pendientes.
+
+## Captura rápida: P3
+
+- [ ] NVDA anuncia el recuento al abrir sugerencias y cada opción activa.
+- [ ] Tab sin menú, huecos, cierres ni alias sale de Contenido; Escape termina los huecos.
+- [ ] Ctrl+Z devuelve el disparador después de un alias y deshace una sugerencia aceptada.
+- [ ] Tocar una opción mantiene el foco en el campo; el menú cabe a 320 px en ambos temas.
+- [ ] Exportar e importar entre dos navegadores conserva los alias y la preferencia.

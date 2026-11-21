@@ -304,7 +304,6 @@ El MVP está terminado cuando una persona puede, usando solamente el teclado y c
 - **Macros personales** como `\R` → `\mathbb{R}` en el preámbulo, la vista previa y la categoría **Mis macros**. Requieren ampliar el formato del borrador.
 - **Bloque de tabla o tabla de verdad** con `tabular`, como las del Repaso −1 del temario.
 - **Referencias cruzadas** con etiquetas en teoremas y ecuaciones y una acción para insertar `\ref`.
-- **Alias de escritura** como `imp` → `\Rightarrow`.
 
 También siguen pendientes el **modelo de documento de tres niveles** (Unidad → Clase → Bloques) y el módulo de apoyo al curso con cita de asesoría, fechas `.ics` y entregables. Hoy `topic` produce una sola `\section`.
 
@@ -331,3 +330,12 @@ Ctrl+Intro (⌘+Intro en macOS) añade el bloque o guarda sus cambios. El foco
 permite encadenar bloques desde Contenido. El autoguardado independiente incluye
 el bloque en curso, ofrece recuperarlo al abrir y conserva una sesión anterior.
 Las vistas previas de la estructura se reutilizan por contenido y profundidad.
+
+## Asistente de escritura
+
+En Contenido, una barra seguida de letras abre sugerencias locales del catálogo.
+Las fórmulas aceptadas desde prosa se envuelven en dólares. Los fragmentos
+admiten huecos #1 a #9 y una posición final #0. Tab acepta el menú, avanza huecos,
+salta cierres o expande alias; sin trabajo pendiente conserva la navegación.
+Escape cierra el menú o termina los huecos. Las preferencias incluyen gestión
+de alias y exportación/importación de configuración entre navegadores.

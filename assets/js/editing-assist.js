@@ -75,5 +75,49 @@
     if (tokens.reduce((n, m) => n + (m[1] === "begin" ? 1 : -1), 0) <= 0) return null;
     return replaceSelection(state, `\n\n\\end{${name}}`, 1);
   }
+  function parseSnippet(source) {
+    const input = typeof source === "object" ? String(source.before || "") + "#1" + String(source.after || "") : String(source);
+    let text = "", final = null;
+    const markers = [];
+    for (let i = 0; i < input.length; i++) {
+      if (input[i] === "#" && !T.isEscaped(input, i) && /[0-9]/.test(input[i + 1] || "")) {
+        const n = Number(input[++i]);
+        if (n === 0) final = text.length;
+        else markers.push({ n, index: text.length });
+      } else text += input[i];
+    }
+    const holes = markers.length || final !== null ? markers.sort((a, b) => a.n - b.n).map(m => m.index)
+      : [...text.matchAll(/\{\}/g)].filter(m => !T.isEscaped(text, m.index)).map(m => m.index + 1);
+    return { text, holes, final: final === null ? text.length : final };
+  }
+  function snippetEdit(state, source, wrapMath = false) {
+    const snippet = parseSnippet(source);
+    const prefix = wrapMath ? "$" : "", suffix = wrapMath ? "$" : "";
+    const text = prefix + snippet.text + suffix;
+    const start = state.selectionStart, first = snippet.holes[0] ?? snippet.final;
+    const edit = replaceSelection(state, text, prefix.length + first);
+    const session = snippet.holes.length ? { start, endDistance: edit.value.length - start - text.length,
+      holes: snippet.holes.map(index => edit.value.length - start - prefix.length - index),
+      finalDistance: edit.value.length - start - prefix.length - snippet.final, index: 0 } : null;
+    const pending = wrapMath ? [{ start, open: "$", close: "$", key: "$", distance: edit.value.length - start - text.length + 1 }] : [];
+    return { edit, session, pending };
+  }
+  function activeSnippet(state, session) {
+    return session && state.selectionStart >= session.start && state.selectionEnd <= state.value.length - session.endDistance ? session : null;
+  }
+  function nextSnippetHole(state, session) {
+    if (!activeSnippet(state, session)) return null;
+    const index = session.index + 1;
+    const cursor = state.value.length - (session.holes[index] ?? session.finalDistance);
+    return { edit: { ...state, selectionStart: cursor, selectionEnd: cursor }, session: index < session.holes.length ? { ...session, index } : null };
+  }
+  function skipPendingClose(state, pending) {
+    const pairs = activePairs(state, pending), pair = pairs.at(-1);
+    if (!pair || state.selectionStart !== state.selectionEnd) return null;
+    const closeAt = state.value.length - pair.distance;
+    if (!/^\s*$/.test(state.value.slice(state.selectionStart, closeAt))) return null;
+    return { edit: { ...state, selectionStart: closeAt + pair.close.length, selectionEnd: closeAt + pair.close.length }, pending: pairs.slice(0, -1) };
+  }
+  Object.assign(T, { parseSnippet, snippetEdit, activeSnippet, nextSnippetHole, skipPendingClose });
   Object.assign(T, { replaceSelection, activePairs, autoPair, deleteEmptyPair, completeEnvironment });
 })(typeof globalThis !== "undefined" ? globalThis : this);

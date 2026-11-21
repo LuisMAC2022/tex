@@ -32,3 +32,17 @@ cada caso de la tabla, dobles barras y guion literal de listas. Los eventos de
 composición, pegado y teclas muertas no activan reglas. Sin nueva dependencia.
 No hay mediciones de teclado real ni NVDA; pendientes en revisión manual.
 Se revisan y bendicen las anclas de distancia/captura bajo DEC-016.
+
+## P3 — Sugerencias, huecos y alias
+
+Implementados parseSnippet, sesiones a distancia del final, clasificación pura
+con acentos y uso semanal (máximo 300), menú único con listbox y div espejo,
+aceptación con teclado o puntero, envoltura matemática en prosa, alias
+predeterminados y personales, gestión y configuración JSON validada antes de
+confirmar. Tab tiene la prioridad acordada y salida nativa sin trabajo pendiente.
+El tablero registra uso sin cambiar su historial de Recientes. Las pruebas de
+lógica incluyen catálogo real, Unicode, fragmentos, ranking y configuración.
+La integración de plantillas y macros queda para P4/P5; en esta etapa esos
+arrays se exportan vacíos. No se añadió dependencia. Falta revisión de NVDA,
+teclados físicos y posición visual del menú por la restricción de Chromium.
+Revisadas y bendecidas las anclas DEC-015 y de captura DEC-016.

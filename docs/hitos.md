@@ -79,3 +79,8 @@ con deshacer nativo, caché de vistas previas y recuperación de sesión en curs
 
 Contexto de escritura con comentarios y argumentos textuales; pares, exponentes,
 selecciones, salto de cierre, Retroceso y cierre de entornos con preferencia local.
+
+## Hito 18 — Sugerencias, huecos y alias
+
+Menú accesible único junto al cursor, clasificación por comandos y términos en
+español, historial con decaimiento, huecos, alias con Tab y configuración portátil.

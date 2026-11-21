@@ -624,6 +624,7 @@
     if (destination !== field) field.focus();
     if (destination === blockContent) scheduleEditorPreview();
 
+    noteUsage(`symbol:${id}`);
     recentSymbols = recentSymbolIds([id, ...recentSymbols]);
     try {
       global.localStorage.setItem(recentSymbolStorageKey, JSON.stringify(recentSymbols));
@@ -718,6 +719,7 @@
         && matchShortcut(event, "block-editor")?.id === "symbols.toggle") {
       event.preventDefault();
       if (event.repeat) return;
+      closeAssistMenu();
       if (inBoard) returnToSymbolOrigin();
       else openSymbolSearch(event.target);
       return;
@@ -1245,17 +1247,21 @@
   }
   blockFieldHooks.push({ fill() { pendingPairs = []; }, clear() { pendingPairs = []; } });
   blockContent.addEventListener("beforeinput", (event) => {
-    if (event.defaultPrevented || T.isApplyingFieldEdit() || event.isComposing || event.inputType !== "insertText" || event.data?.length !== 1 || !prefs.autoPair) return;
+    if (event.defaultPrevented || T.isApplyingFieldEdit() || event.isComposing || event.inputType !== "insertText" || event.data?.length !== 1) return;
+    if (assistState?.token.kind === "slash") return;
+    if (assistState && !/[A-Za-z]/.test(event.data)) closeAssistMenu();
+    if (!prefs.autoPair) return;
     const current = fieldState();
     const result = T.autoPair(current, event.data, { mode: T.mathContextAt(current.value, current.selectionStart, $("#block-type").value), pending: pendingPairs });
     if (result) { event.preventDefault(); applyAssist(result); }
   });
-  /* @decision DEC-016 ancla:ccdabc02 tramo:14
+  /* @decision DEC-016 ancla:3d5a2b69 tramo:14
    * La captura en el fieldset antecede al manejador de Intro de listas. Solo
    * se consume la tecla cuando existe una edición del asistente aplicable.
    */
   blockEditor.addEventListener("keydown", (event) => {
     if (event.target !== blockContent || event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || !prefs.autoPair) return;
+    if (assistState) { handleWritingKey(event); if (event.defaultPrevented) return; }
     const current = fieldState();
     const result = event.key === "Backspace" ? T.deleteEmptyPair(current, pendingPairs)
       : event.key === "Enter" ? T.completeEnvironment(current, $("#block-type").value) : null;
@@ -1267,6 +1273,200 @@
   blockContent.addEventListener("keyup", prunePairs);
   blockContent.addEventListener("click", prunePairs);
   blockContent.addEventListener("blur", () => { pendingPairs = []; });
+  function readWritingStorage(key, fallback) {
+    try { return JSON.parse(global.localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
+  }
+  function writeWritingStorage(key, value) {
+    try { global.localStorage.setItem(key, JSON.stringify(value)); } catch { announce("No se pudo guardar la configuración; se conserva mientras esta pestaña siga abierta."); }
+  }
+  let usage = T.recordUsage(readWritingStorage("tex-notes:usage:v1", {}), null, Date.now());
+  function noteUsage(key) { usage = T.recordUsage(usage, key, Date.now()); writeWritingStorage("tex-notes:usage:v1", usage); }
+  let aliases = readWritingStorage("tex-notes:aliases:v1", T.DEFAULT_ALIASES);
+  if (!Array.isArray(aliases) || aliases.some((a, i) => T.validateAlias(a, aliases.slice(0, i)).length)) aliases = T.DEFAULT_ALIASES.map(a => ({ ...a }));
+  aliases = aliases.map(a => ({ ...a }));
+  let ownTemplates = [];
+  let getCompletionMacros = () => [];
+  let getConfigMacros = () => [];
+  let setConfigMacros = () => {};
+  let refreshTemplates = () => {};
+  let specialCompletions = () => null;
+  let acceptSpecialCompletion = () => false;
+  let snippetSession = null;
+  let assistState = null;
+  const assistList = $("#assist-list");
+  closeAssistMenu = () => {
+    assistState = null; assistList.hidden = true; assistList.replaceChildren();
+    for (const name of ["aria-autocomplete", "aria-controls", "aria-activedescendant"]) blockContent.removeAttribute(name);
+  };
+  function writingMode() { return T.mathContextAt(blockContent.value, blockContent.selectionStart, $("#block-type").value); }
+  function positionAssistMenu() {
+    if (!assistState) return;
+    const rect = blockContent.getBoundingClientRect();
+    const narrow = global.matchMedia("(max-width: 38rem)").matches;
+    let x = rect.left, y = rect.bottom;
+    if (!narrow) {
+      const mirror = document.createElement("div"), marker = document.createElement("span");
+      const style = getComputedStyle(blockContent);
+      for (const key of ["font", "lineHeight", "letterSpacing", "padding", "border", "boxSizing", "tabSize", "textIndent"]) mirror.style[key] = style[key];
+      Object.assign(mirror.style, { position: "fixed", visibility: "hidden", whiteSpace: "pre-wrap", overflowWrap: "break-word", width: `${rect.width}px`, left: `${rect.left}px`, top: `${rect.top}px` });
+      mirror.textContent = blockContent.value.slice(0, blockContent.selectionStart);
+      marker.textContent = "\u200b"; mirror.append(marker); document.body.append(mirror);
+      const caret = marker.getBoundingClientRect();
+      x = caret.left - blockContent.scrollLeft; y = caret.bottom - blockContent.scrollTop;
+      mirror.remove();
+    }
+    assistList.style.width = `${Math.max(0, Math.min(narrow ? rect.width : 420, global.innerWidth - 16))}px`;
+    const width = assistList.offsetWidth, height = assistList.offsetHeight;
+    assistList.style.left = `${Math.max(8, Math.min(x, global.innerWidth - width - 8))}px`;
+    assistList.style.top = `${Math.max(8, Math.min(y, global.innerHeight - height - 8))}px`;
+  }
+  function selectAssist(index, speak = true) {
+    if (!assistState) return;
+    assistState.index = (index + assistState.entries.length) % assistState.entries.length;
+    for (const [i, option] of [...assistList.children].entries()) option.setAttribute("aria-selected", String(i === assistState.index));
+    const active = assistList.children[assistState.index];
+    blockContent.setAttribute("aria-activedescendant", active.id);
+    active.scrollIntoView({ block: "nearest" });
+    if (speak) announce(`${assistState.entries[assistState.index].label}. ${assistState.index + 1} de ${assistState.entries.length}.`);
+  }
+  function openAssistMenu(entries, token, mode) {
+    if (!entries.length) { closeAssistMenu(); return; }
+    const opened = !assistState;
+    assistState = { entries, token: { ...token, cursor: blockContent.selectionStart }, mode, index: 0 };
+    assistList.replaceChildren(...entries.map((entry, i) => {
+      const option = document.createElement("li");
+      option.id = `assist-option-${i}`; option.setAttribute("role", "option");
+      const name = document.createElement("strong"), detail = document.createElement("span");
+      name.textContent = entry.label; detail.textContent = entry.detail || entry.trigger;
+      option.append(name, detail);
+      option.addEventListener("pointerdown", (event) => { event.preventDefault(); acceptAssist(i); });
+      return option;
+    }));
+    assistList.hidden = false;
+    blockContent.setAttribute("aria-autocomplete", "list"); blockContent.setAttribute("aria-controls", "assist-list");
+    selectAssist(0, false); positionAssistMenu();
+    if (opened) announce(`${entries.length} sugerencias. ${entries[0].label}.`);
+  }
+  function updateAssistMenu(event) {
+    if (T.isApplyingFieldEdit()) return;
+    if (event.isComposing || event.inputType !== "insertText" || event.data?.length !== 1) { closeAssistMenu(); return; }
+    const current = fieldState(), mode = writingMode();
+    if (mode === "comment") { closeAssistMenu(); return; }
+    const special = specialCompletions(current, event);
+    if (special) { openAssistMenu(special.entries, special.token, mode); return; }
+    const token = T.completionToken(current);
+    if (!token) { closeAssistMenu(); return; }
+    const entries = T.completionEntries(getCompletionMacros()).filter(e => (e.kind === "environment") === (token.kind === "environment"));
+    openAssistMenu(T.rankCompletions(token.query, entries, usage, Date.now(), mode), token, mode);
+  }
+  function insertWritingSnippet(source, start, end, wrapMath) {
+    const current = fieldState();
+    const result = T.snippetEdit({ ...current, selectionStart: start, selectionEnd: end }, source, wrapMath);
+    const previousPairs = T.activePairs(current, pendingPairs);
+    applyAssist({ edit: result.edit, pending: [...previousPairs, ...result.pending] });
+    snippetSession = result.session;
+  }
+  function acceptAssist(index = assistState?.index) {
+    if (!assistState) return;
+    const { entries, token, mode } = assistState, entry = entries[index];
+    closeAssistMenu();
+    if (acceptSpecialCompletion(entry, token)) return;
+    insertWritingSnippet(entry.insert, token.start, token.end, mode === "text" && entry.mode === "math");
+    noteUsage(entry.key);
+  }
+  function expandAlias(current) {
+    const mode = writingMode(), found = T.aliasAt(current, aliases, mode);
+    if (!found) return false;
+    insertWritingSnippet(found.alias.expansion, found.start, found.end, mode === "text" && found.alias.mode === "math");
+    noteUsage(`alias:${found.alias.trigger}`); return true;
+  }
+  /* @decision DEC-015 ancla:369b59aa tramo:28
+   * Tab se consume solo con una sugerencia, hueco, cierre o alias pendiente.
+   * Escape cancela sin mover el cursor. El resto conserva la navegación nativa.
+   */
+  function handleWritingKey(event) {
+    if (event.target !== blockContent || event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (assistState && ["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"].includes(event.key)) {
+      event.preventDefault();
+      if (event.key === "Escape") { closeAssistMenu(); event.stopPropagation(); }
+      else if (event.key === "ArrowDown" || event.key === "ArrowUp") selectAssist(assistState.index + (event.key === "ArrowDown" ? 1 : -1));
+      else acceptAssist();
+      return;
+    }
+    if (event.key === "Escape" && snippetSession) { event.preventDefault(); snippetSession = null; return; }
+    if (event.key !== "Tab") return;
+    const current = fieldState();
+    const hole = T.nextSnippetHole(current, snippetSession);
+    if (hole) { event.preventDefault(); T.applyFieldEdit(blockContent, hole.edit); snippetSession = hole.session; return; }
+    snippetSession = null;
+    const close = T.skipPendingClose(current, pendingPairs);
+    if (close) { event.preventDefault(); applyAssist(close); return; }
+    if (expandAlias(current)) event.preventDefault();
+  }
+  blockEditor.addEventListener("keydown", handleWritingKey, true);
+  blockContent.addEventListener("input", updateAssistMenu);
+  function pruneWritingSessions() {
+    if (T.isApplyingFieldEdit()) return;
+    snippetSession = T.activeSnippet(fieldState(), snippetSession);
+    if (assistState && (blockContent.selectionStart !== assistState.token.cursor || blockContent.selectionStart !== blockContent.selectionEnd)) closeAssistMenu();
+  }
+  blockContent.addEventListener("select", pruneWritingSessions);
+  blockContent.addEventListener("keyup", pruneWritingSessions);
+  blockContent.addEventListener("click", pruneWritingSessions);
+  blockContent.addEventListener("blur", closeAssistMenu);
+  blockContent.addEventListener("scroll", positionAssistMenu);
+  global.addEventListener("resize", positionAssistMenu);
+  document.addEventListener("scroll", positionAssistMenu, true);
+  blockFieldHooks.push({ fill() { snippetSession = null; closeAssistMenu(); }, clear() { snippetSession = null; closeAssistMenu(); } });
+
+  let editingAlias = -1;
+  function renderAliases() {
+    $("#alias-list").replaceChildren(...aliases.map((alias, index) => {
+      const row = document.createElement("tr");
+      for (const value of [alias.trigger, alias.expansion, alias.mode === "math" ? "Matemáticas" : alias.mode === "text" ? "Texto" : "Cualquier contexto"]) {
+        const cell = document.createElement("td"); cell.textContent = value; row.append(cell);
+      }
+      const cell = document.createElement("td"), edit = document.createElement("button"), remove = document.createElement("button");
+      edit.type = remove.type = "button"; edit.textContent = "Editar alias"; remove.textContent = "Borrar alias";
+      edit.setAttribute("aria-label", `Editar alias ${alias.trigger}`); remove.setAttribute("aria-label", `Borrar alias ${alias.trigger}`);
+      edit.addEventListener("click", () => { editingAlias = index; $("#alias-trigger").value = alias.trigger; $("#alias-expansion").value = alias.expansion; $("#alias-mode").value = alias.mode; $("#alias-trigger").focus(); });
+      remove.addEventListener("click", () => { aliases.splice(index, 1); editingAlias = -1; persistAliases(); $("#alias-trigger").focus(); announce("Alias borrado."); });
+      cell.append(edit, remove); row.append(cell); return row;
+    }));
+  }
+  function persistAliases() { writeWritingStorage("tex-notes:aliases:v1", aliases); renderAliases(); }
+  function saveAlias() {
+    const alias = { trigger: $("#alias-trigger").value.trim(), expansion: $("#alias-expansion").value, mode: $("#alias-mode").value };
+    const errors = T.validateAlias(alias, aliases.filter((a, i) => i !== editingAlias));
+    $("#alias-error").textContent = errors.join(" ");
+    if (errors.length) { announce(errors[0]); return; }
+    if (editingAlias >= 0) aliases[editingAlias] = alias; else aliases.push(alias);
+    editingAlias = -1; persistAliases(); $("#alias-trigger").value = ""; $("#alias-expansion").value = ""; $("#alias-trigger").focus(); announce("Alias guardado.");
+  }
+  $("#save-alias").addEventListener("click", saveAlias);
+  $("#alias-fields").addEventListener("keydown", (event) => { if (event.key === "Enter" && event.target.tagName !== "TEXTAREA" && !event.isComposing) { event.preventDefault(); saveAlias(); } });
+  $("#cancel-alias").addEventListener("click", () => { editingAlias = -1; $("#alias-trigger").value = ""; $("#alias-expansion").value = ""; $("#alias-error").textContent = ""; });
+  $("#reset-aliases").addEventListener("click", () => { aliases = T.DEFAULT_ALIASES.map(a => ({ ...a })); editingAlias = -1; persistAliases(); announce("Alias predeterminados restaurados."); });
+  $("#export-config").addEventListener("click", () => {
+    const data = { kind: "notas-latex-config", version: 1, aliases, templates: ownTemplates, prefs, macros: getConfigMacros() };
+    const url = global.URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+    const link = document.createElement("a"); link.href = url; link.download = "notas-latex-configuracion.json"; document.body.append(link); link.click(); link.remove();
+    global.setTimeout(() => global.URL.revokeObjectURL(url), 0); announce("Configuración exportada.");
+  });
+  $("#import-config").addEventListener("change", async (event) => {
+    const file = event.target.files[0]; if (!file) return;
+    try {
+      const data = JSON.parse(await file.text()), errors = T.validateConfiguration(data);
+      if (errors.length) { announce(errors.join(" ")); return; }
+      if (!global.confirm("¿Reemplazar tus alias, plantillas, preferencias y macros predeterminadas con esta configuración?")) return;
+      aliases = data.aliases; ownTemplates = data.templates; prefs = { autoPair: data.prefs.autoPair }; editingAlias = -1;
+      persistAliases(); writeWritingStorage("tex-notes:prefs:v1", prefs); writeWritingStorage("tex-notes:templates:v1", ownTemplates);
+      $("#auto-pair").checked = prefs.autoPair; pendingPairs = []; setConfigMacros(data.macros); refreshTemplates();
+      announce("Configuración importada.");
+    } catch { announce("No se pudo leer la configuración. Comprueba que sea un archivo JSON válido."); }
+    finally { event.target.value = ""; }
+  });
+  renderAliases();
   /* --- fin [F] --- */
 
   function renderShortcutPanel() {

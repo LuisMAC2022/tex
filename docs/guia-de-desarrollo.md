@@ -444,3 +444,18 @@ pagehide y visibilitychange guardan de inmediato. Véase DEC-019.
 Los cierres se guardan por distancia al final y se validan contra el texto.
 `app.js` atiende caracteres en beforeinput y navegación en captura del fieldset.
 La preferencia se guarda en `tex-notes:prefs:v1`; puede funcionar sin almacenamiento.
+
+## Ampliar sugerencias y alias
+
+Añade un alias predeterminado a `DEFAULT_ALIASES` de `completion.js` con
+trigger, expansion y mode; ejecuta `validateAlias` y las pruebas. Evita las
+palabras de `SHORT_WORDS`. Los comandos de texto viven en `TEXT_COMMANDS`; los
+símbolos se derivan del catálogo y los entornos de `MATH_ENVIRONMENTS`.
+`rankCompletions` recibe el instante y el historial para ser determinista.
+`parseSnippet` acepta texto o before/after, y `snippetEdit` devuelve la edición,
+los huecos y los cierres. Su sesión almacena distancias al final, no índices
+que se desplacen al escribir. La navegación condicional se rige por DEC-015.
+
+`validateConfiguration` valida el sobre y todos sus elementos antes de cualquier
+reemplazo. Alias, uso y preferencias tienen claves separadas con sufijo v1.
+La exportación es JSON; no modifica el borrador ni el contenido del documento.

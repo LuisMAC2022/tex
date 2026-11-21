@@ -421,3 +421,28 @@ completan solo en matemáticas. Las llaves envuelven la selección; un cierre ya
 pendiente se salta al teclearlo. Retroceso elimina un par automático vacío.
 Intro tras una apertura de entorno añade su cierre salvo en listas y bibliografía.
 Los comentarios, las teclas muertas y la composición conservan la escritura normal.
+
+## Sugerencias, huecos y alias
+
+Escribe una barra y al menos una letra en «Contenido». El menú propone hasta
+ocho comandos según el texto, sus nombres en español y el uso reciente. ↑ y ↓
+cambian de opción; Intro, Tab o tocar una opción la insertan. Escape cierra el
+menú sin borrar lo escrito. En prosa, aceptar matemáticas añade sus dólares.
+Tras una apertura de entorno también se sugieren nombres.
+
+Los fragmentos tienen huecos: Tab pasa al siguiente y después a la posición
+final. Escape termina la sesión sin mover el cursor. La prioridad de Tab es:
+menú, hueco, cierre pendiente (permitiendo espacios antes), alias y navegación
+nativa. El asistente se limita a Contenido.
+
+En «Mis alias», completa «Disparador», «Expansión» y «Modo del alias»; usa
+«Guardar alias», «Editar alias» o «Borrar alias». «Cancelar alias» abandona la
+edición. Los marcadores #1 a #9 definen huecos y #0 la posición final; sin
+marcadores, cada par de llaves vacío es un hueco. Un signo de número literal
+se escribe escapado. Los alias solo se expanden con Tab: RR da el conjunto de
+reales; fr una fracción; pd una derivada parcial. Las tildes forman parte del
+disparador, por lo que “lím” no activa “lim”.
+
+«Restablecer alias predeterminados» repone la lista incluida. «Exportar configuración» descarga notas-latex-configuracion.json; «Importar configuración»
+valida el archivo completo y pide confirmación antes de reemplazar tus preferencias.
+El historial de **Recientes** del tablero sigue siendo independiente.

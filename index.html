@@ -203,6 +203,18 @@
           <details id="writing-preferences">
             <summary>Preferencias de escritura</summary>
             <label class="check-field"><input id="auto-pair" type="checkbox" checked> Cerrar automáticamente llaves y delimitadores</label>
+            <h3>Mis alias</h3>
+            <div class="table-scroll"><table><thead><tr><th>Disparador</th><th>Expansión</th><th>Modo</th><th>Acciones</th></tr></thead><tbody id="alias-list"></tbody></table></div>
+            <fieldset id="alias-fields"><legend>Añadir o editar un alias</legend>
+              <p class="field"><label for="alias-trigger">Disparador</label><input id="alias-trigger" type="text" autocomplete="off" aria-describedby="alias-error"></p>
+              <p class="field"><label for="alias-expansion">Expansión</label><textarea id="alias-expansion" rows="2" spellcheck="false" aria-describedby="alias-error"></textarea></p>
+              <p class="field"><label for="alias-mode">Modo del alias</label><select id="alias-mode"><option value="math">Matemáticas</option><option value="text">Texto</option><option value="any">Cualquier contexto</option></select></p>
+              <p id="alias-error" class="error"></p>
+              <button id="save-alias" type="button">Guardar alias</button> <button id="cancel-alias" type="button" class="secondary">Cancelar alias</button>
+            </fieldset>
+            <button id="reset-aliases" type="button" class="secondary">Restablecer alias predeterminados</button>
+            <p><button id="export-config" type="button">Exportar configuración</button></p>
+            <p class="field"><label for="import-config">Importar configuración</label><input id="import-config" type="file" accept="application/json,.json"></p>
           </details>
         </section>
         <details class="shortcut-panel">
@@ -233,6 +245,7 @@
           </menu>
         </form>
       </dialog>
+      <ul role="listbox" id="assist-list" aria-label="Sugerencias de escritura" hidden></ul>
       <p id="app-status" class="status" aria-live="polite" aria-atomic="true">Editor listo.</p>
     </main>
     <footer><p>La vista previa orienta sobre modo matemático; la validación y compilación del documento se realizan en Overleaf.</p></footer>
@@ -249,6 +262,7 @@
     <script src="assets/js/list-outline.js"></script>
     <script src="assets/js/content-check.js"></script>
     <script src="assets/js/editing-assist.js"></script>
+    <script src="assets/js/completion.js"></script>
     <script src="assets/js/app.js"></script>
   </body>
 </html>

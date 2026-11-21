@@ -56,6 +56,18 @@
 - listas nuevas y antiguas conservan su propio formato al copiar, duplicar, mover, guardar y restaurar
 - una sesión vacía no borra el autoguardado y el bloque en curso cuenta como trabajo
 
+## `tests/completion.test.js` — 9 pruebas
+
+- los fragmentos ordenan marcadores numéricos, preservan escapes y encuentran llaves vacías
+- los huecos permanecen estables al escribir y Tab termina en la posición final
+- aceptar matemáticas en prosa envuelve el fragmento y registra su cierre pendiente
+- el ranking usa el catálogo real, acentos, cuatro niveles y desempates deterministas
+- el uso decae por semanas, se limita a 300 y descarta datos corruptos
+- solo una barra sin escapar y letras abren sugerencias, también los nombres de entorno
+- los alias solo coinciden con un token Unicode completo que no sea un comando
+- los alias predeterminados son válidos y no invaden palabras cortas del español
+- la configuración se valida completa antes de aplicar cambios
+
 ## `tests/content-check.test.js` — 14 pruebas
 
 - detecta llaves desparejadas y respeta las escapadas
@@ -225,4 +237,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-173 pruebas con `node:test` más la comprobación estructural.
+182 pruebas con `node:test` más la comprobación estructural.
