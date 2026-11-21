@@ -287,7 +287,7 @@
   function sessionHasContent(session) {
     const nonempty = (value) => typeof value === "string" && Boolean(value.trim());
     return Boolean(session && ((Array.isArray(session.blocks) && session.blocks.some((block) => block && typeof block === "object"))
-      || nonempty(session.editor?.content) || nonempty(session.editor?.title) || nonempty(session.editor?.image?.content)));
+      || nonempty(session.metadata?.title) || nonempty(session.editor?.content) || nonempty(session.editor?.title) || nonempty(session.editor?.image?.content)));
   }
 
   Object.assign(TexNotes, {

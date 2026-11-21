@@ -518,3 +518,7 @@ incluso si el nuevo texto termina casualmente en el mismo carácter.
 El gancho de carga de listas conserva el bloque fuente al cargar un paso de
 plantilla. `listFormatAfterEdit` mantiene flat si el contenido sigue igual y
 activa outline cuando se modifica, como al editar un bloque del árbol.
+
+El título de la nota y el del bloque cuentan como trabajo para autoguardar,
+aunque aún no haya bloques incorporados. Los metadatos precargados de curso,
+profesor y fecha no convierten una sesión vacía en una sesión recuperable.

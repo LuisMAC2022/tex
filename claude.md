@@ -106,3 +106,11 @@ lectura: una plantilla capturada de un borrador antiguo conserva flat hasta
 editar el contenido. Se prueba captura → fragmento → conservación/cambio de
 formato. Los demás ganchos, incluidas opciones de imagen, siguen compartidos.
 Suite, documentación e inventario actualizados.
+
+### P1 — Revisión de integración
+
+Se precisó la detección de sesión vacía: el título de la nota también cuenta
+como trabajo; curso/profesor/fecha precargados siguen sin contar. La prueba
+cubre ambos títulos y el bloque sin incorporar. Una fecha de autoguardado
+corrupta se presenta en español como fecha desconocida. No cambia la clave del
+borrador ni el respaldo. Suite e inventario verificados.

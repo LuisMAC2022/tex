@@ -1733,7 +1733,8 @@
   global.addEventListener("pagehide", saveSession);
   if (hasSessionContent(pendingSession) && normalizeDraft(pendingSession)) {
     $("#autosave-banner").hidden = false;
-    const date = new Date(pendingSession.savedAt).toLocaleString("es-MX");
+    const savedDate = new Date(pendingSession.savedAt);
+    const date = Number.isFinite(savedDate.getTime()) ? savedDate.toLocaleString("es-MX") : "fecha desconocida";
     $("#autosave-message").textContent = `Hay una sesión sin guardar del ${date} con ${countBlocks(pendingSession.blocks)} bloques.`;
   }
   $("#recover-session").addEventListener("click", () => {
