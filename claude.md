@@ -22,3 +22,13 @@ cifra posterior verificable ni afirmación de haber alcanzado ≤60 ms; queda
 pendiente ejecutar el anexo en un navegador permitido. No se añadió dependencia.
 Las pruebas de lógica, documentación y sintaxis pasan. No se verificó aún el
 historial real ni un lector de pantalla; constan en la revisión manual.
+
+## P2 — Autocierre y contexto matemático
+
+Implementados contexto con aperturas incompletas y argumentos textuales,
+lista única de entornos, autocierre por beforeinput, cierres a distancia del
+final, Retroceso, entornos y preferencia local. Las reglas son puras y prueban
+cada caso de la tabla, dobles barras y guion literal de listas. Los eventos de
+composición, pegado y teclas muertas no activan reglas. Sin nueva dependencia.
+No hay mediciones de teclado real ni NVDA; pendientes en revisión manual.
+Se revisan y bendicen las anclas de distancia/captura bajo DEC-016.

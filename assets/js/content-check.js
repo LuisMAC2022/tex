@@ -16,11 +16,7 @@
     "depth": ["aviso", "profundidad-de-listas-y-entornos"],
   };
   const MATH_DELIMITERS = new Set(["$", "$$", "\\(", "\\)", "\\[", "\\]"]);
-  const MATH_ENVIRONMENTS = new Set([
-    "math", "displaymath", "equation", "eqnarray", "align", "alignat", "aligned", "alignedat", "flalign",
-    "gather", "gathered", "multline", "split", "array", "matrix", "pmatrix", "bmatrix", "Bmatrix",
-    "vmatrix", "Vmatrix", "smallmatrix", "cases",
-  ]);
+  const MATH_ENVIRONMENTS = TexNotes.MATH_ENVIRONMENTS;
   const ALIGNMENT_ENVIRONMENTS = new Set(["tabular", "tabularx", "longtable"]);
 
   function hasBlockEnvironment(block, type) {

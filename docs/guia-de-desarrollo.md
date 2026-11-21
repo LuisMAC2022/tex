@@ -435,3 +435,12 @@ contexto de profundidad y versión de vista previa; las imágenes quedan fuera.
 El autoguardado usa `tex-notes:autosave:v1`, con una copia anterior en
 `tex-notes:autosave:previous`. Los eventos input/change tienen retardo de 800 ms;
 pagehide y visibilitychange guardan de inmediato. Véase DEC-019.
+
+## Contexto y autocierre
+
+`math-preview.js` mantiene la única lista `MATH_ENVIRONMENTS` y expone
+`mathContextAt` e `isEscaped`. `editing-assist.js` contiene `autoPair`,
+`activePairs`, `deleteEmptyPair` y `completeEnvironment`, todas puras.
+Los cierres se guardan por distancia al final y se validan contra el texto.
+`app.js` atiende caracteres en beforeinput y navegación en captura del fieldset.
+La preferencia se guarda en `tex-notes:prefs:v1`; puede funcionar sin almacenamiento.

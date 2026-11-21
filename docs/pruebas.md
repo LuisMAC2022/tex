@@ -91,6 +91,20 @@
 - ningún índice apunta a una sección que ya no existe
 - cada rótulo que citan las guías sigue existiendo en la interfaz
 
+## `tests/editing-assist.test.js` — 11 pruebas
+
+- el contexto matemático incluye aperturas incompletas, escapes, entornos y comentarios
+- autocierra llaves literales y escapadas, delimitadores y left en su contexto
+- el autocierre respeta prosa, comentarios, escapes y el carácter siguiente
+- un segundo dólar convierte un par vacío en fórmula destacada y el siguiente salta
+- la llave explícita tras un superíndice automático no se duplica
+- el autocierre envuelve selecciones y conserva el texto seleccionado
+- las dobles barras de un salto no abren delimitador matemático en prosa
+- el guion literal de lista se escribe con llaves automáticas y salto del cierre
+- los cierres conservan su distancia, se validan y se descartan al salir
+- Retroceso elimina un par vacío pendiente y no toca un par con contenido
+- Intro completa entornos con argumentos y no actúa en listas, bibliografía ni pares cerrados
+
 ## `tests/generator.test.js` — 35 pruebas
 
 - los metadatos y los títulos escapan todos los caracteres reservados
@@ -200,10 +214,15 @@
 - el cambio circular de categoría incluye Recientes al principio
 - los recientes conservan hasta doce símbolos distintos y conocidos en orden de inserción
 
+## `tests/text-insertion.test.js` — 2 pruebas
+
+- diffEdit calcula inserciones, borrados y reemplazos mínimos sin cambios ficticios
+- diffEdit nunca divide un par sustituto UTF-16 en sus límites
+
 ## `tests/check-site.mjs` — comprobación estructural
 
 No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, un solo `main` y `h1`, enlace de salto, orden de los scripts clásicos, rutas relativas, etiquetas asociadas y ayudas visibles). Se ejecuta con `npm test`.
 
 ---
 
-160 pruebas con `node:test` más la comprobación estructural.
+173 pruebas con `node:test` más la comprobación estructural.

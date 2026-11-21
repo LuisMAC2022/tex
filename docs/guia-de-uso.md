@@ -412,3 +412,12 @@ nativo de deshacer cuando el navegador admite insertText. La sesión se guarda
 al editar y al ocultar o cerrar la pestaña, incluido el bloque sin incorporar.
 Al volver, «Recuperar sesión» recupera ese trabajo y «Descartar» elimina la
 oferta. «Guardar borrador» sigue siendo un punto de restauración independiente.
+
+## Autocierre en Contenido
+
+En «Preferencias de escritura», «Cerrar automáticamente llaves y delimitadores»
+activa el cierre de llaves y fórmulas. Paréntesis, corchetes y exponentes se
+completan solo en matemáticas. Las llaves envuelven la selección; un cierre ya
+pendiente se salta al teclearlo. Retroceso elimina un par automático vacío.
+Intro tras una apertura de entorno añade su cierre salvo en listas y bibliografía.
+Los comentarios, las teclas muertas y la composición conservan la escritura normal.

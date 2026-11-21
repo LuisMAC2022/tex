@@ -1226,6 +1226,49 @@
   });
   /* --- fin [E] --- */
 
+  /* --- [F] Asistente de escritura --- */
+  const T = global.TexNotes;
+  let pendingPairs = [];
+  let prefs = { autoPair: true };
+  try { const saved = JSON.parse(global.localStorage.getItem("tex-notes:prefs:v1")); if (typeof saved?.autoPair === "boolean") prefs.autoPair = saved.autoPair; } catch { /* valores predeterminados */ }
+  $("#auto-pair").checked = prefs.autoPair;
+  $("#auto-pair").addEventListener("change", () => {
+    prefs.autoPair = $("#auto-pair").checked;
+    pendingPairs = [];
+    try { global.localStorage.setItem("tex-notes:prefs:v1", JSON.stringify(prefs)); } catch { /* preferencia en memoria */ }
+  });
+  function fieldState() { return { value: blockContent.value, selectionStart: blockContent.selectionStart, selectionEnd: blockContent.selectionEnd }; }
+  function applyAssist(result) {
+    T.applyFieldEdit(blockContent, result.edit || result);
+    if (result.pending) pendingPairs = result.pending;
+    scheduleEditorPreview(); scheduleSessionSave();
+  }
+  blockFieldHooks.push({ fill() { pendingPairs = []; }, clear() { pendingPairs = []; } });
+  blockContent.addEventListener("beforeinput", (event) => {
+    if (event.defaultPrevented || T.isApplyingFieldEdit() || event.isComposing || event.inputType !== "insertText" || event.data?.length !== 1 || !prefs.autoPair) return;
+    const current = fieldState();
+    const result = T.autoPair(current, event.data, { mode: T.mathContextAt(current.value, current.selectionStart, $("#block-type").value), pending: pendingPairs });
+    if (result) { event.preventDefault(); applyAssist(result); }
+  });
+  /* @decision DEC-016 ancla:ccdabc02 tramo:14
+   * La captura en el fieldset antecede al manejador de Intro de listas. Solo
+   * se consume la tecla cuando existe una edición del asistente aplicable.
+   */
+  blockEditor.addEventListener("keydown", (event) => {
+    if (event.target !== blockContent || event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || !prefs.autoPair) return;
+    const current = fieldState();
+    const result = event.key === "Backspace" ? T.deleteEmptyPair(current, pendingPairs)
+      : event.key === "Enter" ? T.completeEnvironment(current, $("#block-type").value) : null;
+    if (result) { event.preventDefault(); applyAssist(result); }
+  }, true);
+  function prunePairs() { if (!T.isApplyingFieldEdit()) pendingPairs = T.activePairs(fieldState(), pendingPairs); }
+  blockContent.addEventListener("input", prunePairs);
+  blockContent.addEventListener("select", prunePairs);
+  blockContent.addEventListener("keyup", prunePairs);
+  blockContent.addEventListener("click", prunePairs);
+  blockContent.addEventListener("blur", () => { pendingPairs = []; });
+  /* --- fin [F] --- */
+
   function renderShortcutPanel() {
     const isMac = /Mac/.test(global.navigator.userAgentData?.platform || global.navigator.platform || "");
     const items = SHORTCUTS.map((shortcut) => {

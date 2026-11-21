@@ -13,7 +13,7 @@ assert.match(html, /<main id="contenido-principal" tabindex="-1">/, "El destino 
 // Restricción file://: scripts clásicos en orden de dependencia, nunca módulos ES.
 assert.doesNotMatch(html, /<script[^>]+type="module"/, "los scripts no deben ser módulos ES");
 const scripts = [...html.matchAll(/<script src="(assets\/[^"]+)"><\/script>/g)].map((match) => match[1]);
-assert.deepEqual(scripts, ["assets/vendor/katex/katex.min.js", "assets/js/block-types.js", "assets/js/block-tree.js", "assets/js/latex-generator.js", "assets/js/file-download.js", "assets/js/math-symbols.js", "assets/js/text-insertion.js", "assets/js/math-preview.js", "assets/js/shortcuts.js", "assets/js/image-options.js", "assets/js/list-outline.js", "assets/js/content-check.js", "assets/js/app.js"], "faltan scripts o el orden de carga es incorrecto");
+assert.deepEqual(scripts, ["assets/vendor/katex/katex.min.js", "assets/js/block-types.js", "assets/js/block-tree.js", "assets/js/latex-generator.js", "assets/js/file-download.js", "assets/js/math-symbols.js", "assets/js/text-insertion.js", "assets/js/math-preview.js", "assets/js/shortcuts.js", "assets/js/image-options.js", "assets/js/list-outline.js", "assets/js/content-check.js", "assets/js/editing-assist.js", "assets/js/app.js"], "faltan scripts o el orden de carga es incorrecto");
 assert.match(html, /<link rel="stylesheet" href="assets\/vendor\/katex\/katex\.min\.css">/, "Falta la hoja vendorizada de KaTeX");
 assert.match(html, /<input id="course"[^>]+value="Cálculo III \(1352\)">/, "El curso debe aparecer prellenado desde el temario");
 assert.match(html, /<input id="teacher"[^>]+value="Guzmán Fuentes Ricardo">/, "El profesor debe aparecer prellenado desde el temario");

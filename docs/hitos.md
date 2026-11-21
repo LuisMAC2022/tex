@@ -74,3 +74,8 @@ Diálogo con destinos válidos para mover una rama completa y enfocar su nueva p
 
 Ctrl+Intro, foco continuo, ayuda plegable, acciones antes del tablero, ediciones
 con deshacer nativo, caché de vistas previas y recuperación de sesión en curso.
+
+## Hito 17 — Autocierre y contexto matemático
+
+Contexto de escritura con comentarios y argumentos textuales; pares, exponentes,
+selecciones, salto de cierre, Retroceso y cierre de entornos con preferencia local.

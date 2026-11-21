@@ -60,3 +60,10 @@ por ronda de revisión, no al cambiar código.
 - [ ] Ctrl+Z deshace una inserción del tablero y una edición de lista.
 - [ ] Cerrar y recuperar conserva el bloque en curso, la selección de destino y las opciones de imagen.
 - [ ] Escribir sin recuperar conserva la sesión anterior en la clave de respaldo.
+
+## Captura rápida: P2
+
+- [ ] En Windows latinoamericano escribir barra con AltGr, llaves, corchetes, ^, ~, á y ñ en prosa y fórmulas. Repetir con teclado EE. UU.
+- [ ] AltGr nunca activa Ctrl+Intro; verificar la preferencia de autocierre apagada.
+- [ ] Ctrl+Z tras autocierre, salto, Retroceso en par vacío y apertura de entorno con Intro.
+- [ ] Salir del par, perder foco y cargar otro bloque descartan cierres pendientes.
