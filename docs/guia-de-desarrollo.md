@@ -459,3 +459,21 @@ que se desplacen al escribir. La navegación condicional se rige por DEC-015.
 `validateConfiguration` valida el sobre y todos sus elementos antes de cualquier
 reemplazo. Alias, uso y preferencias tienen claves separadas con sufijo v1.
 La exportación es JSON; no modifica el borrador ni el contenido del documento.
+
+## Tipos con comandos y plantillas
+
+Cada entrada de `BLOCK_TYPES` declara `slash`, un array de comandos sin barra.
+Añadir un comando es editar esa tabla, no el menú. `predefined: true` omite
+entornos como proof de `buildTheoremDefs`; su generación sigue el kind theorem.
+Actualiza las opciones HTML, la prueba del orden, ambas guías, el tramo y el
+ancla de DEC-005. Regenera el ejemplo y comprueba su diff.
+
+Añade una plantilla incluida a `BUILTIN_TEMPLATES` en `templates.js`, con id,
+name, trigger y steps. Cada paso tiene depth y block; empieza en profundidad 0
+y solo puede subir un nivel, con un padre que admita hijos. `validateTemplate`
+comprueba también comandos duplicados. El contenido usa la sintaxis de huecos.
+`templateParent` y `advanceTemplate` resuelven rutas desde los resultados de
+`insertBlock`; omitir un padre omite su descendencia. `templateFromBranch`
+recorre una copia de la rama en preorden y conserva las opciones. La interfaz
+cancela la cola ante cambios estructurales y guarda las propias en
+`tex-notes:templates:v1`. Véanse DEC-018 y DEC-020.

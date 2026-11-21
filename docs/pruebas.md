@@ -117,7 +117,7 @@
 - Retroceso elimina un par vacío pendiente y no toca un par con contenido
 - Intro completa entornos con argumentos y no actúa en listas, bibliografía ni pares cerrados
 
-## `tests/generator.test.js` — 35 pruebas
+## `tests/generator.test.js` — 36 pruebas
 
 - los metadatos y los títulos escapan todos los caracteres reservados
 - el contenido de un bloque no recibe ningún escape
@@ -154,6 +154,7 @@
 - una imagen a la derecha en una lista acota su alineación y no abre un flotante
 - una imagen con etiqueta y sin pie establece la referencia de figura
 - los hijos de una imagen con ruta vacía se emiten aunque se omita la imagen
+- Demostración usa proof predefinido y su título opcional sin redeclararlo
 
 ## `tests/image-options.test.js` — 5 pruebas
 
@@ -226,6 +227,14 @@
 - el cambio circular de categoría incluye Recientes al principio
 - los recientes conservan hasta doce símbolos distintos y conocidos en orden de inserción
 
+## `tests/templates.test.js` — 5 pruebas
+
+- las once plantillas incluidas son válidas, renderizan sus fórmulas y no producen errores previos
+- las plantillas rechazan saltos de profundidad, padres incompatibles, tipos y comandos duplicados
+- el menú / deriva tipos de la tabla, tolera acentos y separa el título
+- la cola usa las rutas insertadas y el teorema y su demostración son hermanos
+- omitir un padre omite su descendencia y capturar una rama conserva opciones de imagen
+
 ## `tests/text-insertion.test.js` — 2 pruebas
 
 - diffEdit calcula inserciones, borrados y reemplazos mínimos sin cambios ficticios
@@ -237,4 +246,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-182 pruebas con `node:test` más la comprobación estructural.
+188 pruebas con `node:test` más la comprobación estructural.

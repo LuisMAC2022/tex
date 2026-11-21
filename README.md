@@ -29,7 +29,7 @@ El generador recibe un objeto con este contrato conceptual:
   },
   blocks: [
     {
-      type: "text|equation|math-inline|definition|theorem|proposition|example|note|itemize|enumerate|bibliography|image",
+      type: "text|equation|math-inline|definition|theorem|proposition|proof|example|note|itemize|enumerate|bibliography|image",
       title: "opcional",
       content: "texto",
       children: [ /* bloques con la misma forma, sin profundidad máxima */ ],
@@ -44,7 +44,7 @@ El generador recibe un objeto con este contrato conceptual:
 - El **tema o unidad** produce una `\section` cuando no está vacío.
 - `blocks` es una lista ordenada **de árboles**. Su orden determina exactamente el orden del cuerpo del documento, y el de `children` el de cada rama.
 - `children` es opcional: **su ausencia equivale a `children: []`**, así que un estado plano escrito para la versión anterior sigue siendo válido y no hay que reescribirlo.
-- Los tipos de bloque viven en una sola tabla, [`assets/js/block-types.js`](assets/js/block-types.js). Los bloques `definition`, `theorem`, `proposition`, `example` y `note` se convierten en sus entornos homónimos; `text` es texto normal y, si tiene título, comienza con `\subsection`.
+- Los tipos de bloque viven en una sola tabla, [`assets/js/block-types.js`](assets/js/block-types.js). Los bloques `definition`, `theorem`, `proposition`, `proof`, `example` y `note` se convierten en sus entornos homónimos; `text` es texto normal y, si tiene título, comienza con `\subsection`.
 - Hay **dos tipos de contenido matemático**, deliberadamente separados del texto: `equation` queda delimitado por `\[` y `\]` en líneas propias, y `math-inline` por `\(` y `\)` en una sola línea. Ambos conservan literalmente lo escrito y solo se diferencian por sus delimitadores en la tabla.
 - `itemize` y `enumerate` producen listas. Cada línea no vacía da un `\item`. Dos espacios o un tabulador forman un nivel de sangría, y cada línea puede bajar hasta un nivel respecto de la anterior. La primera línea comienza en el nivel raíz.
 - El bloque define el tipo de la lista raíz. Al abrir una sublista, el primer elemento fija su tipo con `- ` o `* ` para viñetas y un número seguido de `. ` o `) ` para numeración. Sin marcador hereda el tipo de la lista que la contiene. Los marcadores se consumen en todos los niveles. `{}- ` conserva el guion como parte del elemento.
@@ -83,7 +83,7 @@ El único caso que falla en silencio es `%`: no da error, simplemente hace desap
 ### Bloques anidados
 
 - Cada bloque puede contener otros mediante `children`, sin profundidad máxima. Los hijos **nunca se concatenan dentro de `content`**: siguen siendo nodos editables e independientes.
-- El campo `container` de la tabla de tipos define cuáles admiten hijos. La interfaz y el generador aplican la misma regla. Los bloques de texto, los cinco entornos tipo teorema y las dos listas admiten hijos. En un borrador que trae hijos en una fórmula, una imagen o una bibliografía, estos se conservan como hermanos posteriores.
+- El campo `container` de la tabla de tipos define cuáles admiten hijos. La interfaz y el generador aplican la misma regla. Los bloques de texto, los entornos tipo teorema y las dos listas admiten hijos. En un borrador que trae hijos en una fórmula, una imagen o una bibliografía, estos se conservan como hermanos posteriores.
 - Los hijos de un bloque que **abre un entorno** se emiten antes de su `\end{...}`, en orden. Los de un bloque de **texto**, después de su propio contenido.
 - Separación determinista: un hijo de prosa abre párrafo y va precedido de una línea en blanco; un hijo que abre entorno o fórmula se pega a la línea anterior. En la raíz, los bloques siempre se separan por una línea en blanco.
 - Un entorno de lista sin ningún `\item` no se emite —no compilaría—: en ese caso sus hijos se emiten por sí solos.
@@ -339,3 +339,13 @@ admiten huecos #1 a #9 y una posición final #0. Tab acepta el menú, avanza hue
 salta cierres o expande alias; sin trabajo pendiente conserva la navegación.
 Escape cierra el menú o termina los huecos. Las preferencias incluyen gestión
 de alias y exportación/importación de configuración entre navegadores.
+
+## Comandos y plantillas
+
+El menú / al comienzo de Contenido vacío cambia el tipo y permite escribir un
+título tras el comando: /teo Fubini, /ec, /lista o /dem. Demostración usa el
+entorno proof predefinido de amsthm, sin newtheorem; su título opcional sustituye
+el encabezado. Las once plantillas incluidas se aplican como una cola de pasos
+que se confirman con Ctrl+Intro, con destino y profundidad relativos. Se pueden
+omitir pasos, cancelar la cola y guardar una rama como plantilla personal.
+Las plantillas personales viajan en la configuración y se gestionan en preferencias.

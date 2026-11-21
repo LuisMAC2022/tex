@@ -172,9 +172,10 @@
    * dice: nunca se escribe sobre un bloque distinto del que se estaba editando.
    */
   function cancelEditForStructuralChange() {
-    if (!editorTarget().editing.length) return "";
+    const templateCancelled = cancelTemplateForStructuralChange();
+    if (!editorTarget().editing.length) return templateCancelled;
     resetBlockEditor();
-    return " Se canceló la edición en curso porque cambió la estructura.";
+    return " Se canceló la edición en curso porque cambió la estructura." + templateCancelled;
   }
 
   /* --- Lista anidada --- */
@@ -343,7 +344,8 @@
     setEditorTarget({ parent });
     renderBlocks();
     focusBlockContent();
-    announce(`Bloque ${pathLabel(result.path)} añadido ${parent.length ? `dentro de ${describeBlock(blockAtPath(blocks, parent), parent)}` : "en la raíz"}.`);
+    const templateMessage = commitTemplateStep(result.path);
+    announce(`Bloque ${pathLabel(result.path)} añadido ${parent.length ? `dentro de ${describeBlock(blockAtPath(blocks, parent), parent)}` : "en la raíz"}.${templateMessage ? ` ${templateMessage}` : ""}`);
   });
 
   $("#paste-block").addEventListener("click", () => {
@@ -354,13 +356,15 @@
     const result = insertBlock(blocks, parent, cloneBlock(tray.block));
     if (!result) { renderBlocks(); setEditorTarget(editorTarget()); announce("No se pudo pegar el bloque en ese destino; la lista se actualizó."); return; }
     const label = trayLabel();
+    const cancelled = cancelEditForStructuralChange();
     blocks = result.blocks; renderBlocks(); setEditorTarget(editorTarget());
     if (!focusAction("edit", result.path)) $("#add-block").focus();
-    announce(`${label} pegado como bloque ${pathLabel(result.path)} ${describeLocation(parent)}. Sigue en la bandeja para pegarlo otra vez.`);
+    announce(`${label} pegado como bloque ${pathLabel(result.path)} ${describeLocation(parent)}. Sigue en la bandeja para pegarlo otra vez.${cancelled}`);
   });
 
   $("#cancel-edit").addEventListener("click", () => {
     const cancelled = editorTarget().editing.length;
+    cancelTemplateForStructuralChange();
     resetBlockEditor(); $("#block-type").focus();
     announce(cancelled ? "Edición cancelada." : "El siguiente bloque se añadirá en la raíz.");
   });
@@ -374,6 +378,7 @@
     const action = button.dataset.action;
 
     if (action === "edit") {
+      cancelTemplateForStructuralChange();
       $("#block-type").value = block.type; $("#block-title").value = block.title; $("#block-content").value = block.content;
       for (const hook of blockFieldHooks) hook.fill?.(block);
       $("#block-error").textContent = ""; $("#block-content").removeAttribute("aria-invalid");
@@ -383,6 +388,7 @@
       return;
     }
     if (action === "child") {
+      cancelTemplateForStructuralChange();
       clearBlockFields(); setEditorTarget({ parent: path }); $("#block-type").focus();
       announce(`El siguiente bloque se añadirá dentro de ${describeBlock(block, path)}, en el nivel ${path.length + 1}.`);
       return;
@@ -460,8 +466,10 @@
       draft = normalizeDraft(JSON.parse(raw));
     } catch { draft = null; }
     if (!draft) { $("#restore-draft").focus(); announce("No hay un borrador válido para restaurar."); return; }
+    const cancelled = cancelTemplateForStructuralChange();
     setMetadata(draft.metadata); blocks = draft.blocks; resetBlockEditor(); renderBlocks(); $("#note-title").focus();
     announce(draft.version < DRAFT_VERSION ? "Borrador restaurado y convertido al formato con bloques anidados." : "Borrador restaurado.");
+    if (cancelled) announce("Borrador restaurado." + cancelled);
   });
   $("#delete-draft").addEventListener("click", () => {
     if (!confirm("¿Borrar el borrador guardado en este dispositivo?")) { $("#delete-draft").focus(); announce("No se borró el borrador."); return; }
@@ -801,6 +809,7 @@
 
   function syncImageFields() {
     const active = imageType($("#block-type").value);
+    $("#proof-help").hidden = $("#block-type").value !== "proof";
     imageFields.hidden = !active;
     $("#block-content").closest(".field").hidden = active;
     $(".symbol-board").hidden = active;
@@ -1469,6 +1478,124 @@
   renderAliases();
   /* --- fin [F] --- */
 
+  /* --- [G] Comandos / y plantillas --- */
+  let slashSession = false;
+  let templateSession = null;
+  let renamingTemplate = -1;
+  let savedTemplateBranch = null;
+  const templateDialog = $("#save-template-dialog");
+  const storedTemplates = readWritingStorage("tex-notes:templates:v1", []);
+  if (Array.isArray(storedTemplates)) {
+    for (const template of storedTemplates) if (!T.validateTemplate(template, [...T.BUILTIN_TEMPLATES, ...ownTemplates]).length) ownTemplates.push(template);
+  }
+  const closeCompletionMenu = closeAssistMenu;
+  closeAssistMenu = () => { slashSession = false; closeCompletionMenu(); };
+  blockContent.addEventListener("beforeinput", (event) => {
+    if (!T.isApplyingFieldEdit() && !event.isComposing && event.inputType === "insertText" && event.data === "/" && !blockContent.value) slashSession = true;
+  });
+  specialCompletions = (current) => {
+    if (!slashSession) return null;
+    const result = T.slashCompletions(current, [...T.BUILTIN_TEMPLATES, ...ownTemplates]);
+    if (!result || !result.entries.length) { closeAssistMenu(); return { entries: [], token: { kind: "slash" } }; }
+    return result;
+  };
+  /* @decision DEC-018 ancla:a8b1aa78 tramo:4
+   * Asignar el selector no emite change. El evento explícito sincroniza imagen,
+   * herramientas de listas y vista previa cuando el tipo viene del menú /.
+   */
+  function selectBlockType(typeId) {
+    $("#block-type").value = typeId;
+    $("#block-type").dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  acceptSpecialCompletion = (entry, token) => {
+    if (entry.kind === "template") {
+      const target = editorTarget();
+      templateSession = { template: entry.template, index: 0, basePath: target.editing.length ? target.editing.slice(0, -1) : target.parent, paths: [] };
+      noteUsage(entry.key); loadTemplateStep(); return true;
+    }
+    if (entry.kind !== "type") return false;
+    selectBlockType(entry.typeId);
+    if (token.title !== undefined) $("#block-title").value = token.title;
+    applyAssist({ value: "", selectionStart: 0, selectionEnd: 0 });
+    snippetSession = null; pendingPairs = []; renderEditorPreview(); focusBlockContent(); noteUsage(entry.key);
+    announce(`Tipo: ${blockLabel(entry.typeId)}.${token.title ? ` Título: ${token.title}.` : ""}`);
+    return true;
+  };
+  function renderTemplateProgress() {
+    const progress = $("#template-progress");
+    progress.hidden = !templateSession;
+    if (!templateSession) return;
+    const { template, index } = templateSession, next = template.steps[index + 1];
+    $("#template-progress-text").textContent = `Plantilla «${template.name}»: paso ${index + 1} de ${template.steps.length}${next ? ` · Siguiente: ${blockLabel(next.block.type)}` : " · Último paso"}.`;
+  }
+  function loadTemplateStep() {
+    const { block } = templateSession.template.steps[templateSession.index];
+    const parent = T.templateParent(templateSession);
+    if (!parent) { cancelTemplateForStructuralChange(); announce("La plantilla perdió su destino y se canceló."); return; }
+    setEditorTarget({ parent }); selectBlockType(block.type);
+    $("#block-title").value = block.title;
+    for (const hook of blockFieldHooks) hook.fill?.(block);
+    insertWritingSnippet(block.content, 0, blockContent.value.length, false);
+    renderEditorPreview(); renderTemplateProgress(); focusBlockContent(); saveSession();
+    announce($("#template-progress-text").textContent);
+  }
+  function commitTemplateStep(path) {
+    if (!templateSession) return "";
+    const name = templateSession.template.name;
+    templateSession = T.advanceTemplate(templateSession, path);
+    renderTemplateProgress();
+    if (templateSession) { loadTemplateStep(); return `Sigue la plantilla ${name}.`; }
+    return `Plantilla ${name} completada.`;
+  }
+  function cancelTemplateForStructuralChange() {
+    if (!templateSession) return "";
+    templateSession = null; renderTemplateProgress();
+    return " Se canceló la plantilla porque cambió la estructura o el destino.";
+  }
+  $("#skip-template-step").addEventListener("click", () => {
+    if (!templateSession) return;
+    templateSession = T.advanceTemplate(templateSession, null); renderTemplateProgress();
+    if (templateSession) loadTemplateStep();
+    else { clearBlockFields(); focusBlockContent(); announce("Plantilla terminada; se omitió el paso y su descendencia."); }
+  });
+  $("#cancel-template").addEventListener("click", () => {
+    templateSession = null; renderTemplateProgress(); focusBlockContent(); announce("Plantilla cancelada; el contenido del paso actual se conserva.");
+  });
+  blockItemExtensions.push((block, path, { actions, subject }) => {
+    const button = document.createElement("button"); button.type = "button"; button.textContent = "Guardar como plantilla";
+    button.setAttribute("aria-label", `Guardar como plantilla ${subject}`); button.setAttribute("aria-haspopup", "dialog");
+    button.addEventListener("click", () => {
+      renamingTemplate = -1; savedTemplateBranch = cloneBlock(block);
+      $("#template-name").value = block.title || blockLabel(block.type); $("#template-trigger").value = ""; $("#template-error").textContent = "";
+      templateDialog.showModal();
+    });
+    actions.append(button);
+  });
+  refreshTemplates = () => {
+    $("#own-template-list").replaceChildren(...ownTemplates.map((template, index) => {
+      const item = document.createElement("li"), rename = document.createElement("button"), remove = document.createElement("button");
+      rename.type = remove.type = "button"; rename.textContent = "Renombrar plantilla"; remove.textContent = "Borrar plantilla";
+      rename.setAttribute("aria-label", `Renombrar plantilla ${template.name}`); remove.setAttribute("aria-label", `Borrar plantilla ${template.name}`);
+      rename.addEventListener("click", () => { renamingTemplate = index; $("#template-name").value = template.name; $("#template-trigger").value = template.trigger; $("#template-error").textContent = ""; templateDialog.showModal(); });
+      remove.addEventListener("click", () => { ownTemplates.splice(index, 1); writeWritingStorage("tex-notes:templates:v1", ownTemplates); refreshTemplates(); $("#writing-preferences > summary").focus(); announce("Plantilla borrada."); });
+      item.append(`${template.name} · /${template.trigger} `, rename, remove); return item;
+    }));
+  };
+  $("#save-template-cancel").addEventListener("click", () => templateDialog.close());
+  $("#save-template-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const values = { name: $("#template-name").value.trim(), trigger: $("#template-trigger").value.trim() };
+    const template = renamingTemplate >= 0 ? { ...ownTemplates[renamingTemplate], ...values }
+      : T.templateFromBranch(savedTemplateBranch, { ...values, id: `personal-${Date.now().toString(36)}-${ownTemplates.length}` });
+    const existing = [...T.BUILTIN_TEMPLATES, ...ownTemplates.filter((t, i) => i !== renamingTemplate)];
+    const errors = T.validateTemplate(template, existing); $("#template-error").textContent = errors.join(" ");
+    if (errors.length) { announce(errors[0]); return; }
+    if (renamingTemplate >= 0) ownTemplates[renamingTemplate] = template; else ownTemplates.push(template);
+    writeWritingStorage("tex-notes:templates:v1", ownTemplates); refreshTemplates(); templateDialog.close(); announce("Plantilla guardada.");
+  });
+  refreshTemplates();
+  /* --- fin [G] --- */
+
   function renderShortcutPanel() {
     const isMac = /Mac/.test(global.navigator.userAgentData?.platform || global.navigator.platform || "");
     const items = SHORTCUTS.map((shortcut) => {
@@ -1527,6 +1654,7 @@
   $("#recover-session").addEventListener("click", () => {
     const draft = normalizeDraft(pendingSession);
     if (!draft) { announce("No hay una sesión válida para recuperar."); return; }
+    cancelTemplateForStructuralChange();
     setMetadata(draft.metadata); blocks = draft.blocks;
     const editor = pendingSession.editor || {};
     $("#block-type").value = blockType(editor.type) ? editor.type : "text";

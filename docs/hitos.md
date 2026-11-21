@@ -84,3 +84,8 @@ selecciones, salto de cierre, Retroceso y cierre de entornos con preferencia loc
 
 Menú accesible único junto al cursor, clasificación por comandos y términos en
 español, historial con decaimiento, huecos, alias con Tab y configuración portátil.
+
+## Hito 19 — Comandos /, Demostración y plantillas
+
+Tipos y títulos desde el contenido vacío, proof predefinido, once plantillas de
+Cálculo III por pasos y captura de ramas personales con configuración portátil.

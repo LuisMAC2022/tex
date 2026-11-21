@@ -50,6 +50,7 @@
             <input id="editing-path" type="hidden" value="">
             <input id="parent-path" type="hidden" value="">
             <p id="block-target" class="block-target">El bloque se añadirá al final de la raíz del documento.</p>
+            <p id="template-progress" hidden><span id="template-progress-text"></span> <button id="skip-template-step" type="button" class="secondary">Omitir paso</button> <button id="cancel-template" type="button" class="secondary">Cancelar plantilla</button></p>
             <p id="tray-summary" class="block-target" hidden></p>
             <p class="field">
               <label for="block-type">Tipo de bloque</label>
@@ -60,6 +61,7 @@
                 <option value="definition">Definición</option>
                 <option value="theorem">Teorema</option>
                 <option value="proposition">Proposición</option>
+                <option value="proof">Demostración</option>
                 <option value="example">Ejemplo</option>
                 <option value="note">Nota</option>
                 <option value="itemize">Lista con viñetas</option>
@@ -69,6 +71,7 @@
               </select>
             </p>
             <p class="field"><label for="block-title">Título del bloque (opcional)</label><input id="block-title" name="blockTitle" type="text"></p>
+            <small id="proof-help" hidden>En Demostración, el título opcional sustituye al encabezado Demostración en el PDF.</small>
             <div class="field">
               <details class="field-help"><summary>Ayuda del contenido</summary>
               <small id="block-help">El contenido se copia al documento <strong>tal cual</strong>: comandos como <code>\textbf{...}</code> o <code>\mathbb{R}</code>, llaves y matemáticas entre <code>$…$</code> o <code>$$…$$</code> llegan exactamente como los escribes, y la aplicación no inserta ningún carácter de escape. Por eso puedes pegar aquí LaTeX de otro documento sin revisarlo. A cambio, los caracteres reservados de LaTeX son cosa tuya: para que aparezcan impresos escribe <code>\%</code>, <code>\&amp;</code>, <code>\#</code>, <code>\_</code> o <code>\$</code> —un <code>%</code> suelto comenta el resto de su línea—. Se permiten párrafos separados por una línea vacía y una lista toma un elemento por línea. Solo el título del bloque y los metadatos se escapan por completo, porque la aplicación los coloca dentro de un argumento.</small>
@@ -203,6 +206,7 @@
           <details id="writing-preferences">
             <summary>Preferencias de escritura</summary>
             <label class="check-field"><input id="auto-pair" type="checkbox" checked> Cerrar automáticamente llaves y delimitadores</label>
+            <h3>Mis plantillas</h3><ul id="own-template-list"></ul>
             <h3>Mis alias</h3>
             <div class="table-scroll"><table><thead><tr><th>Disparador</th><th>Expansión</th><th>Modo</th><th>Acciones</th></tr></thead><tbody id="alias-list"></tbody></table></div>
             <fieldset id="alias-fields"><legend>Añadir o editar un alias</legend>
@@ -245,6 +249,15 @@
           </menu>
         </form>
       </dialog>
+      <dialog id="save-template-dialog" aria-labelledby="save-template-heading">
+        <form id="save-template-form" method="dialog">
+          <h2 id="save-template-heading">Guardar como plantilla</h2>
+          <p class="field"><label for="template-name">Nombre de la plantilla</label><input id="template-name" type="text" autofocus aria-describedby="template-error"></p>
+          <p class="field"><label for="template-trigger">Comando</label><input id="template-trigger" type="text" aria-describedby="template-error" autocomplete="off"></p>
+          <p id="template-error" class="error"></p>
+          <menu class="button-row"><li><button id="save-template-cancel" type="button" class="secondary">Cancelar</button></li><li><button type="submit">Guardar plantilla</button></li></menu>
+        </form>
+      </dialog>
       <ul role="listbox" id="assist-list" aria-label="Sugerencias de escritura" hidden></ul>
       <p id="app-status" class="status" aria-live="polite" aria-atomic="true">Editor listo.</p>
     </main>
@@ -263,6 +276,7 @@
     <script src="assets/js/content-check.js"></script>
     <script src="assets/js/editing-assist.js"></script>
     <script src="assets/js/completion.js"></script>
+    <script src="assets/js/templates.js"></script>
     <script src="assets/js/app.js"></script>
   </body>
 </html>

@@ -129,6 +129,7 @@ con imágenes, sube también los archivos de imagen a las rutas indicadas en el 
 | «Definición» | Un recuadro `Definición 1`, numerado. |
 | «Teorema» | `Teorema 1`. |
 | «Proposición» | `Proposición 1`. |
+| «Demostración» | Entorno proof; el título opcional sustituye a su encabezado. |
 | «Ejemplo» | `Ejemplo 1`. |
 | «Nota» | `Nota 1`. |
 | «Lista con viñetas» | Una lista de puntos. |
@@ -281,7 +282,7 @@ original aunque aparezcan avisos.
 
 ## 7. Guardar el trabajo
 
-**No se guarda solo.** Pulsa «Guardar borrador» cuando quieras conservar lo que
+La sesión se autoguarda, incluido el bloque en curso. Pulsa «Guardar borrador» cuando quieras conservar un punto de restauración de lo que
 llevas. Se guarda en este navegador y en este aparato, y así te lo dice el aviso.
 
 - «Restaurar borrador» recupera lo último que guardaste. También entiende borradores
@@ -446,3 +447,24 @@ disparador, por lo que “lím” no activa “lim”.
 «Restablecer alias predeterminados» repone la lista incluida. «Exportar configuración» descarga notas-latex-configuracion.json; «Importar configuración»
 valida el archivo completo y pide confirmación antes de reemplazar tus preferencias.
 El historial de **Recientes** del tablero sigue siendo independiente.
+
+## Comandos de tipo y plantillas
+
+En Contenido vacío escribe / y el comando: /txt o /texto, /ec, /el, /def, /teo,
+/prop, /dem, /ej, /nota, /lista o /vi, /enum o /num, /bib, /img. Puedes buscar
+por nombre sin distinguir acentos. Escribe el título después de un espacio,
+por ejemplo /teo Fubini. Intro o Tab aplica; Escape conserva lo escrito. Al
+seleccionar imagen, el foco pasa a su archivo. «Demostración» usa proof: si
+pones un título, reemplaza el encabezado habitual en el PDF.
+
+El mismo menú ofrece teodem, ejres, limite, parcial, grad, lagrange, fubini,
+polares, esfericas, taylor y preclase. Carga un paso cada vez: escribe en sus
+huecos y confirma con Ctrl+Intro. El aviso de plantilla indica el siguiente
+paso. «Omitir paso» omite el paso y sus descendientes; «Cancelar plantilla»
+conserva lo que haya en el editor. Mover, borrar, duplicar, pegar o restaurar
+cancela la cola y lo anuncia. Teorema y demostración se añaden como hermanos.
+
+«Guardar como plantilla» guarda una rama entera, incluidas opciones de imagen,
+con «Nombre de la plantilla» y «Comando». «Guardar plantilla» confirma.
+En «Mis plantillas», «Renombrar plantilla» cambia nombre y comando, y
+«Borrar plantilla» la retira. La exportación de configuración incluye esta lista.

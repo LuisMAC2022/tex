@@ -75,3 +75,10 @@ por ronda de revisión, no al cambiar código.
 - [ ] Ctrl+Z devuelve el disparador después de un alias y deshace una sugerencia aceptada.
 - [ ] Tocar una opción mantiene el foco en el campo; el menú cabe a 320 px en ambos temas.
 - [ ] Exportar e importar entre dos navegadores conserva los alias y la preferencia.
+
+## Captura rápida: P4
+
+- [ ] Simular diez bloques con /teo Título, /ec y /lista, confirmando con Ctrl+Intro y manteniendo el foco en Contenido.
+- [ ] Completar ejres, repetir omitiendo un paso y repetir moviendo un bloque para cancelar la cola.
+- [ ] /img muestra opciones y enfoca Archivo de imagen; /dem admite un título que sustituye al encabezado.
+- [ ] Guardar una rama con imagen como plantilla y reutilizarla; renombrar, exportar e importar.

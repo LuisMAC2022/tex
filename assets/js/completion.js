@@ -83,7 +83,7 @@
     if(!Array.isArray(config.aliases)||!Array.isArray(config.templates)||!Array.isArray(config.macros)||!config.prefs||typeof config.prefs.autoPair!=='boolean') return ['Faltan alias, plantillas, macros o preferencias válidas.'];
     const errors=[], aliases=[], templates=[], macros=[];
     for(const a of config.aliases){ errors.push(...validateAlias(a,aliases)); aliases.push(a); }
-    for(const t of config.templates){ errors.push(...(T.validateTemplate ? T.validateTemplate(t,templates) : ['Esta versión no admite plantillas importadas.'])); templates.push(t); }
+    for(const t of config.templates){ errors.push(...(T.validateTemplate ? T.validateTemplate(t,[...(T.BUILTIN_TEMPLATES||[]),...templates]) : ['Esta versión no admite plantillas importadas.'])); templates.push(t); }
     for(const m of config.macros){ errors.push(...(T.validateMacro ? T.validateMacro(m,macros) : ['Esta versión no admite macros importadas.'])); macros.push(m); }
     return errors;
   }

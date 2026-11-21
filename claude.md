@@ -46,3 +46,16 @@ La integración de plantillas y macros queda para P4/P5; en esta etapa esos
 arrays se exportan vacíos. No se añadió dependencia. Falta revisión de NVDA,
 teclados físicos y posición visual del menú por la restricción de Chromium.
 Revisadas y bendecidas las anclas DEC-015 y de captura DEC-016.
+
+## P4 — Comandos /, Demostración y plantillas
+
+Implementados slash en la tabla única, menú / reutilizando el componente de P3,
+títulos tras espacio, change explícito y foco de imagen, proof predefinido, once
+plantillas completas, cola relativa a las rutas insertadas, omisión/cancelación,
+guardado de ramas y gestión/importación de plantillas personales. Omitir un
+padre omite sus descendientes. Cambios estructurales cancelan la cola y lo anuncian.
+Cada fórmula incluida se verifica con el KaTeX vendorizado y checkBlock. El
+archivo de ejemplo se regeneró y no tiene cambios. Se revisó el comentario y
+tramo de DEC-005 para predefined/slash y se bendijo su ancla junto con DEC-018.
+No se han comprobado teclados físicos, NVDA ni la clase simulada en navegador;
+quedan en la lista manual. Sin dependencias nuevas.

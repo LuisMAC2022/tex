@@ -135,7 +135,7 @@
    * preámbulo no pueda desincronizarse de los tipos disponibles.
    */
   function buildTheoremDefs() {
-    const declared = TexNotes.BLOCK_TYPES.filter((type) => type.kind === "theorem");
+    const declared = TexNotes.BLOCK_TYPES.filter((type) => type.kind === "theorem" && !type.predefined);
     const styles = [...STYLE_ORDER, ...declared.map((type) => type.style)].filter((style, index, all) => all.indexOf(style) === index);
     const lines = [];
     let current = null;
