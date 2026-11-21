@@ -98,3 +98,11 @@ consumir la llave automática de begin. Esa llave se descarta, mientras se
 conservan los pares exteriores; de otro modo podría confundirse con la última
 llave del nuevo cierre de entorno. Caso anidado cubierto por prueba. Suite e
 inventario actualizados; no cambia el contenido generado ni los guardianes.
+
+### P4 — Revisión de integración
+
+La carga de un paso ahora entrega también su formato de lista al gancho de
+lectura: una plantilla capturada de un borrador antiguo conserva flat hasta
+editar el contenido. Se prueba captura → fragmento → conservación/cambio de
+formato. Los demás ganchos, incluidas opciones de imagen, siguen compartidos.
+Suite, documentación e inventario actualizados.

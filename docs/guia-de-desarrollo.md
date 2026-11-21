@@ -514,3 +514,7 @@ registrar Tab ni Intro sin modificadores en SHORTCUTS.
 Al sustituir un token por un fragmento, `pairsAfterReplacement` conserva solo
 los pares exteriores. Los cierres consumidos por la sustitución se descartan,
 incluso si el nuevo texto termina casualmente en el mismo carácter.
+
+El gancho de carga de listas conserva el bloque fuente al cargar un paso de
+plantilla. `listFormatAfterEdit` mantiene flat si el contenido sigue igual y
+activa outline cuando se modifica, como al editar un bloque del árbol.

@@ -47,3 +47,12 @@ test("omitir un padre omite su descendencia y capturar una rama conserva opcione
  assert.deepEqual(plain(template.steps.map(s=>s.depth)),[0,1]); assert.equal(template.steps[1].block.options.width,0.4);
  assert.equal(template.steps[1].block.options.angle,90); assert.equal(template.steps[0].block.children,undefined);
 });
+
+test("una plantilla conserva el formato de una lista antigua hasta que se modifica el contenido", () => {
+ const block={type:'itemize',title:'',content:'- Literal\n1. Otro',listFormat:'flat',children:[]};
+ const template=T.templateFromBranch(block,{id:'listaantigua',name:'Lista antigua',trigger:'listaantigua'});
+ const loaded=template.steps[0].block;
+ assert.equal(loaded.listFormat,'flat');
+ assert.equal(T.listFormatAfterEdit(loaded,T.parseSnippet(loaded.content).text),'flat');
+ assert.equal(T.listFormatAfterEdit(loaded,loaded.content+'\nNuevo'),'outline');
+});

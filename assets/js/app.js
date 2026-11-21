@@ -955,12 +955,15 @@
   const listContent = $("#block-content");
   const listLimit = $("#list-limit");
   const listShortcuts = SHORTCUTS.filter(({ scope }) => scope === "list-editor");
-  const listKeyNames = listShortcuts.map(listAriaKeyshortcuts);
+  const listKeyNames = listShortcuts.map(shortcut => listAriaKeyshortcuts(shortcut));
+  let loadedListBlock = null;
 
   blockFieldHooks.push({
+    fill(block) { loadedListBlock = blockType(block.type)?.kind === "list" ? block : null; },
+    clear() { loadedListBlock = null; },
     read(type) {
       if (blockType(type)?.kind !== "list") return {};
-      const original = blockAtPath(blocks, editorTarget().editing);
+      const original = blockAtPath(blocks, editorTarget().editing) || loadedListBlock;
       return { listFormat: listFormatAfterEdit(original, listContent.value) };
     },
   });

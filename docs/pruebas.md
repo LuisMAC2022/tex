@@ -239,13 +239,14 @@
 - el cambio circular de categoría incluye Recientes al principio
 - los recientes conservan hasta doce símbolos distintos y conocidos en orden de inserción
 
-## `tests/templates.test.js` — 5 pruebas
+## `tests/templates.test.js` — 6 pruebas
 
 - las once plantillas incluidas son válidas, renderizan sus fórmulas y no producen errores previos
 - las plantillas rechazan saltos de profundidad, padres incompatibles, tipos y comandos duplicados
 - el menú / deriva tipos de la tabla, tolera acentos y separa el título
 - la cola usa las rutas insertadas y el teorema y su demostración son hermanos
 - omitir un padre omite su descendencia y capturar una rama conserva opciones de imagen
+- una plantilla conserva el formato de una lista antigua hasta que se modifica el contenido
 
 ## `tests/text-insertion.test.js` — 2 pruebas
 
@@ -258,4 +259,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-197 pruebas con `node:test` más la comprobación estructural.
+198 pruebas con `node:test` más la comprobación estructural.
