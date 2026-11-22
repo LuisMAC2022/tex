@@ -58,7 +58,7 @@
   function templateFromBranch(block, {id,name,trigger}) {
     const steps=[];
     function visit(node,depth){
-      const {children,...copy}=node;
+      const {children,id: blockId,...copy}=node;
       steps.push({depth,block:copy});
       for(const child of children||[]) visit(child,depth+1);
     }

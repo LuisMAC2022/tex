@@ -9,7 +9,7 @@
   } = global.TexNotes;
 
   // El borrador v1 era una lista plana. Se sigue leyendo para migrarlo; lo que
-  // se guarda es el árbol v3 con macros; se conserva la clave histórica v2.
+  // se guarda es el árbol v4 con macros e identificadores; se conserva la clave histórica v2.
   const STORAGE_KEY = "tex-notes:draft:v2";
   const LEGACY_STORAGE_KEY = "tex-notes:draft:v1";
   const $ = (selector) => document.querySelector(selector);
@@ -22,6 +22,7 @@
   const blockFieldHooks = [];
   const beforeGenerateHooks = [];
   const editorPreviewHooks = [];
+  let documentId = global.TexNotes.newId("d");
   let blocks = [];
   let macros = [];
   let previewVersion = 0;
@@ -115,7 +116,7 @@
   function metadata() {
     return Object.fromEntries(METADATA_KEYS.map((name) => [name, form.elements[name].value]));
   }
-  function state() { return { metadata: metadata(), blocks: cloneBlocks(blocks), macros: macros.map(m => ({ ...m })) }; }
+  function state() { return { documentId, metadata: metadata(), blocks: cloneBlocks(blocks), macros: macros.map(m => ({ ...m })) }; }
   function announce(message) { status.textContent = message; }
   function setMetadata(values = {}) {
     for (const name of METADATA_KEYS) form.elements[name].value = typeof values[name] === "string" ? values[name] : "";
@@ -200,6 +201,7 @@
     const item = document.createElement("li");
     const article = document.createElement("article");
     article.dataset.path = pathToKey(path);
+    article.dataset.blockId = block.id;
     const heading = document.createElement("h4");
     heading.textContent = describeBlock(block, path);
     // El nivel y el padre se escriben, no solo se sugieren con la sangría.
@@ -256,6 +258,10 @@
     while (disclosure) { disclosure.open = true; disclosure = disclosure.parentElement.closest("details"); }
     button.focus();
     return document.activeElement === button || (action !== "edit" && focusAction("edit", path));
+  }
+  function focusById(action, id) {
+    const path = global.TexNotes.pathOfId(blocks, id);
+    return path !== null && focusAction(action, path);
   }
   /** Tras eliminar: hermano que ocupa el hueco, anterior, padre o alta de bloque. */
   function focusAfterRemoval(path) {
@@ -339,7 +345,7 @@
       if (!next) { blockError(`«${blockLabel(draft.type)}» no admite bloques anidados y este bloque ya tiene. Muévelos o elimínalos antes de cambiar el tipo.`); return; }
       blocks = next; resetBlockEditor(); renderBlocks();
       if (keepFieldFocus) focusBlockContent();
-      else if (!focusAction("edit", editing)) $("#block-type").focus();
+      else if (!focusById("edit", blockAtPath(next, editing).id)) $("#block-type").focus();
       announce(`Bloque ${pathLabel(editing)} actualizado.`);
       return;
     }
@@ -366,7 +372,7 @@
     const label = trayLabel();
     const cancelled = cancelEditForStructuralChange();
     blocks = result.blocks; renderBlocks(); setEditorTarget(editorTarget());
-    if (!focusAction("edit", result.path)) $("#add-block").focus();
+    if (!focusById("edit", result.id)) $("#add-block").focus();
     announce(`${label} pegado como bloque ${pathLabel(result.path)} ${describeLocation(parent)}. Sigue en la bandeja para pegarlo otra vez.${cancelled}`);
   });
 
@@ -413,7 +419,7 @@
       // edición a medias se cancela, como en cualquier cambio estructural.
       const cancelled = cancelEditForStructuralChange();
       blocks = result.blocks; renderBlocks(); setEditorTarget(editorTarget());
-      if (!focusAction("edit", result.path)) $("#add-block").focus();
+      if (!focusById("edit", result.id)) $("#add-block").focus();
       announce(`${describeBlock(block, path)} duplicado como ${describeBlock(block, result.path)}${nested ? `, con sus ${nested} ${nested === 1 ? "bloque anidado" : "bloques anidados"}` : ""}. El original no cambia.${cancelled}`);
       return;
     }
@@ -456,7 +462,7 @@
     blocks = result.blocks; renderBlocks(); setEditorTarget(editorTarget());
     // Si el botón usado quedó deshabilitado en el extremo, el foco pasa al
     // movimiento contrario y, si tampoco existe, a la edición del mismo bloque.
-    if (!focusAction(action, result.path) && !focusAction(action === "up" ? "down" : "up", result.path)) focusAction("edit", result.path);
+    if (!focusById(action, block.id) && !focusById(action === "up" ? "down" : "up", block.id)) focusById("edit", block.id);
     announce(`${describeBlock(block, result.path)} movido a la posición ${result.path[result.path.length - 1] + 1} de su nivel.${cancelled}`);
   });
 
@@ -480,8 +486,8 @@
     if (!draft) { $("#restore-draft").focus(); announce("No hay un borrador válido para restaurar."); return; }
     const cancelled = cancelTemplateForStructuralChange();
     setDocumentMacros(draft.macros, false);
-    setMetadata(draft.metadata); blocks = draft.blocks; resetBlockEditor(); renderBlocks(); focusMetadata();
-    announce(draft.version < DRAFT_VERSION ? "Borrador restaurado y convertido al formato con bloques anidados." : "Borrador restaurado.");
+    documentId = draft.documentId; setMetadata(draft.metadata); blocks = draft.blocks; resetBlockEditor(); renderBlocks(); focusMetadata();
+    announce(draft.migratedFrom ? "Borrador restaurado y convertido al formato con bloques anidados." : "Borrador restaurado.");
     if (cancelled) announce("Borrador restaurado." + cancelled);
   });
   $("#delete-draft").addEventListener("click", () => {
@@ -1243,6 +1249,7 @@
   $("#move-block-form").addEventListener("submit", (event) => {
     event.preventDefault();
     const position = movePosition.value === "start" ? 0 : undefined;
+    const movedId = blockAtPath(blocks, movingPath)?.id;
     const result = moveBlockTo(blocks, movingPath, keyToPath(moveDestination.value), position);
     moveDialog.close();
     if (!result) {
@@ -1256,7 +1263,7 @@
     renderBlocks();
     setEditorTarget({});
     renderEditorPreview();
-    focusAction("edit", result.path);
+    focusById("edit", movedId);
     const targetReset = previous.parent.length ? " El siguiente bloque se añadirá en la raíz." : "";
     announce(`Bloque movido de ${pathLabel(movingPath)} a ${pathLabel(result.path)}.${cancelled}${targetReset}`);
   });
@@ -2019,7 +2026,7 @@
     if (!draft) { announce("No hay una sesión válida para recuperar."); return; }
     cancelTemplateForStructuralChange();
     setDocumentMacros(draft.macros, false);
-    setMetadata(draft.metadata); blocks = draft.blocks;
+    documentId = draft.documentId; setMetadata(draft.metadata); blocks = draft.blocks;
     const editor = pendingSession.editor || {};
     $("#block-type").value = blockType(editor.type) ? editor.type : "text";
     $("#block-title").value = typeof editor.title === "string" ? editor.title : "";

@@ -160,6 +160,12 @@
 - Demostración usa proof predefinido y su título opcional sin redeclararlo
 - hyperref se carga al final de la lista blanca únicamente con enlaces activos en el contenido
 
+## `tests/identificadores.test.js` — 3 pruebas
+
+- los identificadores de bloque son únicos en todo el árbol
+- los borradores v1 a v3 migran a v4 y conservan su identidad al volver a abrir
+- los identificadores del estado de ejemplo no alteran un byte de LaTeX
+
 ## `tests/image-options.test.js` — 5 pruebas
 
 - las opciones de imagen tienen valores por defecto sin altura ni etiqueta
@@ -190,7 +196,7 @@
 
 ## `tests/macros.test.js` — 8 pruebas
 
-- borrador v3 conserva macros, migra v1/v2 sin macros y rechaza v4
+- el borrador v4 conserva macros desde v3, migra v1/v2 sin macros y rechaza versiones futuras
 - el preámbulo añade newcommand literal tras graphicx y no cambia sin macros
 - la validación de macros protege nombres reservados del catálogo y entornos
 - la definición de macro valida llaves, escapes, una línea y parámetros declarados
@@ -275,4 +281,4 @@ No usa `node:test`: es un script con 51 aserciones sobre `index.html` (doctype, 
 
 ---
 
-208 pruebas con `node:test` más la comprobación estructural.
+211 pruebas con `node:test` más la comprobación estructural.

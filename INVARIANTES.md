@@ -76,3 +76,8 @@ prueba visible de qué cambió.
 
 ### INV-009 — El preámbulo carga únicamente los paquetes declarados en la lista blanca
 Guardián: `tests/generator.test.js` → "el preámbulo solo carga paquetes de la lista blanca"
+
+### INV-010 — Los identificadores de bloque son únicos en todo el árbol
+Guardián: `tests/identificadores.test.js` → "los identificadores de bloque son únicos en todo el árbol"
+
+Las copias reciben identificadores propios y los movimientos conservan los de toda la rama. Véase [DEC-024](decisiones/DEC-024-identidad-de-bloques.md).

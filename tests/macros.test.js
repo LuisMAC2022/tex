@@ -8,11 +8,12 @@ const ctx=vm.createContext({}); vm.runInContext(await readFile('assets/vendor/ka
 const macros=[{name:'R',params:0,body:String.raw`\mathbb{R}`},{name:'abs',params:1,body:String.raw`\left|#1\right|`}];
 const plain=x=>structuredClone(x);
 
-test("borrador v3 conserva macros, migra v1/v2 sin macros y rechaza v4", () => {
+test("el borrador v4 conserva macros desde v3, migra v1/v2 sin macros y rechaza versiones futuras", () => {
  for(const version of [1,2]) assert.deepEqual(plain(T.normalizeDraft({version,metadata:{},blocks:[],macros}).macros),[]);
  const draft={version:3,metadata:{title:'Notas'},blocks:[],macros};
- assert.deepEqual(plain(T.normalizeDraft(JSON.parse(JSON.stringify(draft)))),draft);
- assert.equal(T.normalizeDraft({...draft,version:4}),null);
+ const restored = T.normalizeDraft(JSON.parse(JSON.stringify(draft)));
+ assert.equal(restored.migratedFrom,3); assert.equal(restored.version,4); assert.deepEqual(plain(restored.macros),macros);
+ assert.equal(T.normalizeDraft({...draft,version:T.DRAFT_VERSION+1}),null);
  const corrupt=[...macros,{name:'x1',params:0,body:'x'},{name:'Good',params:10,body:'x'},{name:'Good',params:1.5,body:'x'},{name:'Good',params:0,body:3},null];
  assert.deepEqual(plain(T.normalizeDraft({...draft,macros:corrupt}).macros),macros);
 });

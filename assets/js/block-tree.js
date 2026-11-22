@@ -1,5 +1,5 @@
 /**
- * Árbol de bloques: rutas estables y operaciones puras.
+ * Árbol de bloques: identificadores estables, rutas de posición y operaciones puras.
  *
  * Un bloque es { type, title, content, children }, con options en imágenes
  * y listFormat en listas.
@@ -17,7 +17,18 @@
   const TexNotes = global.TexNotes || (global.TexNotes = {});
 
   /** Versión del borrador persistido. La 1 era una lista plana sin children. */
-  const DRAFT_VERSION = 3;
+  const DRAFT_VERSION = 4;
+  const blockIdPattern = /^b[0-9a-z]{8}$/;
+  function newId(prefix = "b") {
+    const digits = new Uint8Array(8);
+    if (global.crypto?.getRandomValues) global.crypto.getRandomValues(digits);
+    else for (let i = 0; i < digits.length; i++) digits[i] = Math.floor(Math.random() * 256);
+    return prefix + Array.from(digits, byte => (byte % 36).toString(36)).join("");
+  }
+  function pathOfId(blocks, id) {
+    if (!id) return null;
+    return flattenBlocks(blocks).find(entry => entry.block.id === id)?.path ?? null;
+  }
 
   function isPath(path) {
     return Array.isArray(path) && path.every((index) => Number.isInteger(index) && index >= 0);
@@ -59,16 +70,17 @@
    * hermanos posteriores en vez de perderlos. Así el resto de la aplicación
    * puede dar por cierto que solo un tipo con `container` tiene descendencia.
    */
-  function normalizeBlocks(list, defaultListFormat = "outline") {
+  function cleanBlocks(list, defaultListFormat) {
     if (!Array.isArray(list)) return [];
     const blocks = [];
     for (const raw of list) {
       if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
-      const children = normalizeBlocks(raw.children, defaultListFormat);
+      const children = cleanBlocks(raw.children, defaultListFormat);
       const hasContent = typeof raw.content === "string";
       if (!hasContent && !children.length) continue;
       const type = typeof raw.type === "string" ? raw.type : "text";
       const block = { type, title: typeof raw.title === "string" ? raw.title : "", content: hasContent ? raw.content : "", children: [] };
+      if (typeof raw.id === "string" && blockIdPattern.test(raw.id)) block.id = raw.id;
       applyBlockOptions(block, raw.options);
       blocks.push(applyListFormat(block, raw.listFormat, defaultListFormat));
       if (TexNotes.acceptsChildren(type)) block.children = children;
@@ -77,6 +89,23 @@
     return blocks;
   }
 
+  function normalizeBlocks(list, defaultListFormat = "outline", generate = newId, existing = new Set(), fresh = false) {
+    const blocks = cleanBlocks(list, defaultListFormat);
+    const entries = flattenBlocks(blocks), used = new Set(existing), reserved = new Set(existing);
+    for (const { block } of entries) if (block.id) reserved.add(block.id);
+    let fallback = 0;
+    for (const { block } of entries) {
+      if (fresh || !block.id || used.has(block.id)) {
+        let id = generate("b");
+        if (typeof id !== "string" || !blockIdPattern.test(id) || reserved.has(id)) {
+          do { id = "b" + (fallback++).toString(36).padStart(8, "0"); } while (reserved.has(id));
+        }
+        block.id = id; reserved.add(id);
+      }
+      used.add(block.id);
+    }
+    return blocks;
+  }
   function normalizeBlock(raw) {
     return normalizeBlocks([raw])[0] || null;
   }
@@ -106,9 +135,10 @@
    * Inserta `block` dentro de `parentPath` ([] = raíz). `index` por debajo de
    * cero añade al final. Devuelve { blocks, path } o null.
    */
-  function insertBlock(blocks, parentPath, block, index = -1) {
+  function insertBlock(blocks, parentPath, block, index = -1, generate = newId) {
     if (!isPath(parentPath)) return null;
-    const normalized = normalizeBlock(block);
+    const used = new Set(flattenBlocks(blocks).map(entry => entry.block.id));
+    const [normalized] = normalizeBlocks([block], "outline", generate, used, true);
     if (!normalized) return null;
     const next = cloneBlocks(blocks);
     let list = next;
@@ -119,7 +149,7 @@
     }
     const position = Number.isInteger(index) && index >= 0 && index <= list.length ? index : list.length;
     list.splice(position, 0, normalized);
-    return { blocks: next, path: [...parentPath, position] };
+    return { blocks: next, path: [...parentPath, position], id: normalized.id };
   }
 
   /**
@@ -141,15 +171,10 @@
    * No comparte objetos con el original: es una copia profunda, no una
    * referencia. Editar o eliminar cualquiera de los dos deja intacto al otro.
    */
-  function duplicateBlock(blocks, path) {
-    if (!isPath(path) || !path.length) return null;
-    const next = cloneBlocks(blocks);
-    const siblings = siblingsAtPath(next, path);
-    const position = path[path.length - 1];
-    if (!siblings || position >= siblings.length) return null;
-    const copy = cloneBlocks([siblings[position]])[0];
-    siblings.splice(position + 1, 0, copy);
-    return { blocks: next, path: [...path.slice(0, -1), position + 1] };
+  function duplicateBlock(blocks, path, generate = newId) {
+    const source = blockAtPath(blocks, path);
+    if (!source) return null;
+    return insertBlock(blocks, path.slice(0, -1), source, path.at(-1) + 1, generate);
   }
 
   /**
@@ -269,13 +294,17 @@
    * devuelve siempre { version, metadata, blocks, macros } o null. No lanza: un valor
    * mal formado a cualquier profundidad se descarta al normalizar.
    */
-  function normalizeDraft(raw) {
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-    const version = Number(raw.version);
-    if (!Number.isInteger(version) || version < 1 || version > DRAFT_VERSION) return null;
-    if (!raw.metadata || typeof raw.metadata !== "object" || Array.isArray(raw.metadata)) return null;
-    const metadata = Object.fromEntries(Object.entries(raw.metadata).filter(([, value]) => typeof value === "string"));
-    return { version, metadata, blocks: normalizeBlocks(raw.blocks, "flat"), macros: version >= 3 ? normalizeMacros(raw.macros) : [] };
+  function normalizeDraft(raw, generate = newId) {
+    try {
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+      const source = Number(raw.version);
+      if (!Number.isInteger(source) || source < 1 || source > DRAFT_VERSION) return null;
+      if (!raw.metadata || typeof raw.metadata !== "object" || Array.isArray(raw.metadata)) return null;
+      const metadata = Object.fromEntries(Object.entries(raw.metadata).filter(([, value]) => typeof value === "string"));
+      const documentId = typeof raw.documentId === "string" && /^d[a-z0-9]{8}$/.test(raw.documentId) ? raw.documentId : generate("d");
+      return { version: DRAFT_VERSION, ...(source < DRAFT_VERSION ? { migratedFrom: source } : {}), documentId, metadata,
+        blocks: normalizeBlocks(raw.blocks, "flat", generate), macros: source >= 3 ? normalizeMacros(raw.macros) : [] };
+    } catch { return null; }
   }
 
   function normalizeMacros(raw) {
@@ -291,7 +320,7 @@
   }
 
   Object.assign(TexNotes, {
-    DRAFT_VERSION, normalizeMacros, sessionHasContent, cloneBlocks, cloneBlock, normalizeBlock, normalizeBlocks, blockAtPath, siblingsAtPath,
+    DRAFT_VERSION, newId, pathOfId, normalizeMacros, sessionHasContent, cloneBlocks, cloneBlock, normalizeBlock, normalizeBlocks, blockAtPath, siblingsAtPath,
     insertBlock, duplicateBlock, updateBlock, removeBlock, moveBlock, moveBlockTo, countBlocks, flattenBlocks,
     pathToKey, keyToPath, pathLabel, normalizeDraft, listFormatAfterEdit,
   });

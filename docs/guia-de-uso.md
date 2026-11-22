@@ -478,7 +478,7 @@ un argumento y definición \left|#1\right|. La vista previa muestra una llamada
 de ejemplo y los errores aparecen junto a cada campo. «Guardar macro» la
 incorpora; «Editar macro», «Borrar macro» y «Cancelar macro» permiten gestionarla.
 
-Las macros se guardan con el documento en borradores v3 y sesiones recuperables.
+Las macros se guardan con el documento en borradores v4 y sesiones recuperables.
 Se definen con newcommand en el preámbulo y encabezan las sugerencias al escribir.
 «Usar como mis macros predeterminadas» guarda una copia para documentos nuevos
 sin borrador ni sesión pendiente. La exportación de configuración incluye esas

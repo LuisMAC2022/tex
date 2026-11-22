@@ -24,7 +24,7 @@ const shape = (blocks) => [...flattenBlocks(blocks)].map((entry) => `${pathToKey
 
 test("la ausencia de children equivale a una lista vacía y el estado plano sigue siendo válido", () => {
   const blocks = normalizeBlocks([{ type: "text", content: "Uno" }, { type: "note", title: "T", content: "Dos" }]);
-  assert.deepEqual(mirror(blocks), [
+  assert.deepEqual(mirror(blocks).map(({id, ...block}) => block), [
     { type: "text", title: "", content: "Uno", children: [] },
     { type: "note", title: "T", content: "Dos", children: [] },
   ]);
@@ -106,7 +106,7 @@ test("mover se limita a los hermanos y nunca cambia de nivel", () => {
 
 test("una operación inválida devuelve null y deja el árbol intacto", () => {
   const original = tree();
-  const copia = tree();
+  const copia = mirror(original);
   for (const invalida of [
     () => blockAtPath(original, [9]), () => blockAtPath(original, []), () => blockAtPath(original, [0, "x"]),
     () => insertBlock(original, [9], node("text", "x")), () => insertBlock(original, [], null),
@@ -185,7 +185,7 @@ test("el documento combina matemática mixta y anidación en un mismo bloque", (
 
 test("un borrador plano de la versión 1 se migra sin reescribirlo a mano", () => {
   const draft = normalizeDraft({ version: 1, metadata: { title: "Notas", author: "Ana" }, blocks: [{ type: "text", content: "Uno" }, { type: "note", title: "N", content: "Dos" }] });
-  assert.equal(draft.version, 1, "se informa la versión leída para poder anunciar la migración");
+  assert.equal(draft.migratedFrom, 1, "se informa la versión leída para poder anunciar la migración");
   assert.deepEqual(mirror(draft.metadata), { title: "Notas", author: "Ana" });
   assert.deepEqual(shape(draft.blocks), ["0:Uno", "1:Dos"]);
   assert.deepEqual(mirror(draft.blocks[0].children), []);
@@ -376,7 +376,7 @@ test("las opciones de imagen sobreviven a duplicar, copiar, pegar y restaurar la
   const copied = cloneBlock(blockAtPath(duplicated.blocks, [0, 1]));
   const pasted = insertBlock(duplicated.blocks, [], copied);
   const restored = normalizeDraft(JSON.parse(JSON.stringify({ version: 2, metadata: {}, blocks: pasted.blocks })));
-  assert.equal(restored.version, 2);
+  assert.equal(restored.migratedFrom, 2);
   for (const path of [[0, 0], [0, 1], [1]]) assert.deepEqual(mirror(blockAtPath(restored.blocks, path).options), options);
   assert.notEqual(blockAtPath(duplicated.blocks, [0, 0]).options, blockAtPath(duplicated.blocks, [0, 1]).options);
   assert.notEqual(blockAtPath(duplicated.blocks, [0, 1]).options, copied.options);

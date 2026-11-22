@@ -51,9 +51,9 @@ El generador recibe un objeto con este contrato conceptual:
 - El bloque define el tipo de la lista raíz. Al abrir una sublista, el primer elemento fija su tipo con `- ` o `* ` para viñetas y un número seguido de `. ` o `) ` para numeración. Sin marcador hereda el tipo de la lista que la contiene. Los marcadores se consumen en todos los niveles. `{}- ` conserva el guion como parte del elemento.
 - Se permiten hasta cuatro niveles de un mismo tipo y seis entornos combinados, contando los teoremas y las listas envolventes que genera el editor. Los elementos que alcancen el límite se incorporan al último nivel disponible sin alterar su orden. Si el bloque completo ya está en el límite, sus elementos se emiten como párrafos.
 - Una lista plana sin marcadores conserva el formato `.tex` anterior. Cada nivel de sublista añade dos espacios al comienzo de sus líneas. Los bloques de «Añadir dentro» se emiten después de los elementos y antes del cierre de la lista raíz, si la lista puede abrirse.
-- Al restaurar un borrador antiguo, sus listas sin `listFormat` conservan los marcadores literales y se muestran planas. Cambiar su contenido activa la sintaxis por sangría. Las listas nuevas guardan su formato dentro del borrador v3.
+- Al restaurar un borrador antiguo, sus listas sin `listFormat` conservan los marcadores literales y se muestran planas. Cambiar su contenido activa la sintaxis por sangría. Las listas nuevas guardan su formato dentro del borrador v4.
 - `bibliography` produce una **bibliografía manual con aspecto IEEE**: cada línea no vacía y recortada del contenido se conserva literalmente y se convierte en un `\bibitem{refN}` dentro de `thebibliography`. Este entorno del núcleo de LaTeX aporta por sí mismo la numeración entre corchetes, sin BibTeX, `natbib`, `IEEEtran` ni paquetes adicionales. El campo `title` no se usa, igual que en las listas. Las claves `ref1`, `ref2`, etc. son predecibles y únicas solo dentro de cada bloque; dos bloques de bibliografía repetirán claves y LaTeX mostrará una advertencia de etiqueta duplicada, una limitación aceptada porque la aplicación no genera `\cite{}`.
-- `image` usa la ruta recortada y literal de `content` y el pie opcional de `title`, escapado. No admite hijos. Sus `options` son opcionales y se guardan en el borrador `version: 3`.
+- `image` usa la ruta recortada y literal de `content` y el pie opcional de `title`, escapado. No admite hijos. Sus `options` son opcionales y se guardan en el borrador `version: 4`.
 - `buildTheoremDefs()` deriva las declaraciones `\newtheorem` de esa misma tabla, omite los tipos predefinidos como proof y agrupa los entornos por `\theoremstyle`, de modo que el preámbulo no puede desincronizarse de los tipos disponibles: añadir un tipo es una entrada en la tabla y su `<option>` en `index.html`, y una prueba compara ambas listas.
 - **Regla de numeración:** cada entorno declarado con `\newtheorem` mantiene un contador propio, independiente y continuo en todo el documento. `proposition` comparte `\theoremstyle{plain}` con `theorem`, pero **no comparte contador** ni se reinicia por sección. Cambiar esa regla es editar una sola entrada de la tabla, y es un cambio de contrato que debe documentarse aquí.
 - **El contenido de un bloque llega al `.tex` tal cual se escribió.** La aplicación no inserta ningún carácter de escape en `content`: ni en prosa, ni en los entornos tipo teorema, ni en los elementos de lista, ni por supuesto en los bloques matemáticos. Escribir `\forall x \in \mathbb{R}` produce exactamente eso, y un fragmento de LaTeX pegado desde otro documento —un `align`, un `tabular`— llega intacto.
@@ -237,7 +237,7 @@ cual, incluso cuando la comprobación encuentra errores.
    - La bandeja vive solo en la pestaña abierta: no se guarda en el borrador ni cambia su versión, porque no forma parte del documento.
 5. Pulsa **Generar documento** para actualizar el código `.tex` completo.
 6. Copia o descarga el resultado y pégalo en Overleaf. Si la API moderna del portapapeles no está disponible, se utiliza selección y copia del `textarea` como alternativa.
-7. **Guardar borrador** escribe bajo demanda `{ version: 3, metadata, blocks, macros }` en `localStorage` con la clave `tex-notes:draft:v2`. **Restaurar** lee esa clave y, si no existe, la antigua `tex-notes:draft:v1` con su lista plana: la convierte al árbol y lo dice en el anuncio. La restauración normaliza `type`, `title`, `content` y `children` de forma recursiva, tolera datos ausentes, corruptos o mal anidados a cualquier profundidad y nunca lanza. Borrar retira ambas claves, pide confirmación y nunca borra el formulario abierto.
+7. **Guardar borrador** escribe bajo demanda `{ version: 4, metadata, blocks, macros }` en `localStorage` con la clave `tex-notes:draft:v2`. **Restaurar** lee esa clave y, si no existe, la antigua `tex-notes:draft:v1` con su lista plana: la convierte al árbol y lo dice en el anuncio. La restauración normaliza `type`, `title`, `content` y `children` de forma recursiva, tolera datos ausentes, corruptos o mal anidados a cualquier profundidad y nunca lanza. Borrar retira ambas claves, pide confirmación y nunca borra el formulario abierto.
 
 ### Apertura directa con `file://`
 
@@ -352,7 +352,7 @@ que se confirman con Ctrl+Intro, con destino y profundidad relativos. Se pueden
 omitir pasos, cancelar la cola y guardar una rama como plantilla personal.
 Las plantillas personales viajan en la configuración y se gestionan en preferencias.
 
-## Macros del documento y borrador v3
+## Macros del documento y borrador v4
 
 `macros` es un array de `{ name, params, body }`. El nombre usa letras latinas,
 params es un entero de 0 a 9 y body es literal. `buildPreamble(macros)` emite
@@ -361,9 +361,9 @@ La vista previa emplea las mismas definiciones, aisladas entre renderizados.
 La comprobación previa distingue comandos exclusivos de KaTeX y reconoce las
 macros del documento.
 
-Los borradores v1 y v2 se normalizan con macros vacías; el v3 las conserva.
+Los borradores v1 y v2 se normalizan con macros vacías. La migración de v3 conserva las macros y asigna identificadores. El estado v4 guarda `documentId` y un `id` único por bloque.
 Las versiones futuras se rechazan. La clave histórica tex-notes:draft:v2 se
-mantiene con un sobre version:3, que las aplicaciones anteriores rechazan.
+mantiene con un sobre version:4, que las aplicaciones anteriores rechazan.
 El autoguardado también incorpora macros. Las predeterminadas se guardan en
 tex-notes:macros-default:v1 y se incluyen en la configuración portátil.
 

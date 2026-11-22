@@ -148,7 +148,7 @@ Tres reglas del árbol que conviene tener presentes:
   anterior sigue siendo válido; `normalizeDraft` lo migra y lo dice.
 
 El borrador se guarda bajo demanda en `localStorage`, con la clave
-`tex-notes:draft:v2` y la forma `{ version: 3, metadata, blocks, macros }`. `normalizeDraft`
+`tex-notes:draft:v2` y la forma `{ version: 4, documentId, metadata, blocks, macros }`. `normalizeDraft`
 tolera datos ausentes, corruptos o mal anidados **a cualquier profundidad y nunca
 lanza**: es entrada no confiable, viene del navegador de alguien.
 
@@ -483,11 +483,11 @@ recorre una copia de la rama en preorden y conserva las opciones. La interfaz
 cancela la cola ante cambios estructurales y guarda las propias en
 `tex-notes:templates:v1`. Véanse DEC-018 y DEC-020.
 
-## Macros y borradores v3
+## Macros y borradores v4
 
 `normalizeMacros` aplica el saneado estructural del borrador: nombre latino,
 params entero entre 0 y 9 y body cadena. `normalizeDraft` migra v1/v2 con macros
-vacías y rechaza v4. La clave histórica del borrador se conserva; cambia la
+vacías y conserva las macros de v3. Desde v4 cada bloque tiene un id estable y cada documento su `documentId`. Rechaza versiones posteriores. La clave histórica del borrador se conserva; cambia la
 versión del sobre. `macrosToPreamble` vive en el generador, sin depender de la
 interfaz, y emite newcommand con cuerpo literal. Sin macros no añade líneas.
 
