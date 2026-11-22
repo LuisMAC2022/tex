@@ -126,3 +126,13 @@ Añadí la página autónoma y el informe copiable, con cuatro pruebas y dos var
 Añadí la barra al alcance del pulgar, navegación por huecos y unidades LaTeX, la hoja del tablero y posición según la ventana visual. El plegado según el título ya existía y se reutiliza. Amplié los objetivos táctiles. Las pruebas ejercitan acentos combinados, emoji, comandos, comentarios y recorridos tras editar dos huecos. No verificados la geometría con Gboard, el foco en TalkBack ni las posiciones en píxeles de Chromium; constan en la revisión manual.
 
 `npm test`: 200 pruebas pasaron y `check:js` validó los scripts. El blob de `examples/calculo-3.tex` coincide con el de la rama base (`50cce790`).
+
+## U2 · Duda que requiere decisión
+
+U0 y U1 están completos. Antes de implementar los menús, contrasté las dos entradas de teclado solicitadas en U2 con [DEC-009](decisiones/DEC-009-registro-de-atajos.md) y su [prueba de atajos](tests/shortcuts.test.js). El encargo pide registrar Menú y Mayús+F10 en `shortcuts.js`. Para una tecla sin modificadores, el guardián admite Escape, flechas y Re Pág/Av Pág dentro de un widget. `ContextMenu` queda excluida incluso si solo se escucha en «Contenido».
+
+Lo reproduje en una copia temporal añadiendo únicamente `{ id: "radial.menu", code: "ContextMenu", scope: "content-widget" }` al registro. La prueba «los atajos respetan AltGr, las teclas de los widgets y las combinaciones del navegador» falla en la aserción que enumera las teclas permitidas. Las otras cuatro pruebas del archivo pasan. Mayús+F10 por sí sola sí cabe en el registro actual.
+
+¿Se autoriza una excepción de DEC-009 para `ContextMenu` exclusivamente con foco en «Contenido»? La prueba podría exigir ese ámbito y mantener las restricciones en todos los demás. Se aplicó la regla 0.4 de `agents.md`: U2 quedó en pausa y U3–U5 pendientes por el orden de los paquetes.
+
+No se ejecutaron pruebas de los menús ni compilación de sus fragmentos con KaTeX, `pdflatex` u Overleaf. La comprobación en Android, Gboard y TalkBack continúa en la [revisión manual](docs/revision-manual.md).
