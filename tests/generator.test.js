@@ -200,3 +200,15 @@ test("Demostración usa proof predefinido y su título opcional sin redeclararlo
  assert.equal(proof, '\\begin{proof}[Prueba \\& caso]\nEs cierto.\n\\end{proof}');
  assert.doesNotMatch(buildPreamble(),/\\newtheorem\{proof\}/);
 });
+
+test("hyperref se carga al final de la lista blanca únicamente con enlaces activos en el contenido", () => {
+  for (const command of ["\\href{x}{y}", "\\url{x}"]) {
+    const preamble = buildPreamble([], [{ type: "text", children: [{ content: command }] }]);
+    const packages = [...preamble.matchAll(/\\usepackage(?:\[[^\]]*\])?\{([^}]+)\}/g)].map(m => m[1]);
+    assert.deepEqual(packages, ["fontenc","inputenc","babel","amsmath","amssymb","amsthm","graphicx","hyperref"]);
+    assert.ok(preamble.includes("\\usepackage[hidelinks]{hyperref}"));
+  }
+  for (const content of ["% \\href{x}{y}", "\\\\url{x}", "\\urlname", "sin enlace"]) {
+    assert.ok(!buildPreamble([], [{ content }]).includes("hyperref"));
+  }
+});

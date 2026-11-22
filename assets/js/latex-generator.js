@@ -153,7 +153,13 @@
     return ["% Macros personales definidas en el editor.", ...macros.map(m => `\\newcommand{\\${m.name}}${m.params ? `[${m.params}]` : ""}{${m.body}}`)].join("\n");
   }
 
-  function buildPreamble(macros = []) {
+  function hasDocumentLinks(blocks) {
+    return Array.isArray(blocks) && blocks.some(block => {
+      const tokens = String(block.content || "").match(/%[^\n]*|\\[a-zA-Z]+|\\[\s\S]/g) || [];
+      return (block.type !== "image" && tokens.some(token => token === "\\href" || token === "\\url")) || hasDocumentLinks(block.children);
+    });
+  }
+  function buildPreamble(macros = [], blocks = []) {
     return [
       "\\documentclass[11pt]{article}",
       "% fontenc genera PDF con caracteres latinos copiables.",
@@ -170,6 +176,7 @@
       "\\usepackage{amsthm}",
       "% graphicx permite \\includegraphics para insertar imágenes.",
       "\\usepackage{graphicx}",
+      ...(hasDocumentLinks(blocks) ? ["\\usepackage[hidelinks]{hyperref}"] : []),
       ...(macrosToPreamble(macros) ? [macrosToPreamble(macros)] : []),
       "% Los entornos siguientes se derivan de la tabla de tipos de bloque.",
       buildTheoremDefs(),
@@ -195,7 +202,7 @@
 
   /** El archivo resultante es autocontenido: no depende de ningún .sty externo. */
   function generateLatex(state = {}) {
-    return `${buildPreamble(state.macros)}\n\n${buildMetadata(state.metadata)}\n\n${buildBody(state)}\n\n${buildDocumentEnd()}\n`;
+    return `${buildPreamble(state.macros, state.blocks)}\n\n${buildMetadata(state.metadata)}\n\n${buildBody(state)}\n\n${buildDocumentEnd()}\n`;
   }
 
   Object.assign(TexNotes, {

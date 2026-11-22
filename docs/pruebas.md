@@ -120,7 +120,7 @@
 - Anterior recorre los huecos después de escribir en dos argumentos
 - el cursor recorre comandos, escapes y grafemas completos y respeta los comentarios
 
-## `tests/generator.test.js` — 36 pruebas
+## `tests/generator.test.js` — 37 pruebas
 
 - los metadatos y los títulos escapan todos los caracteres reservados
 - el contenido de un bloque no recibe ningún escape
@@ -158,6 +158,7 @@
 - una imagen con etiqueta y sin pie establece la referencia de figura
 - los hijos de una imagen con ruta vacía se emiten aunque se omita la imagen
 - Demostración usa proof predefinido y su título opcional sin redeclararlo
+- hyperref se carga al final de la lista blanca únicamente con enlaces activos en el contenido
 
 ## `tests/image-options.test.js` — 5 pruebas
 
@@ -209,6 +210,18 @@
 - todos los kinds no matemáticos extraen tramos delimitados
 - analyzeContent clasifica resultados y fallos del renderizador inyectado
 
+## `tests/pdflatex.test.js` — 1 pruebas
+
+- pdflatex compila los fragmentos radiales y el enlace en un documento
+
+## `tests/radial.test.js` — 5 pruebas
+
+- los sectores empiezan arriba, giran a la derecha y asignan el borde al siguiente
+- espera, cancelación, zona muerta, vibración y submenús en los dos modos
+- el catálogo radial deriva referencias válidas y conserva objetivos de 44 píxeles
+- los fragmentos radiales envuelven la selección literal y comparten los huecos
+- todos los fragmentos radiales pasan KaTeX en su contexto y la comprobación previa
+
 ## `tests/shortcuts.test.js` — 6 pruebas
 
 - los atajos tienen identificadores y combinaciones por ámbito únicos
@@ -258,8 +271,8 @@
 
 ## `tests/check-site.mjs` — comprobación estructural
 
-No usa `node:test`: es un script con 49 aserciones sobre `index.html` (doctype, un solo `main` y `h1`, enlace de salto, orden de los scripts clásicos, rutas relativas, etiquetas asociadas y ayudas visibles). Se ejecuta con `npm test`.
+No usa `node:test`: es un script con 51 aserciones sobre `index.html` (doctype, un solo `main` y `h1`, enlace de salto, orden de los scripts clásicos, rutas relativas, etiquetas asociadas y ayudas visibles). Se ejecuta con `npm test`.
 
 ---
 
-201 pruebas con `node:test` más la comprobación estructural.
+208 pruebas con `node:test` más la comprobación estructural.

@@ -199,6 +199,7 @@
 
     const item = document.createElement("li");
     const article = document.createElement("article");
+    article.dataset.path = pathToKey(path);
     const heading = document.createElement("h4");
     heading.textContent = describeBlock(block, path);
     // El nivel y el padre se escriben, no solo se sugieren con la sangría.
@@ -215,7 +216,9 @@
     if (acceptsChildren(block.type)) actions.append(actionButton("Añadir dentro", "child", path, `Añadir un bloque dentro de ${subject}`));
     const disclosure = document.createElement("details"), summary = document.createElement("summary"), more = document.createElement("div");
     disclosure.className = "block-more"; summary.textContent = "Más acciones"; summary.setAttribute("aria-label", `Más acciones para ${subject}`); more.className = "block-more-actions";
-    more.append(
+    const menuButton = actionButton("Menú del bloque", "context", path, "Menú de " + subject);
+    menuButton.setAttribute("aria-haspopup", "menu");
+    more.append(menuButton,
       actionButton("Duplicar", "duplicate", path, `Duplicar ${subject}: la copia queda justo después`),
       actionButton("Copiar bloque", "copy", path, `Copiar ${subject} a la bandeja, para pegarlo donde elijas`),
       actionButton("Copiar texto", "copy-text", path, `Copiar al portapapeles el texto de ${subject}`),
@@ -374,6 +377,13 @@
     announce(cancelled ? "Edición cancelada." : "El siguiente bloque se añadirá en la raíz.");
   });
 
+  function loadBlockEditor(block, path) {
+    cancelTemplateForStructuralChange();
+    $("#block-type").value = block.type; $("#block-title").value = block.title; $("#block-content").value = block.content;
+    for (const hook of blockFieldHooks) hook.fill?.(block);
+    $("#block-error").textContent = ""; $("#block-content").removeAttribute("aria-invalid");
+    setEditorTarget({ editing: path }); renderEditorPreview();
+  }
   blockList.addEventListener("click", async (event) => {
     const button = event.target.closest("button[data-action]");
     if (!button) return;
@@ -382,13 +392,10 @@
     if (!block) { renderBlocks(); $("#add-block").focus(); announce("Ese bloque ya no existe; la lista se actualizó."); return; }
     const action = button.dataset.action;
 
+    if (action === "context") { openRadialAtButton(button, articleTarget(button), event.detail === 0); return; }
     if (action === "edit") {
-      cancelTemplateForStructuralChange();
-      $("#block-type").value = block.type; $("#block-title").value = block.title; $("#block-content").value = block.content;
-      for (const hook of blockFieldHooks) hook.fill?.(block);
-      $("#block-error").textContent = ""; $("#block-content").removeAttribute("aria-invalid");
-      setEditorTarget({ editing: path }); $("#block-type").focus();
-      renderEditorPreview();
+      loadBlockEditor(block, path);
+      $("#block-type").focus();
       announce(`Editando ${describeBlock(block, path)}.`);
       return;
     }
@@ -1258,8 +1265,12 @@
   /* --- [F] Asistente de escritura --- */
   const T = global.TexNotes;
   let pendingPairs = [];
-  let prefs = { autoPair: true };
-  try { const saved = JSON.parse(global.localStorage.getItem("tex-notes:prefs:v1")); if (typeof saved?.autoPair === "boolean") prefs.autoPair = saved.autoPair; } catch { /* valores predeterminados */ }
+  let prefs = { autoPair: true, vibration: true };
+  try { const saved = JSON.parse(global.localStorage.getItem("tex-notes:prefs:v1")); for (const key of ["autoPair","vibration"]) if (typeof saved?.[key] === "boolean") prefs[key] = saved[key]; } catch { /* valores predeterminados */ }
+  $("#radial-vibration").checked = prefs.vibration;
+  $("#radial-vibration").addEventListener("change", () => {
+    prefs.vibration = $("#radial-vibration").checked; writeWritingStorage("tex-notes:prefs:v1", prefs);
+  });
   $("#auto-pair").checked = prefs.autoPair;
   $("#auto-pair").addEventListener("change", () => {
     prefs.autoPair = $("#auto-pair").checked;
@@ -1486,9 +1497,9 @@
       const data = JSON.parse(await file.text()), errors = T.validateConfiguration(data);
       if (errors.length) { announce(errors.join(" ")); return; }
       if (!global.confirm("¿Reemplazar tus alias, plantillas, preferencias y macros predeterminadas con esta configuración?")) return;
-      aliases = data.aliases; ownTemplates = data.templates; prefs = { autoPair: data.prefs.autoPair }; editingAlias = -1;
+      aliases = data.aliases; ownTemplates = data.templates; prefs = { autoPair: data.prefs.autoPair, vibration: data.prefs.vibration !== false }; editingAlias = -1;
       persistAliases(); writeWritingStorage("tex-notes:prefs:v1", prefs); writeWritingStorage("tex-notes:templates:v1", ownTemplates);
-      $("#auto-pair").checked = prefs.autoPair; pendingPairs = []; setConfigMacros(data.macros); refreshTemplates();
+      $("#radial-vibration").checked = prefs.vibration; $("#auto-pair").checked = prefs.autoPair; pendingPairs = []; setConfigMacros(data.macros); refreshTemplates();
       announce("Configuración importada.");
     } catch { announce("No se pudo leer la configuración. Comprueba que sea un archivo JSON válido."); }
     finally { event.target.value = ""; }
@@ -1765,6 +1776,184 @@
     announce("Tablero de símbolos abierto.");
   });
   syncThumbViewport();
+
+  let radialState = T.radialReduce(null, {}), radialModel = null, press = null, holdTimer;
+  let suppressClickUntil = 0;
+  const contextNames = { text: "texto", image: "imagen", formula: "fórmula", global: "acciones generales" };
+  const viewport = () => {
+    const v = global.visualViewport;
+    return { x: v?.offsetLeft || 0, y: v?.offsetTop || 0, width: v?.width ?? innerWidth, height: v?.height ?? innerHeight };
+  };
+  const radialView = T.createRadialView(document, {
+    pick: (index, keyboard) => radialDispatch({ type: "pick", index }, keyboard),
+    back: () => radialDispatch({ type: "escape" }, document.activeElement.closest(".radial-layer")),
+    cancel: () => radialDispatch({ type: "cancel" }), bottom: () => viewport().y + viewport().height,
+  });
+  function articleTarget(node) { return { source: "card", path: keyToPath(node.closest("article").dataset.path) }; }
+  function radialTarget(node) {
+    if (node.closest("#thumb-menu, #content-menu") || node === blockContent) return { source: "editor" };
+    if (node.closest("input,textarea,select,button,a,summary,[contenteditable],dialog,.radial-layer")) return null;
+    if (node.closest("#block-list article")) return articleTarget(node);
+    return { source: "global" };
+  }
+  function focusWritingOrigin(origin) {
+    origin.field.focus({ preventScroll: true });
+    if (origin.selection) origin.field.setSelectionRange(...origin.selection);
+  }
+  function putRadialSnippet(source) {
+    const result = T.applyRadialSnippet(fieldState(), source);
+    applyAssist({ edit: result.edit, pending: [] }); snippetSession = result.session;
+    announce(result.session ? "Hueco " + (result.session.index + 1) + " de " + result.session.holes.length : "Fragmento insertado.");
+  }
+  function goTo(destination) {
+    if (destination === "preferences") $("#writing-preferences").open = true;
+    const target = $(({ content: imageType($("#block-type").value) ? "#image-path" : "#block-content",
+      tree: "#global-menu", result: "#generate", preferences: "#writing-preferences > summary" })[destination]);
+    target.focus(); target.scrollIntoView({ block: "nearest" });
+  }
+  const radialCommands = {
+    insertList() {
+      if (blockType($("#block-type").value)?.kind === "list") shiftListSelection(1);
+      else putRadialSnippet("\\begin{itemize}\n\\item #1\n\\end{itemize}#0");
+    },
+    focusTitle() { $("#block-title").focus(); },
+    openSymbols(group) { openSymbolSearch(blockContent); selectSymbolCategory(group); },
+    setImageWidth(width) { imageWidth.value = width; imageWidth.dispatchEvent(new Event("input", { bubbles: true })); },
+    setImageAlign(align) { imageFields.querySelector('input[name="imageAlign"][value="' + align + '"]').click(); },
+    chooseImageFile() { imageFile.click(); },
+    deleteBlock() {
+      const path = editorTarget().editing, block = blockAtPath(blocks, path);
+      if (!block) { announce("Guarda la imagen antes de eliminarla de la estructura."); return; }
+      if (!block.children.length && !confirm("¿Eliminar " + describeBlock(block, path) + "?")) return;
+      blockList.querySelector('[data-action="delete"][data-path="' + pathToKey(path) + '"]')?.click();
+    },
+    selectType(type) { resetBlockEditor(); selectBlockType(type); focusBlockContent(); },
+    focusType() { $("#block-type").focus(); },
+    undo() { document.execCommand("undo"); },
+    redo() { document.execCommand("redo"); },
+    goTo(destination) { goTo(destination); },
+    openPreferences() { goTo("preferences"); },
+  };
+  function applyRadialAction(action, from) {
+    if (action.type === "insert") putRadialSnippet(action.snippet);
+    if (action.type === "symbol") { symbolOrigin = captureSymbolOrigin(blockContent); insertSymbol(action.symbol); }
+    if (action.type === "command") radialCommands[action.name](...(action.args || []), from);
+  }
+  function clearRadialPress() {
+    clearTimeout(holdTimer);
+    if (press?.node.hasPointerCapture?.(press.id)) press.node.releasePointerCapture(press.id);
+    press = null;
+  }
+  function radialDispatch(event, focus = false) {
+    const before = radialState;
+    radialState = T.radialReduce(before, event, radialModel || {});
+    if (radialState.phase === "idle") {
+      const model = radialModel; radialModel = null;
+      radialView.hide(); clearRadialPress();
+      if (!model) return;
+      focusWritingOrigin(model.originField);
+      if (radialState.action) applyRadialAction(radialState.action, model.context);
+      else if (radialState.cancelled) announce("Menú cerrado.");
+      return;
+    }
+    if (!radialModel || radialState.phase === "waiting") return;
+    if (before.phase === "drag" && radialState.phase === "tap" && event.type !== "open") {
+      Object.assign(radialModel, T.radialLayout(radialModel.slices, { ...radialModel.origin, mode: "tap" }, viewport()));
+    }
+    const { parent, highlight } = radialState, model = radialModel;
+    const items = parent < 0 ? model.slices : model.slices[parent].children;
+    const ring = parent < 0 ? model.root : model.child(parent);
+    const name = parent < 0 ? "Menú de " + contextNames[model.context] : model.slices[parent].label;
+    radialView.draw(ring, items, name, radialState, model);
+    if (before.parent !== parent || event.type === "open" || event.type === "hold") announce(name + ", " + items.length + " opciones.");
+    if (radialState.haptic && prefs.vibration) navigator.vibrate?.(10);
+    if (focus) radialView.focus(Math.max(0, highlight));
+  }
+  function openRadial(target, point, mode, keyboard = false, bar = false) {
+    closeAssistMenu(); closeSymbolSheet();
+    let type = $("#block-type").value;
+    if (target.source === "card") {
+      const block = blockAtPath(blocks, target.path); if (!block) return;
+      type = block.type; loadBlockEditor(block, target.path);
+      blockContent.setSelectionRange(blockContent.value.length, blockContent.value.length);
+    }
+    const kind = blockType(type)?.kind;
+    const context = target.source === "global" ? "global" : kind === "image" ? "image" :
+      kind === "equation" || (target.source === "editor" && writingMode() === "math") ? "formula" : "text";
+    const field = context === "image" ? imagePath : blockContent;
+    const slices = T.slicesFor(context, type), area = viewport(), origin = { ...point, mode, bar };
+    radialModel = { context, origin, originField: captureSymbolOrigin(field), ...T.radialLayout(slices, origin, area) };
+    radialDispatch({ type: "open", mode, point, keyboard }, keyboard);
+    if (press) { try { press.node.setPointerCapture(press.id); } catch { /* puntero ya liberado */ } }
+  }
+  function openRadialAtButton(button, target, keyboard) {
+    const rect = button.getBoundingClientRect();
+    openRadial(target, { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }, "tap", keyboard, button === $("#thumb-menu"));
+  }
+  for (const id of ["thumb-menu","content-menu","global-menu"]) {
+    const button = $("#" + id);
+    button.addEventListener("pointerdown", e => e.preventDefault());
+    button.addEventListener("click", e => openRadialAtButton(button, { source: id === "global-menu" ? "global" : "editor" }, e.detail === 0));
+  }
+  blockContent.setAttribute("aria-keyshortcuts", SHORTCUTS.filter(s => s.scope === "content-widget").map(s => ariaKeyshortcuts(s)).join(" "));
+  blockContent.addEventListener("keydown", e => {
+    if (!matchShortcut(e, "content-widget") || !["idle","waiting"].includes(radialState.phase)) return;
+    e.preventDefault(); openRadialAtButton(blockContent, { source: "editor" }, true);
+  });
+  document.addEventListener("keydown", e => {
+    if (!radialModel) return;
+    const items = radialState.parent < 0 ? radialModel.slices : radialModel.slices[radialState.parent].children;
+    let i = Math.max(0, radialState.highlight);
+    if (e.key === "Escape") radialDispatch({ type: "escape" }, true);
+    else if (["Enter"," ","ArrowRight"].includes(e.key) && (e.key !== "ArrowRight" || items[i].children)) radialDispatch({ type: "pick", index: i }, true);
+    else if (["Home","End","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) {
+      i = e.key === "Home" ? 0 : e.key === "End" ? items.length - 1 :
+        (i + items.length + (["ArrowUp","ArrowLeft"].includes(e.key) ? -1 : 1)) % items.length;
+      radialDispatch({ type: "focus", index: i }, true);
+    } else if (e.key === "Tab") { radialDispatch({ type: "cancel" }); return; } else return;
+    e.preventDefault(); e.stopPropagation();
+  }, true);
+  document.addEventListener("pointerdown", e => {
+    suppressClickUntil = 0;
+    if (!e.isPrimary || (press && press.id !== e.pointerId)) { radialDispatch({ type: "second" }); return; }
+    if (radialModel || e.button !== 0) return;
+    const node = e.target, bar = !!node.closest("#thumb-menu");
+    if (!bar && (e.pointerType === "mouse" || (node === blockContent && !T.LONG_PRESS_IN_FIELD))) return;
+    const target = radialTarget(node); if (!target) return;
+    const point = { x: e.clientX, y: e.clientY };
+    press = { node, id: e.pointerId, point, target, bar };
+    radialDispatch({ type: "down", point });
+    if (bar) { e.preventDefault(); openRadial(target, point, "drag", false, true); }
+    else holdTimer = setTimeout(() => { if (press) openRadial(target, point, "drag"); }, T.RADIAL_HOLD);
+  }, true);
+  for (const name of ["pointermove","pointerup","pointercancel"]) document.addEventListener(name, e => {
+    if (!press || e.pointerId !== press.id) return;
+    if (name === "pointercancel") { radialDispatch({ type: "cancel" }); return; }
+    const point = { x: e.clientX, y: e.clientY }, end = name === "pointerup";
+    if (end && radialModel) suppressClickUntil = performance.now() + 350;
+    if (end && press.bar && Math.hypot(point.x - press.point.x, point.y - press.point.y) <= T.RADIAL_SLOP) {
+      const original = press; clearRadialPress(); openRadial(original.target, original.point, "tap", false, true); return;
+    }
+    radialDispatch({ type: end ? "up" : "move", point });
+    if (end) clearRadialPress();
+  }, true);
+  document.addEventListener("click", e => {
+    if (performance.now() < suppressClickUntil && e.detail) { e.preventDefault(); e.stopImmediatePropagation(); suppressClickUntil = 0; }
+  }, true);
+  document.addEventListener("contextmenu", e => {
+    const touch = e.pointerType === "touch" || e.sourceCapabilities?.firesTouchEvents;
+    if (touch && e.target === blockContent && !T.LONG_PRESS_IN_FIELD) return;
+    const target = radialTarget(e.target); if (!target && !radialModel) return;
+    e.preventDefault();
+    if (radialModel || touch) return;
+    clearRadialPress(); openRadial(target, { x: e.clientX, y: e.clientY }, "tap");
+  });
+  function cancelRadial(reason) { if (radialModel || press) radialDispatch({ type: reason }); }
+  document.addEventListener("scroll", () => cancelRadial("scroll"), true);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) cancelRadial("hidden"); });
+  for (const surface of [thumbBar, $(".structure-panel")]) surface.addEventListener("touchmove", e => {
+    if (radialModel && e.touches.length === 1) e.preventDefault();
+  }, { passive: false });
 
   function renderShortcutPanel() {
     const isMac = /Mac/.test(global.navigator.userAgentData?.platform || global.navigator.platform || "");

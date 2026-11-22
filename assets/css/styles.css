@@ -281,3 +281,21 @@ summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
   .block-editor .field, .block-editor > p { margin-block: .4rem; }
   .block-editor > legend, .block-target { margin-block: .2rem; }
 }
+
+.radial-layer { position: fixed; inset: 0; z-index: 20; touch-action: none; }
+.radial-layer svg, .radial-layer [role="menu"] { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.radial-layer path { fill: var(--surface); stroke: var(--border); stroke-width: 2; pointer-events: auto; }
+.radial-layer path.current { fill: var(--accent-soft); stroke: var(--primary); stroke-width: 4; }
+.radial-layer button { position: absolute; transform: translate(-50%, -50%); min-width: 44px; min-height: 44px;
+  pointer-events: auto; padding: 1px; background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.radial-layer [role="menuitem"] { width: 48px; display: grid; align-content: center; line-height: 1; font-size: .65rem; overflow-wrap: anywhere; }
+.radial-layer [role="menuitem"] > span:first-child { font-size: 1rem; }
+.radial-layer button.current, .radial-layer button:focus-visible { border: 3px solid var(--focus); background: var(--accent-soft); }
+.radial-back { font-size: .7rem; }
+@media (pointer: coarse) {
+  #thumb-menu { touch-action: none; }
+  #block-list article { user-select: none; -webkit-user-select: none; }
+  .image-thumbnail { -webkit-touch-callout: none; }
+}
+
+.radial-parent text { fill: var(--muted); text-anchor: middle; dominant-baseline: middle; pointer-events: none; }

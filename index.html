@@ -163,6 +163,7 @@
               </p>
             </fieldset>
             <menu class="button-row">
+              <li><button id="content-menu" class="secondary" type="button" aria-haspopup="menu">Menú de contenido</button></li>
               <li><button id="add-block" type="button">Añadir bloque</button></li>
               <li><button id="paste-block" class="secondary" type="button" hidden>Pegar bloque</button></li>
               <li><button id="cancel-edit" class="secondary" type="button" hidden>Cancelar edición</button></li>
@@ -196,7 +197,8 @@
             </section>
 
             <div id="thumb-bar" role="toolbar" aria-label="Acciones de escritura">
-              <button type="button" id="thumb-prev"><span aria-hidden="true">←</span>Anterior</button>
+              <button type="button" id="thumb-menu" aria-haspopup="menu"><span aria-hidden="true">✥</span>Menú</button>
+              <button type="button" id="thumb-prev" tabindex="-1"><span aria-hidden="true">←</span>Anterior</button>
               <button type="button" id="thumb-next" tabindex="-1"><span aria-hidden="true">→</span>Siguiente</button>
               <button type="button" id="thumb-symbols" tabindex="-1" aria-controls="symbol-details" aria-expanded="false"><span aria-hidden="true">Ω</span>Símbolos</button>
               <button type="button" id="thumb-add" tabindex="-1"><span aria-hidden="true">＋</span>Añadir</button>
@@ -206,6 +208,7 @@
           <div class="structure-panel">
           <h3>Estructura actual</h3>
           <p>Cada bloque indica su nivel y su bloque padre. «Subir» y «Bajar» mueven el bloque solo entre sus hermanos, sin sacarlo de su nivel. Para repetir una estructura hay tres acciones distintas: <strong>«Duplicar»</strong> deja una copia justo después del original; <strong>«Copiar bloque»</strong> lo guarda en una bandeja y luego eliges el destino con «Pegar bloque», las veces que haga falta; <strong>«Copiar texto»</strong> lleva su contenido al portapapeles del sistema para pegarlo donde quieras, dentro o fuera de la aplicación.</p>
+          <button type="button" id="global-menu" class="secondary" aria-haspopup="menu">Menú general</button>
           <p id="empty-blocks">Todavía no hay bloques.</p>
           <ol id="block-list" class="block-list"></ol>
           </div>
@@ -232,6 +235,7 @@
           <details id="writing-preferences">
             <summary>Preferencias de escritura</summary>
             <label class="check-field"><input id="auto-pair" type="checkbox" checked> Cerrar automáticamente llaves y delimitadores</label>
+            <label class="check-field"><input id="radial-vibration" type="checkbox" checked> Vibración</label>
             <h3>Mis plantillas</h3><ul id="own-template-list"></ul>
             <h3>Mis alias</h3>
             <div class="table-scroll"><table><thead><tr><th>Disparador</th><th>Expansión</th><th>Modo</th><th>Acciones</th></tr></thead><tbody id="alias-list"></tbody></table></div>
@@ -312,6 +316,8 @@
     <script src="assets/js/completion.js"></script>
     <script src="assets/js/templates.js"></script>
     <script src="assets/js/macros.js"></script>
+    <script src="assets/js/menus.js"></script>
+    <script src="assets/js/radial.js"></script>
     <script src="assets/js/app.js"></script>
   </body>
 </html>

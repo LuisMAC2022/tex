@@ -93,8 +93,7 @@
   function pairsAfterReplacement(state, pending, start, end) {
     return activePairs(state, pending).filter(pair => pair.start < start && state.value.length - pair.distance >= end);
   }
-  function snippetEdit(state, source, wrapMath = false) {
-    const snippet = parseSnippet(source);
+  function snippetEdit(state, source, wrapMath = false, snippet = parseSnippet(source)) {
     const prefix = wrapMath ? "$" : "", suffix = wrapMath ? "$" : "";
     const text = prefix + snippet.text + suffix;
     const start = state.selectionStart, first = snippet.holes[0] ?? snippet.final;

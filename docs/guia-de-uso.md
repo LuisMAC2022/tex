@@ -509,3 +509,7 @@ Escape, navegación del menú, Retroceso y los comandos /.
 ## Barra de escritura en el teléfono
 
 Con el teclado abierto, **Anterior** y **Siguiente** recorren los huecos del fragmento o mueven el cursor un comando, escape o grafema. **Símbolos** abre el tablero sobre la barra. Toca un símbolo para insertarlo, o **Cerrar** o Escape para recuperar la selección. **Añadir** guarda el bloque en curso. Las flechas recorren la barra con una sola parada de Tab.
+
+## Menús contextuales
+
+Toca **Menú** para elegir una acción de texto, fórmula o imagen. También puedes abrir **Menú general**, **Menú del bloque** o **Menú de contenido**. En Contenido, Menú o Mayús+F10 enfoca el primer sector. Usa flechas, Inicio, Fin e Intro. Escape vuelve un nivel. Una selección ocupa el primer argumento de un fragmento. **Ir a…** salta a otra sección. En preferencias puedes desactivar la vibración.

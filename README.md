@@ -99,7 +99,7 @@ Bajo las hipótesis del curso, ... se cumple $\iint_A f = \int \! \int f \, dx \
 ```
 
 - Los saltos CRLF y CR se normalizan a LF. Las líneas vacías de un bloque textual conservan los párrafos. Un bloque sin contenido no se emite, salvo que tenga hijos: entonces se emiten ellos.
-- La plantilla `article` incluye solamente `fontenc` (salida latina copiable), `inputenc` (fuente UTF-8), `babel` (español), `amsmath` (matemáticas), `amssymb` (los conjuntos `\mathbb` del tablero de símbolos), `amsthm` (entornos) y `graphicx` (imágenes). El propio preámbulo documenta el motivo. El archivo usa los paquetes estándar de Overleaf y los archivos de imagen que se indiquen en los bloques.
+- La plantilla `article` incluye solamente `fontenc` (salida latina copiable), `inputenc` (fuente UTF-8), `babel` (español), `amsmath` (matemáticas), `amssymb` (los conjuntos `\mathbb` del tablero de símbolos), `amsthm` (entornos) y `graphicx` (imágenes). Cuando el contenido usa `\href` o `\url`, se añade `\usepackage[hidelinks]{hyperref}` después de los demás paquetes. El propio preámbulo documenta el motivo. El archivo usa los paquetes estándar de Overleaf y los archivos de imagen que se indiquen en los bloques.
 - El resultado termina siempre con un salto de línea y es determinista: el mismo estado produce exactamente la misma cadena.
 - El nombre sugerido se deriva del título: minúsculas, sin diacríticos, grupos no alfanuméricos convertidos en guiones y extensión `.tex`. Si queda vacío, se usa **`notas-calculo-3.tex`**.
 
@@ -373,3 +373,7 @@ Desde 75 rem se muestran dos columnas: editor con desplazamiento propio y
 estructura. Los metadatos se pueden plegar y su resumen identifica el documento.
 Las tarjetas mantienen Editar y Añadir dentro visibles y agrupan el resto en
 Más acciones. El panel de teclado describe el asistente y la navegación nativa.
+
+## Menús de escritura en el teléfono
+
+La barra inferior abre el menú de texto, fórmula o imagen según el cursor y el tipo de bloque. Cada tarjeta ofrece su menú y la estructura ofrece el menú general. Se puede elegir por toque, teclado o arrastre. En el campo Contenido, Menú y Mayús+F10 abren el primer sector. Los fragmentos comparten los huecos de la barra y las inserciones pasan por el historial nativo. La pulsación larga en el campo queda desactivada a la espera de mediciones en Android.

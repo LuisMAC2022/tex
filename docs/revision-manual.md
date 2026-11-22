@@ -107,3 +107,5 @@ Con la rama de trabajo en el portátil, ejecuta `python3 -m http.server 8000` de
 
 - [ ] En Gboard, registrar escritura, autocierre, sugerencias y borrado. Probar la pulsación larga en campo y tarjeta, las dos ventanas y las capacidades. Pegar el JSON en [resultados de Android](../diagnostico/resultados-android.md).
 - [ ] Verificar que la barra queda sobre Gboard al abrirlo, cerrarlo y girar el teléfono. Tocar Anterior, Siguiente, un símbolo y Añadir con selección hacia atrás. Comprobar foco, teclado abierto y anuncio de la barra con TalkBack.
+- [ ] Probar en Android la pulsación larga de 400 ms en tarjeta y zona vacía, el arrastre con una mano, los abanicos, la vibración y el zoom con dos dedos. TalkBack debe anunciar cada menú y devolver el foco. Confirmar que se conserva la selección de Gboard dentro del campo.
+- [ ] En escritorio abrir los cuatro contextos por clic y por teclado, volver del submenú y compilar los fragmentos y el enlace en Overleaf.

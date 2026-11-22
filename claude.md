@@ -140,3 +140,9 @@ No se ejecutaron pruebas de los menús ni compilación de sus fragmentos con KaT
 ### Resolución de la duda de U2
 
 El 22 de noviembre de 2026 la persona usuaria autorizó la excepción para la tecla Menú solo con foco en Contenido. Se registró en [DEC-022](decisiones/DEC-022-menu-contextual-en-contenido.md) y en el guardián de atajos. Se reanuda U2.
+
+## U2 · Menús contextuales
+
+Implementé cuatro menús, los dos anillos, la navegación por toque, arrastre y teclado, la preferencia de vibración y el comando adicional **Ir a…**. Se usan los catálogos de bloques y símbolos. [DEC-022](decisiones/DEC-022-menu-contextual-en-contenido.md) fija el ámbito de Menú y [DEC-023](decisiones/DEC-023-enlaces-con-hyperref.md) registra `hyperref` bajo demanda. Ajusté los radios del semicírculo a 86–146 px: con ocho sectores el arco medio supera 44 px. La confirmación existente de eliminación solo aparecía con hijos; el menú de una imagen también pide confirmación antes de invocar la eliminación de esa hoja.
+
+Pasaron 208 pruebas, incluida la compilación real de los fragmentos y el enlace con `pdflatex -no-shell-escape`. Se prepararon el formato, babel español y las fuentes en el entorno temporal. KaTeX y `checkBlock` pasaron. El `.tex` regenerado coincide byte a byte. En un DOM simulado comprobé los cuatro contextos, el foco inicial, la fracción sobre una selección y el menú desde la tarjeta. No verificados en un navegador gráfico el dibujo y los gestos: Chromium abortó al crear su socket. Android, TalkBack y Overleaf quedan en la revisión manual.

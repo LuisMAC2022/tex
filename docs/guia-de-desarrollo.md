@@ -376,8 +376,9 @@ los anuncios se comprueban a mano, con la lista de
 [DEC-007](../decisiones/DEC-007-sin-dom-en-pruebas.md), y la contrapartida es que la
 lógica debe vivir fuera de `app.js` siempre que se pueda.
 
-**No se compila LaTeX en ninguna prueba.** Se comparan cadenas `.tex`, nunca PDF. La
-compilación es de Overleaf ([DEC-021](../decisiones/DEC-021-aplicacion-copia-maestra.md)).
+Las pruebas comparan el archivo de referencia byte a byte. Si está instalado, `pdflatex` compila también los fragmentos radiales en un directorio temporal con `-no-shell-escape`. Overleaf se revisa manualmente.
+
+Los sectores se definen en `assets/js/menus.js`. Se puede añadir un fragmento, referenciar un símbolo por id, crear un submenú o invocar un comando existente editando ese archivo. Para un comando nuevo hay que registrar su función en `radialCommands` de `app.js`. Los rótulos de tipos y símbolos se resuelven desde sus catálogos. La geometría y las transiciones se prueban en `tests/radial.test.js`.
 
 ---
 
