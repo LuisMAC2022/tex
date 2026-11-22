@@ -275,10 +275,18 @@
 - diffEdit calcula inserciones, borrados y reemplazos mínimos sin cambios ficticios
 - diffEdit nunca divide un par sustituto UTF-16 en sus límites
 
+## `tests/versions.test.js` — 5 pruebas
+
+- el historial limita cien pasos, restaura en ambas direcciones y descarta la rama rehecha
+- las diferencias por id abarcan posición, padre, opciones, lista, macros y líneas
+- la retención conserva las manuales y cuenta las automáticas por documento
+- las exportaciones se deduplican por contenido y la migración del borrador es idempotente
+- el proyecto valida, informa qué versiones omite y combina por id sin sobrescribir
+
 ## `tests/check-site.mjs` — comprobación estructural
 
 No usa `node:test`: es un script con 51 aserciones sobre `index.html` (doctype, un solo `main` y `h1`, enlace de salto, orden de los scripts clásicos, rutas relativas, etiquetas asociadas y ayudas visibles). Se ejecuta con `npm test`.
 
 ---
 
-211 pruebas con `node:test` más la comprobación estructural.
+216 pruebas con `node:test` más la comprobación estructural.

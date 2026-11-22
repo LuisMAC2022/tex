@@ -1,6 +1,6 @@
 # Notas LaTeX
 
-Aplicación web estática para consolidar apuntes de clase y exportarlos como un archivo LaTeX para compilar en Overleaf. El editor y el borrador funcionan en el navegador, con KaTeX y sus fuentes incluidos en el sitio.
+Aplicación web estática para consolidar apuntes de clase y exportarlos como un archivo LaTeX para compilar en Overleaf. El editor y las versiones del documento funcionan en el navegador, con KaTeX y sus fuentes incluidos en el sitio.
 
 > Invariantes vigiladas: [`INVARIANTES.md`](INVARIANTES.md) · por qué de cada
 > decisión: [`decisiones/`](decisiones/) · reglas para agentes:
@@ -8,7 +8,7 @@ Aplicación web estática para consolidar apuntes de clase y exportarlos como un
 > [`docs/guia-de-uso.md`](docs/guia-de-uso.md) · cómo se extiende:
 > [`docs/guia-de-desarrollo.md`](docs/guia-de-desarrollo.md)
 
-> **La aplicación es la copia maestra y Overleaf solo compila** ([DEC-021](decisiones/DEC-021-aplicacion-copia-maestra.md)). El `.tex` es un producto derivado: se genera, se copia o se descarga y se compila en Overleaf. Los errores se localizan allí y se corrigen aquí, porque las correcciones hechas en Overleaf no vuelven a la aplicación. Mientras no existan las versiones ni el archivo de proyecto, el único respaldo es el borrador local de este dispositivo.
+> **La aplicación es la copia maestra y Overleaf solo compila** ([DEC-021](decisiones/DEC-021-aplicacion-copia-maestra.md)). El `.tex` es un producto derivado: se genera, se copia o se descarga y se compila en Overleaf. Los errores se localizan allí y se corrigen aquí, porque las correcciones hechas en Overleaf no vuelven a la aplicación. La aplicación guarda versiones y exporta el proyecto a un archivo JSON para trasladarlo entre dispositivos.
 
 
 ## Especificación del documento generado
@@ -237,7 +237,7 @@ cual, incluso cuando la comprobación encuentra errores.
    - La bandeja vive solo en la pestaña abierta: no se guarda en el borrador ni cambia su versión, porque no forma parte del documento.
 5. Pulsa **Generar documento** para actualizar el código `.tex` completo.
 6. Copia o descarga el resultado y pégalo en Overleaf. Si la API moderna del portapapeles no está disponible, se utiliza selección y copia del `textarea` como alternativa.
-7. **Guardar borrador** escribe bajo demanda `{ version: 4, metadata, blocks, macros }` en `localStorage` con la clave `tex-notes:draft:v2`. **Restaurar** lee esa clave y, si no existe, la antigua `tex-notes:draft:v1` con su lista plana: la convierte al árbol y lo dice en el anuncio. La restauración normaliza `type`, `title`, `content` y `children` de forma recursiva, tolera datos ausentes, corruptos o mal anidados a cualquier profundidad y nunca lanza. Borrar retira ambas claves, pide confirmación y nunca borra el formulario abierto.
+7. **Guardar versión** conserva instantáneas en IndexedDB. Si el almacén no abre, la interfaz avisa y usa localStorage con retención reducida. **Ver cambios** compara por id, **Restaurar** crea un respaldo y **Exportar proyecto** descarga un JSON con el estado, las versiones y, opcionalmente, la configuración. **Importar proyecto** guarda un respaldo y combina las versiones por id. El autoguardado conserva el bloque a medio escribir (DEC-019).
 
 ### Apertura directa con `file://`
 
@@ -296,7 +296,7 @@ Los hitos entregados están en [`docs/hitos.md`](docs/hitos.md).
 
 ## Criterio de finalización del MVP
 
-El MVP está terminado cuando una persona puede, usando solamente el teclado y con la página abierta por doble clic, crear una nota con al menos dos tipos de bloque, revisar el código generado, copiarlo, descargarlo, recargar la página y recuperar el borrador.
+El MVP está terminado cuando una persona puede, usando solamente el teclado y con la página abierta por doble clic, crear una nota con al menos dos tipos de bloque, revisar el código generado, copiarlo, descargarlo, recargar la página y recuperar una versión.
 
 ## Pendiente
 
@@ -362,8 +362,7 @@ La comprobación previa distingue comandos exclusivos de KaTeX y reconoce las
 macros del documento.
 
 Los borradores v1 y v2 se normalizan con macros vacías. La migración de v3 conserva las macros y asigna identificadores. El estado v4 guarda `documentId` y un `id` único por bloque.
-Las versiones futuras se rechazan. La clave histórica tex-notes:draft:v2 se
-mantiene con un sobre version:4, que las aplicaciones anteriores rechazan.
+Las versiones futuras se rechazan. La clave histórica tex-notes:draft:v2 se lee durante la migración al panel de versiones.
 El autoguardado también incorpora macros. Las predeterminadas se guardan en
 tex-notes:macros-default:v1 y se incluyen en la configuración portátil.
 

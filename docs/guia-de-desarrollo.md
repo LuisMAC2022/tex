@@ -147,8 +147,7 @@ Tres reglas del árbol que conviene tener presentes:
 - **`children` ausente equivale a `children: []`.** Un borrador plano de la versión
   anterior sigue siendo válido; `normalizeDraft` lo migra y lo dice.
 
-El borrador se guarda bajo demanda en `localStorage`, con la clave
-`tex-notes:draft:v2` y la forma `{ version: 4, documentId, metadata, blocks, macros }`. `normalizeDraft`
+Las versiones se almacenan en IndexedDB, base `tex-notes`, almacén `versions`. La clave histórica de localStorage `tex-notes:draft:v2` se migra una vez, después se retira. `normalizeDraft`
 tolera datos ausentes, corruptos o mal anidados **a cualquier profundidad y nunca
 lanza**: es entrada no confiable, viene del navegador de alguien.
 
@@ -523,3 +522,7 @@ activa outline cuando se modifica, como al editar un bloque del árbol.
 El título de la nota y el del bloque cuentan como trabajo para autoguardar,
 aunque aún no haya bloques incorporados. Los metadatos precargados de curso,
 profesor y fecha no convierten una sesión vacía en una sesión recuperable.
+
+## Versiones y archivo de proyecto
+
+`versions.js` normaliza proyectos, compara árboles por id, calcula diferencias de líneas acotadas, administra la retención y las dos pilas del historial. El adaptador de interfaz `version-storage.js` ofrece `read()` y `update(transform)`. IndexedDB ejecuta la lectura, los cambios y la poda en una transacción. El respaldo alternativo usa una clave local y limita las automáticas a ocho. [DEC-025](../decisiones/DEC-025-versiones-y-proyecto.md) documenta la relación con el autoguardado y el formato de intercambio.

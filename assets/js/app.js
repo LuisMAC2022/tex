@@ -22,7 +22,13 @@
   const blockFieldHooks = [];
   const beforeGenerateHooks = [];
   const editorPreviewHooks = [];
+  const ACTIVE_DOCUMENT_KEY = "tex-notes:active-document";
   let documentId = global.TexNotes.newId("d");
+  try {
+    const saved = localStorage.getItem(ACTIVE_DOCUMENT_KEY) || JSON.parse(localStorage.getItem("tex-notes:autosave:v1"))?.documentId;
+    if (global.TexNotes.validDocumentId(saved)) documentId = saved;
+  } catch { /* Es posible editar sin almacenamiento. */ }
+  let history = { past: [], future: [] }, committedMetadata, generatedSnapshot = null, lastChangedId = null;
   let blocks = [];
   let macros = [];
   let previewVersion = 0;
@@ -120,6 +126,7 @@
   function announce(message) { status.textContent = message; }
   function setMetadata(values = {}) {
     for (const name of METADATA_KEYS) form.elements[name].value = typeof values[name] === "string" ? values[name] : "";
+    committedMetadata = metadata();
     syncMetadataSummary(true);
   }
 
@@ -343,7 +350,7 @@
     if (editing.length) {
       const next = updateBlock(blocks, editing, draft);
       if (!next) { blockError(`«${blockLabel(draft.type)}» no admite bloques anidados y este bloque ya tiene. Muévelos o elimínalos antes de cambiar el tipo.`); return; }
-      blocks = next; resetBlockEditor(); renderBlocks();
+      changeTree(next, blockAtPath(next, editing).id); resetBlockEditor(); renderBlocks();
       if (keepFieldFocus) focusBlockContent();
       else if (!focusById("edit", blockAtPath(next, editing).id)) $("#block-type").focus();
       announce(`Bloque ${pathLabel(editing)} actualizado.`);
@@ -351,7 +358,7 @@
     }
     const result = insertBlock(blocks, parent, draft);
     if (!result) { blockError("No se pudo añadir el bloque en esa posición; la lista se actualizó."); renderBlocks(); return; }
-    blocks = result.blocks;
+    changeTree(result.blocks, result.id);
     clearBlockFields();
     // El destino se conserva para encadenar varios hijos del mismo padre.
     setEditorTarget({ parent });
@@ -371,7 +378,7 @@
     if (!result) { renderBlocks(); setEditorTarget(editorTarget()); announce("No se pudo pegar el bloque en ese destino; la lista se actualizó."); return; }
     const label = trayLabel();
     const cancelled = cancelEditForStructuralChange();
-    blocks = result.blocks; renderBlocks(); setEditorTarget(editorTarget());
+    changeTree(result.blocks, result.id); renderBlocks(); setEditorTarget(editorTarget());
     if (!focusById("edit", result.id)) $("#add-block").focus();
     announce(`${label} pegado como bloque ${pathLabel(result.path)} ${describeLocation(parent)}. Sigue en la bandeja para pegarlo otra vez.${cancelled}`);
   });
@@ -418,7 +425,7 @@
       // La copia se inserta entre hermanos y desplaza las rutas siguientes: una
       // edición a medias se cancela, como en cualquier cambio estructural.
       const cancelled = cancelEditForStructuralChange();
-      blocks = result.blocks; renderBlocks(); setEditorTarget(editorTarget());
+      changeTree(result.blocks, block.id); renderBlocks(); setEditorTarget(editorTarget());
       if (!focusById("edit", result.id)) $("#add-block").focus();
       announce(`${describeBlock(block, path)} duplicado como ${describeBlock(block, result.path)}${nested ? `, con sus ${nested} ${nested === 1 ? "bloque anidado" : "bloques anidados"}` : ""}. El original no cambia.${cancelled}`);
       return;
@@ -451,7 +458,7 @@
       if (!next) { announce("No se pudo eliminar el bloque."); return; }
       const label = describeBlock(block, path);
       const cancelled = cancelEditForStructuralChange();
-      blocks = next; renderBlocks(); setEditorTarget(editorTarget()); focusAfterRemoval(path);
+      changeTree(next, block.id); renderBlocks(); setEditorTarget(editorTarget()); focusAfterRemoval(path);
       announce(`Eliminado ${label}${nested ? ` con sus ${nested} bloques anidados` : ""}.${cancelled}`);
       return;
     }
@@ -459,46 +466,42 @@
     const result = moveBlock(blocks, path, action === "up" ? -1 : 1);
     if (!result) { button.focus(); announce("El bloque ya está en el extremo de sus hermanos."); return; }
     const cancelled = cancelEditForStructuralChange();
-    blocks = result.blocks; renderBlocks(); setEditorTarget(editorTarget());
+    changeTree(result.blocks, block.id); renderBlocks(); setEditorTarget(editorTarget());
     // Si el botón usado quedó deshabilitado en el extremo, el foco pasa al
     // movimiento contrario y, si tampoco existe, a la edición del mismo bloque.
     if (!focusById(action, block.id) && !focusById(action === "up" ? "down" : "up", block.id)) focusById("edit", block.id);
     announce(`${describeBlock(block, result.path)} movido a la posición ${result.path[result.path.length - 1] + 1} de su nivel.${cancelled}`);
   });
 
-  form.addEventListener("submit", (event) => {
-    event.preventDefault(); const title = $("#note-title");
-    if (!title.value.trim()) { $("#metadata-details").open = true; $("#title-error").textContent = "Escribe un título para generar el documento."; title.setAttribute("aria-invalid", "true"); title.focus(); announce("No se generó el documento: falta el título."); return; }
-    $("#title-error").textContent = "";
-    title.removeAttribute("aria-invalid");
-    const documentState = state();
-    for (const hook of beforeGenerateHooks) hook(documentState);
-    output.value = generateLatex(documentState);
-    announce("Documento generado.");
+  function generateOutput() {
+    const title = $("#note-title");
+    if (!title.value.trim()) {
+      $("#metadata-details").open = true; $("#title-error").textContent = "Escribe un título para generar el documento.";
+      title.setAttribute("aria-invalid", "true"); title.focus(); announce("No se generó el documento: falta el título."); return false;
+    }
+    $("#title-error").textContent = ""; title.removeAttribute("aria-invalid");
+    generatedSnapshot = state();
+    for (const hook of beforeGenerateHooks) hook(generatedSnapshot);
+    output.value = generateLatex(generatedSnapshot);
+    return true;
+  }
+  function exportSnapshot() {
+    if (!output.value) { announce("Genera el documento antes de exportarlo."); $("#generate").focus(); return null; }
+    if ((!generatedSnapshot || generatedSnapshot.documentId !== documentId || !global.TexNotes.sameDocument(generatedSnapshot, state())) && !generateOutput()) return null;
+    return generatedSnapshot;
+  }
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    if (generateOutput()) { announce("Documento generado."); saveExportVersion(generatedSnapshot); }
   });
-  $("#save-draft").addEventListener("click", () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: DRAFT_VERSION, ...state() })); announce("Borrador guardado únicamente en este dispositivo."); } catch { announce("No se pudo guardar el borrador; el contenido actual se conserva."); } });
-  $("#restore-draft").addEventListener("click", () => {
-    let draft = null;
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
-      draft = normalizeDraft(JSON.parse(raw));
-    } catch { draft = null; }
-    if (!draft) { $("#restore-draft").focus(); announce("No hay un borrador válido para restaurar."); return; }
-    const cancelled = cancelTemplateForStructuralChange();
-    setDocumentMacros(draft.macros, false);
-    documentId = draft.documentId; setMetadata(draft.metadata); blocks = draft.blocks; resetBlockEditor(); renderBlocks(); focusMetadata();
-    announce(draft.migratedFrom ? "Borrador restaurado y convertido al formato con bloques anidados." : "Borrador restaurado.");
-    if (cancelled) announce("Borrador restaurado." + cancelled);
+  $("#download-tex").addEventListener("click", () => {
+    const snapshot = exportSnapshot(); if (!snapshot) return;
+    downloadTex(output.value, snapshot.metadata.title); saveExportVersion(snapshot); announce("Descarga del archivo .tex iniciada.");
   });
-  $("#delete-draft").addEventListener("click", () => {
-    if (!confirm("¿Borrar el borrador guardado en este dispositivo?")) { $("#delete-draft").focus(); announce("No se borró el borrador."); return; }
-    try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(LEGACY_STORAGE_KEY); } catch { /* el contenido abierto se conserva igualmente */ }
-    $("#save-draft").focus(); announce("Borrador guardado eliminado; el contenido actual se conserva.");
-  });
-  $("#download-tex").addEventListener("click", () => { if (!output.value) { announce("Genera el documento antes de descargarlo."); $("#generate").focus(); return; } downloadTex(output.value, $("#note-title").value); announce("Descarga del archivo .tex iniciada."); });
   $("#copy-code").addEventListener("click", async () => {
-    if (!output.value) { announce("Genera el documento antes de copiarlo."); $("#generate").focus(); return; }
-    try { await copyToClipboard(output.value, output); announce("Código LaTeX copiado."); } catch { announce("No se pudo copiar el código; permanece disponible para seleccionarlo manualmente."); }
+    const snapshot = exportSnapshot(); if (!snapshot) return;
+    try { await copyToClipboard(output.value, output); saveExportVersion(snapshot); announce("Código LaTeX copiado."); }
+    catch { announce("No se pudo copiar el código; permanece disponible para seleccionarlo manualmente."); }
   });
 
   function focusBlockContent() { $(blockType($("#block-type").value)?.kind === "image" ? "#image-path" : "#block-content").focus(); }
@@ -1259,7 +1262,7 @@
 
     const previous = editorTarget();
     const cancelled = cancelEditForStructuralChange();
-    blocks = result.blocks;
+    changeTree(result.blocks, movedId);
     renderBlocks();
     setEditorTarget({});
     renderEditorPreview();
@@ -1492,8 +1495,17 @@
   $("#alias-fields").addEventListener("keydown", (event) => { if (event.key === "Enter" && event.target.tagName !== "TEXTAREA" && !event.isComposing) { event.preventDefault(); saveAlias(); } });
   $("#cancel-alias").addEventListener("click", () => { editingAlias = -1; $("#alias-trigger").value = ""; $("#alias-expansion").value = ""; $("#alias-error").textContent = ""; });
   $("#reset-aliases").addEventListener("click", () => { aliases = T.DEFAULT_ALIASES.map(a => ({ ...a })); editingAlias = -1; persistAliases(); announce("Alias predeterminados restaurados."); });
+  function portableConfig() {
+    return { kind: "notas-latex-config", version: 1, aliases, templates: ownTemplates, prefs, macros: getConfigMacros() };
+  }
+  function applyPortableConfig(data, applyDefaults = true) {
+    aliases = data.aliases; ownTemplates = data.templates; prefs = { autoPair: data.prefs.autoPair, vibration: data.prefs.vibration !== false }; editingAlias = -1;
+    persistAliases(); writeWritingStorage("tex-notes:prefs:v1", prefs); writeWritingStorage("tex-notes:templates:v1", ownTemplates);
+    $("#radial-vibration").checked = prefs.vibration; $("#auto-pair").checked = prefs.autoPair;
+    pendingPairs = []; setConfigMacros(data.macros, applyDefaults); refreshTemplates();
+  }
   $("#export-config").addEventListener("click", () => {
-    const data = { kind: "notas-latex-config", version: 1, aliases, templates: ownTemplates, prefs, macros: getConfigMacros() };
+    const data = portableConfig();
     const url = global.URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
     const link = document.createElement("a"); link.href = url; link.download = "notas-latex-configuracion.json"; document.body.append(link); link.click(); link.remove();
     global.setTimeout(() => global.URL.revokeObjectURL(url), 0); announce("Configuración exportada.");
@@ -1504,9 +1516,7 @@
       const data = JSON.parse(await file.text()), errors = T.validateConfiguration(data);
       if (errors.length) { announce(errors.join(" ")); return; }
       if (!global.confirm("¿Reemplazar tus alias, plantillas, preferencias y macros predeterminadas con esta configuración?")) return;
-      aliases = data.aliases; ownTemplates = data.templates; prefs = { autoPair: data.prefs.autoPair, vibration: data.prefs.vibration !== false }; editingAlias = -1;
-      persistAliases(); writeWritingStorage("tex-notes:prefs:v1", prefs); writeWritingStorage("tex-notes:templates:v1", ownTemplates);
-      $("#radial-vibration").checked = prefs.vibration; $("#auto-pair").checked = prefs.autoPair; pendingPairs = []; setConfigMacros(data.macros); refreshTemplates();
+      applyPortableConfig(data);
       announce("Configuración importada.");
     } catch { announce("No se pudo leer la configuración. Comprueba que sea un archivo JSON válido."); }
     finally { event.target.value = ""; }
@@ -1642,11 +1652,12 @@
   if (!existingSnapshot) macros = defaultMacros.map(m => ({ ...m }));
   getCompletionMacros = () => macros;
   getConfigMacros = () => defaultMacros;
-  setConfigMacros = (next) => {
+  setConfigMacros = (next, applyDefaults = true) => {
     defaultMacros = next.map(m => ({ ...m })); writeWritingStorage("tex-notes:macros-default:v1", defaultMacros);
-    if (!blocks.length && !blockContent.value.trim() && !$("#block-title").value.trim() && !$("#note-title").value.trim()) setDocumentMacros(defaultMacros);
+    if (applyDefaults && !blocks.length && !blockContent.value.trim() && !$("#block-title").value.trim() && !$("#note-title").value.trim()) setDocumentMacros(defaultMacros);
   };
   function setDocumentMacros(next, draw = true) {
+    if (draw) rememberChange();
     macros = next.map(m => ({ ...m })); previewVersion++; badgedBlocks = null;
     renderMacroList();
     if (draw) { closeAssistMenu(); renderBlocks(); renderEditorPreview(); saveSession(); }
@@ -1815,7 +1826,7 @@
   function goTo(destination) {
     if (destination === "preferences") $("#writing-preferences").open = true;
     const target = $(({ content: imageType($("#block-type").value) ? "#image-path" : "#block-content",
-      tree: "#global-menu", result: "#generate", preferences: "#writing-preferences > summary" })[destination]);
+      tree: "#global-menu", result: "#generate", versions: "#versions-heading", preferences: "#writing-preferences > summary" })[destination]);
     target.focus(); target.scrollIntoView({ block: "nearest" });
   }
   const radialCommands = {
@@ -1836,8 +1847,8 @@
     },
     selectType(type) { resetBlockEditor(); selectBlockType(type); focusBlockContent(); },
     focusType() { $("#block-type").focus(); },
-    undo() { document.execCommand("undo"); },
-    redo() { document.execCommand("redo"); },
+    undo(source) { if (source === "global") travelStructure("undo"); else document.execCommand("undo"); },
+    redo(source) { if (source === "global") travelStructure("redo"); else document.execCommand("redo"); },
     goTo(destination) { goTo(destination); },
     openPreferences() { goTo("preferences"); },
   };
@@ -2026,7 +2037,7 @@
     if (!draft) { announce("No hay una sesión válida para recuperar."); return; }
     cancelTemplateForStructuralChange();
     setDocumentMacros(draft.macros, false);
-    documentId = draft.documentId; setMetadata(draft.metadata); blocks = draft.blocks;
+    rememberChange(); selectDocument(draft.documentId); setMetadata(draft.metadata); blocks = draft.blocks;
     const editor = pendingSession.editor || {};
     $("#block-type").value = blockType(editor.type) ? editor.type : "text";
     $("#block-title").value = typeof editor.title === "string" ? editor.title : "";
@@ -2036,13 +2047,207 @@
     for (const hook of blockFieldHooks) hook.fill?.({ ...blockDraft(), ...(editor.image || {}), type: $("#block-type").value });
     setEditorTarget(paths); renderBlocks(); renderEditorPreview(); focusBlockContent();
     $("#autosave-banner").hidden = true;
-    announce("Sesión recuperada, incluido el bloque a medio escribir.");
+    paintVersions(knownVersions); announce("Sesión recuperada, incluido el bloque a medio escribir.");
   });
   $("#discard-session").addEventListener("click", () => {
     try { global.localStorage.removeItem(AUTOSAVE_KEY); } catch { /* la aplicación sigue disponible */ }
     pendingSession = null; $("#autosave-banner").hidden = true; focusBlockContent(); announce("Sesión anterior descartada.");
   });
   autosaveReady = true;
+
+  function selectDocument(id) {
+    documentId = id;
+    try { localStorage.setItem(ACTIVE_DOCUMENT_KEY,id); } catch { /* sesión en memoria */ }
+  }
+  function focusId() {
+    return document.activeElement.closest?.("article[data-block-id]")?.dataset.blockId ||
+      blockAtPath(blocks,editorTarget().editing)?.id || null;
+  }
+  function syncHistoryButtons() {
+    $("#undo-structure").disabled = !history.past.length; $("#redo-structure").disabled = !history.future.length;
+  }
+  function rememberChange(id = focusId(), previous = state()) {
+    history = T.rememberHistory(history,T.historyEntry(previous,id));
+    syncHistoryButtons();
+  }
+  function changeTree(next, id) { rememberChange(id); lastChangedId=id; blocks = next; }
+  function loadVersionState(data, id, targetId) {
+    form.inert=false;
+    cancelTemplateForStructuralChange(); clearMacroForm();
+    selectDocument(id); setDocumentMacros(data.macros,false); setMetadata(data.metadata); blocks=T.cloneBlocks(data.blocks);
+    resetBlockEditor(); renderBlocks(); renderEditorPreview(); output.value=""; generatedSnapshot=null;
+    $("#version-diff").hidden=true;
+    if (!focusById("edit",targetId)) focusBlockContent();
+    // Se persiste también la restauración de un estado vacío.
+    if (!hasSessionContent(state())) {
+      try { localStorage.removeItem(AUTOSAVE_KEY); } catch { /* almacenamiento no disponible */ }
+    }
+  }
+  function travelStructure(direction) {
+    const next=T.travelHistory(history,T.historyEntry(state(),focusId() || lastChangedId),direction);
+    if (!next) { announce("No hay más cambios en esa dirección."); return; }
+    history=next.history; syncHistoryButtons(); loadVersionState(next.entry.state,next.entry.documentId,next.entry.focusId);
+    if (knownVersions) paintVersions(knownVersions);
+    announce(direction==="undo" ? "Cambio estructural deshecho." : "Cambio estructural rehecho.");
+  }
+  committedMetadata=metadata();
+  $("#metadata-details").addEventListener("change",event=>{
+    const name=event.target.name;
+    if (!METADATA_KEYS.includes(name) || committedMetadata[name]===event.target.value) return;
+    const before=state(); before.metadata[name]=committedMetadata[name];
+    rememberChange(focusId(),before); committedMetadata=metadata();
+  });
+  $("#undo-structure").addEventListener("click",()=>travelStructure("undo"));
+  $("#redo-structure").addEventListener("click",()=>travelStructure("redo"));
+
+  let knownVersions = [], persistenceRequest = null;
+  const storageReady = T.openVersionStore(global);
+  const versionStatus = message => { $("#version-status").textContent=message; };
+  async function reportStorage(store, request=false) {
+    if (request && !persistenceRequest) {
+      persistenceRequest = Promise.resolve().then(()=>navigator.storage?.persist?.()).catch(()=>false);
+    }
+    let persistent=false, estimate={};
+    try { persistent=Boolean(persistenceRequest ? await persistenceRequest : await navigator.storage?.persisted?.()); } catch {}
+    try { estimate=(await navigator.storage?.estimate?.()) || {}; } catch {}
+    const usage = Number.isFinite(estimate.usage) ? " Uso: " + (estimate.usage/1048576).toFixed(1) + " MiB" +
+      (Number.isFinite(estimate.quota) ? " de " + (estimate.quota/1048576).toFixed(1) : "") + "." : "";
+    $("#storage-status").textContent=(store.notice ? store.notice+" " : "")+(store.kind==="localStorage" ? "IndexedDB no disponible. Se usa localStorage (8 versiones automáticas por documento). " : "")+
+      (persistent ? "Almacenamiento persistente concedido." : "Sin almacenamiento persistente confirmado. Exporta el proyecto con regularidad.")+usage;
+  }
+  const optionsFor=(origin,label="")=>({origin,label,createdAt:new Date().toISOString(),id:T.newId("v")+T.newId("")});
+  function paintVersions(rows) {
+    knownVersions=rows;
+    const list=$("#version-list");
+    const visible=T.newestFirst(rows.filter(v=>v.documentId===documentId || v.origin==="respaldo" || v.id==="borrador-guardado-migrado"));
+    list.replaceChildren(...visible.map(v=>{
+      const li=document.createElement("li"), title=document.createElement("p");
+      title.textContent=[new Date(v.createdAt).toLocaleString("es-MX"), v.label || "Sin nombre", v.origin,
+        v.summary.title || "Sin título", v.summary.blocks+" bloques"].join(" · ");
+      li.append(title);
+      for (const [key,label] of [["diff","Ver cambios"],["restore","Restaurar"],["rename","Renombrar"],["delete","Eliminar"]]) {
+        const b=document.createElement("button"); b.type="button"; b.className="secondary";
+        b.dataset.versionId=v.id; b.dataset.operation=key; b.textContent=label; b.setAttribute("aria-label",label+" · "+title.textContent); li.append(b);
+      }
+      return li;
+    }));
+    if (!visible.length) { const li=document.createElement("li"); li.textContent="Todavía no hay versiones."; list.append(li); }
+  }
+  let versionQueue=Promise.resolve();
+  function withVersions(operation, exclusive=false) {
+    const run=async()=>{
+      const store=await storageReady;
+      if (exclusive) form.inert=true;
+      try { return await operation(store); } finally { if (exclusive) form.inert=false; }
+    };
+    versionQueue=versionQueue.then(run).catch(error=>{
+      versionStatus("No se completó la operación de versiones. "+(error?.message || "Almacenamiento no disponible."));
+    });
+    return versionQueue;
+  }
+  function saveExportVersion(snapshot) {
+    withVersions(async store=>{
+      const rows=await store.update(all=>T.addVersion(all,snapshot,optionsFor("exportación"),store.limit));
+      paintVersions(rows); void reportStorage(store,true);
+    });
+  }
+  $("#save-version").addEventListener("click",()=>{
+    const snapshot=state(), label=$("#version-label").value.trim(), options=optionsFor("manual",label);
+    withVersions(async store=>{
+      paintVersions(await store.update(all=>T.addVersion(all,snapshot,options,store.limit)));
+      if ($("#version-label").value.trim()===label) $("#version-label").value="";
+      versionStatus("Versión guardada."); void reportStorage(store,true);
+    });
+  });
+  function describeDiff(diff) {
+    const lines=[];
+    for (const [key,label] of [["added","Añadido"],["removed","Eliminado"],["moved","Movido"],["modified","Modificado"]]) {
+      for (const item of diff[key]) {
+        lines.push(label+" · "+(item.title || blockLabel(item.type))+" ("+item.id+")");
+        if (item.from) lines.push("  "+(item.from.parent||"Raíz")+" · "+(item.from.position+1)+" → "+(item.to.parent||"Raíz")+" · "+(item.to.position+1));
+        if (item.fields) lines.push("  "+item.fields.map(k=>({title:"título",type:"tipo",content:"contenido",options:"opciones",listFormat:"formato de lista"})[k]).join(", "));
+        if (item.lines?.truncated) lines.push("  Diferencia por líneas omitida por tamaño.");
+        for (const line of item.lines?.changes||[]) lines.push("  "+(line.kind==="added"?"+ ":"− ")+line.line+" "+line.text);
+      }
+    }
+    for (const [key,label] of [["metadata","Metadato"],["macros","Macro"]]) for (const change of diff[key]) {
+      lines.push(label+" "+change.key+": "+JSON.stringify(change.before??null)+" → "+JSON.stringify(change.after??null));
+    }
+    return lines.join("\n") || "Sin cambios respecto a esta versión.";
+  }
+  $("#version-list").addEventListener("click",event=>{
+    const button=event.target.closest("button[data-version-id]"); if (!button) return;
+    const id=button.dataset.versionId, op=button.dataset.operation;
+    if (op==="delete" && !confirm("¿Eliminar esta versión guardada?")) return;
+    const current=knownVersions.find(v=>v.id===id);
+    const label=op==="rename" ? global.prompt("Nombre de la versión",current?.label || "") : null;
+    if (op==="rename" && label===null) return;
+    withVersions(async store=>{
+      const get=all=>{const row=all.find(v=>v.id===id); if(!row) throw Error("La versión ya no existe."); return row;};
+      if (op==="diff") {
+        const row=get(await store.read()), panel=$("#version-diff");
+        panel.textContent=describeDiff(T.diffDocuments(row.state,state())); panel.hidden=false; panel.focus(); return;
+      }
+      const snapshot=state(), currentFocus=focusId();
+      let restored;
+      const rows=await store.update(all=>{
+        const row=get(all);
+        if (op==="delete") return all.filter(v=>v.id!==id);
+        if (op==="rename") return all.map(v=>v.id===id?{...v,label:label.trim()}:v);
+        restored=row;
+        return T.addVersion(all,snapshot,optionsFor("respaldo","Antes de restaurar"),store.limit);
+      });
+      if (restored) {
+        rememberChange(currentFocus,snapshot); loadVersionState(restored.state,restored.documentId,currentFocus);
+      }
+      paintVersions(rows); versionStatus(restored?"Versión restaurada. Se guardó un respaldo.":op==="rename"?"Versión renombrada.":"Versión eliminada.");
+      if (!restored) $("#save-version").focus();
+    },op==="restore");
+  });
+  $("#export-project").addEventListener("click",()=>{
+    const snapshot=state(), config=$("#project-config").checked ? JSON.parse(JSON.stringify(portableConfig())) : null;
+    withVersions(async store=>{
+      let versions=[], warning="";
+      try { versions=(await store.read()).filter(v=>v.documentId===snapshot.documentId); }
+      catch { warning=" No se pudieron incluir las versiones almacenadas."; }
+      T.downloadProject({kind:"notas-latex-proyecto",version:1,exportedAt:new Date().toISOString(),documentId:snapshot.documentId,
+        current:T.documentSnapshot(snapshot),versions,...(config?{config}:{})});
+      versionStatus("Proyecto exportado."+warning); void reportStorage(store,true);
+    });
+  });
+  $("#import-project").addEventListener("change",async event=>{
+    const field=event.target, file=field.files[0]; if (!file) return;
+    let checked;
+    try { checked=T.validateProject(await file.text()); } catch { checked={error:"No se pudo leer el archivo."}; }
+    field.value="";
+    if (checked.error) { versionStatus(checked.error); return; }
+    const {project,skipped}=checked;
+    withVersions(async store=>{
+      const snapshot=state(), currentFocus=focusId();
+      const rows=await store.update(all=>T.addVersion(T.mergeVersions(all,project.versions),snapshot,optionsFor("respaldo","Antes de importar"),store.limit));
+      rememberChange(currentFocus,snapshot); loadVersionState(project.current,project.documentId,null);
+      if (project.config) applyPortableConfig(project.config,false);
+      paintVersions(rows); void reportStorage(store,true);
+      versionStatus("Proyecto importado con respaldo previo."+(skipped.length?" Versiones omitidas: "+skipped.join(", ")+".":""));
+    },true);
+  });
+  withVersions(async store=>{
+    const legacy=readWritingStorage(STORAGE_KEY,null) || readWritingStorage(LEGACY_STORAGE_KEY,null);
+    let rows;
+    if (legacy) {
+      let migrated;
+      rows=await store.update(all=>{
+        migrated=T.migrateSingleDraft(all,legacy,{documentId,createdAt:new Date().toISOString()});
+        return migrated?.rows || all;
+      });
+      if (migrated) {
+        try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(LEGACY_STORAGE_KEY); } catch { /* la migración es idempotente */ }
+        versionStatus("Borrador guardado (migrado) disponible en Versiones.");
+      } else versionStatus("El borrador anterior es ilegible. Se conserva su copia original.");
+    } else rows=await store.read();
+    paintVersions(rows); void reportStorage(store);
+  });
+  selectDocument(documentId);
 
   renderShortcutPanel();
   renderSymbolBoard();

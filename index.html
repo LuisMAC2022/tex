@@ -22,7 +22,7 @@
         <section aria-labelledby="datos-heading">
           <details id="metadata-details" open>
           <summary><h2 id="datos-heading">Datos del documento</h2></summary>
-          <p>El título es el único dato obligatorio. Los borradores permanecen únicamente en este dispositivo.</p>
+          <p>El título es el único dato obligatorio. Las versiones se guardan en este navegador. Puedes trasladar el documento con su archivo de proyecto.</p>
           <fieldset class="form-grid">
             <legend>Metadatos</legend>
             <p class="field field-wide">
@@ -38,7 +38,7 @@
           </fieldset>
           <details id="document-macros">
             <summary>Macros del documento</summary>
-            <p>Las macros viajan con el borrador y se definen en el preámbulo del documento.</p>
+            <p>Las macros viajan con el proyecto y se definen en el preámbulo del documento.</p>
             <ul id="macro-list"></ul>
             <fieldset id="macro-fields"><legend>Añadir o editar una macro</legend>
               <p class="field"><label for="macro-name">Nombre</label><input id="macro-name" type="text" autocomplete="off" spellcheck="false" aria-describedby="macro-name-error"><span id="macro-name-error" class="error"></span></p>
@@ -49,11 +49,6 @@
             </fieldset>
             <button id="use-default-macros" type="button" class="secondary">Usar como mis macros predeterminadas</button>
           </details>
-          <menu class="button-row" aria-label="Acciones del borrador">
-            <li><button id="save-draft" type="button">Guardar borrador</button></li>
-            <li><button id="restore-draft" type="button">Restaurar borrador</button></li>
-            <li><button id="delete-draft" class="secondary danger" type="button">Borrar borrador</button></li>
-          </menu>
           </details>
         </section>
 
@@ -209,6 +204,8 @@
           <h3>Estructura actual</h3>
           <p>Cada bloque indica su nivel y su bloque padre. «Subir» y «Bajar» mueven el bloque solo entre sus hermanos, sin sacarlo de su nivel. Para repetir una estructura hay tres acciones distintas: <strong>«Duplicar»</strong> deja una copia justo después del original; <strong>«Copiar bloque»</strong> lo guarda en una bandeja y luego eliges el destino con «Pegar bloque», las veces que haga falta; <strong>«Copiar texto»</strong> lleva su contenido al portapapeles del sistema para pegarlo donde quieras, dentro o fuera de la aplicación.</p>
           <button type="button" id="global-menu" class="secondary" aria-haspopup="menu">Menú general</button>
+          <button type="button" id="undo-structure" class="secondary" disabled>Deshacer cambio</button>
+          <button type="button" id="redo-structure" class="secondary" disabled>Rehacer cambio</button>
           <p id="empty-blocks">Todavía no hay bloques.</p>
           <ol id="block-list" class="block-list"></ol>
           </div>
@@ -229,6 +226,18 @@
             <li><button id="copy-code" type="button">Copiar código</button></li>
             <li><button id="download-tex" type="button">Descargar .tex</button></li>
           </menu>
+        </section>
+        <section aria-labelledby="versions-heading">
+          <h2 id="versions-heading" tabindex="-1">Versiones</h2>
+          <p class="field"><label for="version-label">Nombre de la versión (opcional)</label><input id="version-label" type="text"></p>
+          <button id="save-version" type="button">Guardar versión</button>
+          <ul id="version-list"></ul>
+          <pre id="version-diff" hidden tabindex="-1" aria-label="Cambios con el documento actual"></pre>
+          <p id="version-status" role="status"></p>
+          <p id="storage-status"></p>
+          <label class="check-field"><input id="project-config" type="checkbox"> Incluir la configuración portátil</label>
+          <button id="export-project" type="button">Exportar proyecto</button>
+          <p class="field"><label for="import-project">Importar proyecto</label><input id="import-project" type="file" accept="application/json,.json"></p>
         </section>
         <section aria-labelledby="writing-heading">
           <h2 id="writing-heading">Preferencias de escritura</h2>
@@ -318,6 +327,8 @@
     <script src="assets/js/macros.js"></script>
     <script src="assets/js/menus.js"></script>
     <script src="assets/js/radial.js"></script>
+    <script src="assets/js/versions.js"></script>
+    <script src="assets/js/version-storage.js"></script>
     <script src="assets/js/app.js"></script>
   </body>
 </html>

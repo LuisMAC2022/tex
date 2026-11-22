@@ -152,3 +152,9 @@ Pasaron 208 pruebas, incluida la compilación real de los fragmentos y el enlace
 El sobre v4 conserva `documentId` y un id por bloque. Las copias, los pegados y los pasos de plantilla crean identidades nuevas. Los movimientos y las ediciones conservan las existentes, y el editor vuelve a localizar por id el bloque que debe recibir el foco. [DEC-024](decisiones/DEC-024-identidad-de-bloques.md) y [INV-010](INVARIANTES.md) registran la regla y su guardián. Las pruebas de formatos anteriores comprueban por separado el esquema resultante y la versión de origen en `migratedFrom`.
 
 Pasaron 211 pruebas, incluida la compilación con `pdflatex`, y el ejemplo con ids generó exactamente el `.tex` de referencia. No verificado el recorrido del foco con TalkBack; está en la revisión manual.
+
+## U4 · Historial, versiones y proyecto
+
+Implementé deshacer y rehacer hasta cien cambios estructurales, versiones manuales y de exportación, respaldos previos a restaurar o importar, comparación por id y por líneas, y el traslado en JSON con configuración opcional. Las escrituras en IndexedDB se confirman en una transacción. El respaldo en localStorage conserva ocho automáticas y se incorpora a IndexedDB cuando vuelve a estar disponible. Las manuales se conservan en ambos almacenes. La migración del antiguo borrador es idempotente. Se documentó [DEC-025](decisiones/DEC-025-versiones-y-proyecto.md).
+
+Pasaron 216 pruebas, incluida la compilación. En un DOM simulado recorrí ambos adaptadores desde los controles: duplicar, deshacer/rehacer, guardar, generar dos veces, comparar, restaurar, exportar, importar y volver al documento anterior. No verificadas la concesión real de persistencia, la expulsión de datos ni la reapertura en Chrome Android. Estos puntos y el traslado entre equipos están en la revisión manual.

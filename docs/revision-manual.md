@@ -29,12 +29,12 @@ por ronda de revisión, no al cambiar código.
 - [ ] Usar Re Pág y Av Pág para recorrer categorías, incluida **Recientes** vacía. El foco debe quedar en la rejilla y solo la categoría activa debe anunciarse como pulsada. Insertar más de doce símbolos, repetir uno y recargar. Confirmar que aparecen los doce más recientes sin repetir y que el historial de la pestaña funciona si el almacenamiento no está disponible.
 - [ ] Comprobar a 320 CSS px que no hay desplazamiento horizontal y que cada botón conserva al menos 44 × 44 px y foco visible.
 - [ ] Revisar con lector de pantalla que el orden anunciado coincide con el visual y que etiquetas, instrucciones, errores y títulos son comprensibles.
-- [ ] Confirmar que altas, movimientos, borrados, generación, copia, descarga y borrador se anuncian dinámicamente y no solo mediante color.
+- [ ] Confirmar que altas, movimientos, borrados, generación, copia, descarga y guardado de versiones se anuncian dinámicamente y no solo mediante color.
 - [ ] Forzar un título vacío y un bloque vacío; confirmar error escrito, `aria-invalid` y foco en el campo.
 - [ ] Probar zoom al 200 %, 320 CSS px y orientación móvil sin pérdida de contenido ni desplazamiento horizontal de la interfaz, con un bloque de tercer nivel a la vista.
 - [ ] Comprobar contraste de texto, controles, foco, errores y estados en temas claro y oscuro con una herramienta WCAG 2.1 AA.
 - [ ] Usar `prefers-reduced-motion: reduce` y verificar que no aparece movimiento inesperado.
-- [ ] Guardar, recargar, restaurar y borrar un borrador de un árbol de varios niveles; probar también una entrada corrupta y un borrador plano `version: 1` para comprobar la migración y su anuncio.
+- [ ] Guardar, recargar, restaurar y eliminar una versión de un árbol de varios niveles; probar también una entrada corrupta y un borrador plano `version: 1` para comprobar la migración y su anuncio.
 - [ ] Denegar permiso del portapapeles y confirmar que un fallo conserva el resultado y comunica una alternativa.
 - [ ] Abrir `index.html` por doble clic (`file://`) y confirmar que se añaden bloques, se genera, se copia y se descarga sin errores en consola.
 - [ ] Con `file://` y sin conexión, verificar que las fuentes matemáticas cargan y que la vista previa es legible en ambos temas.
@@ -49,7 +49,7 @@ por ronda de revisión, no al cambiar código.
 - [ ] Pegar en un proyecto vacío de Overleaf un `.tex` con texto mixto y entornos anidados, y comprobar que compila sin añadir paquetes.
 - [ ] Compilar con una bibliografía y comprobar que cada referencia aparece numerada entre corchetes.
 - [ ] Seleccionar **Imagen** y pulsar **Añadir bloque** con la ruta vacía. Comprobar el error junto a **Archivo de imagen** y el foco. Probar una ruta con espacios y extensión `.GIF` en mayúsculas y comprobar que se muestran avisos y se puede guardar.
-- [ ] Elegir un PNG local, comprobar la miniatura en el editor y la estructura, seleccionar **Mediana** y pulsar **Girar 90°**. Editar el bloque y comprobar que recupera la ruta, el 60 %, el giro y las demás opciones. Guardar el borrador, recargar y restaurar para comprobar que ahora se muestra la ruta con sus ajustes.
+- [ ] Elegir un PNG local, comprobar la miniatura en el editor y la estructura, seleccionar **Mediana** y pulsar **Girar 90°**. Editar el bloque y comprobar que recupera la ruta, el 60 %, el giro y las demás opciones. Guardar una versión, recargar y restaurar para comprobar que ahora se muestra la ruta con sus ajustes.
 - [ ] Subir un PNG a Overleaf con el nombre indicado en la ruta. Compilar un documento con una imagen raíz, otra girada y otra dentro de un teorema. Confirmar el giro, el pie escapado y la posición de la imagen anidada.
 
 ## Captura rápida: P1
@@ -86,7 +86,7 @@ por ronda de revisión, no al cambiar código.
 ## Captura rápida: P5
 
 - [ ] Definir R, usarla en una fórmula, generar y compilar en Overleaf. Borrar la macro y comprobar el error katex-only.
-- [ ] Guardar y restaurar borrador v3 conserva macros; un v2 restaura con lista vacía.
+- [ ] Migrar un borrador v3 a una versión conserva sus macros. Un v2 se migra con lista vacía.
 - [ ] Guardar predeterminadas y comenzar sin borrador ni autoguardado las carga; no sustituyen las de un documento abierto.
 - [ ] Cambiar una macro actualiza tanto el editor como las vistas previas de todos los bloques.
 
@@ -110,3 +110,4 @@ Con la rama de trabajo en el portátil, ejecuta `python3 -m http.server 8000` de
 - [ ] Probar en Android la pulsación larga de 400 ms en tarjeta y zona vacía, el arrastre con una mano, los abanicos, la vibración y el zoom con dos dedos. TalkBack debe anunciar cada menú y devolver el foco. Confirmar que se conserva la selección de Gboard dentro del campo.
 - [ ] En escritorio abrir los cuatro contextos por clic y por teclado, volver del submenú y compilar los fragmentos y el enlace en Overleaf.
 - [ ] Mover una rama, editarla y duplicarla. Verificar el foco en el mismo bloque tras mover y en la copia tras duplicar, también con TalkBack.
+- [ ] Guardar una versión en Chrome Android, cerrar el navegador y restaurarla después. Comprobar persistencia concedida o denegada y espacio usado. Exportar a JSON, transferir al portátil, importar y volver a Android. Comparar bloques movidos, macros y líneas. Recuperar el respaldo anterior a una importación y probar deshacer/rehacer con TalkBack.

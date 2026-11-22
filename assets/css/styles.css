@@ -299,3 +299,7 @@ summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 }
 
 .radial-parent text { fill: var(--muted); text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+
+#version-list li { margin-block: .65rem; }
+#version-list button { margin-inline-end: .3rem; margin-block: .15rem; }
+#version-diff { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 24rem; overflow: auto; }

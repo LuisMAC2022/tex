@@ -168,7 +168,7 @@ apartado: siguen corridos hasta el final del documento. Es a propósito.
 
 ### Insertar y editar una imagen
 
-1. Selecciona «Imagen». En «Opciones de imagen», escribe la ruta en «Archivo de imagen» o usa «Elegir archivo…» para rellenar el nombre y obtener una miniatura local. Sube el archivo al proyecto de Overleaf en esa misma ruta. El borrador guarda la ruta y los ajustes de la imagen.
+1. Selecciona «Imagen». En «Opciones de imagen», escribe la ruta en «Archivo de imagen» o usa «Elegir archivo…» para rellenar el nombre y obtener una miniatura local. Sube el archivo al proyecto de Overleaf en esa misma ruta. El proyecto guarda la ruta y los ajustes de la imagen.
 2. Escribe el pie en «Título del bloque (opcional)». Ajusta «Ancho de la imagen» con el deslizador o elige «Pequeña» (40 %), «Mediana» (60 %), «Grande» (80 %) o «Ancho completo» (100 %). Si indicas «Altura máxima (cm, opcional)», la escala respeta ambos límites y mantiene las proporciones antes de girar.
 3. Pulsa «Girar 90°» o ajusta «Ángulo de giro (grados)». Elige «Izquierda», «Centro» o «Derecha» en «Alineación de la imagen» y completa «Posición de la figura» o «Etiqueta de la figura (opcional)» si las necesitas.
 4. Comprueba la ruta o la miniatura en «Vista previa de la imagen» y usa «Añadir bloque». Para volver a cargar sus ajustes, abre «Editar» en el bloque y confirma con «Guardar cambios».
@@ -282,17 +282,13 @@ original aunque aparezcan avisos.
 
 ## 7. Guardar el trabajo
 
-La sesión se autoguarda, incluido el bloque en curso. Pulsa «Guardar borrador» cuando quieras conservar un punto de restauración de lo que
-llevas. Se guarda en este navegador y en este aparato, y así te lo dice el aviso.
+La sesión guarda el bloque en curso para recuperarlo al abrir. En «Versiones», **Guardar versión** conserva un punto al que puedes volver. Puedes darle nombre. Generar, copiar y descargar el código guardan una versión automática si el documento cambió. Al copiar o descargar un resultado anterior, el editor actualiza el código con los cambios confirmados.
 
-- «Restaurar borrador» recupera lo último que guardaste. También entiende borradores
-  de la versión anterior de la aplicación y te avisa cuando convierte uno.
-- «Borrar borrador» pide confirmación y **no toca** lo que tengas en pantalla.
-
-**Guarda un borrador antes de cerrar, y guarda el `.tex` en tu ordenador o en Overleaf
-antes de terminar la sesión.** El borrador del navegador es una comodidad para seguir
-mañana, no un sitio donde archivar. Se pierde si borras datos de navegación, y no
-existe en ningún otro aparato tuyo.
+- **Ver cambios** compara la versión con el documento actual. **Restaurar** guarda antes un respaldo. **Deshacer cambio** permite volver atrás en la sesión.
+- **Renombrar** y **Eliminar** actúan sobre la versión elegida. Las versiones manuales se conservan hasta que las elimines. Se guardan las últimas 30 automáticas de cada documento, u ocho si el navegador solo ofrece el almacenamiento alternativo.
+- **Exportar proyecto** descarga el JSON con los bloques, macros y versiones del documento. Marca **Incluir la configuración portátil** si quieres llevar también alias, plantillas y preferencias. Guarda el archivo en Drive o en un repositorio privado para pasarlo entre teléfono y portátil.
+- **Importar proyecto** guarda primero un respaldo, combina las versiones por id e indica cuáles omitió. En la lista también puedes recuperar el respaldo anterior a una importación.
+- Si tenías un borrador antiguo, la versión **Borrador guardado (migrado)** queda disponible en el primer arranque. El panel indica si el navegador concedió almacenamiento persistente y cuánto espacio está en uso.
 
 ---
 
@@ -412,7 +408,7 @@ Las inserciones del tablero y las ediciones de listas conservan el historial
 nativo de deshacer cuando el navegador admite insertText. La sesión se guarda
 al editar y al ocultar o cerrar la pestaña, incluido el bloque sin incorporar.
 Al volver, «Recuperar sesión» recupera ese trabajo y «Descartar» elimina la
-oferta. «Guardar borrador» sigue siendo un punto de restauración independiente.
+oferta. «Guardar versión» conserva un punto de restauración independiente.
 
 ## Autocierre en Contenido
 
@@ -478,7 +474,7 @@ un argumento y definición \left|#1\right|. La vista previa muestra una llamada
 de ejemplo y los errores aparecen junto a cada campo. «Guardar macro» la
 incorpora; «Editar macro», «Borrar macro» y «Cancelar macro» permiten gestionarla.
 
-Las macros se guardan con el documento en borradores v4 y sesiones recuperables.
+Las macros se guardan con el documento en las versiones del proyecto y las sesiones recuperables.
 Se definen con newcommand en el preámbulo y encabezan las sugerencias al escribir.
 «Usar como mis macros predeterminadas» guarda una copia para documentos nuevos
 sin borrador ni sesión pendiente. La exportación de configuración incluye esas

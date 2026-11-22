@@ -8,17 +8,23 @@
     return `${stem || "notas-calculo-3"}.tex`;
   }
 
-  function downloadTex(content, title) {
-    const blob = new Blob([content], { type: "application/x-tex;charset=utf-8" });
+  function downloadFile(content, filename, type) {
+    const blob = new Blob([content], { type });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = sanitizeFilename(title);
+    link.download = filename;
     document.body.append(link);
     link.click();
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
-  Object.assign(TexNotes, { sanitizeFilename, downloadTex });
+  function downloadTex(content, title) {
+    downloadFile(content, sanitizeFilename(title), "application/x-tex;charset=utf-8");
+  }
+  function downloadProject(project) {
+    downloadFile(JSON.stringify(project, null, 2), sanitizeFilename(project.current.metadata.title).replace(/\.tex$/, ".json"), "application/json");
+  }
+  Object.assign(TexNotes, { sanitizeFilename, downloadTex, downloadProject });
 })(typeof globalThis !== "undefined" ? globalThis : this);

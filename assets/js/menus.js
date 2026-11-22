@@ -48,6 +48,7 @@
         command("goto-content", "Contenido", "¶", "goTo", "content"),
         command("goto-tree", "Estructura", "≡", "goTo", "tree"),
         command("goto-result", "Resultado", "⇣", "goTo", "result"),
+        command("goto-versions", "Versiones", "◷", "goTo", "versions"),
         command("goto-prefs", "Preferencias", "⚙", "goTo", "preferences"),
       ]),
       command("prefs", "Ajustes", "⚙", "openPreferences"),
