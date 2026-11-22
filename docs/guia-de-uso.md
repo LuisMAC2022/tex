@@ -505,3 +505,7 @@ para duplicar, copiar, eliminar, subir, bajar, mover o guardar una plantilla.
 Después de mover con sus botones, el desplegable del bloque destino se abre
 para conservar el foco. «Atajos de teclado» incluye la prioridad de Tab,
 Escape, navegación del menú, Retroceso y los comandos /.
+
+## Barra de escritura en el teléfono
+
+Con el teclado abierto, **Anterior** y **Siguiente** recorren los huecos del fragmento o mueven el cursor un comando, escape o grafema. **Símbolos** abre el tablero sobre la barra. Toca un símbolo para insertarlo, o **Cerrar** o Escape para recuperar la selección. **Añadir** guarda el bloque en curso. Las flechas recorren la barra con una sola parada de Tab.

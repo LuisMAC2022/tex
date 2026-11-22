@@ -175,6 +175,7 @@
             </details>
 
             <section class="symbol-board" aria-labelledby="simbolos-heading" aria-describedby="symbol-board-intro">
+              <button id="close-symbol-sheet" type="button" class="secondary" hidden>Cerrar</button>
               <p class="symbol-shortcut"><button id="symbol-toggle" type="button" aria-label="Buscar en el tablero de símbolos">Buscar</button> <kbd id="symbol-shortcut-label">Alt+Mayús+S</kbd></p>
               <details id="symbol-details" open>
                 <summary><h3 id="simbolos-heading">Símbolos matemáticos</h3></summary>
@@ -194,6 +195,12 @@
               </details>
             </section>
 
+            <div id="thumb-bar" role="toolbar" aria-label="Acciones de escritura">
+              <button type="button" id="thumb-prev"><span aria-hidden="true">←</span>Anterior</button>
+              <button type="button" id="thumb-next" tabindex="-1"><span aria-hidden="true">→</span>Siguiente</button>
+              <button type="button" id="thumb-symbols" tabindex="-1" aria-controls="symbol-details" aria-expanded="false"><span aria-hidden="true">Ω</span>Símbolos</button>
+              <button type="button" id="thumb-add" tabindex="-1"><span aria-hidden="true">＋</span>Añadir</button>
+            </div>
           </fieldset>
 
           <div class="structure-panel">

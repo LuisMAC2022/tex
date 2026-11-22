@@ -61,3 +61,23 @@ test("Intro completa entornos con argumentos y no actúa en listas, bibliografí
  for(const type of ['itemize','enumerate','bibliography']) assert.equal(T.completeEnvironment(state(String.raw`\begin{align}§`),type),null);
  for(const text of [String.raw`\begin{align}§\end{align}`,String.raw`\\begin{align}§`,String.raw`% \begin{align}§`]) assert.equal(T.completeEnvironment(state(text),'text'),null);
 });
+
+test("Anterior recorre los huecos después de escribir en dos argumentos", () => {
+  const inserted = T.snippetEdit(state("§"), "\\frac{#1}{#2}#0");
+  const next = T.nextSnippetHole(state("\\frac{a§}{}"), inserted.session);
+  const back = T.previousSnippetHole(state("\\frac{a}{dos§}"), next.session);
+  assert.equal(view(back.edit), "\\frac{a§}{dos}");
+  assert.equal(T.previousSnippetHole(back.edit, back.session).edit.selectionStart, back.edit.selectionStart);
+  assert.equal(T.nextSnippetHole(back.edit, back.session).edit.selectionStart, 12);
+});
+test("el cursor recorre comandos, escapes y grafemas completos y respeta los comentarios", () => {
+  for (const unit of ["\\alpha", "\\\\", "\\{", "a\u0301", "🙂", "👩‍🔬"]) {
+    const value = " " + unit + " ";
+    for (let i = 1; i < unit.length + 1; i++) assert.equal(T.tokenBoundary(value, i, 1), unit.length + 1);
+    assert.equal(T.tokenBoundary(value, unit.length + 1, -1), 1);
+  }
+  assert.equal(T.tokenBoundary("%\\abc\n\\abc", 1, 1), 2);
+  assert.equal(T.tokenBoundary("%\\abc\n\\abc", 6, 1), 10);
+  assert.equal(T.tokenBoundary("x", 0, -1), 0);
+  assert.equal(T.tokenBoundary("x", 1, 1), 1);
+});

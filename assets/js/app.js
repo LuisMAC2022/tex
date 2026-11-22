@@ -327,7 +327,7 @@
     return true;
   }
 
-  $("#add-block").addEventListener("click", () => {
+  function commitBlock(keepFieldFocus = false) {
     const draft = blockDraft();
     if (!validateBlock(draft.type)) return;
     const { editing, parent } = editorTarget();
@@ -335,7 +335,8 @@
       const next = updateBlock(blocks, editing, draft);
       if (!next) { blockError(`«${blockLabel(draft.type)}» no admite bloques anidados y este bloque ya tiene. Muévelos o elimínalos antes de cambiar el tipo.`); return; }
       blocks = next; resetBlockEditor(); renderBlocks();
-      if (!focusAction("edit", editing)) $("#block-type").focus();
+      if (keepFieldFocus) focusBlockContent();
+      else if (!focusAction("edit", editing)) $("#block-type").focus();
       announce(`Bloque ${pathLabel(editing)} actualizado.`);
       return;
     }
@@ -349,7 +350,8 @@
     focusBlockContent();
     const templateMessage = commitTemplateStep(result.path);
     announce(`Bloque ${pathLabel(result.path)} añadido ${parent.length ? `dentro de ${describeBlock(blockAtPath(blocks, parent), parent)}` : "en la raíz"}.${templateMessage ? ` ${templateMessage}` : ""}`);
-  });
+  }
+  $("#add-block").addEventListener("click", () => commitBlock());
 
   $("#paste-block").addEventListener("click", () => {
     if (!tray) { updateTrayControls(); announce("La bandeja está vacía: copia un bloque antes de pegar."); return; }
@@ -614,12 +616,14 @@
   function returnToSymbolOrigin() {
     const { field, selection } = symbolOrigin ?? captureSymbolOrigin(lastBlockField);
     symbolOrigin = null;
+    closeSymbolSheet();
     field.focus();
     if (selection) field.setSelectionRange(...selection);
   }
 
   function openSymbolSearch(field) {
     symbolOrigin = field ? captureSymbolOrigin(field) : symbolOrigin ?? captureSymbolOrigin(lastBlockField);
+    if (coarsePointer.matches) showSymbolSheet();
     symbolDetails.open = true;
     symbolSearch.focus();
     symbolSearch.select();
@@ -631,6 +635,7 @@
     const { field, selection } = symbolOrigin ?? captureSymbolOrigin(lastBlockField);
     const destination = selection && !field.readOnly ? field : blockContent;
     if (destination === field) destination.setSelectionRange(...selection);
+    closeSymbolSheet();
     insertIntoField(destination, symbol.insert || symbol.command);
     symbolOrigin = null;
     if (destination !== field) field.focus();
@@ -817,6 +822,12 @@
     imageFields.hidden = !active;
     $("#block-content").closest(".field").hidden = active;
     $(".symbol-board").hidden = active;
+    for (const id of ["thumb-prev", "thumb-next", "thumb-symbols"]) $("#" + id).disabled = active;
+    const buttons = [...$("#thumb-bar").querySelectorAll("button")];
+    if (!buttons.some(button => !button.disabled && button.tabIndex === 0)) {
+      for (const button of buttons) button.tabIndex = -1;
+      buttons.find(button => !button.disabled).tabIndex = 0;
+    }
     if (active) previewTitle.textContent = "Vista previa de la imagen";
     else previewTitle.textContent = originalPreviewTitle;
     previewHelp.hidden = active;
@@ -1677,6 +1688,83 @@
   function focusMetadata() { $( $("#metadata-details").open ? "#note-title" : "#metadata-details > summary").focus(); }
   $("#metadata-details").addEventListener("input", () => syncMetadataSummary());
   syncMetadataSummary(true);
+
+  const thumbBar = $("#thumb-bar");
+  const coarsePointer = global.matchMedia("(pointer: coarse)");
+  const rootStyle = document.documentElement.style;
+  function syncThumbViewport() {
+    const v = global.visualViewport;
+    const inset = v ? Math.max(0, global.innerHeight - v.offsetTop - v.height) : 0;
+    rootStyle.setProperty("--keyboard-inset", inset + "px");
+    rootStyle.setProperty("--thumb-height", thumbBar.offsetHeight + "px");
+    rootStyle.setProperty("--sheet-height", ((v?.height ?? global.innerHeight) * .4) + "px");
+  }
+  function revealThumbField() {
+    syncThumbViewport();
+    if (coarsePointer.matches && document.activeElement === blockContent) blockContent.scrollIntoView({ block: "nearest" });
+  }
+  global.visualViewport?.addEventListener("resize", revealThumbField);
+  global.visualViewport?.addEventListener("scroll", syncThumbViewport);
+  global.addEventListener("resize", syncThumbViewport);
+  if (global.ResizeObserver) new ResizeObserver(syncThumbViewport).observe(thumbBar);
+  blockContent.addEventListener("focus", () => { if (coarsePointer.matches) requestAnimationFrame(revealThumbField); });
+  function showSymbolSheet() {
+    symbolOrigin ??= captureSymbolOrigin(blockContent);
+    symbolBoard.classList.add("symbol-sheet");
+    symbolDetails.open = true;
+    $("#close-symbol-sheet").hidden = false;
+    $("#thumb-symbols").setAttribute("aria-expanded", "true");
+  }
+  function closeSymbolSheet() {
+    symbolBoard.classList.remove("symbol-sheet");
+    $("#close-symbol-sheet").hidden = true;
+    $("#thumb-symbols").setAttribute("aria-expanded", "false");
+  }
+  coarsePointer.addEventListener("change", () => { closeSymbolSheet(); syncThumbViewport(); });
+  $("#close-symbol-sheet").addEventListener("click", returnToSymbolOrigin);
+  symbolBoard.addEventListener("pointerdown", event => {
+    if (symbolBoard.classList.contains("symbol-sheet") && event.target.closest("button")) event.preventDefault();
+  });
+  document.addEventListener("keydown", event => {
+    if (event.key !== "Escape" || !symbolBoard.classList.contains("symbol-sheet")) return;
+    event.preventDefault(); event.stopPropagation(); returnToSymbolOrigin();
+  }, true);
+  thumbBar.addEventListener("pointerdown", event => { if (event.target.closest("button")) event.preventDefault(); });
+  thumbBar.addEventListener("keydown", event => {
+    const buttons = [...thumbBar.querySelectorAll("button:enabled")];
+    const index = buttons.indexOf(event.target);
+    if (index < 0 || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    const next = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1 :
+      (index + buttons.length + (event.key === "ArrowLeft" ? -1 : 1)) % buttons.length;
+    buttons[index].tabIndex = -1;
+    buttons[next].tabIndex = 0;
+    buttons[next].focus();
+  });
+  function thumbStep(direction) {
+    closeAssistMenu();
+    const current = fieldState();
+    const hole = direction > 0 ? T.nextSnippetHole(current, snippetSession) : T.previousSnippetHole(current, snippetSession);
+    if (hole) {
+      T.applyFieldEdit(blockContent, hole.edit); snippetSession = hole.session;
+      announce(hole.session ? "Hueco " + (hole.session.index + 1) + " de " + hole.session.holes.length : "Fin del fragmento.");
+    } else {
+      snippetSession = null;
+      const index = T.tokenBoundary(current.value, direction > 0 ? current.selectionEnd : current.selectionStart, direction);
+      T.applyFieldEdit(blockContent, { ...current, selectionStart: index, selectionEnd: index });
+      announce("Cursor en la posición " + (index + 1) + ".");
+    }
+  }
+  $("#thumb-prev").addEventListener("click", () => thumbStep(-1));
+  $("#thumb-next").addEventListener("click", () => thumbStep(1));
+  $("#thumb-add").addEventListener("click", () => { closeAssistMenu(); closeSymbolSheet(); commitBlock(true); });
+  $("#thumb-symbols").addEventListener("click", event => {
+    if (symbolBoard.classList.contains("symbol-sheet")) { returnToSymbolOrigin(); return; }
+    blockContent.focus(); showSymbolSheet();
+    if (event.detail === 0) symbolSearch.focus();
+    announce("Tablero de símbolos abierto.");
+  });
+  syncThumbViewport();
 
   function renderShortcutPanel() {
     const isMac = /Mac/.test(global.navigator.userAgentData?.platform || global.navigator.platform || "");

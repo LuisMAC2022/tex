@@ -104,7 +104,7 @@
 - ningún índice apunta a una sección que ya no existe
 - cada rótulo que citan las guías sigue existiendo en la interfaz
 
-## `tests/editing-assist.test.js` — 11 pruebas
+## `tests/editing-assist.test.js` — 13 pruebas
 
 - el contexto matemático incluye aperturas incompletas, escapes, entornos y comentarios
 - autocierra llaves literales y escapadas, delimitadores y left en su contexto
@@ -117,6 +117,8 @@
 - los cierres conservan su distancia, se validan y se descartan al salir
 - Retroceso elimina un par vacío pendiente y no toca un par con contenido
 - Intro completa entornos con argumentos y no actúa en listas, bibliografía ni pares cerrados
+- Anterior recorre los huecos después de escribir en dos argumentos
+- el cursor recorre comandos, escapes y grafemas completos y respeta los comentarios
 
 ## `tests/generator.test.js` — 36 pruebas
 
@@ -255,8 +257,8 @@
 
 ## `tests/check-site.mjs` — comprobación estructural
 
-No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, un solo `main` y `h1`, enlace de salto, orden de los scripts clásicos, rutas relativas, etiquetas asociadas y ayudas visibles). Se ejecuta con `npm test`.
+No usa `node:test`: es un script con 49 aserciones sobre `index.html` (doctype, un solo `main` y `h1`, enlace de salto, orden de los scripts clásicos, rutas relativas, etiquetas asociadas y ayudas visibles). Se ejecuta con `npm test`.
 
 ---
 
-198 pruebas con `node:test` más la comprobación estructural.
+200 pruebas con `node:test` más la comprobación estructural.

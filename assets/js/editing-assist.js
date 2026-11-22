@@ -101,18 +101,50 @@
     const edit = replaceSelection(state, text, prefix.length + first);
     const session = snippet.holes.length ? { start, endDistance: edit.value.length - start - text.length,
       holes: snippet.holes.map(index => edit.value.length - start - prefix.length - index),
-      finalDistance: edit.value.length - start - prefix.length - snippet.final, index: 0 } : null;
+      finalDistance: edit.value.length - start - prefix.length - snippet.final, length: edit.value.length, index: 0 } : null;
     const pending = wrapMath ? [{ start, open: "$", close: "$", key: "$", distance: edit.value.length - start - text.length + 1 }] : [];
     return { edit, session, pending };
   }
   function activeSnippet(state, session) {
-    return session && state.selectionStart >= session.start && state.selectionEnd <= state.value.length - session.endDistance ? session : null;
+    if (!session || state.selectionStart < session.start || state.selectionEnd > state.value.length - session.endDistance) return null;
+    const delta = state.value.length - session.length;
+    if (!delta) return session;
+    const current = session.holes[session.index];
+    const track = distance => distance > current ? distance + delta : distance;
+    return { ...session, length: state.value.length, holes: session.holes.map(track), finalDistance: track(session.finalDistance) };
   }
-  function nextSnippetHole(state, session) {
-    if (!activeSnippet(state, session)) return null;
-    const index = session.index + 1;
+  function stepSnippetHole(state, session, direction) {
+    session = activeSnippet(state, session);
+    if (!session) return null;
+    const index = Math.max(0, session.index + direction);
     const cursor = state.value.length - (session.holes[index] ?? session.finalDistance);
     return { edit: { ...state, selectionStart: cursor, selectionEnd: cursor }, session: index < session.holes.length ? { ...session, index } : null };
+  }
+  function nextSnippetHole(state, session) { return stepSnippetHole(state, session, 1); }
+  function previousSnippetHole(state, session) { return stepSnippetHole(state, session, -1); }
+
+  const graphemes = new Intl.Segmenter("es", { granularity: "grapheme" });
+  function tokenBoundary(value, index, direction) {
+    index = Math.max(0, Math.min(value.length, index));
+    const parts = graphemes.segment(value);
+    let end = 0, comment = false;
+    while (end < value.length) {
+      const start = end;
+      const char = value[end];
+      if (!comment && char === "\\" && end + 1 < value.length) {
+        end++;
+        if (/[a-zA-Z]/.test(value[end])) {
+          while (end < value.length && /[a-zA-Z]/.test(value[end])) end++;
+        } else end += parts.containing(end).segment.length;
+      } else {
+        end += parts.containing(end).segment.length;
+        if (char === "%") comment = true;
+        if (char === "\n" || char === "\r") comment = false;
+      }
+      if (direction < 0 && start < index && index <= end) return start;
+      if (direction > 0 && start <= index && index < end) return end;
+    }
+    return index;
   }
   function skipPendingClose(state, pending) {
     const pairs = activePairs(state, pending), pair = pairs.at(-1);
@@ -121,6 +153,6 @@
     if (!/^\s*$/.test(state.value.slice(state.selectionStart, closeAt))) return null;
     return { edit: { ...state, selectionStart: closeAt + pair.close.length, selectionEnd: closeAt + pair.close.length }, pending: pairs.slice(0, -1) };
   }
-  Object.assign(T, { parseSnippet, pairsAfterReplacement, snippetEdit, activeSnippet, nextSnippetHole, skipPendingClose });
+  Object.assign(T, { parseSnippet, pairsAfterReplacement, snippetEdit, activeSnippet, nextSnippetHole, previousSnippetHole, tokenBoundary, skipPendingClose });
   Object.assign(T, { replaceSelection, activePairs, autoPair, deleteEmptyPair, completeEnvironment });
 })(typeof globalThis !== "undefined" ? globalThis : this);

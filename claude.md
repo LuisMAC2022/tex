@@ -120,3 +120,9 @@ borrador ni el respaldo. Suite e inventario verificados.
 Añadí la página autónoma y el informe copiable, con cuatro pruebas y dos variantes de ventana. Los guardianes de recursos locales y rutas relativas revisan también el diagnóstico. No verificado en Android real: composición de Gboard, selección nativa, posición sobre el teclado y permisos del dispositivo. El procedimiento y el destino del informe están en `user.md`.
 
 `npm test`: 198 pruebas y la comprobación estructural pasaron. El Chromium local abortó al crear su socket de instancia (`Operation not permitted`), antes de abrir la página. No obtuve medidas de pantalla.
+
+## U1 · Barra de escritura
+
+Añadí la barra al alcance del pulgar, navegación por huecos y unidades LaTeX, la hoja del tablero y posición según la ventana visual. El plegado según el título ya existía y se reutiliza. Amplié los objetivos táctiles. Las pruebas ejercitan acentos combinados, emoji, comandos, comentarios y recorridos tras editar dos huecos. No verificados la geometría con Gboard, el foco en TalkBack ni las posiciones en píxeles de Chromium; constan en la revisión manual.
+
+`npm test`: 200 pruebas pasaron y `check:js` validó los scripts. El blob de `examples/calculo-3.tex` coincide con el de la rama base (`50cce790`).

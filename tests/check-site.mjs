@@ -110,3 +110,9 @@ const faltantes = [...nombres(claro)].filter((token) => !nombres(oscuro).has(tok
 assert.deepEqual(faltantes, [], `El bloque oscuro no redefine: ${faltantes.join(", ")}`);
 
 console.log("HTML estructural, tipos de bloque, anidamiento, copia de bloques, tablero de símbolos y rutas internas: correctos");
+
+const thumb = html.match(/<div id="thumb-bar" role="toolbar" aria-label="Acciones de escritura">([\s\S]*?)<\/div>/);
+assert.ok(thumb, "Falta la barra de acciones de escritura");
+const thumbButtons = [...thumb[1].matchAll(/<button ([^>]+)><span[^>]*>[^<]*<\/span>([^<]+)<\/button>/g)];
+assert.deepEqual(thumbButtons.map(b => b[2]), ["Anterior", "Siguiente", "Símbolos", "Añadir"]);
+assert.ok(thumbButtons.every(b => b[1].includes('type="button"')), "Los botones de la barra no envían el formulario");
