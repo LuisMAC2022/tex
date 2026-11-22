@@ -2,6 +2,7 @@
 (function (T) {
   "use strict";
   const origins = ["manual", "exportación", "respaldo"];
+  const isoDate = s => typeof s === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/.test(s) && Number.isFinite(Date.parse(s));
   const validDocumentId = id => typeof id === "string" && /^d[a-z0-9]{8}$/.test(id);
   function documentSnapshot({ metadata, blocks, macros }) {
     return { version: T.DRAFT_VERSION, metadata: { ...metadata }, blocks: T.cloneBlocks(blocks), macros: T.normalizeMacros(macros) };
@@ -89,7 +90,10 @@
     const latest=newestFirst(rows.filter(v=>v.documentId===data.documentId))[0];
     if (options.origin==="exportación" && latest && sameDocument(latest.state,data)) return rows;
     const time=Math.max(Date.parse(options.createdAt),latest ? Date.parse(latest.createdAt)+1 : 0);
-    const record=versionRecord(options.id,data.documentId,new Date(time).toISOString(),options.label||"",options.origin,data);
+    const used=new Set(rows.map(v=>v.id));
+    let id=options.id, suffix=0;
+    while (used.has(id)) id=options.id+"-"+(++suffix);
+    const record=versionRecord(id,data.documentId,new Date(time).toISOString(),options.label||"",options.origin,data);
     return pruneVersions(mergeVersions(rows,[record]),limit);
   }
   function migrateSingleDraft(rows, raw, options) {
@@ -106,7 +110,7 @@
     try {
       if (typeof raw==="string") raw=JSON.parse(raw);
       if (raw?.kind!=="notas-latex-proyecto" || raw.version!==1 || !validDocumentId(raw.documentId) ||
-        !Array.isArray(raw.versions) || !Number.isFinite(Date.parse(raw.exportedAt))) return fail("Formato o versión de proyecto incompatible.");
+        !Array.isArray(raw.versions) || !isoDate(raw.exportedAt)) return fail("Formato o versión de proyecto incompatible.");
       const readState = s => {
         if (!s || !Array.isArray(s.blocks) || (s.version >= 3 && !Array.isArray(s.macros))) return null;
         const draft=T.normalizeDraft({...s,documentId:raw.documentId});
@@ -119,7 +123,7 @@
       raw.versions.forEach((v,index)=>{
         const state=readState(v?.state);
         if (!state || typeof v.id!=="string" || !v.id.trim() || ids.has(v.id) || v.documentId!==raw.documentId ||
-          !origins.includes(v.origin) || typeof v.label!=="string" || !Number.isFinite(Date.parse(v.createdAt))) {
+          !origins.includes(v.origin) || typeof v.label!=="string" || !isoDate(v.createdAt)) {
           skipped.push(typeof v?.id==="string" ? v.id : "posición " + (index+1)); return;
         }
         ids.add(v.id); versions.push(versionRecord(v.id,v.documentId,new Date(v.createdAt).toISOString(),v.label,v.origin,state));

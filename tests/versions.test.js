@@ -60,5 +60,10 @@ test("el proyecto valida, informa qué versiones omite y combina por id sin sobr
   assert.equal(checked.error,null);assert.deepEqual(plain(checked.skipped),["v","posición 3","dañada"]);
   assert.equal(checked.project.versions.length,1);
   assert.equal(T.mergeVersions([v],[{...v,label:"sustituto"}])[0].label,"v");
+  const collision=T.addVersion([v],state("Respaldo previo"),options(v.id,"respaldo"));
+  assert.equal(collision.length,2);
+  assert.equal(collision.find(r=>r.id!==v.id).state.metadata.title,"Respaldo previo");
+  assert.ok(T.validateProject({...project,exportedAt:"22"}).error);
+  assert.deepEqual(plain(T.validateProject({...project,versions:[{...v,createdAt:"2026"}]}).skipped),["v"]);
   for(const raw of ["{",null,{...project,version:7},{...project,current:{version:7}},{...project,current:{version:4,metadata:{},blocks:"texto",macros:[]}}]) assert.ok(T.validateProject(raw).error);
 });
