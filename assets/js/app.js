@@ -1857,6 +1857,17 @@
     if (action.type === "symbol") { symbolOrigin = captureSymbolOrigin(blockContent); insertSymbol(action.symbol); }
     if (action.type === "command") radialCommands[action.name](...(action.args || []), from);
   }
+  function radialScrollPositions(node) {
+    const positions = new Map();
+    const remember = element => {
+      if (element) positions.set(element, [element.scrollLeft, element.scrollTop]);
+    };
+    remember(document.scrollingElement);
+    remember(blockEditor);
+    remember(blockContent);
+    for (let part = node; part?.nodeType === 1; part = part.parentElement) remember(part);
+    return positions;
+  }
   function clearRadialPress() {
     clearTimeout(holdTimer);
     if (press?.node.hasPointerCapture?.(press.id)) press.node.releasePointerCapture(press.id);
@@ -1900,7 +1911,8 @@
       kind === "equation" || (target.source === "editor" && writingMode() === "math") ? "formula" : "text";
     const field = context === "image" ? imagePath : blockContent;
     const slices = T.slicesFor(context, type), area = viewport(), origin = { ...point, mode, bar };
-    radialModel = { context, origin, originField: captureSymbolOrigin(field), ...T.radialLayout(slices, origin, area) };
+    const scrollPositions = radialScrollPositions(press?.node || document.elementFromPoint?.(point.x, point.y));
+    radialModel = { context, origin, scrollPositions, originField: captureSymbolOrigin(field), ...T.radialLayout(slices, origin, area) };
     radialDispatch({ type: "open", mode, point, keyboard }, keyboard);
     if (press) { try { press.node.setPointerCapture(press.id); } catch { /* puntero ya liberado */ } }
   }
@@ -1939,7 +1951,7 @@
     if (!bar && (e.pointerType === "mouse" || (node === blockContent && !T.LONG_PRESS_IN_FIELD))) return;
     const target = radialTarget(node); if (!target) return;
     const point = { x: e.clientX, y: e.clientY };
-    press = { node, id: e.pointerId, point, target, bar };
+    press = { node, id: e.pointerId, point, target, bar, scrollPositions: radialScrollPositions(node) };
     radialDispatch({ type: "down", point });
     if (bar) { e.preventDefault(); openRadial(target, point, "drag", false, true); }
     else holdTimer = setTimeout(() => { if (press) openRadial(target, point, "drag"); }, T.RADIAL_HOLD);
@@ -1967,7 +1979,12 @@
     clearRadialPress(); openRadial(target, { x: e.clientX, y: e.clientY }, "tap");
   });
   function cancelRadial(reason) { if (radialModel || press) radialDispatch({ type: reason }); }
-  document.addEventListener("scroll", () => cancelRadial("scroll"), true);
+  document.addEventListener("scroll", event => {
+    const positions = radialModel?.scrollPositions || press?.scrollPositions;
+    if (!positions) return;
+    const node = event.target === document ? document.scrollingElement : event.target;
+    radialDispatch({ type: "scroll", previous: positions.get(node), x: node?.scrollLeft, y: node?.scrollTop });
+  }, true);
   document.addEventListener("visibilitychange", () => { if (document.hidden) cancelRadial("hidden"); });
   for (const surface of [thumbBar, $(".structure-panel")]) surface.addEventListener("touchmove", e => {
     if (radialModel && e.touches.length === 1) e.preventDefault();

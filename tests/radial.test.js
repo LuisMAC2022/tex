@@ -28,6 +28,11 @@ test("espera, cancelación, zona muerta, vibración y submenús en los dos modos
   const open = step(down,{type:"hold",ms:400});
   assert.equal(open.phase,"drag");
   for (const type of ["second","hidden","scroll","cancel"]) assert.ok(step(open,{type}).cancelled);
+  const queued = {type:"scroll", previous:[0,859], x:0, y:859};
+  assert.equal(step(open,queued).phase,"drag");
+  assert.equal(step(down,queued).phase,"waiting");
+  assert.ok(step(open,{...queued,y:860}).cancelled);
+  assert.ok(step(open,{...queued,x:1}).cancelled);
   assert.equal(step(open,{type:"move",point:move(19,0)}).highlight,-1);
   assert.ok(step(open,{type:"up",point:move(19,0)}).cancelled);
   const hi = step(open,{type:"move",point:move(50,0)});

@@ -160,3 +160,9 @@ Implementé deshacer y rehacer hasta cien cambios estructurales, versiones manua
 Pasaron 216 pruebas, incluida la compilación. En un DOM simulado recorrí ambos adaptadores desde los controles: duplicar, deshacer/rehacer, guardar, generar dos veces, comparar, restaurar, exportar, importar y volver al documento anterior. No verificadas la concesión real de persistencia, la expulsión de datos ni la reapertura en Chrome Android. Estos puntos y el traslado entre equipos están en la revisión manual.
 
 Comprobación adicional de U4: si el archivo importado ya contiene el identificador propuesto para el respaldo, el respaldo recibe uno distinto y se conservan ambos registros. La validación exige fechas ISO con zona horaria.
+
+### U2 · Comprobación en Chromium
+
+Al abrir el menú de imagen desde un editor desplazable, Chromium podía entregar tarde el aviso de un desplazamiento anterior al toque. El menú ahora compara la posición al abrir con la posición del evento. La prueba del reductor cubre tanto ese aviso pendiente como un movimiento posterior que sí lo cancela. El fondo del menú y los rótulos de los sectores permiten distinguir los controles a 320 px.
+
+En Chromium headless comprobé los cuatro contextos, los dos atajos, el clic derecho, el regreso al campo con la selección original y el deshacer nativo después de envolver una selección. Con puntero táctil emulado comprobé el arrastre inmediato desde la barra, la pulsación larga sobre tarjeta y zona vacía y la cancelación por zona muerta, segundo dedo y desplazamiento.

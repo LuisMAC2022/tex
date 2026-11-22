@@ -88,6 +88,8 @@
     const items = () => s.parent < 0 ? layout.slices : children(s.parent);
     const cancel = () => ({ ...idle(), cancelled: true });
     const finish = action => ({ ...idle(), action });
+    // Un desplazamiento previo a la apertura puede notificarse después del toque.
+    if (event.type === "scroll" && event.previous && event.x === event.previous[0] && event.y === event.previous[1]) return s;
     if (["cancel","scroll","hidden","second"].includes(event.type)) return cancel();
     if (event.type === "down") return { ...idle(), phase: "waiting", origin: event.point };
     if (event.type === "open") return { ...idle(), phase: event.mode || "tap", origin: event.point, highlight: event.keyboard ? 0 : -1 };
