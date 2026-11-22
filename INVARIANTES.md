@@ -58,7 +58,7 @@ deriva. Por qué: [DEC-005](decisiones/DEC-005-tabla-unica-de-tipos.md).
 ### INV-006 — Ni el sitio ni el proyecto cargan nada remoto
 Guardián: `tests/invariantes.test.js` → "INV-006: ni el sitio ni el proyecto cargan nada remoto"
 
-La aplicación funciona abierta por doble clic y sin red. KaTeX y sus fuentes
+La aplicación y las páginas de `diagnostico/` funcionan abiertas por doble clic y sin red. KaTeX y sus fuentes
 se distribuyen con el sitio. `package.json` sigue sin `dependencies` ni
 `devDependencies`.
 

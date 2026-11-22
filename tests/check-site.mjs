@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile, access } from "node:fs/promises";
+import { readFile, readdir, access } from "node:fs/promises";
 import { loadTexNotes } from "./load-app.mjs";
 
 const { BLOCK_TYPES, acceptsChildren, blockToLatex } = await loadTexNotes();
@@ -18,7 +18,9 @@ assert.match(html, /<link rel="stylesheet" href="assets\/vendor\/katex\/katex\.m
 assert.match(html, /<input id="course"[^>]+value="Cálculo III \(1352\)">/, "El curso debe aparecer prellenado desde el temario");
 assert.match(html, /<input id="teacher"[^>]+value="Guzmán Fuentes Ricardo">/, "El profesor debe aparecer prellenado desde el temario");
 assert.match(html, /<input id="date"[^>]+type="date"[^>]+value="2026-09-13">/, "La fecha acordada debe aparecer prellenada");
-assert.doesNotMatch(html, /(?:src|href)="\/(?!\/)/, "Las rutas internas no deben partir de la raíz");
+for (const page of [html, ...await Promise.all((await readdir("diagnostico")).filter(name => name.endsWith(".html")).map(name => readFile("diagnostico/" + name, "utf8")))]) {
+  assert.doesNotMatch(page, /(?:src|href)\s*=\s*["']\/(?!\/)|url\(\s*["']?\/(?!\/)/i, "Las rutas internas no deben partir de la raíz");
+}
 const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]));
 assert(ids.has("math-preview") && ids.has("math-preview-status"), "Falta la vista previa matemática o su estado");
 assert.doesNotMatch(html, /id="math-preview"[^>]*aria-live/, "La vista matemática no debe anunciar cada renderizado");

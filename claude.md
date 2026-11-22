@@ -114,3 +114,9 @@ como trabajo; curso/profesor/fecha precargados siguen sin contar. La prueba
 cubre ambos títulos y el bloque sin incorporar. Una fecha de autoguardado
 corrupta se presenta en español como fecha desconocida. No cambia la clave del
 borrador ni el respaldo. Suite e inventario verificados.
+
+## U0 · Diagnóstico Android
+
+Añadí la página autónoma y el informe copiable, con cuatro pruebas y dos variantes de ventana. Los guardianes de recursos locales y rutas relativas revisan también el diagnóstico. No verificado en Android real: composición de Gboard, selección nativa, posición sobre el teclado y permisos del dispositivo. El procedimiento y el destino del informe están en `user.md`.
+
+`npm test`: 198 pruebas y la comprobación estructural pasaron. El Chromium local abortó al crear su socket de instancia (`Operation not permitted`), antes de abrir la página. No obtuve medidas de pantalla.

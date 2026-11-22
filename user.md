@@ -60,3 +60,11 @@ uno está en el encargo):
 
 Cuando exista `diagnostico/android.html`, ábrelo en el teléfono (sección 4 del
 encargo) y pega el informe en `diagnostico/resultados-android.md`.
+
+## Diagnóstico en tu teléfono
+
+1. Abre esta rama en el portátil y ejecuta `python3 -m http.server 8000` en la raíz.
+2. Conecta Android por USB con depuración habilitada y ejecuta `adb reverse tcp:8000 tcp:8000`.
+3. Abre `http://localhost:8000/diagnostico/android.html` en Chrome y sigue las pruebas con Gboard.
+4. Prueba ambas variantes de ventana, anota la selección y la posición del teclado y toca **Copiar informe**.
+5. Pega el JSON en [resultados-android.md](diagnostico/resultados-android.md).

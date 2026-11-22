@@ -100,3 +100,9 @@ por ronda de revisión, no al cambiar código.
 - [ ] Ctrl+Z inmediatamente tras: tablero, autocierre, salto de cierre, Retroceso en par, sugerencia, alias, edición en hueco, begin con Intro, continuación de lista y sangría. Comprobar el alcance de cada deshacer.
 - [ ] Cerrar la pestaña con un bloque a medias y recuperar; empezar a escribir sin recuperar y verificar autosave:previous.
 - [ ] Con NVDA comprobar opciones activas, recuento del menú y salida nativa con Tab cuando no hay nada pendiente.
+
+## Android
+
+Con la rama de trabajo en el portátil, ejecuta `python3 -m http.server 8000` desde la raíz. Con depuración USB habilitada y `adb reverse tcp:8000 tcp:8000`, abre `http://localhost:8000/` y la página `diagnostico/android.html` en Chrome. `chrome://inspect` permite observar la consola. En la misma Wi-Fi se puede abrir `http://IP-del-portátil:8000/`, donde el portapapeles y el almacenamiento persistente pueden estar restringidos. Pages sirve `main` tras la fusión.
+
+- [ ] En Gboard, registrar escritura, autocierre, sugerencias y borrado. Probar la pulsación larga en campo y tarjeta, las dos ventanas y las capacidades. Pegar el JSON en [resultados de Android](../diagnostico/resultados-android.md).

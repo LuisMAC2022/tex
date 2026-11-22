@@ -12,7 +12,7 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -87,12 +87,12 @@ test("cada guardián existe y sigue afirmando lo que se le atribuye", () => {
 });
 
 test("INV-006: ni el sitio ni el proyecto cargan nada remoto", () => {
-  const html = readFileSync(join(RAIZ, "index.html"), "utf8");
-  assert.doesNotMatch(
-    html,
-    /<(?:script|link|img|iframe|source)\b[^>]*(?:src|href)\s*=\s*["'](?:https?:)?\/\//i,
-    "index.html carga un recurso remoto",
-  );
+  const pages = ["index.html", ...readdirSync(join(RAIZ, "diagnostico")).filter(name => name.endsWith(".html")).map(name => "diagnostico/" + name)];
+  for (const file of pages) {
+    const html = readFileSync(join(RAIZ, file), "utf8");
+    assert.doesNotMatch(html, /<(?:script|link|img|iframe|source)\b[^>]*(?:src|href)\s*=\s*["'](?:https?:)?\/\//i, file + " carga un recurso remoto");
+    assert.doesNotMatch(html, /@import|url\(\s*["']?(?:https?:)?\/\//i, file + " carga CSS remoto");
+  }
 
   const css = readFileSync(join(RAIZ, "assets/css/styles.css"), "utf8");
   assert.doesNotMatch(css, /@import|url\(\s*["']?(?:https?:)?\/\//i, "el CSS carga algo remoto");
