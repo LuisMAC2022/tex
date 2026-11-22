@@ -3,24 +3,27 @@
      Antes de vaciar: promueve lo durable (invariante → INVARIANTES.md,
      justificación → decisiones/, rasgo del sistema → README.md). -->
 
-# Encargo para Astra — Captura rápida en el editor
+# Encargo: el teléfono primero (barra del pulgar, menús radiales, identificadores y versiones)
 
-De: Claude · Fecha: 2026-11-21 · Rama base: `claude/funcionalidades-en-paralelo`
+De: Claude · Fecha: 2026-11-22 · Rama base: `claude/ui-ux`
+Para: el agente que lo implemente (Astra, Codex u otro)
 
-Implementa seis paquetes que aceleran la entrada de bloques. El análisis, las
-mediciones y las decisiones de producto ya están hechos y acordados con la
-persona usuaria; tu trabajo es implementarlos sin romper el contrato del
-repositorio. Lee el encargo completo antes de escribir código: varias trampas
-de un paquete afectan a otro.
+Son seis paquetes, U0–U5, y se hacen en orden. Las decisiones de producto ya
+están tomadas con la persona usuaria. Tu trabajo es implementarlas sin romper el
+contrato del repositorio. Lee el encargo completo antes de escribir código:
+varias trampas de un paquete afectan a otro.
+
+El encargo anterior (captura rápida, P1–P6) está terminado. Sus informes siguen
+en `claude.md` y sus reglas R1 y R2 siguen vigentes; se repiten abajo.
 
 ---
 
 ## 0. Cómo trabajar
 
 1. Lee `PROTOCOLO.md` e `INVARIANTES.md` antes de tocar nada. Son reglas.
-2. Crea una rama desde `claude/funcionalidades-en-paralelo` (por ejemplo
-   `astra/captura-rapida`), salvo que la persona te indique otra.
-3. Implementa los paquetes **en orden** (P1 → P6). Cada paquete termina con
+2. Crea una rama desde `claude/ui-ux`, por ejemplo `astra/ui-ux`, salvo que la
+   persona te indique otra.
+3. Implementa los paquetes **en orden** (U0 → U5). Cada paquete termina con
    `npm test` en verde y en uno o varios commits propios. No mezcles paquetes en
    un commit. La documentación de cada cambio va en su mismo commit (tabla
    «Qué se actualiza con qué» de `PROTOCOLO.md`).
@@ -28,864 +31,724 @@ de un paquete afectan a otro.
    código real, **detente y escribe la duda en `claude.md`**. No resuelvas la
    contradicción reescribiendo una prueba guardiana.
 5. Al terminar cada paquete, deja en `claude.md` un informe corto: qué hiciste,
-   qué mediste, qué no hiciste y por qué.
+   qué mediste, **qué no pudiste verificar** y por qué. Tu entorno no tiene un
+   teléfono Android y probablemente tampoco `pdflatex`. No afirmes nada que no
+   hayas visto funcionar: escribe «no verificado» y añade el punto a
+   `docs/revision-manual.md`.
+6. Las decisiones nuevas toman el **siguiente número libre** de `decisiones/`.
+   DEC-021 ya existe y reemplaza a DEC-001.
 
-## 1. Para quién
+## 1. Para quién y en qué condiciones
 
-Una persona estudiante de Cálculo III que **captura en vivo durante la clase** y
-después pasa en limpio con otras notas. Usa teclado **español latinoamericano**
-en el salón e **inglés EE. UU.** en casa. Cada función nueva tiene que ser más
-rápida que lo que reemplaza y **no estorbar al escribir prosa en español**.
+- **Herramienta personal** de una sola persona. No es un producto, ni un estudio
+  con participantes, ni compite con Overleaf.
+- **Dispositivo principal: teléfono Android con Chrome y Gboard**, a menudo con
+  una sola mano y en clase, con red inestable. El portátil sigue en uso, con
+  teclado español latinoamericano en el salón e inglés EE. UU. en casa. Todo lo
+  decidido para escritorio en P1–P6 se conserva.
+- **El documento vive en la aplicación** (DEC-021). Overleaf solo compila. El
+  `.tex` es un producto derivado.
 
-## 2. Diagnóstico medido (Chromium, 1366×768, estado actual)
+### Medición de partida
 
-| Hallazgo | Dato |
+Emulación de Pixel 7 (412×839 px CSS, sin teclado virtual) con el estado de
+`claude/ui-ux`. El guion está en el anexo A.
+
+| Elemento | Posición vertical |
 | --- | --- |
-| Entre «Contenido» y «Añadir bloque» | 19 paradas de Tab (13 son categorías del tablero) y 870 px |
-| Atajo para añadir un bloque | no existe |
-| Foco después de añadir | «Tipo de bloque», no «Contenido» |
-| Intro en «Título del bloque (opcional)» | envía el formulario y genera el documento (envío implícito) |
-| Insertar desde el tablero o pulsar Intro en una lista | **borra el historial de deshacer**: `insertIntoField` y `applyListEdit` asignan `field.value`. Comprobado: tras insertar `\alpha`, Ctrl+Z no deshace nada |
-| `document.execCommand("insertText")` | conserva Ctrl+Z (comprobado en Chromium); dentro de un manejador de `beforeinput` no dispara un segundo `beforeinput` |
-| Añadir un bloque con 60 / 100 bloques con fórmulas ya en el árbol | ~160 / ~220 ms de JS síncrono; sin fórmulas, ~17 ms |
-| Memorizar solo `katex.renderToString` | baja a ~140–200 ms: el coste principal es reconstruir el DOM de todas las vistas previas en `renderBlocks()` |
-| KaTeX acepta comandos que nuestro preámbulo no define | `\R`, `\N`, `\Z`, `\Reals`, `\argmax`, `\Bbb`… La vista previa muestra ℝ y Overleaf falla con «Undefined control sequence». La comprobación previa no lo detecta |
-| Autoguardado | no existe; cerrar la pestaña en clase pierde todo lo no guardado a mano |
+| Etiqueta «Contenido» | ~1 970 px (unas 2,3 pantallas de desplazamiento) |
+| Botón «Añadir bloque» | ~2 210 px |
+| Tablero de símbolos | ~2 730 px, **debajo** de «Añadir bloque» y lejos del campo |
+| «Estructura actual» | ~3 100 px |
+| Altura total | ~4 800 px; «Datos del documento» abierto ocupa ~700 px |
 
-## 3. Decisiones ya tomadas (no las reabras)
+Objetivos táctiles por debajo de 44 px: la casilla del autocierre (22 px de
+ancho) y los `summary` de 24 px de alto de «Macros del documento», «Vista
+previa de las matemáticas», «Preferencias de escritura» y «Atajos de teclado».
 
-- El tipo de bloque se cambia escribiendo **comandos `/`** al inicio de un
-  bloque vacío: `/def`, `/teo`, `/ec`…
-- La persona quiere **ambas** formas de comando personalizado: **alias** que se
-  expanden al teclear y **macros** reales con `\newcommand` en el preámbulo.
-- La **paleta de comandos sigue fuera** (README, «Quedan expresamente fuera»).
-  El menú `/` cubre ese papel dentro del campo.
-- Se añade el tipo **Demostración** (`proof`, que `amsthm` ya define).
-- **No añadas combinaciones nuevas con Alt+Mayús.** En Windows con dos
-  distribuciones instaladas (latinoamericana y EE. UU.), Alt+Mayús puede cambiar
-  de distribución a media escritura. El único atajo nuevo con modificador es
-  **Ctrl+Intro** (⌘+Intro en macOS).
-- No se añade ninguna biblioteca de edición (CodeMirror, Monaco, etc.):
-  INV-006 prohíbe dependencias, y DEC-002, los módulos ES. Se sigue con
-  `<textarea>` y funciones puras.
+Toda la captura de P1–P6 se apoya en teclas que un teclado virtual no tiene:
+Ctrl+Intro, Tab para huecos y alias, y Escape.
 
-## 4. Reglas transversales (valen para todos los paquetes)
+### Lo que nadie ha comprobado todavía
 
-- **R1 — Toda edición programática del contenido conserva el deshacer.** Usa la
-  función `applyFieldEdit` de P1 en lugar de asignar `field.value`. Solo se
-  permite asignar `.value` al **cargar** un bloque (Editar, restaurar) o al
-  **vaciar** el formulario, porque ahí reiniciar el historial es correcto.
+- Con Gboard gran parte del texto llega como **composición**. El autocierre y
+  las sugerencias exigen `inputType === "insertText"` y `!isComposing`
+  (`assets/js/app.js`, manejadores de `beforeinput`). Es probable que no se
+  activen en Android. U0 lo mide; **no lo «arregles» sin esos datos**.
+- Qué ocurre en Chrome Android con una pulsación larga **dentro** de un
+  `textarea` si la aplicación la intercepta: selección nativa, tiradores, menú
+  contextual y cancelación del puntero.
+
+## 2. Decisiones ya tomadas (no las reabras)
+
+- **DEC-021:** la aplicación es la copia maestra. DEC-003 e INV-001 siguen
+  vigentes: no hay reimportación desde el `.tex`. La ida y vuelta es con el
+  archivo de proyecto JSON de U4.
+- **Sin Python en este encargo.** No crees tipos de bloque de código ni
+  reserves campos para ejecución. Está sin decidir.
+- **Sin bibliotecas, sin módulos ES y sin paso de construcción** (INV-006,
+  DEC-002). Scripts clásicos sobre `window.TexNotes`.
+- **Los gestos son aceleradores, nunca la única vía.** Todo lo que hace un menú
+  radial se puede hacer también con toques visibles y con teclado. Ninguna
+  acción esencial depende de una pulsación larga, de un arrastre ni de recordar
+  un gesto (WCAG 2.2, criterio 2.5.7). En los estudios con *marking menus*,
+  incluso las personas expertas volvían al menú visible para recordar.
+- **Posiciones estables.** Un sector no cambia de sitio por frecuencia de uso.
+  Prohibido reordenar menús por uso: el gesto se aprende por dirección.
+- **Fragmentos con la sintaxis existente, no con `|`.** La especificación
+  original marcaba el cursor final con `|`. Pero `|` es un carácter válido de
+  LaTeX (`\left| x \right|`, `\|`, `|x|`), y el repositorio ya tiene una
+  sintaxis probada y sin ambigüedad: huecos `#1`–`#9`, posición final `#0` y
+  `\#` para un signo literal (`parseSnippet`, en `assets/js/editing-assist.js`).
+  Además, los huecos permiten recorrer los argumentos restantes con los botones
+  de la barra, que es lo que en el teléfono ahorra tiempo.
+- **Como máximo 8 sectores por anillo**, y cada sector mide al menos 44 px de
+  arco en su radio medio y 44 px de grosor.
+- **Atajos de teclado:** nada nuevo con Alt+Mayús (en Windows cambia de
+  distribución de teclado). Solo se permite la convención de plataforma para
+  menús contextuales: tecla Menú o Mayús+F10, registrada en `shortcuts.js`.
+- **«Versiones» son versiones del documento**, no de la aplicación. Las
+  versiones sustituyen al borrador único (U4).
+
+## 3. Reglas transversales (valen para todos los paquetes)
+
+- **R1 — Toda edición programática del contenido conserva el deshacer.** Usa
+  `applyFieldEdit` (DEC-016). Solo se asigna `.value` al cargar un bloque o al
+  vaciar el formulario.
 - **R2 — Los caracteres tecleados se leen en `beforeinput`, no en `keydown`.**
-  En la distribución latinoamericana, `\` se escribe con AltGr, que Windows
-  reporta como Ctrl+Alt: un `keydown` con `event.key === "\\"` llega con
-  `ctrlKey` y `altKey` activos. Reacciona solo a
-  `inputType === "insertText"` con `event.data` de **un solo carácter**. Las
-  teclas de navegación (↑ ↓ Intro Tab Escape Retroceso) sí van en `keydown`.
-- **R3 — Composición y teclas muertas.** Ignora todo evento con
-  `isComposing === true` o `inputType === "insertCompositionText"`. Las tildes
-  (`á`, `é`) son teclas muertas en la distribución latinoamericana y `^` puede
-  serlo: si `event.data` trae más de un carácter (por ejemplo `"^2"`), no hagas
-  nada. Ignora también `insertFromPaste`, `insertReplacementText` (corrector) y
-  `insertFromDrop`.
-- **R4 — Orden de los manejadores.** El manejador de listas (sección [C] de
-  `app.js`) consume Intro en «Contenido» y se registró antes que cualquier
-  sección nueva. Registra el teclado del asistente **en fase de captura sobre el
-  `fieldset` del editor** (`addEventListener("keydown", h, true)`) para que
-  corra primero, y llama a `preventDefault()` cuando consumas una tecla. Los
-  manejadores existentes ya comprueban `event.defaultPrevented`.
-- **R5 — Lógica pura y probada sin DOM** (DEC-007). Cada regla de edición es
-  una función pura `{ value, selectionStart, selectionEnd } → edición | null`,
-  con pruebas en `tests/`. `app.js` solo conecta eventos.
-- **R6 — Scripts clásicos.** Cada archivo nuevo se añade a `index.html`, a la
-  lista esperada de `tests/check-site.mjs` (mensaje «faltan scripts o el orden
-  de carga es incorrecto») y a `check:js` en `package.json`, en el orden de
-  dependencias. Para probarlo, pásalo en la lista de archivos de
-  `loadTexNotes([...])`.
-- **R7 — Solo en «Contenido».** El autocierre, las sugerencias, los alias y los
-  comandos `/` actúan únicamente en `#block-content`. El título del bloque y los
-  metadatos se escapan por completo (INV-003): un `\mathbb{R}` insertado allí
-  saldría como texto literal.
-- **R8 — El contenido sigue siendo literal** (INV-002). Todo ocurre mientras se
-  teclea; ninguna función de generación transforma `content`.
-- **R9 — Almacenamiento local.** Claves nuevas con versión (`…:v1`); cada
-  lectura y escritura dentro de `try/catch`; la app funciona sin
-  almacenamiento.
-- **R10 — Accesibilidad.** Los anuncios van a `#app-status`. Ninguna tecla
-  atrapa el foco: si no hay nada que completar, Tab sale del campo como
-  siempre.
-- **R11 — Sin texto ajeno en la interfaz.** Las cadenas visibles están en
-  español y se escriben con el estilo actual. Todo rótulo citado en
-  `docs/guia-de-uso.md` entre «…» debe existir en `index.html` o `app.js`
-  (`tests/documentacion.test.js`).
+- **R3 — Los botones de la barra y los sectores no le quitan el foco al campo.**
+  Haz `preventDefault()` en `pointerdown` y actúa en `click`, con el mismo
+  patrón que las opciones del menú de sugerencias en `app.js`. Guarda la
+  selección al abrir y restáurala al aplicar. Si el campo pierde el foco, Gboard
+  se cierra, la página salta y la selección se pierde. Si el foco llega a la
+  barra con teclado o TalkBack, el resultado se aplica al campo y el foco
+  vuelve a él.
+- **R4 — La lógica es pura y vive fuera de `app.js`.** No toca el DOM al cargar
+  y se prueba con `tests/load-app.mjs` (DEC-007). Cada script nuevo va en
+  `index.html` en orden de dependencia, en la lista de `tests/check-site.mjs`
+  (INV-004), en `check:js` de `package.json` y en el cargador de sus pruebas.
+- **R5 — Una sola fuente de verdad.** Los tipos de bloque están en
+  `block-types.js` (INV-005), los símbolos en `math-symbols.js` y los atajos en
+  `shortcuts.js` (DEC-009). `menus.js` los **referencia por id**, nunca los
+  copia.
+- **R6 — Accesibilidad.** Roles y nombres accesibles, foco previsible, anuncios
+  en la región `aria-live`, objetivos de 44 px y nada que dependa solo del
+  color. TalkBack entra en la revisión manual.
+- **R7 — El archivo de referencia no cambia.** `examples/calculo-3.tex` queda
+  idéntico byte a byte en todos los paquetes (INV-008). Si un cambio lo altera
+  sin que este encargo lo diga, detente.
 
 ---
 
-## P1 — Captura sin fricción
+## U0 — Diagnóstico en el teléfono real
 
-**Objetivo:** escribir varios bloques seguidos sin ratón ni desplazamiento,
-sin perder el deshacer y sin perder trabajo si se cierra la pestaña.
+**Objetivo:** obtener los datos que ningún entorno de agente puede obtener.
+Con ellos se decide si la pulsación larga puede usarse dentro de «Contenido» y
+cómo se coloca la barra sobre el teclado.
 
-### P1.1 Ediciones que conservan el deshacer (`text-insertion.js`)
+**Entregable:** `diagnostico/android.html`. Es una página autocontenida, con CSS
+y JS en línea, scripts clásicos, nada remoto y rutas relativas. No se enlaza
+desde la interfaz. Tiene cuatro pruebas guiadas y un botón «Copiar informe».
 
-- `diffEdit(oldValue, newValue)` (pura): devuelve `{ start, end, text }`, el
-  reemplazo mínimo de prefijo y sufijo comunes, o `null` si no hay cambio. No
-  partas un par sustituto UTF-16: si un límite cae entre un sustituto alto y
-  uno bajo, retrocede el inicio o avanza el final un índice.
-- `applyFieldEdit(field, { value, selectionStart, selectionEnd, selectionDirection })`:
-  enfoca, selecciona `[start, end]` y ejecuta
-  `document.execCommand("insertText", false, text)`, o `"delete"` si
-  `text === ""`. Si `execCommand` devuelve `false` o lanza una excepción,
-  recurre a `field.setRangeText(text, start, end, "end")` y despacha
-  `new Event("input", { bubbles: true })`. Al final aplica la selección pedida.
-- Usa una bandera de reentrada (`applying = true` mientras dure) y exponla, para
-  que los manejadores de `input` del asistente ignoren las ediciones propias.
-- Sustituye las asignaciones `field.value = …` de `insertIntoField` y de
-  `applyListEdit`. No toques las de «Editar», restaurar ni `clearBlockFields`.
-- Pruebas de `diffEdit`: sin cambio, inserción, borrado, reemplazo, inserción al
-  inicio y al final, y un texto con `𝔸` en el límite.
+1. **Escritura.** Un `textarea` que registra `keydown` (`key`, `code`,
+   `keyCode`), `beforeinput` (`inputType`, `data`, `isComposing`),
+   `compositionstart`, `compositionupdate`, `compositionend` e `input`. El guion
+   en pantalla pide escribir `\frac`, `(`, `{`, `$`, `^`, `á`, aceptar una
+   palabra de la barra de sugerencias de Gboard y borrar con Retroceso.
+2. **Pulsación larga.** Sobre un `textarea` y sobre una tarjeta no editable,
+   registra los eventos `pointer*`, `touch*`, `contextmenu` y `selectionchange`
+   con su tiempo. Tiene interruptores para:
+   - `preventDefault` en `contextmenu`;
+   - `user-select: none` y `-webkit-touch-callout: none` en la tarjeta;
+   - un `touchmove` registrado **desde el principio** con `{ passive: false }`
+     que hace `preventDefault()` solo después de 400 ms.
 
-### P1.2 Ctrl+Intro añade o guarda
+   La pregunta es: ¿se puede abrir un menú a los 400 ms y seguir recibiendo
+   `pointermove` hasta soltar, sin `pointercancel` ni selección nativa?
+3. **Teclado y ventana.** Registra `visualViewport.height`,
+   `visualViewport.offsetTop` e `innerHeight` al abrir y cerrar el teclado, en
+   dos variantes de la meta viewport: con y sin
+   `interactive-widget=resizes-content` (por ejemplo, `?resize=1`). Un elemento
+   `position: fixed; bottom: 0` muestra si queda sobre el teclado.
+4. **Capacidades.** Comprueba:
+   - `navigator.vibrate`: si existe y qué devuelve;
+   - `navigator.storage.persisted()`, `persist()` y `estimate()`;
+   - `indexedDB.open`;
+   - `matchMedia("(pointer: coarse)")`, `devicePixelRatio` y tamaño de pantalla.
 
-- En `shortcuts.js` añade
-  `{ id: "block.commit", code: "Enter", ctrl: true, alt: false, shift: false, meta: false, mod: true, scope: "block-editor", label: "Añadir el bloque o guardar los cambios" }`.
-  `mod: true` significa que **en macOS ⌘ sustituye a Ctrl**. Declara la
-  entrada con `ctrl: true` para que las reglas actuales de
-  `tests/shortcuts.test.js` sigan siendo válidas.
-- Amplía `matchShortcut(event, scope, isMac = false)`: con `mod` e `isMac`, exige
-  `metaKey` en lugar de `ctrlKey`. Amplía también `shortcutLabel` (⌘ en macOS) y
-  `ariaKeyshortcuts`: devuelve `"Control+Enter"`, o `"Meta+Enter"` en macOS.
-  El tercer parámetro es opcional, así que las llamadas existentes no cambian.
-- El manejador va en el `keydown` del `fieldset` del editor, el mismo que ya
-  atiende `symbols.toggle`. Funciona desde el tipo, el título, el contenido, los
-  campos de imagen y el tablero. Cierra cualquier menú abierto y ejecuta la
-  acción de «Añadir bloque».
-- Pruebas: coincide con Ctrl sin macOS y con ⌘ en macOS; no coincide con AltGr
-  (`getModifierState("AltGraph")`) ni con Alt añadido.
+«Copiar informe» copia un JSON al portapapeles, con un `textarea`
+seleccionable como alternativa. La página no envía nada a ninguna parte.
 
-### P1.3 Foco después de añadir y envío implícito
+**Pruebas:** extiende la vigilancia de INV-006 e INV-007 a `diagnostico/*.html`:
+nada remoto y nada que parta de la raíz. Ajusta el texto de INV-006 si su
+guardián cambia.
 
-- Después de añadir, el foco va a `#block-content`. Si el tipo es imagen, va a
-  `#image-path`, porque «Contenido» está oculto. El tipo se conserva como ya
-  ocurre. Después de «Guardar cambios», el comportamiento actual no cambia.
-- Intro en `#block-title` mueve el foco a «Contenido» y **no** envía el
-  formulario. Intro en los campos de texto y número de la imagen no hace nada
-  (`preventDefault`). Los metadatos no cambian.
-
-### P1.4 Orden del editor
-
-- Mueve la fila de botones de «Añadir bloque», «Pegar bloque» y «Cancelar
-  edición» justo después de los campos de imagen (`#image-fields`) y antes de
-  la vista previa y del tablero. En los bloques que no son imagen, esos campos
-  están ocultos y el botón queda justo debajo de «Contenido». Conserva los ids.
-- Pon `#block-help` dentro de `<details class="field-help">` con el rótulo
-  `<summary>Ayuda del contenido</summary>`, plegado por defecto. Conserva
-  intacto el elemento `<small id="block-help">` y su texto, que
-  `tests/check-site.mjs` busca con una expresión regular. `aria-describedby`
-  sigue funcionando con el contenido plegado.
-- Resultado esperado: una sola tabulación de «Contenido» a «Añadir bloque»
-  (dos si están visibles las herramientas de lista).
-
-### P1.5 Rendimiento de la estructura
-
-- En `renderBlockPreview`, cuando `context.structure` es verdadero, guarda en
-  caché el resultado ya dibujado. Clave:
-  `JSON.stringify([type, listFormat, content, depthKey, previewVersion])`.
-  `depthKey` es el contexto de profundidad de lista que hoy calcula
-  `listDepthForPath(parentPath)`, **no la ruta**.
-  `previewVersion` es un contador que P5 incrementa al cambiar las macros.
-- Si hay acierto, haz `container.replaceChildren(nodo.cloneNode(true))`. Clonar
-  nodos es mucho más barato que volver a parsear el HTML de KaTeX. Guarda
-  también el `analysis` que devuelve la función.
-- No uses la caché con imágenes: dependen de `imagePreviews` y de URL de
-  objeto.
-- Límite de 1000 entradas; al superarlo, vacía la caché.
-- **Objetivo: ≤ 60 ms de JS** al añadir un bloque con 100 bloques con fórmulas.
-  Mide antes y después con el script del anexo A y pon ambas cifras en el
-  informe.
-
-### P1.6 Autoguardado de la sesión
-
-- Clave nueva `tex-notes:autosave:v1`, **distinta** de la del borrador
-  explícito.
-- Contenido:
-  `{ version: DRAFT_VERSION, savedAt, metadata, blocks, macros, editor: { type, title, content, editingPath, parentPath, image } }`.
-  `macros` entra en P5 y `image` es lo que devuelve el gancho de lectura de
-  imagen. Lo más valioso en clase es **el bloque a medio escribir**.
-- Momentos de guardado:
-  - al final de `renderBlocks()`;
-  - con `input` y `change` del formulario, con un retardo de 800 ms;
-  - inmediatamente con `visibilitychange` (pestaña oculta) y con `pagehide`.
-- **No guardes una sesión vacía**: sin bloques, con «Contenido» vacío y con el
-  título vacío. El curso, el profesor y la fecha precargados no cuentan como
-  contenido. Si lo hicieras, abrir la página borraría la sesión anterior.
-- Al cargar, si existe una sesión con contenido, muestra
-  `<p id="autosave-banner">` con el texto «Hay una sesión sin guardar del
-  {fecha y hora} con {N} bloques.» y dos botones: «Recuperar sesión» y
-  «Descartar». No la restaures sola.
-- Antes de que la sesión nueva sobrescriba la anterior por primera vez, copia la
-  anterior a `tex-notes:autosave:previous`. Es un nivel de respaldo.
-- «Recuperar sesión» pasa los datos por `normalizeDraft` y restaura los campos
-  del editor. Si `editingPath` ya no existe, el contenido se carga como bloque
-  nuevo en `parentPath`, o en la raíz si tampoco existe.
-- Un error de cuota se anuncia una sola vez por sesión. No toques «Guardar
-  borrador», «Restaurar borrador» ni sus claves.
+**Después:** escribe en `user.md` cinco líneas para la persona: cómo abrir la
+página (sección 4 de este encargo), qué hacer y dónde pegar el informe
+(`diagnostico/resultados-android.md`). **No esperes el resultado.** Sigue con
+U1 y U2 con la opción conservadora (sin pulsación larga dentro del campo) y deja
+la otra detrás de una constante.
 
 ---
 
-## P2 — Autocierre y contexto matemático
+## U1 — Distribución para el teléfono y barra del pulgar
 
-**Objetivo:** que las llaves, los delimitadores y los entornos se cierren solos
-sin estorbar en la prosa.
+**Objetivo:** en pantallas táctiles estrechas, «Contenido» queda a la vista y
+las acciones frecuentes quedan al alcance del pulgar, con el teclado abierto.
 
-### P2.1 `mathContextAt(content, index, typeId)` en `math-preview.js` (pura)
+1. **Compactar sin reordenar el DOM.** El README exige que el orden del DOM
+   coincida con el visual: **no uses `order` de CSS**.
+   - «Datos del documento» empieza plegado si el título ya tiene valor, y
+     abierto si está vacío, porque el título es obligatorio.
+   - Al enfocar «Contenido», el campo se desplaza para quedar visible por
+     encima de la barra y del teclado. Usa `scroll-padding-block-end` con la
+     altura de la barra.
+2. **Barra del pulgar** (`#thumb-bar`). Es un `role="toolbar"` con
+   `aria-label="Acciones de escritura"`: una sola parada de Tab y flechas entre
+   sus botones. Fija abajo y visible con `(pointer: coarse)`; el escritorio no
+   cambia. Cada botón mide al menos 48×48 px, con texto visible e icono. Orden
+   final, fijo:
 
-- Devuelve `"math"`, `"text"` o `"comment"` según la posición `index`.
-- Los tipos con `kind: "equation"` devuelven siempre `"math"`.
-- En los demás, recorre `[0, index)`:
-  - Un `%` sin escapar abre un comentario hasta el fin de línea.
-  - Considera los delimitadores sin escapar (`$$`, `$`, `\(`, `\)`, `\[`, `\]`)
-    y `\begin{…}`/`\end{…}` de los entornos matemáticos.
-  - **Un delimitador abierto y no cerrado antes de `index` cuenta como abierto**.
-    `mathSegments` lo descarta; aquí no hay que descartarlo.
-  - Dentro de matemáticas, el argumento de `\text{…}`, `\textbf{…}`,
-    `\textit{…}`, `\mbox{…}` y `\emph{…}` es `"text"`. Lleva la cuenta de la
-    profundidad de llaves.
-- Exporta `isEscaped`.
-- Mueve la lista `MATH_ENVIRONMENTS` de `content-check.js` a `math-preview.js`
-  como `TexNotes.MATH_ENVIRONMENTS` y haz que `content-check.js` la reutilice.
-  Debe existir **una sola lista**.
+   | 1 | 2 | 3 | 4 | 5 | 6 |
+   | --- | --- | --- | --- | --- | --- |
+   | «Menú» (U2) | «Anterior» | «Siguiente» | «Selección» (U5) | «Símbolos» | «Añadir» |
 
-Pruebas mínimas (`|` marca `index`):
+   Los botones de paquetes posteriores se añaden en su paquete.
+   - **«Anterior» y «Siguiente»:**
+     - Con un fragmento activo, recorren los huecos. Hoy solo existe
+       `nextSnippetHole`; añade `previousSnippetHole`, que es pura.
+     - Sin fragmento, mueven el cursor **una unidad LaTeX**: un `\comando`
+       entero, `\\`, un escape como `\{` o un grafema. Usa `Intl.Segmenter`
+       para no partir acentos ni pares sustitutos. Hazlo con una función pura
+       `tokenBoundary(value, index, direction)`.
+     - Los rótulos son estáticos. El comportamiento actual se anuncia
+       («Hueco 2 de 3»).
+   - **«Símbolos»** abre el tablero existente como hoja inferior sobre la
+     barra: es el mismo elemento del DOM, con una altura de como mucho el 40 %
+     de `visualViewport.height`. Escape o «Cerrar» devuelven al campo con su
+     selección. Trampa: los botones de símbolo le quitan el foco al campo y
+     cierran el teclado, así que aplica R3 mientras el tablero esté abierto como
+     hoja. El buscador sí recibe foco.
+   - **«Añadir»** hace lo mismo que «Añadir bloque» o «Guardar cambios»
+     (Ctrl+Intro).
+3. **Sobre el teclado.** Coloca la barra con `visualViewport` (eventos `resize`
+   y `scroll`): `bottom = innerHeight − (offsetTop + height)`. Funciona se use o
+   no `interactive-widget`. Si U0 confirma que esa meta viewport basta, puedes
+   añadirla. Reserva `padding-block-end` en `body` para que la barra no tape lo
+   último.
+4. **Objetivos de menos de 44 px:** corrige la casilla del autocierre y los
+   cuatro `summary` de la medición de partida.
 
-| Contenido | Tipo | Esperado |
-| --- | --- | --- |
-| `Sea $x\|` | text | math |
-| `Sea $x$ y\|` | text | text |
-| `Cuesta 5\$ y (\|` | text | text |
-| `$\text{si \|}x$` | text | text |
-| `\begin{align} a\|` | text | math |
-| `% $x\|` | text | comment |
-| `\\(\|` (salto de línea `\\` seguido de `(`) | text | text |
-| `\(x\|` | text | math |
-| cualquier posición | equation | math |
+**Pruebas:**
+- Puras: `previousSnippetHole`, y `tokenBoundary` con comandos, `\\`, `\{`,
+  acentos, emoji (pares sustitutos), comentarios y los extremos del texto.
+- Estructurales en `check-site.mjs`: la barra existe con su `aria-label`, sus
+  botones son `type="button"` y sus rótulos están en `index.html`.
 
-### P2.2 `autoPair(state, data, { mode, pending })` (pura, archivo nuevo `editing-assist.js`)
-
-Devuelve `{ edit, pending }` o `null`. `|` marca el cursor.
-
-| Tecleado | Condición | Resultado |
-| --- | --- | --- |
-| `{` | cualquier modo salvo comentario | `{\|}` |
-| `{` tras `\` sin escapar | cualquier modo | `\{\|\}` |
-| `{` tras `\left\` | math | `\left\{\|\right\}` |
-| `(` o `[` | math | `(\|)` · `[\|]` |
-| `(` o `[` tras `\left` | math | `\left(\|\right)` · `\left[\|\right]` |
-| `\|` tras `\left` | math | `\left\|\|\right\|` |
-| `(` o `[` tras `\` sin escapar | text | `\(\|\)` · `\[\|\]` |
-| `$` sin escapar | text | `$\|$` |
-| `$` dentro de un par `$\|$` vacío y pendiente | — | `$$\|$$` |
-| `^` o `_` | math | `^{\|}` · `_{\|}` |
-| `{` justo después de un `^{` o `_{` automático vacío | — | no inserta nada: la llave ya está |
-| `{`, `$` (text), `(` o `[` (math) con texto seleccionado | — | envuelve la selección |
-| el carácter de cierre pendiente que está justo tras el cursor | — | salta el cierre |
-
-- **Solo cierra si el carácter siguiente** es el final del texto, un espacio o
-  uno de `)]}$,.;:`. Así, escribir `$` delante de una palabra existente no
-  produce `$$palabra`.
-- `\\[2pt]`: las dos barras se escapan entre sí, así que el `[` no va precedido
-  de una barra sin escapar. En texto no se cierra; en matemáticas se cierra como
-  corchete normal y el `]` tecleado lo salta. Escribe esta prueba.
-- `{}- ` es la sintaxis del guion literal en las listas. Con el autocierre,
-  `{` produce `{|}`, `}` lo salta y luego `- `. Escribe esta prueba.
-- **Cierres pendientes:** guárdalos como **distancia al final** del texto
-  (`value.length - posición`). Lo que se escribe dentro del par no altera esa
-  distancia. Antes de usar un cierre pendiente, comprueba que el carácter en esa
-  posición sigue siendo el esperado; si no, descártalo. Vacía la lista cuando el
-  cursor sale del par más interno, al perder el foco y al cargar otro bloque.
-- **Retroceso** sin modificadores y sin selección, entre un par vacío y
-  pendiente: borra los dos caracteres en una sola edición. Hazlo en `keydown`.
-- **`\begin{nombre}` + Intro:** si la línea termina antes del cursor en
-  `\begin{nombre}`, con argumentos opcionales `[…]` o `{…}`, y en todo el
-  contenido hay más `\begin{nombre}` que `\end{nombre}`, inserta
-  `\n\n\end{nombre}` y deja el cursor en la línea vacía del medio, sin añadir
-  sangría. **No lo hagas en los bloques de lista ni de bibliografía**: allí cada
-  línea es un elemento. Tiene prioridad sobre la continuación de listas, por
-  R4.
-- Preferencia «Cerrar automáticamente llaves y delimitadores»: casilla activada
-  por defecto, guardada en `tex-notes:prefs:v1`. Desactivada, no hay autocierre
-  ni `^{}`.
-- Conexión: `beforeinput` en `#block-content` (R2, R3). Si hay una regla
-  aplicable, `preventDefault()` + `applyFieldEdit`.
-- Prueba cada fila de la tabla, las dos trampas anteriores y las condiciones de
-  no cierre.
+**Revisión manual:** en Android, la barra queda sobre el teclado; tocar
+«Anterior», «Siguiente» o «Añadir» no cierra el teclado; TalkBack lee la barra
+como barra de herramientas.
 
 ---
 
-## P3 — Sugerencias al escribir `\`, huecos y alias
+## U2 — Menús radiales contextuales
 
-**Objetivo:** que los comandos frecuentes se escriban en dos o tres
-pulsaciones y que los recientes aparezcan donde se escribe.
+**Objetivo:** acciones por dirección, con una mano, según lo que hay bajo el
+dedo o en el cursor. Dos archivos:
+- `assets/js/menus.js`: solo datos;
+- `assets/js/radial.js`: geometría, máquina de estados, aplicación de acciones
+  y una fábrica de DOM que solo llama `app.js`.
 
-### P3.1 Sintaxis de huecos: `parseSnippet(text)` (pura, `editing-assist.js`)
+`radial.js` no toca el DOM al cargar (R4).
 
-- Los marcadores `#1`…`#9` son huecos en orden numérico y `#0` es la posición
-  final. `\#` es un `#` literal, no un marcador.
-- Sin marcadores: cada `{}` **vacío** es un hueco, en orden, y el final es el
-  extremo del texto.
-- Devuelve `{ text, holes: [índices], final }`.
-- Una entrada del catálogo con `insert: { before, after }` equivale a
-  `before + "#1" + after`.
-
-### P3.2 Sesión de huecos
-
-- Tras insertar un fragmento con huecos, el cursor va al primero.
-- Tab salta al siguiente; tras el último, va a `final` y la sesión termina.
-- Escape termina la sesión sin mover el cursor.
-- Guarda los huecos como **distancia al final** del texto, igual que los
-  cierres. Escribir en un hueco no desplaza los siguientes.
-- Termina la sesión si el cursor sale del tramo del fragmento.
-
-### P3.3 Motor de sugerencias (archivo nuevo `completion.js`, puro)
-
-- Fuentes con la forma
-  `{ key, kind, trigger, insert, label, detail, mode }`:
-  - los símbolos de `MATH_SYMBOLS`, con modo `"math"` salvo el grupo
-    `structure`, que es `"any"`;
-  - las macros del documento (P5);
-  - una lista corta `TEXT_COMMANDS`: `\textbf{}`, `\textit{}`, `\emph{}`,
-    `\underline{}`, `\quad`, `\qquad`, `\label{}`, `\ref{}`;
-  - los nombres de entorno para `\begin{`, a partir de
-    `TexNotes.MATH_ENVIRONMENTS` más `center`.
-- `rankCompletions(query, entries, usage, now, mode)`:
-  - Normaliza los acentos (NFD y quitar las marcas) en la consulta y en las
-    palabras clave.
-  - Orden: prefijo exacto del comando > subcadena del comando > prefijo de una
-    palabra clave en español > subcadena de una palabra clave.
-  - Los empates se ordenan por la puntuación de uso y después por el orden del
-    catálogo. Devuelve como máximo 8.
-  - Es determinista: `now` se inyecta.
-  - Escribe las pruebas con datos reales del catálogo, por ejemplo `fr` →
-    primero `\frac`.
-- Registro de uso en `tex-notes:usage:v1`, con la forma `{ [key]: { n, t } }`:
-  - máximo 300 entradas; al superarlo, se descartan las de menor puntuación;
-  - puntuación = `n / (1 + díasDesdeÚltimoUso / 7)`;
-  - claves: `symbol:<id>`, `macro:<nombre>`, `alias:<disparador>`,
-    `type:<id>`, `template:<id>`;
-  - se registra al insertar desde el tablero, aceptar una sugerencia, expandir
-    un alias, usar un comando `/` y aplicar una plantilla.
-- No cambies la clave ni el formato de «Recientes» del tablero
-  (`tex-notes:recent-symbols`).
-
-### P3.4 Menú de sugerencias (componente único en `app.js`, sección nueva [F])
-
-- **Un solo componente**, que P4 reutiliza para el menú `/`.
-- Se abre después de un `input` propio de la persona (no de `applyFieldEdit`)
-  cuando el texto antes del cursor termina en una barra sin escapar seguida de
-  **al menos una letra**:
-  `/(?:^|[^\\])(?:\\\\)*\\([A-Za-z]+)$/`. No se abre en un comentario.
-  Escribir `\\` no lo abre.
-- Teclas en `keydown`, fase de captura:
-  - ↓ y ↑ mueven la opción activa de forma circular;
-  - Intro y Tab aceptan;
-  - Escape cierra con `stopPropagation()`.
-- Se cierra al perder el foco, al teclear un carácter que no es letra (que se
-  inserta normalmente), si el cursor sale del token y al pulsar Alt+Mayús+S.
-- Ratón y táctil: `pointerdown` con `preventDefault()` en una opción la acepta
-  sin quitar el foco al campo. En el teléfono no hay Tab.
-- **Al aceptar en modo `"text"` un candidato de modo `"math"`**, envuélvelo en
-  `$…$`: `\alpha` escrito en prosa queda `$\alpha|$`, con el `$` final
-  registrado como cierre pendiente. Así no se produce el error «Missing $
-  inserted».
-- Los candidatos con huecos inician una sesión de huecos (P3.2).
-- ARIA:
-  - `<ul role="listbox" id="assist-list">` con elementos `<li role="option">` y
-    un id cada uno;
-  - mientras está abierto, `#block-content` lleva `aria-autocomplete="list"`,
-    `aria-controls="assist-list"` y `aria-activedescendant`;
-  - quítalos al cerrar y **no** pongas `aria-expanded` en el `textarea`;
-  - al abrir, anuncia una sola vez «N sugerencias» en `#app-status`.
-- Posición: bajo el cursor, con la técnica del div espejo (copia los estilos del
-  `textarea` y mide un `<span>` en la posición del cursor), recortada al
-  viewport. Con menos de 38 rem de ancho, a todo el ancho bajo el campo.
-- Sin colores literales fuera de `:root`. `tests/check-site.mjs` lo exige y el
-  tema oscuro tiene que redefinir los tokens nuevos.
-
-### P3.5 Alias
-
-- Forma: `{ trigger, expansion, mode }`, guardados en `tex-notes:aliases:v1`.
-- Se expanden **solo con Tab**, nunca solos. El disparador es la secuencia
-  `[\p{L}\p{N}]+` (con la bandera `u`) inmediatamente anterior al cursor. Debe
-  ir al principio, tras un espacio o tras un signo que no sea letra, número ni
-  `\`.
-- Usar `\p{L}` en lugar de `[A-Za-z]` es lo que impide que «lím» active el alias
-  `lim`.
-- Si el alias es de modo `"math"` y el cursor está en prosa, envuelve el
-  resultado en `$…$`, como en P3.4.
-- **Prioridad de Tab en «Contenido»** (DEC-015, ver §7):
-  1. aceptar la sugerencia abierta;
-  2. saltar al siguiente hueco;
-  3. saltar tras un cierre pendiente que esté justo después del cursor (solo
-     espacios en medio);
-  4. expandir un alias;
-  5. Tab nativo.
-  Es una excepción acotada a DEC-009, que deja Tab nativo.
-- Ctrl+Z después de una expansión devuelve el disparador escrito
-  (`applyFieldEdit`).
-
-Alias predeterminados (prueba que ninguno coincida con una palabra corta del
-español: `a al de del el en es ex la las lo los no o para por que se si sin su un una y ya`):
-
-Todos son de modo `"math"`:
-
-- `RR` → `\mathbb{R}`, `NN` → `\mathbb{N}`, `ZZ` → `\mathbb{Z}`,
-  `QQ` → `\mathbb{Q}`, `CC` → `\mathbb{C}`
-- `imp` → `\Rightarrow`, `sii` → `\Leftrightarrow`
-- `pt` → `\forall`, `exi` → `\exists`
-- `fr` → `\frac{#1}{#2}#0`
-- `pd` → `\frac{\partial #1}{\partial #2}#0`
-- `lim` → `\lim_{#1 \to #2} #0`
-- `int` → `\int_{#1}^{#2} #3 \, d#4`, `iint` → `\iint_{#1} #2 \, dA`
-- `sum` → `\sum_{#1}^{#2} #0`
-- `nab` → `\nabla`, `eps` → `\varepsilon`, `ra` → `\to`
-- `vec` → `\mathbf{#1}#0`
-- `abs` → `\left| #1 \right|#0`
-- `norm` → `\left\| #1 \right\|#0`
-
-### P3.6 «Preferencias de escritura»
-
-Es una sección nueva, después de «Resultado», con `<details>`.
-
-- Casilla del autocierre (P2).
-- «Mis alias»: tabla para añadir, editar y borrar, y el botón «Restablecer
-  alias predeterminados».
-- `validateAlias` (pura) exige:
-  - disparador `^[\p{L}\p{N}]{2,12}$`u, único;
-  - que el disparador no coincida con ninguna palabra corta de la lista;
-  - expansión no vacía y con marcadores válidos.
-- «Exportar configuración» descarga `notas-latex-configuracion.json` con
-  `{ kind: "notas-latex-config", version: 1, aliases, templates, prefs, macros }`.
-  `templates` llega con P4 y `macros` con P5. La persona usa máquinas distintas
-  en el salón y en casa, y el almacenamiento local no viaja entre ellas.
-- «Importar configuración» lee un `<input type="file">`, valida todo antes de
-  aplicar y pide confirmación para reemplazar.
-
----
-
-## P4 — Comandos `/`, Demostración y plantillas
-
-### P4.1 Tipo Demostración
-
-- Entrada en `BLOCK_TYPES`:
-  `{ id: "proof", label: "Demostración", kind: "theorem", environment: "proof", heading: "Demostración", style: "plain", predefined: true, container: true }`.
-  Colócala después de `proposition`. Añade su `<option>` en el mismo lugar de
-  `index.html`, porque la prueba compara el orden.
-- `buildTheoremDefs()` debe omitir los tipos `predefined`. `amsthm` ya define
-  `proof` y `\newtheorem{proof}` fallaría en Overleaf con «Command \proof
-  already defined».
-- Actualiza el **cuerpo** de la prueba «el preámbulo deriva un \newtheorem por
-  cada tipo declarado» para que filtre `!type.predefined`. **No cambies su
-  nombre**: es el guardián literal de INV-005.
-- Añade una prueba: `proof` produce `\begin{proof}[Título]…\end{proof}` y el
-  preámbulo no contiene `\newtheorem{proof}`. `babel` en español ya traduce el
-  encabezado como «Demostración».
-- Con título, el título **sustituye** a «Demostración» en el PDF. Dilo en la
-  ayuda.
-- Cambiar la tabla altera el ancla de DEC-005 (`tramo:14` → `tramo:15`, más el
-  campo `slash` de P4.2). Actualiza el comentario `@decision` para mencionar
-  `predefined` y `slash`, ejecuta `npm run bendecir` y dilo en el commit.
-- `examples/calculo-3.tex` **no debe cambiar**. Si cambia, hay un error.
-
-### P4.2 Comandos `/`
-
-- En `BLOCK_TYPES`, añade a cada tipo `slash: [...]`, que es la fuente única de
-  verdad (DEC-005):
-
-| Tipo | Comandos |
-| --- | --- |
-| text | `/txt`, `/texto` |
-| equation | `/ec` |
-| math-inline | `/el` |
-| definition | `/def` |
-| theorem | `/teo` |
-| proposition | `/prop` |
-| proof | `/dem` |
-| example | `/ej` |
-| note | `/nota` |
-| itemize | `/lista`, `/vi` |
-| enumerate | `/enum`, `/num` |
-| bibliography | `/bib` |
-| image | `/img` |
-
-  La comparación ignora acentos: `/definición` funciona.
-- El menú se abre cuando `/` se teclea en la posición 0 con «Contenido»
-  **vacío**. Muestra primero los tipos y luego las plantillas (P4.3), filtrados
-  por las letras escritas.
-- `/teo Fubini`: tras el primer espacio, el resto de la línea es el título.
-  Intro o Tab aplica; Escape cierra y deja el texto tal cual. Si la palabra no
-  coincide con ningún comando al teclear el espacio, el menú se cierra.
-- Al aplicar:
-  - cambia `#block-type` y **despacha `new Event("change", { bubbles: true })`**.
-    Asignar `.value` por código no dispara `change`; sin él no se muestran los
-    campos de imagen, la vista previa queda vieja y no aparecen las
-    herramientas de lista;
-  - pon el título si se escribió uno y vacía «Contenido» con `applyFieldEdit`;
-  - si el tipo es imagen, el foco va a `#image-path`, porque «Contenido» queda
-    oculto; si no, a «Contenido»;
-  - anuncia «Tipo: Teorema. Título: Fubini.».
-- Con el menú `/` abierto no hay autocierre ni sugerencias.
-
-### P4.3 Plantillas
-
-- **Modelo:**
-  `{ id, name, trigger, steps: [{ depth, block: { type, title, content, listFormat?, options? } }] }`.
-  `depth` es relativo al destino. Un paso de profundidad `d + 1` va **dentro**
-  del último paso de profundidad `d`. El contenido admite huecos (P3.1).
-- **Validación** (`validateTemplate`, pura):
-  - la primera profundidad es 0;
-  - la profundidad sube como mucho 1 por paso;
-  - el padre de cada paso con `depth > 0` acepta hijos (`acceptsChildren`);
-  - los tipos existen;
-  - el disparador cumple `^[a-z0-9]{2,16}$` y es único entre plantillas y
-    comandos de tipo.
-- **Aplicación como cola:**
-  - Elegir una plantilla en el menú `/` carga el paso 1 en el editor (tipo,
-    título y contenido sin marcadores) e inicia la sesión de huecos.
-  - Cada Ctrl+Intro añade el paso actual y carga el siguiente.
-  - El padre de cada paso sale de una pila con las rutas devueltas por
-    `insertBlock`: profundidad 0 = destino actual; `d` = ruta del último paso
-    de profundidad `d - 1`.
-  - Un aviso `<p id="template-progress">` muestra «Plantilla «Nombre»: paso 1
-    de 3 · Siguiente: Demostración», con dos botones: «Omitir paso» y
-    «Cancelar plantilla».
-- **Cualquier cambio estructural cancela la plantilla y se anuncia**: eliminar,
-  mover, duplicar, pegar o restaurar. Las rutas guardadas dejarían de valer;
-  sigue el mismo criterio que `cancelEditForStructuralChange`.
-- **Plantillas incluidas** (archivo nuevo `templates.js`). Solo pueden usar
-  comandos de `amsmath` y `amssymb`. Prueba que cada fórmula se renderiza en
-  KaTeX dentro del `vm`, como hace `tests/symbols.test.js`, y que `checkBlock`
-  no devuelve errores sobre cada paso una vez quitados los marcadores:
-
-  Cada paso se escribe como «profundidad · tipo · contenido». En JavaScript,
-  cada `\` se escribe `\\`.
-
-  - `teodem` — «Teorema con demostración»
-    - 0 · theorem · `#1`
-    - 0 · proof · `#1`
-    - Son hermanas. Una demostración **dentro** del teorema quedaría dentro de
-      `\begin{theorem}`.
-  - `ejres` — «Ejemplo resuelto»
-    - 0 · example · `#1`
-    - 1 · text · `\textit{Solución.} #1`
-    - 1 · equation · `#1`
-  - `limite` — «Límite (ε-δ)»
-    - 0 · definition, título «Límite de una función real de un vector»:
-      `Sea $f: D \subseteq \mathbb{R}^n \to \mathbb{R}$ y $\mathbf{a}$ un punto de acumulación de $D$. Decimos que $\lim_{\mathbf{x} \to \mathbf{a}} f(\mathbf{x}) = L$ si para todo $\varepsilon > 0$ existe $\delta > 0$ tal que, si $\mathbf{x} \in D$ y $0 < \|\mathbf{x} - \mathbf{a}\| < \delta$, entonces $|f(\mathbf{x}) - L| < \varepsilon$.`
-  - `parcial` — «Derivada parcial»
-    - 0 · definition, título «Derivada parcial»:
-      `La derivada parcial de $f$ respecto de $x$ en $(a,b)$ es`
-    - 1 · equation ·
-      `\frac{\partial f}{\partial x}(a,b) = \lim_{h \to 0} \frac{f(a+h,b) - f(a,b)}{h}`
-  - `grad` — «Gradiente y derivada direccional»
-    - 0 · equation ·
-      `\nabla f(a,b) = \left( \frac{\partial f}{\partial x}(a,b), \frac{\partial f}{\partial y}(a,b) \right)`
-    - 0 · equation ·
-      `D_{\mathbf{u}} f(a,b) = \nabla f(a,b) \cdot \mathbf{u}, \qquad \|\mathbf{u}\| = 1`
-  - `lagrange` — «Multiplicadores de Lagrange»
-    - 0 · text ·
-      `Para optimizar $f(x,y)$ sujeta a $g(x,y) = k$ resolvemos el sistema`
-    - 0 · equation ·
-      `\begin{cases} \nabla f(x,y) = \lambda \nabla g(x,y) \\ g(x,y) = k \end{cases}`
-  - `fubini` — «Integral iterada»
-    - 0 · equation ·
-      `\iint_R f(x,y)\,dA = \int_{#1}^{#2} \int_{#3}^{#4} f(x,y)\,dy\,dx`
-  - `polares` — «Coordenadas polares»
-    - 0 · equation ·
-      `\iint_D f(x,y)\,dA = \int_{\alpha}^{\beta} \int_{r_1(\theta)}^{r_2(\theta)} f(r\cos\theta, r\sin\theta)\, r\,dr\,d\theta`
-  - `esfericas` — «Coordenadas esféricas»
-    - 0 · equation ·
-      `\iiint_E f\,dV = \iiint f(\rho\sin\varphi\cos\theta, \rho\sin\varphi\sin\theta, \rho\cos\varphi)\,\rho^2\sin\varphi\,d\rho\,d\varphi\,d\theta`
-  - `taylor` — «Taylor de orden 2 en dos variables»
-    - 0 · equation ·
-      `f(a+h,b+k) \approx f(a,b) + f_x(a,b)\,h + f_y(a,b)\,k + \frac{1}{2}\left( f_{xx}(a,b)\,h^2 + 2 f_{xy}(a,b)\,hk + f_{yy}(a,b)\,k^2 \right)`
-  - `preclase` — «Pregunta pre-clase»
-    - 0 · text, título «Pregunta»: `#1`
-    - 1 · text · `\textbf{Respuesta.} #1`
-- **Plantillas propias:** añade la acción «Guardar como plantilla» a cada
-  bloque. Abre un `<dialog>`, como «Mover a…», con dos campos: «Nombre de la
-  plantilla» y «Comando». Recorre la rama en preorden con su profundidad y la
-  guarda en `tex-notes:templates:v1`. Las imágenes conservan sus `options`.
-  Gestión desde «Preferencias de escritura»: lista con renombrar y borrar.
-  Entran en la exportación de configuración.
-
----
-
-## P5 — Macros del documento
-
-**Objetivo:** escribir `\R` en el contenido y que el `.tex` lo defina.
-
-- **Modelo:** `state.macros = [{ name: "R", params: 0, body: "\\mathbb{R}" }]`.
-  Pertenecen **al documento**: van en el borrador y en el autoguardado.
-- **Borrador v3:**
-  - `DRAFT_VERSION = 3`;
-  - `normalizeDraft` devuelve también `macros`, con una normalización
-    estructural: nombre `^[A-Za-z]+$`, `params` entero de 0 a 9 y `body` de tipo
-    cadena; descarta las entradas inválidas;
-  - un borrador v1 o v2 se migra con `macros: []`;
-  - un borrador v4 sigue devolviendo `null`, como hoy, y una versión antigua de
-    la app rechaza el v3 en lugar de perder sus macros en silencio.
-  - Pruebas: un borrador v2 se restaura con `[]`, un v3 hace el viaje de ida y
-    vuelta y un v4 da `null`.
-- **Generación:**
-  - en `latex-generator.js`, `buildPreamble(macros = [])` y
-    `generateLatex(state)` pasan `state.macros`;
-  - las macros se insertan después de `\usepackage{graphicx}` y antes de «% Los
-    entornos siguientes…»:
-    ```tex
-    % Macros personales definidas en el editor.
-    \newcommand{\R}{\mathbb{R}}
-    \newcommand{\abs}[1]{\left|#1\right|}
-    ```
-  - sin macros no se emite nada, así que el ejemplo de referencia no cambia
-    (INV-008);
-  - el cuerpo es literal y sin escapes, por el mismo criterio que el contenido
-    (DEC-004);
-  - se usa `\newcommand`, que falla con un error visible si el nombre ya existe,
-    y **no** `\providecommand`, que no haría nada en silencio.
-  - Pon `macrosToPreamble` dentro de `latex-generator.js`, no en otro archivo:
-    `tests/load-app.mjs` carga el generador sin los módulos de interfaz.
-- **Validación** (`macros.js`, pura; `validateMacro(macro, existing)`):
-  - nombre `^[A-Za-z]+$`, único y no reservado;
-  - `params` entre 0 y 9;
-  - cuerpo no vacío, en una sola línea y con llaves equilibradas, teniendo en
-    cuenta los escapes;
-  - todo `#` sin escapar va seguido de un dígito entre 1 y `params`; `##` no se
-    permite.
-  - Los mensajes van en español y nombran el problema, por ejemplo: «\S ya
-    existe en LaTeX (signo de sección). Elige otro nombre.».
-- **Nombres reservados:**
-  - todos los comandos que aparecen en `MATH_SYMBOLS` (extráelos de `command` e
-    `insert.before`);
-  - una lista `LATEX_RESERVED`: `b c d H i j k l L o O P r S t u v aa AA ae AE oe OE ss dag ddag`,
-    `begin end item par label ref caption section subsection newcommand renewcommand providecommand def let relax input include usepackage documentclass maketitle title author date`,
-    `text textbf textit emph mathbb mathbf mathrm mathcal frac sqrt left right`,
-    `sin cos tan cot sec csc log ln exp lim sup inf max min det dim ker deg arg gcd Pr hom`;
-  - los entornos de `BLOCK_TYPES`, que `\newtheorem` y `amsthm` ya definen como
-    comandos.
-- **KaTeX:**
-  - pasa `macros` a `katex.renderToString` en `katexRender`;
-  - **crea un objeto nuevo en cada llamada**: KaTeX modifica el objeto de macros
-    cuando el contenido usa `\gdef`;
-  - al cambiar las macros, incrementa `previewVersion` (P1.5) y vuelve a dibujar
-    la estructura y la vista previa del editor.
-- **Interfaz:**
-  - dentro de «Datos del documento», un `<details>` «Macros del documento» con
-    la lista y un formulario de tres campos: «Nombre», «Número de argumentos» y
-    «Definición»;
-  - vista previa de la macro (por ejemplo `\abs{x}`) y errores junto a cada
-    campo;
-  - el botón «Usar como mis macros predeterminadas» las guarda en
-    `tex-notes:macros-default:v1`;
-  - una sesión sin borrador ni autoguardado empieza con esas macros;
-  - las macros aparecen las primeras en las sugerencias de P3.
-- **Nueva regla de la comprobación previa, `katex-only`** (error, en
-  `content-check.js`): avisa del uso de un comando que KaTeX acepta y nuestro
-  preámbulo no define, si no hay una macro del documento con ese nombre.
-  - `checkDocument(state)` lee `state.macros`; `checkBlock` recibe un cuarto
-    parámetro opcional `{ macros }`.
-  - Lista, comprobada contra la copia de KaTeX del repositorio:
-    `R N Z Reals reals Complex natnums cnums Alpha Beta Epsilon Zeta Eta Iota Kappa Mu Nu Omicron Rho Tau Chi bull infin isin exist lang rang larr rarr lArr rArr Larr Rarr harr hArr Harr lrarr Lrarr uarr darr sub sube supe plusmn sdot alef alefsym image real weierp thetasym clubs diamonds hearts spades sect Dagger arcctg arctg ch cosec cotg cth sh tg ctg argmax Bbb bold`.
-  - Aparte, como **aviso** porque existen con otro significado: `\empty` (en
-    LaTeX no imprime nada; KaTeX dibuja ∅) y `\th` (en LaTeX es la letra þ).
-  - Sugiere el reemplazo cuando exista: `\R`→`\mathbb{R}`,
-    `\Complex`→`\mathbb{C}`, `\empty`→`\emptyset`, `\infin`→`\infty`,
-    `\isin`→`\in`, `\exist`→`\exists`, `\lang`/`\rang`→`\langle`/`\rangle`,
-    `\rArr`→`\Rightarrow`, `\sub`→`\subset`, `\sube`→`\subseteq`,
-    `\plusmn`→`\pm`, `\sdot`→`\cdot`, `\alef`→`\aleph`.
-  - Prueba que KaTeX renderiza cada entrada de la lista; eso mantiene la lista
-    honesta.
-  - Añade su sección en `docs/guia-de-uso.md`, porque `RULES` enlaza una ancla
-    de esa guía y la prueba de documentación la verifica.
-
----
-
-## P6 — Interfaz
-
-- **Dos columnas** a partir de 75 rem de ancho.
-  - `main` pasa a `min(100% - 2rem, 110rem)`. «Datos del documento» y
-    «Resultado» ocupan todo el ancho.
-  - Dentro de «Contenido», el editor va a la izquierda y «Estructura actual» a
-    la derecha.
-  - El editor es `position: sticky; top: .5rem` con
-    `max-block-size: calc(100dvh - 1rem)` y desplazamiento propio. **Sin esa
-    altura máxima, un editor fijo más alto que la ventana no deja llegar a su
-    parte inferior.**
-  - Por debajo de 75 rem, una sola columna como hoy.
-- **Metadatos plegables:** «Datos del documento» va en un `<details>`, abierto
-  si el título está vacío, con un resumen como «Título · curso · fecha».
-- **Tarjetas compactas:**
-  - quedan visibles «Editar» y «Añadir dentro»;
-  - las demás acciones pasan a `<details class="block-more">` con el rótulo
-    «Más acciones»: Duplicar, Copiar bloque, Copiar texto, Eliminar, Subir,
-    Bajar, Mover a… y Guardar como plantilla;
-  - pasa `more` en el contexto de `blockItemExtensions` y cambia la extensión
-    [E] para que añada allí su botón;
-  - **trampa: `focusAction()` hoy hace `button.focus()` sobre botones que
-    quedarían dentro de un `<details>` cerrado.** El foco falla en silencio y
-    acaba en `body` después de Subir, Bajar o Duplicar. Abre el `<details>` del
-    destino antes de enfocar o, si no es posible, enfoca «Editar».
-  - El párrafo de «Estructura actual» tiene que seguir nombrando «Duplicar»,
-    «Copiar bloque», «Copiar texto» y «Pegar bloque»: `tests/check-site.mjs` lo
-    exige.
-- **Panel de atajos:** añade una lista fija `<ul id="editing-keys">` con:
-  - Ctrl+Intro;
-  - Tab y Escape en «Contenido», con su prioridad;
-  - ↑ ↓ Intro en el menú;
-  - Retroceso en un par vacío;
-  - los comandos `/`.
-  Tab e Intro sin modificador **no** entran en `SHORTCUTS`:
-  `tests/shortcuts.test.js` solo admite Escape, flechas y Re Pág/Av Pág sin
-  modificadores en un ámbito de widget.
-- **Se conservan:** los límites del tablero (≤ 20 rem en escritorio, ≤ 25 rem
-  por debajo de 38 rem), los objetivos táctiles de 44 × 44 px, la ausencia de
-  desplazamiento horizontal a 320 px y el contraste en los dos temas.
-
----
-
-## 5. Pruebas existentes que vas a tener que tocar (y cómo)
-
-| Prueba | Por qué falla | Qué hacer |
-| --- | --- | --- |
-| `tests/check-site.mjs`, orden de scripts | archivos nuevos | añadirlos en orden de dependencia, también en `index.html` y `check:js` |
-| `tests/generator.test.js`, \newtheorem | `proof` es `predefined` | filtrar `!type.predefined` sin renombrar la prueba |
-| `tests/generator.test.js`, opciones contra tabla | `<option value="proof">` | mismo orden que la tabla |
-| `tests/anclas.test.js` | la tabla de tipos cambia bajo DEC-005 | actualizar el comentario, `tramo` y `npm run bendecir`; decirlo en el commit |
-| `tests/documentacion.test.js` | rótulos nuevos en la guía e inventario | rótulos reales en «…» y `npm run inventario` tras añadir pruebas |
-| `tests/shortcuts.test.js` | campo `mod` | la entrada lleva `ctrl: true`; añade pruebas de `mod` |
-| `tests/generator.test.js`, ejemplo byte a byte | **no debe fallar** | si falla, revisa: ni las macros vacías ni `proof` deben cambiar el ejemplo |
-
-No toques las afirmaciones literales que `INVARIANTES.md` cita como guardianes.
-
-## 6. Revisión manual (añádela a `docs/revision-manual.md`)
-
-DEC-007 deja la interfaz sin pruebas automáticas, así que esta lista es parte
-de la suite:
-
-- [ ] Con la distribución **latinoamericana** en Windows:
-  - escribir `\` (AltGr), `{`, `}`, `[`, `]`, `^`, `~`, `á` y `ñ` en prosa y en
-    fórmulas;
-  - confirmar que el autocierre, las sugerencias y los alias reaccionan;
-  - confirmar que AltGr nunca dispara Ctrl+Intro.
-- [ ] Lo mismo con la distribución **EE. UU.**
-- [ ] Con las dos distribuciones instaladas en Windows, usar Alt+Mayús+S, G y Q
-  y comprobar si cambia la distribución. Si cambia, anótalo en `claude.md`.
-- [ ] Ctrl+Z inmediatamente después de cada acción: insertar desde el tablero,
-  autocierre, salto de cierre, Retroceso en un par, sugerencia aceptada, alias
-  expandido, hueco, `\begin` + Intro, Intro en una lista y sangría de lista.
-  Cada Ctrl+Z deshace solo esa acción.
-- [ ] Clase simulada: diez bloques seguidos solo con teclado, con `/teo Título`,
-  `/ec` y `/lista`, usando Ctrl+Intro. El foco nunca sale de «Contenido».
-- [ ] La plantilla `ejres` completa, una con «Omitir paso» y otra cancelada al
-  mover un bloque.
-- [ ] Cerrar la pestaña con un bloque a medio escribir, reabrir y recuperar la
-  sesión. Abrir la página y escribir sin recuperar: la sesión anterior queda en
-  `tex-notes:autosave:previous`.
-- [ ] Con NVDA, abrir el menú de sugerencias: se anuncia el recuento y cada
-  opción activa. Tab con el menú cerrado y sin nada pendiente sale del campo.
-- [ ] Definir `\R`, usarlo, generar y compilar en Overleaf. Borrar la macro y
-  confirmar el error `katex-only` en la comprobación previa.
-- [ ] A 320 px: el menú es usable al tacto, sin desplazamiento horizontal.
-
-## 7. Documentación y decisiones (en el commit de cada paquete)
-
-- `README.md`: borrador v3 y macros en el preámbulo (contrato), tipo
-  Demostración, comandos `/`, alias y plantillas. En «Pendiente», quita las
-  macros y los alias de «Siguiente ronda». La paleta sigue en «fuera por
-  ahora».
-- `docs/guia-de-uso.md` y `docs/guia-de-desarrollo.md`: cómo se usa y cómo se
-  amplía (cómo añadir una plantilla incluida, un alias predeterminado o un
-  comando `/`). Las guías **no** llevan justificaciones.
-- `docs/hitos.md`: un hito por paquete (16–21).
-- Decisiones nuevas en `decisiones/`, con el formato de las existentes y estas
-  razones:
-  - **DEC-015 — Tab en «Contenido» solo cuando hay algo que completar.** Amplía
-    DEC-009 sin reemplazarla.
-    - En un `textarea`, Tab no tiene otro uso y es la tecla habitual de los
-      fragmentos.
-    - Si no hay nada pendiente, Tab es nativo, y Escape termina cualquier sesión
-      de huecos. Así no hay trampa de teclado (WCAG 2.1.2).
-    - Los alias predeterminados evitan las palabras cortas del español para que
-      Tab no expanda «en» cuando se quiere salir del campo.
-  - **DEC-016 — Las ediciones programáticas pasan por `execCommand`.**
-    - Asignar `value` borraba el historial de deshacer.
-    - `execCommand` está desaconsejado pero sigue siendo la única vía que
-      conserva Ctrl+Z en un `textarea`.
-    - El respaldo con `setRangeText` pierde el deshacer pero no el texto.
-  - **DEC-017 — Alias y macros, las dos cosas.**
-    - Los alias son personales, viven en el navegador y se expanden al teclear:
-      el `.tex` nunca depende de ellos.
-    - Las macros son del documento, viajan en el borrador v3 y en el preámbulo.
-    - Se usa `\newcommand` porque falla de forma visible; `\providecommand`
-      fallaría en silencio.
-  - **DEC-018 — Menú `/` en lugar de atajos por tipo y de paleta.**
-    - En Windows con dos distribuciones, Alt+Mayús puede cambiar de
-      distribución, y Ctrl+Alt es AltGr (DEC-009).
-    - `/` no depende de la distribución y se escribe sin quitar las manos de la
-      fila central.
-    - La paleta sigue fuera porque el menú cubre su caso dentro del campo.
-  - **DEC-019 — Autoguardado separado del borrador explícito.** Guardar en la
-    clave del borrador sobrescribiría con una sesión vacía al abrir la página, y
-    el borrador es un punto de restauración elegido por la persona.
-  - **DEC-020 — Demostración como entorno predefinido.** `amsthm` define `proof`
-    y `\newtheorem{proof}` no compilaría; `predefined` lo excluye del
-    preámbulo sin crear un `kind` nuevo.
-- Para el código no obvio (la distancia al final, el `change` despachado, la
-  fase de captura), un bloque `@decision` encima, con `ancla:nueva`, y
-  `npm run bendecir`.
-- Opcional, si encuentras un guardián estable: una invariante «el contenido no
-  se asigna con `.value` fuera de cargar y vaciar el formulario», con una
-  prueba sobre el texto de `app.js` que la vigile. Si no encuentras un guardián
-  que no sea frágil, no la añadas.
-
-## 8. Fuera de alcance
-
-- La paleta de comandos, las bibliotecas de edición y cualquier dependencia.
-- El bloque de tabla, las referencias cruzadas y la sincronización entre
-  dispositivos: la exportación de configuración la sustituye.
-- Cambiar el escapado de títulos o de metadatos.
-- Llevar el asistente a otros campos.
-- Rediseñar el tablero de símbolos. Solo pasa a usar `applyFieldEdit` y a
-  registrar el uso.
-
-## Anexo A — Medición de rendimiento (no se añade al repositorio)
-
-Ejecútalo con un Playwright instalado aparte. No lo añadas a `package.json`
-(INV-006).
+### Formato de `menus.js`
 
 ```js
-// node medir.cjs   (con la app en /ruta/al/repo)
-const { chromium } = require("playwright");
+TexNotes.RADIAL_MENUS = [
+  { context: "formula", slices: [
+    { id: "frac", label: "Fracción", icon: "a⁄b", action: { type: "insert", snippet: "\\frac{#1}{#2}#0" } },
+    { id: "greek", label: "Griegas", icon: "αβ", action: { type: "submenu", slices: [
+      { id: "alpha", label: "alfa", action: { type: "symbol", symbol: "alpha" } },
+      // …
+    ] } },
+  ] },
+];
+```
+
+Tipos de acción:
+
+| Tipo | Qué hace |
+| --- | --- |
+| `insert` | Inserta un fragmento con la sintaxis `#N` |
+| `symbol` | Inserta una entrada de `MATH_SYMBOLS` por id y registra el uso como el tablero |
+| `command` | Llama por nombre a una función de un registro, con `args` opcional |
+| `submenu` | Abre un segundo anillo con sus propios `slices` |
+| `blockTypes` | Submenú derivado de una lista de ids de `BLOCK_TYPES`, con los rótulos de `blockLabel()` |
+
+**Qué se puede hacer solo editando `menus.js`:** un fragmento nuevo, un símbolo,
+un submenú o un comando que ya exista. Un comando nuevo exige además su función
+en el registro de `app.js`. Dilo así en la guía de desarrollo, sin prometer más.
+
+### Menús iniciales
+
+| Contexto | Sectores (en este orden, el 1 arriba y en sentido horario) |
+| --- | --- |
+| `formula` | Fracción `\frac{#1}{#2}#0` · Raíz `\sqrt{#1}#0` · Integral `\int_{#1}^{#2} #3 \, d#4#0` · Suma `\sum_{#1}^{#2} #0` · Superíndice `^{#1}#0` · Subíndice `_{#1}#0` · Matriz `\begin{pmatrix}`⏎`#1 & #2 \\`⏎`#3 & #4`⏎`\end{pmatrix}#0` · Griegas (submenú) |
+| `text` | Negrita `\textbf{#1}#0` · Cursiva `\textit{#1}#0` · Lista (comando `insertList`) · Título (comando `focusTitle`) · Enlace `\href{#1}{#2}#0` · Fórmula en línea `$#1$#0` |
+| `image` | Tamaño (submenú: 40 %, 60 %, 80 %, 100 % con `setImageWidth`) · Pie (comando `focusTitle`) · Alineación (submenú: izquierda, centro y derecha con `setImageAlign`) · Reemplazar (`chooseImageFile`) · Eliminar (`deleteBlock`, con la confirmación existente) |
+| `global` | Nuevo bloque (`blockTypes`) · Deshacer (`undo`) · Rehacer (`redo`) · Ir a… (submenú con `goTo`) · Ajustes (`openPreferences`) |
+
+Notas de diseño de estos menús:
+
+- **Griegas:** 7 letras + «Más…», que hace `openSymbols("greek-lower")`. Hay
+  más de 30 griegas y no caben en un anillo. Propuesta inicial: α, β, δ, ε
+  (`varepsilon`, como el alias `eps`), θ, λ y π. La persona puede cambiarla en
+  `menus.js`.
+- **Nuevo bloque:** 7 tipos + «Más…», que enfoca «Tipo de bloque». Propuesta:
+  texto, ecuación, en línea, definición, teorema, demostración y ejemplo.
+- **Lista** es un comando y no un fragmento. En un bloque de texto o de teorema
+  inserta `\begin{itemize}`⏎`\item #1`⏎`\end{itemize}#0`. En un bloque de lista
+  cada línea ya es un `\item`, así que ese fragmento rompería el documento: ahí
+  la acción es «Sangrar».
+- **Título** enfoca «Título del bloque (opcional)», que el generador convierte
+  en `\subsection` o en el título del entorno. No insertes `\subsection` dentro
+  del contenido: la estructura la gobierna el árbol.
+- **Enlace:** `\href` necesita `hyperref`, que **no está** en la lista blanca
+  del preámbulo (INV-009). Añádelo a la lista blanca y emítelo **solo si algún
+  contenido usa `\href` o `\url`**, como `\usepackage[hidelinks]{hyperref}` y
+  después de todos los demás paquetes. Así el ejemplo de referencia no cambia
+  (R7). Prueba los dos casos en `generator.test.js`, documenta el preámbulo en
+  el README y registra la decisión.
+- **Ir a…** no estaba en la especificación de la persona. Se añade porque la
+  página mide unas 6 pantallas en el teléfono. Destinos: «Contenido»,
+  «Estructura», «Resultado», «Preferencias» y, desde U4, «Versiones».
+  Menciónalo en el informe.
+
+### Dónde y cómo se abre
+
+| Dónde | Cómo | Contexto |
+| --- | --- | --- |
+| Botón «Menú» de la barra | Tocar abre en modo toque. Tocar y arrastrar abre en modo arrastre, **sin esperar**. | Según el editor: `formula` si el tipo es una fórmula o si `mathContextAt(...) === "math"`; `image` si el bloque es una imagen; `text` en otro caso |
+| Pulsación larga (400 ms) sobre una tarjeta de la estructura | Arrastre | Según el tipo de la tarjeta: imagen → `image`; fórmula → `formula`; resto → `text`. Para `formula` y `text`, primero se abre el bloque en el editor como con «Editar», con el cursor al final |
+| Pulsación larga en zona vacía, fuera de campos y controles | Arrastre | `global` |
+| Pulsación larga dentro de «Contenido» | **Desactivada** (`LONG_PRESS_IN_FIELD = false`) hasta conocer U0 | Como el botón «Menú» |
+| Clic derecho con ratón | Modo toque | Como la pulsación larga en ese lugar |
+| Tecla Menú o Mayús+F10 en «Contenido» | Modo toque, con foco en el primer sector | Como el botón «Menú» |
+
+### Geometría
+
+Constantes en `radial.js` (no en `menus.js`):
+- espera de la pulsación larga: 400 ms;
+- tolerancia de movimiento durante la espera: 10 px; si se supera, era un
+  desplazamiento y no se abre nada;
+- zona muerta: 20 px.
+
+Ángulo con `Math.atan2` desde el punto de presión, en coordenadas de pantalla
+(la *y* crece hacia abajo): `θ = atan2(dx, −dy)`, normalizado a `[0, 2π)`. Así 0
+queda arriba y crece en sentido horario.
+- **Anillo completo:** el sector *i* de *n* está centrado en `i·2π/n`.
+- **Abanico de amplitud `span` desde `start`:** sectores iguales en
+  `[start, start + span)`. Fuera del abanico no se resalta nada.
+- Los bordes entre sectores pertenecen siempre al sector siguiente en sentido
+  horario.
+
+**Restricción de 44 px:** `span · r_medio / n ≥ 44` y `r_ext − r_int ≥ 44`. Las
+cuentas, para no descubrirlo tarde:
+
+| Disposición | Requisito con 8 sectores | Valores iniciales |
+| --- | --- | --- |
+| Anillo completo | `r_medio ≥ 56` | 32–104 px (r_medio 68, arco ≈ 53 px) |
+| Medio anillo (desde la barra, junto al borde inferior) | `r_medio ≥ 112` | 84–140 px |
+| Submenú en abanico alrededor del sector padre | Con 112–176 px, `span ≥ 140°` | 150° |
+
+Un **segundo anillo completo no cabe** en un teléfono de 412 px. El submenú es
+un abanico centrado en la dirección del sector padre. Si el abanico no cabe en
+la ventana, el submenú **sustituye** al primer anillo en el mismo centro. Escribe
+una función pura `fitMenu(origin, viewport, n)` que elija entre anillo completo,
+medio anillo, abanico y sustitución.
+
+En modo arrastre, el origen del ángulo es siempre el punto de presión, aunque
+parte del dibujo quede fuera de pantalla. En modo toque, el dibujo se desplaza
+para caber entero.
+
+### Máquina de estados
+
+La máquina es pura: `radialReduce(state, event, layout) → state`, y su salida
+incluye `highlight`, `action`, `cancelled` y `haptic`.
+
+- **Espera:** `down` + movimiento mayor que la tolerancia → reposo (era un
+  desplazamiento). `down` + 400 ms → abierto en arrastre.
+- **Arrastre en el primer anillo:**
+  - dentro de la zona muerta, nada resaltado;
+  - fuera de ella, el sector por ángulo;
+  - si ese sector es un submenú y la distancia supera `r_ext` del primer
+    anillo, se abre el submenú;
+  - al volver por debajo de `r_ext`, se cierra el submenú.
+- **Soltar en arrastre:**
+  - en la zona muerta, se cancela;
+  - sobre una hoja, se ejecuta su acción;
+  - sobre un submenú sin haber salido del anillo, el submenú queda abierto en
+    modo toque;
+  - sobre un elemento del submenú, se ejecuta su acción.
+- **Modo toque:**
+  - tocar un elemento lo ejecuta o abre su submenú;
+  - tocar fuera o Escape cierra;
+  - en un submenú, Escape vuelve al primer anillo.
+- **Teclado:** flechas en círculo, Inicio y Fin, Intro o Espacio para activar,
+  flecha hacia fuera o Intro sobre un submenú para abrirlo, Escape para volver
+  o cerrar. Al cerrar, el foco vuelve al campo con su selección.
+- **Cancelaciones:** `pointercancel`, un segundo puntero (el zoom con dos dedos
+  debe seguir funcionando; ignora `isPrimary === false` y cancela), pérdida de
+  visibilidad de la página y desplazamiento.
+- **Vibración:** `haptic` es `true` solo cuando cambia el resaltado en modo
+  arrastre. La vista llama a `navigator.vibrate?.(10)` si la preferencia
+  «Vibración» está activa (activada por defecto, en «Preferencias de
+  escritura»).
+
+### Dibujo y accesibilidad
+
+- Una capa fija sobre la ventana, con `touch-action: none`.
+- Un `svg` con `aria-hidden="true"` para los sectores, con trazos de arco.
+- Encima, un contenedor `role="menu"` con un `button role="menuitem"` por
+  sector, situado en el centro del sector, de al menos 44×44 px, con rótulo e
+  icono. El SVG es decoración; la interacción accesible son los botones.
+- El resaltado no depende solo del color: borde más grueso y fondo.
+- Al abrir se anuncia, por ejemplo, «Menú de fórmula, 8 opciones».
+- Sin animación con `prefers-reduced-motion`. Tokens de los dos temas.
+
+### Trampas de Android (confírmalas con U0)
+
+- Registra `touchmove` con `{ passive: false }` **antes** de que empiece el
+  toque, en el panel de estructura y en la barra, y llama a `preventDefault()`
+  solo con el menú abierto. Si no, Chrome empieza a desplazar y emite
+  `pointercancel`. No lo registres en toda la página: los oyentes no pasivos
+  grandes ralentizan el desplazamiento.
+- Llama a `setPointerCapture` al abrir.
+- `contextmenu` con `preventDefault` en tarjetas y zonas vacías. Pon
+  `-webkit-touch-callout: none` en las miniaturas de imagen y
+  `user-select: none` en las tarjetas con `(pointer: coarse)`. Copiar texto se
+  sigue haciendo con «Copiar texto».
+- Aplica R3 al abrir desde la barra: abrir el menú no debe cerrar el teclado.
+
+### Aplicar un fragmento
+
+Escribe una función pura `applyRadialSnippet(state, snippet) → { edit, session }`
+sobre `parseSnippet`:
+- **Sin selección:** el cursor va al primer hueco, o a `#0`, o al final si no
+  hay marcadores.
+- **Con selección:** el texto seleccionado ocupa `#1` y el cursor va al
+  siguiente hueco.
+
+La sesión de huecos es la misma que recorren «Anterior» y «Siguiente».
+`app.js` aplica el resultado con `applyFieldEdit` (R1).
+
+### Pruebas (`tests/radial.test.js`, puras)
+
+- **Sector por ángulo:** arriba, derecha, abajo e izquierda con 4 y 8 sectores;
+  bordes exactos; abanicos; fuera del abanico.
+- **Zona muerta:** soltar a menos de 20 px cancela; moverse dentro de ella no
+  resalta nada.
+- **Pulsación larga:** movimiento antes de 400 ms → no se abre; un segundo
+  puntero cancela.
+- **Submenú:** salir del anillo sobre un sector de submenú lo abre; volver
+  adentro lo cierra; soltar sobre un elemento devuelve su acción; soltar sobre
+  el padre lo deja abierto en modo toque.
+- **Fragmentos:** con y sin selección; solo `#0`; sin marcadores; `\#` literal;
+  `$#1$#0`.
+- **Validación de `menus.js`:**
+  - existen los cuatro contextos;
+  - como máximo 8 sectores por anillo;
+  - ids únicos y tipos de acción conocidos;
+  - los fragmentos pasan `validSnippetMarkers`;
+  - los símbolos y los tipos de bloque existen;
+  - los comandos están en la lista de nombres declarada;
+  - `fitMenu` cumple 44 px en la peor disposición de cada menú.
+- **Representación:** cada fragmento de `formula` y de `text`, con los huecos
+  rellenos con `x`, se representa con el KaTeX incluido y pasa `checkBlock` sin
+  errores. Sigue el patrón de `templates.test.js`.
+- **Estructural en `check-site.mjs`:** cada comando declarado se registra en
+  `app.js`.
+- **`pdflatex`, opcional (`tests/pdflatex.test.js`):** genera un documento con
+  todos los fragmentos y el enlace, y lo compila con
+  `-interaction=nonstopmode -halt-on-error -no-shell-escape` en un directorio
+  temporal. Se **omite** con `{ skip: "pdflatex no está instalado" }` si no está
+  instalado. Actualiza la frase «No se compila LaTeX en ninguna prueba» de
+  `docs/guia-de-desarrollo.md` y regenera el inventario. En el informe di si se
+  ejecutó o se omitió.
+
+### Criterio de terminado
+
+1. Los cuatro contextos abren su menú:
+   - en escritorio, verificado por ti si tu navegador arranca; si no, dilo;
+   - en el Android real, lo verifica la persona con `docs/revision-manual.md`.
+     **Tú no lo puedes afirmar.**
+2. Los fragmentos pasan KaTeX y `checkBlock` en la suite y compilan con
+   `pdflatex` si está disponible. Overleaf queda en la revisión manual.
+3. Las pruebas puras pasan.
+4. Hay informe en `claude.md`.
+
+---
+
+## U3 — Identificadores estables (borrador v4)
+
+**Objetivo:** cada bloque tiene un `id` que sobrevive a mover, editar, deshacer
+y restaurar. Es un requisito de U4 (comparar versiones) y de las futuras
+referencias cruzadas. Hoy los bloques se identifican por su posición
+(`keyToPath`), que cambia al mover (DEC-014).
+
+- **Formato:** `b` + 8 caracteres base36 a partir de `crypto.getRandomValues`,
+  con un respaldo sin `crypto`. Las funciones puras reciben el generador
+  inyectado para que las pruebas sean deterministas. El estado lleva además un
+  `documentId`.
+- **Copias con id nuevo** (para no duplicar ids): «Duplicar», «Pegar bloque»
+  desde la bandeja y cada aplicación de plantilla. `templateFromBranch` quita
+  los ids. Mover conserva el id.
+- **Normalización:** `normalizeDraft` asigna ids a los bloques que no lo tienen
+  y reasigna los duplicados o inválidos. Nunca lanza.
+- **Versión del borrador:** `DRAFT_VERSION = 4`. Las versiones 1 a 3 migran;
+  las posteriores se rechazan. La clave se mantiene, como hizo P5.
+- **El generador ignora los ids.** El `.tex` de referencia no cambia (R7).
+  Prueba que añadir ids al estado de ejemplo no altera la salida.
+- **Foco:** donde hoy se recalcula la ruta para devolver el foco después de un
+  cambio estructural, busca por id (`pathOfId`).
+- **Invariante nueva**, con guardián: «Los identificadores de bloque son únicos
+  en todo el árbol». Escribe una decisión con el porqué de los ids frente a las
+  rutas.
+
+**Pruebas:**
+- unicidad después de duplicar, pegar, aplicar plantilla y migrar;
+- conservación al mover;
+- normalización de ids ausentes, duplicados y con otros tipos;
+- migración v1, v2 y v3 → v4;
+- salida `.tex` idéntica.
+
+---
+
+## U4 — Versiones y archivo de proyecto
+
+**Objetivo:** que el documento pueda vivir en la aplicación (DEC-021) sin
+miedo a perderlo. Hay tres capas.
+
+### 1. Deshacer y rehacer de la estructura (solo en la sesión)
+
+- Antes de cada cambio estructural se guarda una instantánea de
+  `{ metadata, blocks, macros }`, hasta un máximo de 100. Cuentan como cambio:
+  añadir, guardar una edición, eliminar, subir, bajar, «Mover a…», duplicar,
+  pegar, cada paso de plantilla, los cambios de macros y los metadatos al
+  confirmarlos.
+- Deshacer restaura la instantánea, cancela la edición en curso como hace
+  cualquier cambio estructural, lo anuncia y devuelve el foco por id.
+- Hay botones visibles «Deshacer cambio» y «Rehacer cambio» en la estructura.
+- Los comandos `undo` y `redo` de U2 distinguen el origen:
+  - abiertos desde el editor, deshacen el texto con el historial nativo
+    (`execCommand("undo")`, DEC-016);
+  - abiertos desde `global`, deshacen la estructura.
+- Sin atajos de teclado nuevos.
+
+### 2. Versiones guardadas (persistentes)
+
+- **Almacén:** IndexedDB (base `tex-notes`, almacén `versions`). Cada registro
+  tiene esta forma:
+
+  ```js
+  {
+    id, documentId,
+    createdAt,   // ISO
+    label,
+    origin,      // "manual" | "exportación" | "respaldo"
+    state,       // { version: 4, metadata, blocks, macros }
+    summary,     // { title, blocks }
+  }
+  ```
+
+  Si IndexedDB no abre (por ejemplo, en algún navegador con `file://`), se usa
+  `localStorage` con menos retención y se avisa.
+- **Lógica pura en `assets/js/versions.js`**, probada con un almacén en memoria
+  que tiene la misma interfaz que el de IndexedDB. El adaptador de IndexedDB
+  vive en la capa de interfaz.
+- **Creación:**
+  - «Guardar versión», con nombre opcional;
+  - automática al «Generar documento», copiar o descargar el `.tex`, si el
+    estado cambió desde la última versión. Responde a «¿qué fue lo último que
+    compilé?»;
+  - automática **antes** de restaurar o importar, con origen `respaldo`.
+- **Retención:** las manuales se conservan todas. De las automáticas, las 30
+  últimas por documento. Hazlo con una función pura `pruneVersions`.
+- **Lista** con fecha, nombre, origen y número de bloques. Acciones:
+  - «Ver cambios»: diferencias con el estado actual;
+  - «Restaurar»: crea antes un respaldo y se puede deshacer;
+  - «Renombrar»;
+  - «Eliminar», con confirmación.
+- **Diferencias:** una función pura `diffDocuments(a, b)` que compara por id y
+  da bloques añadidos, eliminados, movidos (padre o posición) y modificados
+  (tipo, título, contenido, opciones, formato de lista), además de los cambios
+  de metadatos y macros. Para el contenido modificado, una diferencia por
+  líneas, con un límite de tamaño.
+- **Almacenamiento persistente:** al guardar la primera versión o al exportar,
+  pide `navigator.storage.persist()`. Muestra el resultado y el uso
+  (`estimate()`). Si no se concede, recomienda exportar el proyecto con
+  regularidad.
+
+### 3. Archivo de proyecto
+
+- «Exportar proyecto» descarga un `.json` con esta forma:
+
+  ```js
+  {
+    kind: "notas-latex-proyecto", version: 1, exportedAt, documentId,
+    current,     // { version: 4, metadata, blocks, macros }
+    versions,    // [...]
+    config,      // opcional: la configuración portátil existente
+  }
+  ```
+
+  Usa `file-download.js`.
+- «Importar proyecto» valida con una función pura `validateProject`:
+  - los estados pasan por `normalizeDraft`;
+  - las versiones inválidas se omiten y se informa de cuáles;
+  - nunca lanza;
+  - **nunca sobrescribe sin respaldo**: primero crea una versión de respaldo y
+    después carga;
+  - las versiones se combinan por id, sin duplicados.
+
+  Es la ida y vuelta del formato propio; el `.tex` nunca se importa (DEC-003).
+- El archivo es la copia de seguridad y el traslado entre teléfono y portátil.
+  La guía de uso recomienda guardarlo en Drive o en un repositorio privado.
+
+### Sustituye al borrador único
+
+«Guardar borrador», «Restaurar» y «Borrar» se sustituyen por las versiones.
+Tres conceptos de persistencia confundirían. Al primer arranque, el borrador
+guardado en la clave actual se migra **una vez** a una versión llamada
+«Borrador guardado (migrado)». El autoguardado de la sesión (DEC-019) se queda:
+sirve para recuperar después de un cierre, no es una versión.
+
+Actualiza todo lo que nombra esos rótulos: `docs/guia-de-uso.md` (la prueba
+de documentación lo exige), el README y la revisión manual. Registra la
+decisión y su relación con DEC-019, DEC-003 y DEC-021.
+
+### Pruebas
+
+- historial: límite, deshacer y rehacer, y que una acción nueva vacíe lo
+  rehecho;
+- `diffDocuments` en todos los casos, incluidos metadatos y macros;
+- diferencia por líneas;
+- `pruneVersions`;
+- `validateProject` con archivos corruptos, de otra versión y con versiones
+  duplicadas;
+- combinación por id;
+- migración del borrador único;
+- la versión automática solo se crea si hubo cambios.
+
+---
+
+## U5 — Selección por alcance
+
+**Objetivo:** seleccionar sin arrastrar tiradores. Es el núcleo de la propuesta
+de diseño que motivó este encargo: elegir un objeto, ampliar o reducir su
+alcance y aplicarle una operación del menú radial.
+
+- **Funciones puras** en `assets/js/selection-scope.js`:
+  - `scopeLevels(value, range, mode)` devuelve los rangos que contienen la
+    selección, de menor a mayor y estrictamente crecientes, cada uno con el
+    nombre de su nivel;
+  - `expandScope` y `shrinkScope` trabajan sobre una pila: reducir vuelve
+    exactamente al rango anterior.
+- **Prosa:** palabra → oración → párrafo (separado por líneas vacías) → bloque.
+  Usa `Intl.Segmenter("es")`.
+- **Matemáticas**, en el subconjunto declarado: símbolo o comando →
+  argumento o grupo `{…}` → término (entre `+` y `−` al mismo nivel) → miembro
+  (entre relaciones: `=`, `<`, `>`, `\le`, `\ge`, `\in`, `\subset`, `\to`…) →
+  fórmula → fórmula con delimitadores.
+  - Reconoce `\frac` y `\sqrt[…]{…}` con sus argumentos, `^` y `_`,
+    `\left … \right`, `\begin … \end`, y `&` y `\\` en matrices.
+  - Lo que no se reconoce es atómico.
+  - **Solo se selecciona: nunca se modifica el texto** (INV-002).
+- **Interfaz:** el botón «Selección» de la barra alterna el modo
+  (`aria-pressed`). En ese modo, «Anterior» reduce y «Siguiente» amplía, y se
+  anuncia el nivel («Término: `\frac{a}{b}`»). Las posiciones de los botones
+  no cambian. Con la selección hecha, «Menú» → «Fracción» la envuelve (U2).
+- **Pruebas:** fracciones anidadas, raíz con índice, subíndices compuestos,
+  `\left( \right)`, `\{ \}` escapados, comentarios, `\text{…}` dentro de una
+  fórmula, matrices, oraciones en español con acentos, y los extremos del
+  texto. No dependas de casos finos de ICU.
+
+---
+
+## 4. Cómo probar en el teléfono (para la persona y para el informe)
+
+GitHub Pages publica solo `main`, así que una rama no se ve en Pages. Hay tres
+opciones:
+
+1. **USB, la recomendada.** En el portátil: `python3 -m http.server 8000` y
+   `adb reverse tcp:8000 tcp:8000`. En el teléfono, abre
+   `http://localhost:8000/` en Chrome. `localhost` es un contexto seguro, así
+   que el portapapeles, `persist()` y la vibración se comportan como en Pages.
+   `chrome://inspect` en el portátil da la consola del teléfono.
+2. **Misma red Wi-Fi:** `http://IP-del-portátil:8000/`. No es un contexto
+   seguro: el portapapeles moderno y `persist()` pueden fallar.
+3. **Fusionar en `main`** y abrir Pages.
+
+Añade estas instrucciones a `docs/revision-manual.md`, junto con una sección
+«Android» que incluya:
+- Gboard: autocierre y sugerencias;
+- la barra sobre el teclado;
+- que el teclado no se cierre;
+- pulsación larga en tarjetas y en zona vacía;
+- arrastre con una mano;
+- vibración;
+- TalkBack;
+- persistencia de las versiones tras cerrar Chrome;
+- exportar e importar el proyecto.
+
+## 5. Fuera de este encargo
+
+- **Python, ejecución y notebooks.** Sin decidir.
+- **Referencias cruzadas `\label` / `\ref`.** Siguiente ronda; se apoyarán en
+  U3.
+- **Varios documentos en una biblioteca.** U4 deja preparado `documentId`.
+- **Pasar de «línea N del `.tex`» al bloque que la produjo.** Mencionado en
+  DEC-021.
+- **Instalación sin conexión** (manifest y service worker, solo bajo https;
+  `file://` no cambia). Es el siguiente paquete recomendado para usar el
+  teléfono en clase con mala red.
+- **Sincronización, edición visual de fórmulas (MathLive) y reconocimiento de
+  escritura a mano.**
+
+## 6. Informe final
+
+Al terminar U5, deja en `claude.md`:
+- qué hiciste en cada paquete;
+- qué decisiones e invariantes nuevas registraste;
+- qué mediste;
+- **la lista exacta de lo no verificado**: Android real, TalkBack, `pdflatex`,
+  Overleaf y los navegadores que no arrancaron;
+- si algo de este encargo resultó equivocado al contrastarlo con el código.
+
+---
+
+## Anexo A — Medición de partida (Playwright)
+
+Requiere Chromium. Si no arranca en tu entorno, dilo y no inventes cifras.
+
+```js
+const { chromium, devices } = require("playwright");
 (async () => {
   const browser = await chromium.launch();
-  const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
-  await page.goto("file:///ruta/al/repo/index.html");
-  const content = "Sea $f:\\mathbb{R}^2 \\to \\mathbb{R}$ y $\\nabla f(x,y) = \\left(\\frac{\\partial f}{\\partial x}, \\frac{\\partial f}{\\partial y}\\right)$ con $\\lim_{(x,y)\\to(0,0)} f = 0$.";
-  await page.evaluate((content) => localStorage.setItem("tex-notes:draft:v2", JSON.stringify({
-    version: 2, metadata: { title: "x" },
-    blocks: Array.from({ length: 100 }, (_, i) => ({ type: "text", title: "", content: `${content} ${i}`, children: [] })),
-  })), content);
-  await page.click("#restore-draft");
-  for (let k = 0; k < 3; k++) {
-    await page.fill("#block-content", content);
-    console.log(await page.evaluate(() => {
-      const t = performance.now();
-      document.querySelector("#add-block").click();
-      return `${Math.round(performance.now() - t)} ms de JS`;
-    }));
-  }
+  const ctx = await browser.newContext({ ...devices["Pixel 7"] });
+  const page = await ctx.newPage();
+  await page.goto("file://" + process.cwd() + "/index.html");
+  const top = (s) => page.evaluate((s) => {
+    const b = document.querySelector(s)?.getBoundingClientRect();
+    return b && Math.round(b.top + scrollY);
+  }, s);
+  console.log({
+    contenido: await top("#block-content"),
+    añadir: await top("#add-block"),
+    tablero: await top(".symbol-board"),
+    estructura: await top(".structure-panel"),
+    alto: await page.evaluate(() => document.documentElement.scrollHeight),
+  });
   await browser.close();
 })();
 ```
-
-Referencia antes de P1: ~200–220 ms por alta. Objetivo: ≤ 60 ms. El script
-siembra un borrador v2 y sigue sirviendo después de P5, porque los borradores v2
-se migran.

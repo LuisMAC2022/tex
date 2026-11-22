@@ -25,7 +25,8 @@ aquí, no dentro de seis meses.
 ### INV-001 — La exportación es de ida: no existe reimportación desde el `.tex`
 Guardián: `tests/generator.test.js` → "el documento es autocontenido y no lleva sobre de reimportación"
 
-Overleaf es la copia maestra. Por qué: [DEC-001](decisiones/DEC-001-overleaf-copia-maestra.md),
+El `.tex` es un producto derivado: la copia maestra es la aplicación y Overleaf solo
+compila. Por qué: [DEC-021](decisiones/DEC-021-aplicacion-copia-maestra.md),
 [DEC-003](decisiones/DEC-003-sin-reimportacion.md).
 
 ### INV-002 — El contenido de un bloque llega al `.tex` sin un solo escape

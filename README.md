@@ -8,7 +8,7 @@ Aplicación web estática para consolidar apuntes de clase y exportarlos como un
 > [`docs/guia-de-uso.md`](docs/guia-de-uso.md) · cómo se extiende:
 > [`docs/guia-de-desarrollo.md`](docs/guia-de-desarrollo.md)
 
-> **Overleaf es la copia maestra.** Esta aplicación es un frente de redacción **de ida**: el `.tex` generado se copia o se descarga y se pega en Overleaf, donde se corrige y se compila. Las correcciones hechas allí no vuelven a la aplicación.
+> **La aplicación es la copia maestra y Overleaf solo compila** ([DEC-021](decisiones/DEC-021-aplicacion-copia-maestra.md)). El `.tex` es un producto derivado: se genera, se copia o se descarga y se compila en Overleaf. Los errores se localizan allí y se corrigen aquí, porque las correcciones hechas en Overleaf no vuelven a la aplicación. Mientras no existan las versiones ni el archivo de proyecto, el único respaldo es el borrador local de este dispositivo.
 
 
 ## Especificación del documento generado
@@ -307,7 +307,9 @@ El MVP está terminado cuando una persona puede, usando solamente el teclado y c
 
 También siguen pendientes el **modelo de documento de tres niveles** (Unidad → Clase → Bloques) y el módulo de apoyo al curso con cita de asesoría, fechas `.ics` y entregables. Hoy `topic` produce una sola `\section`.
 
-Quedan expresamente fuera por ahora: TeX en WASM, TikZ/PGFPlots, traducción de errores de TeX, paleta de comandos, buscar y reemplazar, historial de versiones, infraestructura de sincronización y cualquier ida y vuelta desde Overleaf a la aplicación.
+En curso, según el encargo de `agents.md` en la rama `claude/ui-ux`: distribución para Android con barra del pulgar, menús radiales contextuales, identificadores estables de bloque, versiones con archivo de proyecto y selección por alcance.
+
+Quedan expresamente fuera por ahora: TeX en WASM, TikZ/PGFPlots, traducción de errores de TeX, paleta de comandos, buscar y reemplazar, infraestructura de sincronización y cualquier ida y vuelta desde el `.tex` o desde Overleaf a la aplicación. La ejecución de Python está sin decidir y no forma parte de ese encargo.
 
 ### Sistema de documentación
 

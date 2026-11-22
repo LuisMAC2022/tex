@@ -377,7 +377,7 @@ los anuncios se comprueban a mano, con la lista de
 lógica debe vivir fuera de `app.js` siempre que se pueda.
 
 **No se compila LaTeX en ninguna prueba.** Se comparan cadenas `.tex`, nunca PDF. La
-compilación es de Overleaf ([DEC-001](../decisiones/DEC-001-overleaf-copia-maestra.md)).
+compilación es de Overleaf ([DEC-021](../decisiones/DEC-021-aplicacion-copia-maestra.md)).
 
 ---
 
