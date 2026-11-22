@@ -17,3 +17,5 @@ por Opción. Cada combinación tiene un ámbito y una acción visible.
 Ctrl+Alt se reserva para AltGr en teclados españoles. Tab conserva la
 navegación nativa y las combinaciones del navegador quedan disponibles. Las
 teclas sin modificador se reservan para navegación dentro de un widget.
+
+[DEC-022](DEC-022-menu-contextual-en-contenido.md) documenta la excepción autorizada para la tecla Menú en el campo Contenido.

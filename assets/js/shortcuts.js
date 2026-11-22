@@ -2,6 +2,8 @@
   "use strict";
 
   const SHORTCUTS = Object.freeze([
+    { id: "radial.menu", code: "ContextMenu", scope: "content-widget", label: "Abrir el menú de Contenido" },
+    { id: "radial.shiftMenu", code: "F10", shift: true, scope: "content-widget", label: "Abrir el menú de Contenido" },
     { id: "block.commit", code: "Enter", ctrl: true, alt: false, shift: false, meta: false, mod: true, scope: "block-editor", label: "Añadir el bloque o guardar los cambios" },
     { id: "symbols.toggle", code: "KeyS", alt: true, shift: true, ctrl: false, meta: false, scope: "block-editor", label: "Ir al tablero de símbolos o volver al campo", owner: "A" },
     { id: "symbols.escape", code: "Escape", alt: false, shift: false, ctrl: false, meta: false, scope: "symbol-widget", label: "Borrar la búsqueda o volver al campo desde el tablero", owner: "A" },
@@ -21,7 +23,7 @@
   ];
   const names = {
     ArrowLeft: "←", ArrowRight: "→", ArrowUp: "↑", ArrowDown: "↓",
-    PageUp: "Re Pág", PageDown: "Av Pág", Escape: "Escape", Enter: "Intro",
+    ContextMenu: "Menú", PageUp: "Re Pág", PageDown: "Av Pág", Escape: "Escape", Enter: "Intro",
   };
 
   function keyName(code) {

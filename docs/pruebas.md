@@ -209,13 +209,14 @@
 - todos los kinds no matemáticos extraen tramos delimitados
 - analyzeContent clasifica resultados y fallos del renderizador inyectado
 
-## `tests/shortcuts.test.js` — 5 pruebas
+## `tests/shortcuts.test.js` — 6 pruebas
 
 - los atajos tienen identificadores y combinaciones por ámbito únicos
 - los atajos respetan AltGr, las teclas de los widgets y las combinaciones del navegador
 - los atajos usan el código físico y muestran teclas legibles y accesibles
 - los atajos internos del tablero se limitan a la búsqueda y la rejilla
 - Ctrl+Intro incorpora bloques y en macOS usa Meta sin confundir AltGr
+- Menú y Mayús+F10 se reservan al campo Contenido
 
 ## `tests/symbols.test.js` — 21 pruebas
 
@@ -261,4 +262,4 @@ No usa `node:test`: es un script con 49 aserciones sobre `index.html` (doctype, 
 
 ---
 
-200 pruebas con `node:test` más la comprobación estructural.
+201 pruebas con `node:test` más la comprobación estructural.

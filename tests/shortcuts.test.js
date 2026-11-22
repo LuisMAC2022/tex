@@ -10,11 +10,14 @@ test("los atajos tienen identificadores y combinaciones por ámbito únicos", ()
   assert.equal(new Set(scoped).size, scoped.length);
 });
 test("los atajos respetan AltGr, las teclas de los widgets y las combinaciones del navegador", () => {
-  for (const { code, alt, shift, ctrl, meta, scope } of SHORTCUTS) {
+  for (const { id, code, alt, shift, ctrl, meta, scope } of SHORTCUTS) {
     assert.ok(!(ctrl && alt), "Ctrl+Alt equivale a AltGr");
     if (!(alt || shift || ctrl || meta)) {
       assert.match(scope, /widget/);
-      assert.match(code, /^(Escape|Arrow(Up|Down|Left|Right)|Page(Up|Down))$/);
+      if (code === "ContextMenu") {
+        assert.equal(id, "radial.menu");
+        assert.equal(scope, "content-widget");
+      } else assert.match(code, /^(Escape|Arrow(Up|Down|Left|Right)|Page(Up|Down))$/);
     }
     assert.ok(!/^F(?:5|6|11|12)$/.test(code));
     if (!alt && !shift && (ctrl || meta)) assert.doesNotMatch(code, /^Key[TWNLRPSFDHJK]$/);
@@ -57,4 +60,15 @@ test("Ctrl+Intro incorpora bloques y en macOS usa Meta sin confundir AltGr", () 
  const s=SHORTCUTS.find(s=>s.id==='block.commit');
  assert.equal(shortcutLabel(s),'Ctrl+Intro'); assert.equal(shortcutLabel(s,true),'⌘Intro');
  assert.equal(ariaKeyshortcuts(s),'Control+Enter'); assert.equal(ariaKeyshortcuts(s,true),'Meta+Enter');
+});
+
+test("Menú y Mayús+F10 se reservan al campo Contenido", () => {
+  for (const event of [{ code: "ContextMenu" }, { code: "F10", shiftKey: true }]) {
+    assert.ok(matchShortcut(event, "content-widget"));
+    for (const scope of new Set(SHORTCUTS.map(s => s.scope).filter(s => s !== "content-widget"))) {
+      assert.equal(matchShortcut(event, scope), undefined);
+    }
+  }
+  assert.equal(matchShortcut({ code: "F10" }, "content-widget"), undefined);
+  assert.equal(matchShortcut({ code: "ContextMenu", altKey: true }, "content-widget"), undefined);
 });

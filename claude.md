@@ -136,3 +136,7 @@ Lo reproduje en una copia temporal añadiendo únicamente `{ id: "radial.menu", 
 ¿Se autoriza una excepción de DEC-009 para `ContextMenu` exclusivamente con foco en «Contenido»? La prueba podría exigir ese ámbito y mantener las restricciones en todos los demás. Se aplicó la regla 0.4 de `agents.md`: U2 quedó en pausa y U3–U5 pendientes por el orden de los paquetes.
 
 No se ejecutaron pruebas de los menús ni compilación de sus fragmentos con KaTeX, `pdflatex` u Overleaf. La comprobación en Android, Gboard y TalkBack continúa en la [revisión manual](docs/revision-manual.md).
+
+### Resolución de la duda de U2
+
+El 22 de noviembre de 2026 la persona usuaria autorizó la excepción para la tecla Menú solo con foco en Contenido. Se registró en [DEC-022](decisiones/DEC-022-menu-contextual-en-contenido.md) y en el guardián de atajos. Se reanuda U2.
