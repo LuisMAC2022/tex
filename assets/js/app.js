@@ -1908,7 +1908,7 @@
     const kind = blockType(type)?.kind;
     const context = target.source === "global" ? "global" : kind === "image" ? "image" :
       kind === "equation" || (target.source === "editor" && writingMode() === "math") ? "formula" : "text";
-    const field = context === "image" ? imagePath : blockContent;
+    const field = kind === "image" ? imagePath : blockContent;
     const slices = T.slicesFor(context, type), area = viewport(), origin = { ...point, mode, bar };
     const scrollPositions = radialScrollPositions(press?.node || document.elementFromPoint?.(point.x, point.y));
     radialModel = { context, origin, scrollPositions, originField: captureSymbolOrigin(field), ...T.radialLayout(slices, origin, area) };
