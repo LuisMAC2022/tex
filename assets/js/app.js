@@ -8,8 +8,7 @@
     analyzeContent, normalizeLineBreaks, blockType, SHORTCUTS, shortcutLabel,
   } = global.TexNotes;
 
-  // El borrador v1 era una lista plana. Se sigue leyendo para migrarlo; lo que
-  // se guarda es el árbol v4 con macros e identificadores; se conserva la clave histórica v2.
+  // Estas dos claves identifican los borradores anteriores que se migran a Versiones.
   const STORAGE_KEY = "tex-notes:draft:v2";
   const LEGACY_STORAGE_KEY = "tex-notes:draft:v1";
   const $ = (selector) => document.querySelector(selector);

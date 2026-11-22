@@ -486,8 +486,7 @@ cancela la cola ante cambios estructurales y guarda las propias en
 
 `normalizeMacros` aplica el saneado estructural del borrador: nombre latino,
 params entero entre 0 y 9 y body cadena. `normalizeDraft` migra v1/v2 con macros
-vacías y conserva las macros de v3. Desde v4 cada bloque tiene un id estable y cada documento su `documentId`. Rechaza versiones posteriores. La clave histórica del borrador se conserva; cambia la
-versión del sobre. `macrosToPreamble` vive en el generador, sin depender de la
+vacías y conserva las macros de v3. Desde v4 cada bloque tiene un id estable y cada documento su `documentId`. Rechaza versiones posteriores. Tras incorporar el borrador histórico como versión manual, se retira su clave de localStorage. `macrosToPreamble` vive en el generador, sin depender de la
 interfaz, y emite newcommand con cuerpo literal. Sin macros no añade líneas.
 
 `macros.js` valida nombres de catálogo, lista reservada y entornos, unicidad,
