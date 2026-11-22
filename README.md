@@ -307,7 +307,7 @@ El MVP está terminado cuando una persona puede, usando solamente el teclado y c
 
 También siguen pendientes el **modelo de documento de tres niveles** (Unidad → Clase → Bloques) y el módulo de apoyo al curso con cita de asesoría, fechas `.ics` y entregables. Hoy `topic` produce una sola `\section`.
 
-En curso, según el encargo de `agents.md` en la rama `claude/ui-ux`: distribución para Android con barra del pulgar, menús radiales contextuales, identificadores estables de bloque, versiones con archivo de proyecto y selección por alcance.
+La interfaz para el teléfono incluye barra del pulgar, menús contextuales, selección por alcance y versiones con archivo de proyecto. La revisión con Android real sigue en `docs/revision-manual.md`.
 
 Quedan expresamente fuera por ahora: TeX en WASM, TikZ/PGFPlots, traducción de errores de TeX, paleta de comandos, buscar y reemplazar, infraestructura de sincronización y cualquier ida y vuelta desde el `.tex` o desde Overleaf a la aplicación. La ejecución de Python está sin decidir y no forma parte de ese encargo.
 
@@ -376,3 +376,7 @@ Más acciones. El panel de teclado describe el asistente y la navegación nativa
 ## Menús de escritura en el teléfono
 
 La barra inferior abre el menú de texto, fórmula o imagen según el cursor y el tipo de bloque. Cada tarjeta ofrece su menú y la estructura ofrece el menú general. Se puede elegir por toque, teclado o arrastre. En el campo Contenido, Menú y Mayús+F10 abren el primer sector. Los fragmentos comparten los huecos de la barra y las inserciones pasan por el historial nativo. La pulsación larga en el campo queda desactivada a la espera de mediciones en Android.
+
+## Selección por alcance
+
+**Selección** permite ampliar con **Siguiente** y volver al rango anterior con **Anterior**. La prosa distingue palabra, oración, párrafo y bloque. Las fórmulas reconocen comandos, grupos, términos, miembros, delimitadores y celdas de matriz. Los rangos usan los índices del campo y conservan el contenido literal. Una selección se puede envolver con un fragmento del menú radial.

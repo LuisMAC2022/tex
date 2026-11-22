@@ -525,3 +525,7 @@ profesor y fecha no convierten una sesión vacía en una sesión recuperable.
 ## Versiones y archivo de proyecto
 
 `versions.js` normaliza proyectos, compara árboles por id, calcula diferencias de líneas acotadas, administra la retención y las dos pilas del historial. El adaptador de interfaz `version-storage.js` ofrece `read()` y `update(transform)`. IndexedDB ejecuta la lectura, los cambios y la poda en una transacción. El respaldo alternativo usa una clave local y limita las automáticas a ocho. [DEC-025](../decisiones/DEC-025-versiones-y-proyecto.md) documenta la relación con el autoguardado y el formato de intercambio.
+
+## Selección por alcance
+
+`selection-scope.js` calcula rangos sobre la cadena UTF-16 original. La prosa usa segmentación española. El analizador matemático conserva comentarios y escapes como unidades, empareja grupos y entornos y reconoce argumentos de fracciones, raíces, índices, relaciones y separadores de matriz. `expandScope` y `shrinkScope` conservan una pila de rangos. Ninguna de estas funciones escribe en el campo.

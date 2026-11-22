@@ -509,3 +509,7 @@ Con el teclado abierto, **Anterior** y **Siguiente** recorren los huecos del fra
 ## Menús contextuales
 
 Toca **Menú** para elegir una acción de texto, fórmula o imagen. También puedes abrir **Menú general**, **Menú del bloque** o **Menú de contenido**. En Contenido, Menú o Mayús+F10 enfoca el primer sector. Usa flechas, Inicio, Fin e Intro. Escape vuelve un nivel. Una selección ocupa el primer argumento de un fragmento. **Ir a…** salta a otra sección. En preferencias puedes desactivar la vibración.
+
+## Seleccionar sin arrastrar
+
+Toca **Selección** y pulsa **Siguiente** para ampliar desde el cursor. En prosa puedes pasar de palabra a oración, párrafo y bloque. En una fórmula puedes alcanzar un argumento, un término, un miembro o la fórmula completa. **Anterior** recupera exactamente la selección previa. Abre **Menú** y elige **Fracción** para usarla como numerador. El cursor queda en el denominador. Volver a tocar **Selección** desactiva el modo.

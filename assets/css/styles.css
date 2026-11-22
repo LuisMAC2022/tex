@@ -305,3 +305,5 @@ summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 #version-list li { margin-block: .65rem; }
 #version-list button { margin-inline-end: .3rem; margin-block: .15rem; }
 #version-diff { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 24rem; overflow: auto; }
+
+#thumb-selection[aria-pressed="true"] { background: var(--accent-soft); color: var(--text); box-shadow: inset 0 -4px 0 var(--primary); }

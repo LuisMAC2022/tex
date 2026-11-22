@@ -166,3 +166,53 @@ Comprobación adicional de U4: si el archivo importado ya contiene el identifica
 Al abrir el menú de imagen desde un editor desplazable, Chromium podía entregar tarde el aviso de un desplazamiento anterior al toque. El menú ahora compara la posición al abrir con la posición del evento. La prueba del reductor cubre tanto ese aviso pendiente como un movimiento posterior que sí lo cancela. El fondo del menú y los rótulos de los sectores permiten distinguir los controles a 320 px.
 
 En Chromium headless comprobé los cuatro contextos, los dos atajos, el clic derecho, el regreso al campo con la selección original y el deshacer nativo después de envolver una selección. Con puntero táctil emulado comprobé el arrastre inmediato desde la barra, la pulsación larga sobre tarjeta y zona vacía y la cancelación por zona muerta, segundo dedo y desplazamiento. Al cerrar el menú general mientras se edita una imagen, el foco vuelve al campo de archivo visible.
+
+## U5 · Selección por alcance
+
+El botón **Selección** mantiene su lugar entre **Siguiente** y **Símbolos**. Con el modo activo, Siguiente amplía desde la palabra o el símbolo hasta el párrafo, bloque o fórmula. Anterior recupera el rango y la dirección anteriores. La selección trabaja sobre el texto original. El menú puede usarla como numerador y dejar el cursor en el denominador.
+
+Seis pruebas ejercitan la prosa española, fracciones anidadas, raíces con índice, scripts, matrices, delimitadores, comentarios, escapes, texto dentro de fórmulas y grafemas en los extremos del campo. En Chromium con entrada táctil emulada seleccioné una variable con la barra, amplié y reduje la selección y la envolví como fracción. La escritura con Gboard y los anuncios de los niveles con TalkBack quedan en la [revisión manual](docs/revision-manual.md).
+
+## Informe final · U0–U5 · 22 de noviembre de 2026
+
+| Paquete | Entrega |
+| --- | --- |
+| U0 | Diagnóstico local de escritura, pulsación larga, ventana visual y capacidades. Ambas variantes de ventana registran eventos en el mismo informe JSON. |
+| U1 | Barra inferior con seis controles en la versión final. Permite recorrer huecos, moverse por unidades LaTeX, abrir el tablero y guardar el bloque. |
+| U2 | Menús de texto, fórmula, imagen y acciones generales. Admiten toque, ratón y teclado. **Ir a…** lleva directamente a Contenido, Estructura, Resultado, Preferencias o Versiones. |
+| U3 | Esquema v4 con identidad de documento y de bloque. Mover conserva los ids y duplicar, pegar o aplicar una plantilla crea otros. |
+| U4 | Historial estructural de la sesión, versiones persistentes, diferencias por bloque y por línea, respaldo previo a una restauración o importación e intercambio del proyecto en JSON. |
+| U5 | Selección progresiva de prosa y matemáticas. Reducir recupera la selección anterior, incluso si se hizo hacia atrás. |
+
+### Decisiones y diferencias con el encargo
+
+- El guardián anterior excluía la tecla Menú sin modificadores. La excepción autorizada se limita a **Contenido**. El guardián sigue comprobando los demás ámbitos. [DEC-022](decisiones/DEC-022-menu-contextual-en-contenido.md)
+- El preámbulo añade `hyperref` al final cuando el documento usa un enlace. [DEC-023](decisiones/DEC-023-enlaces-con-hyperref.md)
+- La identidad de un bloque se conserva al cambiar de posición. La invariante INV-010 cuenta con una prueba de unicidad en todo el árbol. [DEC-024](decisiones/DEC-024-identidad-de-bloques.md) · [INV-010](INVARIANTES.md#inv-010--los-identificadores-de-bloque-son-únicos-en-todo-el-árbol)
+- El proyecto JSON permite trasladar la copia editable con sus versiones. Las versiones manuales, las automáticas y el autoguardado de sesión tienen ciclos de vida distintos. [DEC-025](decisiones/DEC-025-versiones-y-proyecto.md)
+- El plegado de los datos según el título ya existía. La confirmación de borrado existente cubría bloques con hijos, por lo que se completó para la acción de imagen. El medio anillo inicial de 84–140 px ofrecía 43,98 px de arco por sector con ocho opciones. Los radios de 86–146 px dan 45,55 px.
+
+### Mediciones y comprobaciones
+
+Posiciones en píxeles CSS desde el inicio del documento con Chromium headless, Pixel 7 emulado a 412 × 839, sin teclado virtual. Se midió el borde superior del campo de contenido. La columna de título plegado usa el mismo título y panel cerrado en ambas ramas.
+
+| Elemento | Base, título vacío | Entrega, título vacío | Base, título plegado | Entrega, título plegado |
+| --- | ---: | ---: | ---: | ---: |
+| Campo Contenido | 1999 | 1933 | 981 | 1054 |
+| Botón Añadir bloque del formulario | 2211 | 2205 | 1193 | 1326 |
+| Estructura | 3107 | 2715 | 2089 | 1836 |
+| Altura total | 4806 | 5146 | 3788 | 4267 |
+
+En la base, el tablero empezaba en 2684 px con título vacío y en 1666 px con los datos plegados. En la entrega se abre como hoja de hasta el 40 % de la ventana visual. **Símbolos** y **Añadir** están disponibles en la barra fija desde el inicio. La barra empieza en el píxel 790 de la ventana y sus seis botones miden aproximadamente 69 × 48 px a 412 px de ancho. A 320 px la página conserva ese ancho y los ocho sectores de fórmula caben con controles de al menos 44 × 44 px.
+
+- Pasaron las 222 pruebas de `npm test`, con cero omisiones, la revisión estructural y `npm run check:js`. La prueba de `pdflatex` compiló los fragmentos y el enlace. KaTeX y la comprobación previa también los aceptaron.
+- Tras regenerar `examples/calculo-3.tex`, su contenido coincide byte a byte con la rama base. El identificador Git del archivo es `50cce790167e2c198075745e7366df76725d2dd3`.
+- En escritorio, Chromium headless abrió los cuatro menús a 1366 × 768. Comprobé selección hacia atrás, foco, ambos atajos, clic derecho y Ctrl+Z. En la emulación táctil comprobé el tablero de símbolos, añadir un bloque, arrastre desde la barra, pulsación larga en tarjeta y zona vacía, y cancelación por segundo dedo o desplazamiento.
+- En Chromium comprobé guardar, comparar, leer el contenido y el nombre del proyecto exportado, importar, deshacer la importación y volver a encontrar la versión manual tras recargar. En un DOM simulado repetí la restauración y el traslado con IndexedDB y con el respaldo de localStorage.
+
+### Pendiente de verificación
+
+- **Android físico con Chrome y Gboard**. Faltan composición, autocierre y sugerencias reales, tiradores nativos, altura y continuidad del teclado, manejo con una mano, zoom y vibración física. La pulsación larga dentro de Contenido sigue desactivada hasta contar con el [informe del teléfono](user.md#diagnóstico-en-tu-teléfono).
+- **TalkBack**, incluidos anuncios de la barra, los menús, la selección y las versiones. También queda pendiente la revisión con lectores de pantalla de escritorio y teclados físicos.
+- **Almacenamiento y transferencia entre equipos**. Falta comprobar concesión y revocación de persistencia, expulsión de datos y reapertura tras cerrar Chrome en Android. El Chromium de este entorno canceló la escritura en disco tanto del proyecto como de una descarga de texto de control. Se verificaron el JSON generado, su nombre y su importación. Falta trasladar el archivo descargado entre teléfono y portátil.
+- **Overleaf**, Firefox y Safari/WebKit. El Chromium gráfico del sistema abortó durante el arranque por el permiso de su socket. Las verificaciones de navegador descritas arriba se ejecutaron con Chromium headless. El procedimiento de dispositivo, almacenamiento y exportación figura en la [lista de revisión](docs/revision-manual.md#android).

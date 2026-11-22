@@ -837,7 +837,7 @@
     imageFields.hidden = !active;
     $("#block-content").closest(".field").hidden = active;
     $(".symbol-board").hidden = active;
-    for (const id of ["thumb-prev", "thumb-next", "thumb-symbols"]) $("#" + id).disabled = active;
+    for (const id of ["thumb-prev", "thumb-next", "thumb-selection", "thumb-symbols"]) $("#" + id).disabled = active;
     const buttons = [...$("#thumb-bar").querySelectorAll("button")];
     if (!buttons.some(button => !button.disabled && button.tabIndex === 0)) {
       for (const button of buttons) button.tabIndex = -1;
@@ -1769,8 +1769,57 @@
     buttons[next].tabIndex = 0;
     buttons[next].focus();
   });
+  const scopeButton = $("#thumb-selection");
+  let scopeMode = null, scopeStack = [], scopeRange = null;
+  function clearScope() {
+    scopeMode = null;
+    scopeStack = [];
+    scopeRange = null;
+    scopeButton.setAttribute("aria-pressed", "false");
+  }
+  function currentScopeRange() {
+    return { start: blockContent.selectionStart, end: blockContent.selectionEnd, direction: blockContent.selectionDirection };
+  }
+  function focusRange(range) {
+    blockContent.focus({ preventScroll: true });
+    blockContent.setSelectionRange(range.start, range.end, range.direction || "forward");
+  }
+  scopeButton.addEventListener("click", () => {
+    const range = currentScopeRange();
+    if (scopeMode) {
+      clearScope();
+      announce("Selección por alcance desactivada.");
+    } else {
+      scopeMode = T.scopeModeAt(blockContent.value, range, $("#block-type").value);
+      scopeRange = range;
+      scopeButton.setAttribute("aria-pressed", "true");
+      closeAssistMenu();
+      announce("Selección por alcance. Siguiente amplía, Anterior reduce.");
+    }
+    focusRange(range);
+  });
+  blockContent.addEventListener("input", clearScope);
+  $("#block-type").addEventListener("change", clearScope);
+  blockFieldHooks.push({ fill: clearScope, clear: clearScope });
+  function stepScope(direction) {
+    const actual = currentScopeRange();
+    if (actual.start !== scopeRange?.start || actual.end !== scopeRange?.end) {
+      scopeStack = [];
+      scopeRange = actual;
+      scopeMode = T.scopeModeAt(blockContent.value, actual, $("#block-type").value);
+    }
+    const next = direction > 0 ? T.expandScope(blockContent.value, scopeRange, scopeMode, scopeStack) :
+      T.shrinkScope(scopeRange, scopeStack);
+    scopeRange = next.range;
+    scopeStack = next.stack;
+    focusRange(scopeRange);
+    const selected = blockContent.value.slice(scopeRange.start, scopeRange.end);
+    announce(selected ? (scopeRange.name || "Selección original") + ": " + selected.slice(0, 120) :
+      "Cursor en la posición " + (scopeRange.start + 1) + ".");
+  }
   function thumbStep(direction) {
     closeAssistMenu();
+    if (scopeMode) { stepScope(direction); return; }
     const current = fieldState();
     const hole = direction > 0 ? T.nextSnippetHole(current, snippetSession) : T.previousSnippetHole(current, snippetSession);
     if (hole) {
@@ -1907,7 +1956,7 @@
     }
     const kind = blockType(type)?.kind;
     const context = target.source === "global" ? "global" : kind === "image" ? "image" :
-      kind === "equation" || (target.source === "editor" && writingMode() === "math") ? "formula" : "text";
+      kind === "equation" || (target.source === "editor" && (writingMode() === "math" || scopeMode === "math")) ? "formula" : "text";
     const field = kind === "image" ? imagePath : blockContent;
     const slices = T.slicesFor(context, type), area = viewport(), origin = { ...point, mode, bar };
     const scrollPositions = radialScrollPositions(press?.node || document.elementFromPoint?.(point.x, point.y));

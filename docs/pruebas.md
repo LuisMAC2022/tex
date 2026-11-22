@@ -228,6 +228,15 @@
 - los fragmentos radiales envuelven la selección literal y comparten los huecos
 - todos los fragmentos radiales pasan KaTeX en su contexto y la comprobación previa
 
+## `tests/selection-scope.test.js` — 6 pruebas
+
+- fracciones anidadas, relaciones y delimitadores amplían rangos estrictamente crecientes
+- la raíz con índice y los subíndices y superíndices compuestos incluyen su base
+- left y right forman un grupo y las llaves escapadas y comentarios son atómicos
+- los entornos de matriz distinguen celda, fila y fórmula con delimitadores
+- la prosa española y text dentro de matemáticas usan palabras y oraciones
+- reducir recupera exactamente una selección hacia atrás y respeta extremos y grafemas
+
 ## `tests/shortcuts.test.js` — 6 pruebas
 
 - los atajos tienen identificadores y combinaciones por ámbito únicos
@@ -285,8 +294,8 @@
 
 ## `tests/check-site.mjs` — comprobación estructural
 
-No usa `node:test`: es un script con 51 aserciones sobre `index.html` (doctype, un solo `main` y `h1`, enlace de salto, orden de los scripts clásicos, rutas relativas, etiquetas asociadas y ayudas visibles). Se ejecuta con `npm test`.
+No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, un solo `main` y `h1`, enlace de salto, orden de los scripts clásicos, rutas relativas, etiquetas asociadas y ayudas visibles). Se ejecuta con `npm test`.
 
 ---
 
-216 pruebas con `node:test` más la comprobación estructural.
+222 pruebas con `node:test` más la comprobación estructural.
