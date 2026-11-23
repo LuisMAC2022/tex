@@ -141,3 +141,5 @@ orden:
 - **Diagnóstico del teléfono:** pendiente. Lo más sencillo es publicar esta rama
   en `main`; así la página de diagnóstico queda en GitHub Pages y se abre
   directamente en el teléfono, sin portátil ni cable.
+- **Pulsación larga dentro de «Contenido»:** se queda como está, sin informe
+  (DEC-031). El menú se abre con el botón «Menú» de la barra.

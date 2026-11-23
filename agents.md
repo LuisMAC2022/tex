@@ -40,7 +40,7 @@ El encargo anterior (U0–U5, U3.1 y U3.2) está terminado. Su texto sigue en Gi
    - el tamaño de `app.js` antes y después;
    - **qué no pudiste verificar** y por qué.
 6. Las decisiones nuevas toman el **siguiente número libre** de `decisiones/`.
-   La última es DEC-030.
+   La última es DEC-031.
 
 ## 1. Lo que ya está hecho (no lo repitas)
 
@@ -94,8 +94,9 @@ terminar N1, N2, N3 y N4.
 - Como máximo 8 sectores por anillo, 44 px de arco en el radio medio y 44 px de
   grosor. Fragmentos con `#1`–`#9`, `#0` y `\#`.
 - Atajos: nada con Alt+Mayús. La tecla Menú solo en «Contenido» (DEC-022).
-- La pulsación larga dentro de «Contenido» sigue desactivada. Falta el informe
-  JSON del diagnóstico; las observaciones del teléfono ya están en
+- La pulsación larga dentro de «Contenido» queda para la selección de Android y
+  no abre menús ([DEC-031](decisiones/DEC-031-pulsacion-larga-en-contenido.md)).
+  Lo observado en el teléfono está en
   [resultados-android.md](diagnostico/resultados-android.md).
 
 **Cambio respecto a U2.** Hoy la pulsación larga sobre una tarjeta carga el
@@ -621,8 +622,8 @@ bloquear el guardado.
 - **Gboard.** La persona comprobó el 2026-11-23 en su teléfono que las
   sugerencias de `\` y los menús funcionan con Gboard, y que la barra queda
   sobre el teclado. **No cambies el manejo de la composición.**
-  - `LONG_PRESS_IN_FIELD` sigue en `false` mientras no llegue el informe JSON
-    de la prueba 2 del diagnóstico. Sin informe, no lo toques.
+  - `LONG_PRESS_IN_FIELD` queda en `false` por decisión (DEC-031). No lo
+    toques.
 
 ---
 

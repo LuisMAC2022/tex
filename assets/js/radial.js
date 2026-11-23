@@ -2,6 +2,10 @@
 (function (T) {
   "use strict";
   const TAU = Math.PI * 2, HOLD = 400, SLOP = 10, DEAD = 20;
+  /* @decision DEC-031 ancla:fd59e818 tramo:1
+   * En «Contenido» la pulsación larga es de Android: selecciona texto. El menú
+   * se abre ahí con el botón Menú de la barra, la tecla Menú o Mayús+F10.
+   */
   const LONG_PRESS_IN_FIELD = false;
   const normalize = a => ((a % TAU) + TAU) % TAU;
   const bounded = (x, lo, hi) => Math.max(lo, Math.min(x, hi));

@@ -11,8 +11,8 @@ Chrome con Gboard, en la aplicación principal (`index.html`):
 La página `diagnostico/android.html` es un registrador de eventos y no tiene esas
 funciones; que no aparezcan ahí es lo esperado.
 
-## Pendiente
+## Pulsación larga dentro de «Contenido»
 
-El informe JSON de la página de diagnóstico. Solo hace falta para decidir si la
-pulsación larga dentro de «Contenido» abre el menú radial (prueba 2). Sin él, sigue
-desactivada y el botón «Menú» de la barra hace lo mismo.
+La persona decidió dejarla como está, sin completar la prueba 2: conserva la
+selección de texto de Android y el menú se abre con el botón «Menú» de la barra.
+[DEC-031](../decisiones/DEC-031-pulsacion-larga-en-contenido.md)

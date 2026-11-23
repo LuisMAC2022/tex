@@ -381,7 +381,7 @@ Más acciones. El panel de teclado describe el asistente y la navegación nativa
 
 ## Menús de escritura en el teléfono
 
-La barra inferior abre el menú de texto, fórmula o imagen según el cursor y el tipo de bloque. Cada tarjeta ofrece su menú y la estructura ofrece el menú general. Se puede elegir por toque, teclado o arrastre. En el campo Contenido, Menú y Mayús+F10 abren el primer sector. Los fragmentos comparten los huecos de la barra y las inserciones pasan por el historial nativo. La pulsación larga en el campo queda desactivada a la espera de mediciones en Android.
+La barra inferior abre el menú de texto, fórmula o imagen según el cursor y el tipo de bloque. Cada tarjeta ofrece su menú y la estructura ofrece el menú general. Se puede elegir por toque, teclado o arrastre. En el campo Contenido, Menú y Mayús+F10 abren el primer sector. Los fragmentos comparten los huecos de la barra y las inserciones pasan por el historial nativo. La pulsación larga dentro de Contenido conserva la selección de texto de Android; ahí el menú se abre con el botón de la barra ([DEC-031](decisiones/DEC-031-pulsacion-larga-en-contenido.md)).
 
 ## Selección por alcance
 

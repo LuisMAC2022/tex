@@ -107,7 +107,7 @@ recorre por ronda de revisión, no al cambiar código.
 
 Con la rama de trabajo en el portátil, ejecuta `python3 -m http.server 8000` desde la raíz. Con depuración USB habilitada y `adb reverse tcp:8000 tcp:8000`, abre `http://localhost:8000/` y la página `diagnostico/android.html` en Chrome. `chrome://inspect` permite observar la consola. En la misma Wi-Fi se puede abrir `http://IP-del-portátil:8000/`, donde el portapapeles y el almacenamiento persistente pueden estar restringidos. Pages sirve `main` tras la fusión.
 
-- [ ] En Gboard, registrar escritura, autocierre, sugerencias y borrado. Probar la pulsación larga en campo y tarjeta, las dos ventanas y las capacidades. Pegar el JSON en [resultados de Android](../diagnostico/resultados-android.md).
+- [ ] En Gboard, comprobar escritura, autocierre, sugerencias y borrado en la aplicación. Anotar lo observado en [resultados de Android](../diagnostico/resultados-android.md). La pulsación larga dentro de Contenido no abre menús ([DEC-031](../decisiones/DEC-031-pulsacion-larga-en-contenido.md)): comprobar que la selección nativa sigue funcionando.
 - [ ] Verificar que la barra queda sobre Gboard al abrirlo, cerrarlo y girar el teléfono. Tocar Anterior, Siguiente, un símbolo y Añadir con selección hacia atrás. Comprobar foco, teclado abierto y anuncio de la barra con TalkBack.
 - [ ] Probar en Android la pulsación larga de 400 ms en tarjeta y zona vacía, el arrastre con una mano, los abanicos, la vibración y el zoom con dos dedos. TalkBack debe anunciar cada menú y devolver el foco. Confirmar que se conserva la selección de Gboard dentro del campo.
 - [ ] En escritorio abrir los cuatro contextos por clic y por teclado, volver del submenú y compilar los fragmentos y el enlace en Overleaf.
