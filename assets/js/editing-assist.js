@@ -30,9 +30,6 @@
       }
       return { edit: { value, selectionStart: closeAt + last.close.length, selectionEnd: closeAt + last.close.length }, pending: pending.slice(0, -1) };
     }
-    if (data === "{" && last && last.open === "{" && start === end && start === closeAt && /[\^_]\{$/.test(before)) {
-      return { edit: { value, selectionStart: start, selectionEnd: end }, pending };
-    }
     if (!selected && start < value.length && !/[\s)\]}$,.;:]/.test(value[start])) return null;
     const slash = before.endsWith("\\") && !T.isEscaped(value, start - 1);
     const left = before.endsWith("\\left") && !T.isEscaped(value, start - 5);
@@ -50,7 +47,8 @@
       close = "\\right|"; key = "|"; open = "\\left|"; openStart -= 5;
     } else if (data === "$" && mode === "text" && !T.isEscaped(value, start)) {
       close = "$"; key = "$";
-    } else if ((data === "^" || data === "_") && mode === "math" && !T.isEscaped(value, start)) {
+    } else if ((data === "^" || data === "_") && selected && mode === "math" && !T.isEscaped(value, start)) {
+      // Sin selección no se abre llave: véase DEC-022.
       inserted += "{"; open = "{"; openStart++; close = "}"; key = "}";
     } else return null;
     const edit = replaceSelection(state, inserted + selected + close, inserted.length, inserted.length + selected.length);

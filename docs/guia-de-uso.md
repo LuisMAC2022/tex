@@ -417,9 +417,11 @@ oferta. «Guardar borrador» sigue siendo un punto de restauración independient
 ## Autocierre en Contenido
 
 En «Preferencias de escritura», «Cerrar automáticamente llaves y delimitadores»
-activa el cierre de llaves y fórmulas. Paréntesis, corchetes y exponentes se
-completan solo en matemáticas. Las llaves envuelven la selección; un cierre ya
-pendiente se salta al teclearlo. Retroceso elimina un par automático vacío.
+activa el cierre de llaves y fórmulas. Paréntesis y corchetes se completan solo
+en matemáticas. `^` y `_` se escriben tal cual: `x^2 + y^2` queda como lo
+tecleas. Si seleccionas texto en matemáticas, `^` y `_` lo envuelven como
+exponente o subíndice. Para un grupo largo escribe `{`, que se cierra sola.
+Las llaves envuelven la selección; un cierre ya pendiente se salta al teclearlo. Retroceso elimina un par automático vacío.
 Intro tras una apertura de entorno añade su cierre salvo en listas y bibliografía.
 Los comentarios, las teclas muertas y la composición conservan la escritura normal.
 

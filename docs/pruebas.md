@@ -104,13 +104,14 @@
 - ningún índice apunta a una sección que ya no existe
 - cada rótulo que citan las guías sigue existiendo en la interfaz
 
-## `tests/editing-assist.test.js` — 11 pruebas
+## `tests/editing-assist.test.js` — 12 pruebas
 
 - el contexto matemático incluye aperturas incompletas, escapes, entornos y comentarios
 - autocierra llaves literales y escapadas, delimitadores y left en su contexto
 - el autocierre respeta prosa, comentarios, escapes y el carácter siguiente
 - un segundo dólar convierte un par vacío en fórmula destacada y el siguiente salta
-- la llave explícita tras un superíndice automático no se duplica
+- los exponentes y subíndices escritos de corrido no abren llaves
+- ^ y _ envuelven la selección como exponente o subíndice
 - el autocierre envuelve selecciones y conserva el texto seleccionado
 - las dobles barras de un salto no abren delimitador matemático en prosa
 - el guion literal de lista se escribe con llaves automáticas y salto del cierre
@@ -259,4 +260,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-198 pruebas con `node:test` más la comprobación estructural.
+199 pruebas con `node:test` más la comprobación estructural.
