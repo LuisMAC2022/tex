@@ -34,6 +34,13 @@ test("el ranking usa el catálogo real, acentos, cuatro niveles y desempates det
  assert.equal(T.rankCompletions('',entries,{},0,'math').length,8);
  assert.equal(T.rankCompletions('a',entries,{},0,'comment').length,0);
 });
+test("sin historial, el comando más corto encabeza las sugerencias del mismo nivel", () => {
+ const entries=T.completionEntries();
+ for(const mode of ['math','text']) assert.equal(T.rankCompletions('frac',entries,{},0,mode)[0].label,'fracción');
+ assert.equal(T.rankCompletions('sum',entries,{},0,'math')[0].trigger,'\\sum');
+ const derivative=entries.find(e=>e.trigger===String.raw`\frac{\partial f}{\partial x}`);
+ assert.equal(T.rankCompletions('frac',entries,{[derivative.key]:{n:3,t:0}},0,'math')[0].key,derivative.key);
+});
 test("el uso decae por semanas, se limita a 300 y descarta datos corruptos", () => {
  assert.equal(T.usageScore({n:8,t:0},7*86400000),4);
  const usage=Object.fromEntries(Array.from({length:301},(_,i)=>['key:'+i,{n:i+1,t:0}]));

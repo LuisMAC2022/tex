@@ -455,7 +455,8 @@ Añade un alias predeterminado a `DEFAULT_ALIASES` de `completion.js` con
 trigger, expansion y mode; ejecuta `validateAlias` y las pruebas. Evita las
 palabras de `SHORT_WORDS`. Los comandos de texto viven en `TEXT_COMMANDS`; los
 símbolos se derivan del catálogo y los entornos de `MATH_ENVIRONMENTS`.
-`rankCompletions` recibe el instante y el historial para ser determinista.
+`rankCompletions` recibe el instante y el historial para ser determinista. Ordena
+por nivel de coincidencia, uso, longitud del comando y posición en el catálogo.
 `parseSnippet` acepta texto o before/after, y `snippetEdit` devuelve la edición,
 los huecos y los cierres. Su sesión almacena distancias al final, no índices
 que se desplacen al escribir. La navegación condicional se rige por DEC-015.

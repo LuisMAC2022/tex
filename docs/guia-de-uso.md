@@ -430,7 +430,9 @@ Los comentarios, las teclas muertas y la composición conservan la escritura nor
 ## Sugerencias, huecos y alias
 
 Escribe una barra y al menos una letra en «Contenido». El menú propone hasta
-ocho comandos según el texto, sus nombres en español y el uso reciente. ↑ y ↓
+ocho comandos según el texto, sus nombres en español y el uso reciente; a
+igualdad, primero el más sencillo (`\frac` propone la fracción antes que las
+derivadas). ↑ y ↓
 cambian de opción; Intro, Tab o tocar una opción la insertan. Escape cierra el
 menú sin borrar lo escrito. En prosa, aceptar matemáticas añade sus dólares.
 Tras una apertura de entorno también se sugieren nombres.
