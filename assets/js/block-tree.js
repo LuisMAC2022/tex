@@ -17,7 +17,7 @@
   const TexNotes = global.TexNotes || (global.TexNotes = {});
 
   /** Versión del borrador persistido. La 1 era una lista plana sin children. */
-  const DRAFT_VERSION = 5;
+  const DRAFT_VERSION = 6;
   const blockIdPattern = /^b[0-9a-z]{8}$/;
   function newId(prefix = "b") {
     const digits = new Uint8Array(8);
@@ -323,7 +323,9 @@
       const metadata = Object.fromEntries(Object.entries(raw.metadata).filter(([, value]) => typeof value === "string"));
       const documentId = typeof raw.documentId === "string" && /^d[a-z0-9]{8}$/.test(raw.documentId) ? raw.documentId : generate("d");
       return { version: DRAFT_VERSION, ...(source < DRAFT_VERSION ? { migratedFrom: source } : {}), documentId, metadata,
-        blocks: normalizeBlocks(raw.blocks, "flat", generate), macros: source >= 3 ? normalizeMacros(raw.macros) : [] };
+        blocks: normalizeBlocks(raw.blocks, "flat", generate), macros: source >= 3 ? normalizeMacros(raw.macros) : [],
+        references: TexNotes.normalizeReferences(source >= 6 ? raw.references : []),
+        bibliography: TexNotes.normalizeBibliography(source >= 6 ? raw.bibliography : null) };
     } catch { return null; }
   }
 
@@ -343,6 +345,7 @@
   function sessionHasContent(session) {
     const nonempty = (value) => typeof value === "string" && Boolean(value.trim());
     return Boolean(session && ((Array.isArray(session.blocks) && session.blocks.some((block) => block && typeof block === "object"))
+      || session.references?.length || session.bibliography?.style === "apa" || session.bibliography?.includeUncited
       || nonempty(session.metadata?.title) || nonempty(session.editor?.content) || nonempty(session.editor?.title) || nonempty(session.editor?.image?.content)));
   }
 

@@ -89,3 +89,9 @@ test("todos los fragmentos radiales pasan KaTeX en su contexto y la comprobació
     assert.deepEqual(structuredClone(T.checkBlock(block)).filter(i => i.severity==="error"),[],block.content);
   }
 });
+test("el clic táctil posterior a soltar la barra se reconoce aun con detail cero y el teclado conserva el foco", () => {
+  assert.equal(T.isPointerClick({detail:0, pointerType:"touch"}),true);
+  assert.equal(T.isPointerClick({detail:0, sourceCapabilities:{firesTouchEvents:true}}),true);
+  assert.equal(T.isPointerClick({detail:1, pointerType:"mouse"}),true);
+  assert.equal(T.isPointerClick({detail:0, pointerType:"", sourceCapabilities:{firesTouchEvents:false}}),false);
+});

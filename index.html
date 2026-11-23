@@ -49,6 +49,29 @@
             </fieldset>
             <button id="use-default-macros" type="button" class="secondary">Usar como mis macros predeterminadas</button>
           </details>
+          <details id="document-references">
+            <summary>Referencias del documento</summary>
+            <p class="field"><label for="citation-style">Estilo de citas</label>
+              <select id="citation-style"><option value="ieee">IEEE</option><option value="apa">APA 7.ª edición</option></select>
+            </p>
+            <label class="check-field"><input type="checkbox" id="include-uncited"> Incluir también las no citadas</label>
+            <ul id="reference-list"></ul>
+            <fieldset><legend>Añadir o editar una referencia</legend>
+              <p class="field"><label for="ref-key">Clave</label><input id="ref-key" type="text" spellcheck="false" aria-describedby="ref-key-help ref-key-error"><small id="ref-key-help"></small><span class="error" id="ref-key-error"></span></p>
+              <p class="field"><label for="ref-authors">Autores</label><textarea id="ref-authors" rows="3" aria-describedby="ref-authors-help ref-authors-error"></textarea><small id="ref-authors-help">Un autor por línea, en la forma Apellido, Iniciales.</small><span class="error" id="ref-authors-error"></span></p>
+              <p class="field"><label for="ref-year">Año</label><input id="ref-year" type="text" inputmode="numeric" aria-describedby="ref-year-error"><span class="error" id="ref-year-error"></span></p>
+              <p class="field"><label for="ref-title">Título</label><input id="ref-title" type="text" aria-describedby="ref-title-error"><span class="error" id="ref-title-error"></span></p>
+              <p class="field"><label for="ref-edition">Edición</label><input id="ref-edition" type="text" inputmode="numeric" aria-describedby="ref-edition-error"><span class="error" id="ref-edition-error"></span></p>
+              <p class="field"><label for="ref-publisher">Editorial</label><input id="ref-publisher" type="text"></p>
+              <p class="field"><label for="ref-place">Lugar</label><input id="ref-place" type="text"></p>
+              <p class="field"><label for="ref-url">Enlace</label><input id="ref-url" type="text" inputmode="url"></p>
+              <p class="field"><label for="ref-text">Texto libre</label><textarea id="ref-text" rows="3" aria-describedby="ref-text-help"></textarea><small id="ref-text-help">Sustituye la ficha por texto LaTeX literal. En APA se necesitan también los autores y el año.</small></p>
+              <button type="button" id="save-reference">Guardar referencia</button>
+              <button type="button" id="cancel-reference" class="secondary">Cancelar referencia</button>
+            </fieldset>
+            <button type="button" id="add-course-references" class="secondary">Añadir las referencias del curso</button>
+            <button type="button" id="save-course-references" class="secondary">Guardar como referencias del curso</button>
+          </details>
           </details>
         </section>
 
@@ -324,6 +347,7 @@
     <script src="assets/js/image-options.js"></script>
     <script src="assets/js/list-outline.js"></script>
     <script src="assets/js/cross-references.js"></script>
+    <script src="assets/js/references.js"></script>
     <script src="assets/js/content-check.js"></script>
     <script src="assets/js/editing-assist.js"></script>
     <script src="assets/js/completion.js"></script>

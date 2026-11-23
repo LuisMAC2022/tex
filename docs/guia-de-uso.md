@@ -526,3 +526,15 @@ Toca **Selección** y pulsa **Siguiente** para ampliar desde el cursor. En prosa
 En un teorema, proposición, definición, ejemplo, nota, ecuación destacada o imagen, completa «Etiqueta» o pulsa «Proponer desde el título». El prefijo se muestra junto al campo. Identifica un único bloque y sigue siendo válido después de moverlo.
 
 En «Contenido», escribe `\ref{` o `\eqref{` y elige el destino con un toque, Intro o Tab. **Referir** abre la misma lista desde el menú de texto. En prosa se añade el nombre del tipo cuando hace falta. Las ecuaciones se citan con `\eqref`. Si el menú omite el número, comprueba el PDF. En «Resultado», cada error se puede seguir hasta el bloque.
+
+## Citas y bibliografía
+
+1. Abre «Referencias del documento» en «Datos del documento». Puedes empezar una ficha en «Añadir o editar una referencia» o pulsar «Añadir las referencias del curso». El botón omite los libros que ya tengan la misma clave.
+2. Escribe los «Autores», uno por línea, como `Stewart, J.`, y el «Año». Comprueba la «Clave» propuesta y completa «Título». «Edición» admite números a partir de 2. «Editorial», «Lugar» y «Enlace» son opcionales. «Texto libre» sustituye el formato de la ficha por tu propio LaTeX. APA necesita autores y año incluso con texto libre. Pulsa «Guardar referencia» o «Cancelar referencia».
+3. En «Contenido», escribe `\citep{` y elige un libro, o abre **Citar** desde el menú de texto. **Entre paréntesis** inserta `\citep` y **En la frase** inserta `\citet`. Para indicar una página usa `\citep[p.~912]{stewart1994}`. Una coma permite buscar otro libro para la misma cita.
+4. En «Estilo de citas» elige «IEEE» o «APA 7.ª edición». Al generar el documento, la bibliografía aparece al final. Activa «Incluir también las no citadas» para imprimir todas las fichas. En Overleaf, recompila para resolver las citas.
+5. «Editar referencia» permite corregir la ficha. Si el documento ya usa la clave, el campo indica por qué está bloqueado. «Eliminar referencia» indica cuántas citas quedarían rotas y pide confirmación. En «Resultado» se puede abrir el bloque o la ficha que necesita corrección.
+
+En un bloque «Bibliografía (IEEE)», abre «Más acciones» y pulsa «Convertir en referencias del documento». Cada línea conserva su LaTeX y su clave `ref1`, `ref2`… Si una clave ya está ocupada, el aviso la identifica. Se puede deshacer la conversión con «Deshacer cambio».
+
+«Guardar como referencias del curso» sustituye el catálogo que ofrece el botón de añadir. La configuración portátil traslada ese catálogo entre dispositivos. «Guardar versión» y «Exportar proyecto» conservan las referencias y el estilo del documento.

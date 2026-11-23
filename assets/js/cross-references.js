@@ -30,7 +30,7 @@
       if (!match[1]) continue;
       argument.lastIndex = match.index + match[0].length;
       const arg = argument.exec(visible);
-      commands.push({ name: match[1], index: match.index, arg: arg?.[1]?.trim(),
+      commands.push({ name: match[1], index: match.index, arg: arg?.[1]?.trim(), rawArg: arg?.[1],
         argStart: arg ? argument.lastIndex - arg[1].length - 1 : null });
     }
     return commands;

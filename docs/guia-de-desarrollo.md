@@ -483,11 +483,11 @@ recorre una copia de la rama en preorden y conserva las opciones. La interfaz
 cancela la cola ante cambios estructurales y guarda las propias en
 `tex-notes:templates:v1`. Véanse DEC-018 y DEC-020.
 
-## Macros y borradores v4
+## Macros y versiones del borrador
 
 `normalizeMacros` aplica el saneado estructural del borrador: nombre latino,
 params entero entre 0 y 9 y body cadena. `normalizeDraft` migra v1/v2 con macros
-vacías y conserva las macros de v3. Desde v4 cada bloque tiene un id estable y cada documento su `documentId`. Rechaza versiones posteriores. Tras incorporar el borrador histórico como versión manual, se retira su clave de localStorage. `macrosToPreamble` vive en el generador, sin depender de la
+vacías y conserva las macros de v3. Desde v4 cada bloque tiene un id estable y cada documento su `documentId`. La versión 5 incorporó las etiquetas y la 6 añade el catálogo bibliográfico. Se rechaza un número de versión superior a `DRAFT_VERSION`. Tras incorporar el borrador histórico como versión manual, se retira su clave de localStorage. `macrosToPreamble` vive en el generador, sin depender de la
 interfaz, y emite newcommand con cuerpo literal. Sin macros no añade líneas.
 
 `macros.js` valida nombres de catálogo, lista reservada y entornos, unicidad,
@@ -534,3 +534,9 @@ profesor y fecha no convierten una sesión vacía en una sesión recuperable.
 ## Destinos y contadores del documento
 
 `labelPrefix` en `block-types.js` habilita la etiqueta. El formato v5 migra la etiqueta histórica de imagen y conserva la primera ocurrencia en preorden. `blockIsEmitted` y `emissionContext` se comparten entre generador y recorrido de destinos. `cross-references.js` calcula los contadores y analiza los comandos manuales. `checkDocument` combina los diagnósticos con ruta, línea y columna. Las instantáneas y `diffDocuments` incluyen el campo del bloque. [DEC-027](../decisiones/DEC-027-etiquetas-de-bloque.md)
+
+## Catálogo bibliográfico
+
+`references.js` contiene las ocho referencias de `temario.md`, la validación por campo, la asignación de claves y la ordenación de fichas. `citationInfo` recorre los bloques emitidos en preorden y reúne los usos, las claves citadas y las bibliografías manuales. El generador lo comparte para seleccionar `natbib` e imprimir una sola lista al final. `printedReferences` calcula los sufijos por título entre las entradas que se imprimirán.
+
+`normalizeDraft` migra v1–v5 a v6. Cada instantánea contiene una copia de los autores y las opciones. La configuración portátil v1 admite el catálogo del curso en el campo opcional `references`. `convertBibliography` valida todas las claves antes de retirar el bloque. La interfaz registra la conversión como un solo cambio en el historial. [DEC-028](../decisiones/DEC-028-citas-y-bibliografia.md)

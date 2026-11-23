@@ -28,6 +28,10 @@
       insert("link", "Enlace", "↗", "\\href{#1}{#2}#0"),
       insert("inline", "Fórmula en línea", "ƒ", "$#1$#0"),
       insert("reference", "Referir", "↪", "\\ref{#1}#0"),
+      submenu("cite", "Citar", "❞", [
+        insert("cite-parentheses", "Entre paréntesis", "( )", "\\citep{#1}#0"),
+        insert("cite-narrative", "En la frase", "Aa", "\\citet{#1}#0"),
+      ]),
     ] },
     { context: "image", slices: [
       submenu("size", "Tamaño", "↔", [40,60,80,100].map(w => command("width-" + w, w + " %", "↔", "setImageWidth", w))),

@@ -133,6 +133,11 @@
     return "M " + coord(a, ring.outer) + " A " + ring.outer + " " + ring.outer + " 0 " + large + " 1 " + coord(b, ring.outer)
       + " L " + coord(b, ring.inner) + " A " + ring.inner + " " + ring.inner + " 0 " + large + " 0 " + coord(a, ring.inner) + " Z";
   }
+  // Chromium también emite clics táctiles con detail 0. Una activación
+  // desde el teclado carece de puntero y debe poder llevar el foco al menú.
+  function isPointerClick(event) {
+    return event.detail > 0 || Boolean(event.pointerType) || event.sourceCapabilities?.firesTouchEvents === true;
+  }
   function createRadialView(doc, handlers) {
     const layer = doc.createElement("div");
     layer.className = "radial-layer"; layer.hidden = true;
@@ -181,7 +186,7 @@
       const item = e.target.closest("[data-index]");
       if (e.target.closest("[data-parent-index]")) {
         handlers.back(); handlers.pick(Number(e.target.closest("[data-parent-index]").dataset.parentIndex), false);
-      } else if (item) handlers.pick(Number(item.dataset.index), e.detail === 0);
+      } else if (item) handlers.pick(Number(item.dataset.index), !isPointerClick(e));
       else if (e.target === back) handlers.back();
       else handlers.cancel();
     });
@@ -189,5 +194,5 @@
       hide() { layer.hidden = true; lastRing = lastItems = null; } };
   }
   Object.assign(T, { RADIAL_HOLD: HOLD, RADIAL_SLOP: SLOP, LONG_PRESS_IN_FIELD, angleOf, centerAngle, sectorAt,
-    fitMenu, radialLayout, slicesFor, applyRadialSnippet, radialReduce, createRadialView });
+    fitMenu, radialLayout, slicesFor, applyRadialSnippet, radialReduce, isPointerClick, createRadialView });
 })(globalThis.TexNotes);

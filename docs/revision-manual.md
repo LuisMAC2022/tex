@@ -119,3 +119,9 @@ Con la rama de trabajo en el portátil, ejecuta `python3 -m http.server 8000` de
 
 - En Overleaf, compilar dos veces teoremas, ecuaciones y figuras etiquetadas. Comparar el PDF con los números que muestra el menú, también después de mover una rama.
 - En Android con Gboard, abrir las sugerencias con `\ref{` y mediante **Referir**. Con TalkBack y NVDA, comprobar el nombre del campo, el prefijo, sus errores y el retorno al editor.
+
+## Citas y bibliografía
+
+- En Overleaf, compilar dos veces en IEEE un documento con teoremas, ecuaciones, figuras y las ocho referencias del curso. Comparar los números del menú con el PDF. Cambiar a APA sin editar el contenido y repetir la compilación.
+- En Android con Gboard, probar `\citep{`, `\ref{` y la selección de otra clave después de una coma. Abrir también **Citar** y **Referir** desde la barra y comprobar el foco con el teclado desplegado.
+- Con TalkBack en Android y NVDA en escritorio, recorrer el panel, provocar un error por campo y seguirlo desde el resumen. Comprobar el anuncio de clave bloqueada, la cantidad de citas al eliminar y el foco al cancelar o convertir.

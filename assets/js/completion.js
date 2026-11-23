@@ -7,6 +7,7 @@
     ['textbf', '\\textbf{}', 'Negrita'], ['textit', '\\textit{}', 'Cursiva'], ['emph', '\\emph{}', 'Énfasis'],
     ['underline', '\\underline{}', 'Subrayado'], ['quad', '\\quad', 'Espacio cuadratín'], ['qquad', '\\qquad', 'Espacio doble'],
     ['label', '\\label{}', 'Etiqueta'], ['ref', '\\ref{}', 'Referencia'],
+    ['citep', '\\citep{}', 'Cita entre paréntesis'], ['citet', '\\citet{}', 'Cita en la frase'],
   ].map(([id,insert,label]) => ({key:`text:${id}`,kind:'text',trigger:'\\'+id,insert,label,detail:insert,mode:'any'}));
   const DEFAULT_ALIASES = [
     ['RR','\\mathbb{R}'],['NN','\\mathbb{N}'],['ZZ','\\mathbb{Z}'],['QQ','\\mathbb{Q}'],['CC','\\mathbb{C}'],
@@ -50,6 +51,12 @@
   function completionToken(state) {
     if(state.selectionStart!==state.selectionEnd) return null;
     const before=state.value.slice(0,state.selectionStart);
+    const citation = /\\([a-zA-Z]+)\*?\s*(?:\[(?:[^\]\\]|\\.)*\]\s*){0,2}\{([^{}]*)$/.exec(before);
+    if (citation && T.isCitation(citation[1]) && !T.isEscaped(before, citation.index)) {
+      const query = citation[2].split(",").at(-1).trimStart();
+      const tail = /^[a-z0-9-]*/i.exec(state.value.slice(state.selectionStart))[0];
+      return {kind:"citation", query, start:state.selectionStart - query.length, end:state.selectionStart + tail.length};
+    }
     const reference = /\\(?:eqref|ref)\{([^{}\s,]*)$/.exec(before);
     if (reference && !T.isEscaped(before, reference.index)) {
       const tail = /^[a-z0-9:-]*\}?/i.exec(state.value.slice(state.selectionStart))[0];
@@ -79,6 +86,14 @@
         detail: label, insert: prefix + command + "{" + label + "}", mode: "any" };
     });
   }
+  function citationOptions(references) {
+    return references.map(entry => {
+      const author = T.authorLabel(entry).replace("et~al.", "et al.");
+      const who = author ? author + (entry.year ? " (" + entry.year + ")" : "") : entry.key;
+      return { key:"cite:" + entry.key, kind:"citation", trigger:entry.key, insert:entry.key, mode:"any",
+        label:who + " · " + (entry.title || entry.text), detail:entry.key };
+    });
+  }
   function validateAlias(alias, existing = []) {
     const errors=[];
     if(!alias||typeof alias!=='object') return ['El alias no es válido.'];
@@ -104,7 +119,17 @@
     for(const a of config.aliases){ errors.push(...validateAlias(a,aliases)); aliases.push(a); }
     for(const t of config.templates){ errors.push(...(T.validateTemplate ? T.validateTemplate(t,[...(T.BUILTIN_TEMPLATES||[]),...templates]) : ['Esta versión no admite plantillas importadas.'])); templates.push(t); }
     for(const m of config.macros){ errors.push(...(T.validateMacro ? T.validateMacro(m,macros) : ['Esta versión no admite macros importadas.'])); macros.push(m); }
+    if (config.references !== undefined) {
+      if (!Array.isArray(config.references)) errors.push("La lista de referencias del curso es inválida.");
+      else {
+        const seen = [];
+        for (const reference of config.references) {
+          errors.push(...Object.values(T.validateReference(reference, seen)));
+          seen.push(reference);
+        }
+      }
+    }
     return errors;
   }
-  Object.assign(T,{SHORT_WORDS,TEXT_COMMANDS,DEFAULT_ALIASES,normalizeSearch,completionEntries,referenceOptions,usageScore,rankCompletions,recordUsage,completionToken,validSnippetMarkers,validateAlias,aliasAt,validateConfiguration});
+  Object.assign(T,{SHORT_WORDS,TEXT_COMMANDS,DEFAULT_ALIASES,normalizeSearch,completionEntries,referenceOptions,citationOptions,usageScore,rankCompletions,recordUsage,completionToken,validSnippetMarkers,validateAlias,aliasAt,validateConfiguration});
 })(typeof globalThis !== 'undefined' ? globalThis : this);

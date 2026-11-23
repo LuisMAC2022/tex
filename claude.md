@@ -216,6 +216,7 @@ En la base, el tablero empezaba en 2684 px con título vacío y en 1666 px con l
 - **TalkBack**, incluidos anuncios de la barra, los menús, la selección y las versiones. También queda pendiente la revisión con lectores de pantalla de escritorio y teclados físicos.
 - **Almacenamiento y transferencia entre equipos**. Falta comprobar concesión y revocación de persistencia, expulsión de datos y reapertura tras cerrar Chrome en Android. El Chromium de este entorno canceló la escritura en disco tanto del proyecto como de una descarga de texto de control. Se verificaron el JSON generado, su nombre y su importación. Falta trasladar el archivo descargado entre teléfono y portátil.
 - **Overleaf**, Firefox y Safari/WebKit. El Chromium gráfico del sistema abortó durante el arranque por el permiso de su socket. Las verificaciones de navegador descritas arriba se ejecutaron con Chromium headless. El procedimiento de dispositivo, almacenamiento y exportación figura en la [lista de revisión](docs/revision-manual.md#android).
+
 ## U3.1 · Etiquetas y referencias cruzadas
 
 La fusión reúne las correcciones de `claude/ui-ux` con U0–U5 de `codex/ui-ux`. Ambas ramas habían usado DEC-022. La decisión sobre exponentes conserva su justificación como DEC-026.
@@ -223,3 +224,15 @@ La fusión reúne las correcciones de `claude/ui-ux` con U0–U5 de `codex/ui-ux
 La migración v5 traslada la etiqueta de imagen y deduplica en orden de emisión. El editor propone claves, ofrece destinos desde el teclado y **Referir**, y señala duplicados y referencias rotas. La estructura, el historial y las plantillas conservan las reglas de identidad. Se registraron DEC-027 e INV-011.
 
 Pasaron 232 pruebas y el control estructural. Dos compilaciones con `pdflatex` confirmaron en el `.aux` los ocho destinos de la prueba, incluidas dos figuras. El ejemplo regenerado coincide byte a byte. Chromium headless abrió el sitio por `file://` y comprobó propuesta, tarjeta numerada, autocompletado con Intro y generación. No verificado en Android físico, Gboard, TalkBack, NVDA, Overleaf, Firefox o Safari. Los pasos pendientes figuran en la revisión manual.
+
+## U3.2 · Citas y bibliografía del documento
+
+El panel permite guardar fuentes, citar varias claves y alternar IEEE y APA 7. Los ocho libros de `temario.md` se incorporan con un botón. La conversión de una bibliografía manual conserva las claves y se deshace en un solo paso. Las referencias, el estilo y las etiquetas viajan en las versiones y en el estado v6 del proyecto JSON. La configuración portátil incluye el catálogo del curso. Se registró [DEC-028](decisiones/DEC-028-citas-y-bibliografia.md) y se amplió el guardián de INV-009 para la carga condicional de `natbib`.
+
+Pasaron las 243 pruebas, la comprobación estructural y `npm run check:js`. Se ejecutaron dos pasadas reales de `pdflatex` por estilo. Las ocho claves quedaron resueltas y el orden de los `\bibcite` del archivo auxiliar coincidió con el orden calculado en ambos estilos. El ejemplo regenerado conserva los mismos bytes que en las dos ramas de origen.
+
+En Chromium headless probé el submenú **Citar**, la aceptación de una segunda clave, la validación por campo, el bloqueo de clave citada y el aviso al eliminar. También comprobé la conversión con deshacer y rehacer, la restauración de una versión y la exportación e importación del contenido del proyecto con su configuración.
+
+En un Pixel 7 emulado, Chromium enviaba un clic táctil con `detail: 0` al soltar la barra. Ese clic cerraba el menú recién abierto. Se incorporó el tipo de puntero a la detección y se verificaron por toque la apertura de **Citar**, el submenú y la aceptación de la clave. El arrastre sobre una selección insertó la fórmula una sola vez. Mayús+F10 y Escape conservaron la navegación con teclado y el retorno del foco.
+
+Pendientes de revisión manual en esta ronda: Android físico con Gboard, TalkBack, NVDA, Overleaf, Firefox y Safari/WebKit. Los casos están en la [revisión manual](docs/revision-manual.md#citas-y-bibliografía).

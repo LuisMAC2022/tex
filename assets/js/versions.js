@@ -4,8 +4,9 @@
   const origins = ["manual", "exportación", "respaldo"];
   const isoDate = s => typeof s === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/.test(s) && Number.isFinite(Date.parse(s));
   const validDocumentId = id => typeof id === "string" && /^d[a-z0-9]{8}$/.test(id);
-  function documentSnapshot({ metadata, blocks, macros }) {
-    return { version: T.DRAFT_VERSION, metadata: { ...metadata }, blocks: T.cloneBlocks(blocks), macros: T.normalizeMacros(macros) };
+  function documentSnapshot({ metadata, blocks, macros, references, bibliography }) {
+    return { version: T.DRAFT_VERSION, metadata: { ...metadata }, blocks: T.cloneBlocks(blocks), macros: T.normalizeMacros(macros),
+      references: T.normalizeReferences(references), bibliography: T.normalizeBibliography(bibliography) };
   }
   function canonical(value) {
     if (Array.isArray(value)) return value.map(canonical);
@@ -13,7 +14,7 @@
     return value;
   }
   const equal = (a,b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
-  const sameDocument = (a,b) => equal(a.metadata,b.metadata) && equal(a.blocks,b.blocks) && equal(a.macros,b.macros);
+  const sameDocument = (a,b) => equal(documentSnapshot(a), documentSnapshot(b));
   const historyEntry = (data,focusId) => ({ documentId: data.documentId, state: documentSnapshot(data), focusId });
   function rememberHistory(history, entry) { return { past: [...history.past,entry].slice(-100), future: [] }; }
   function travelHistory(history,current,direction) {
@@ -50,6 +51,10 @@
     const left=index(a), right=index(b);
     const byName = list => Object.fromEntries((list||[]).map(m=>[m.name,m]));
     const result={added:[],removed:[],moved:[],modified:[],metadata:changedKeys(a.metadata||{},b.metadata||{}),macros:changedKeys(byName(a.macros),byName(b.macros))};
+    const refs = doc => Object.fromEntries(T.normalizeReferences(doc.references).map(r => [r.key, r]));
+    result.references = changedKeys(refs(a), refs(b)).map(change => ({ ...change,
+      kind: change.before === undefined ? "added" : change.after === undefined ? "removed" : "modified" }));
+    result.bibliography = changedKeys(T.normalizeBibliography(a.bibliography), T.normalizeBibliography(b.bibliography));
     const names = list => (list||[]).map(m=>m.name);
     if (!equal(names(a.macros),names(b.macros)) && equal([...names(a.macros)].sort(),[...names(b.macros)].sort())) {
       result.macros.push({key:"orden",before:names(a.macros),after:names(b.macros)});
@@ -86,6 +91,13 @@
     const state=documentSnapshot(data);
     return {id,documentId,createdAt,label,origin,state,summary:{title:state.metadata.title||"",blocks:T.countBlocks(state.blocks)}};
   }
+  function upgradeStoredVersions(rows) {
+    return rows.map(row => {
+      if (!row.state || row.state.version >= T.DRAFT_VERSION) return row;
+      const draft = T.normalizeDraft({ ...row.state, documentId: row.documentId });
+      return draft ? { ...row, state: documentSnapshot(draft) } : row;
+    });
+  }
   function addVersion(rows, data, options, limit=30) {
     const latest=newestFirst(rows.filter(v=>v.documentId===data.documentId))[0];
     if (options.origin==="exportación" && latest && sameDocument(latest.state,data)) return rows;
@@ -113,6 +125,9 @@
         !Array.isArray(raw.versions) || !isoDate(raw.exportedAt)) return fail("Formato o versión de proyecto incompatible.");
       const readState = s => {
         if (!s || !Array.isArray(s.blocks) || (s.version >= 3 && !Array.isArray(s.macros))) return null;
+        if (s.version >= 6 && (!Array.isArray(s.references) || !s.bibliography ||
+            !["ieee","apa"].includes(s.bibliography.style) || typeof s.bibliography.includeUncited !== "boolean" ||
+            T.normalizeReferences(s.references).length !== s.references.length)) return null;
         const draft=T.normalizeDraft({...s,documentId:raw.documentId});
         return draft && documentSnapshot(draft);
       };
@@ -133,5 +148,5 @@
     } catch { return fail("No se pudo leer el proyecto JSON."); }
   }
   Object.assign(T,{validDocumentId,documentSnapshot,sameDocument,historyEntry,rememberHistory,travelHistory,diffLines,diffDocuments,
-    newestFirst,pruneVersions,mergeVersions,addVersion,migrateSingleDraft,validateProject});
+    newestFirst,pruneVersions,mergeVersions,addVersion,migrateSingleDraft,upgradeStoredVersions,validateProject});
 })(globalThis.TexNotes);

@@ -77,6 +77,8 @@ prueba visible de qué cambió.
 ### INV-009 — El preámbulo carga únicamente los paquetes declarados en la lista blanca
 Guardián: `tests/generator.test.js` → "el preámbulo solo carga paquetes de la lista blanca"
 
+`natbib` se activa al guardar referencias o al escribir un comando propio del paquete. `hyperref` se carga al final de los paquetes cuando hay enlaces.
+
 ### INV-010 — Los identificadores de bloque son únicos en todo el árbol
 Guardián: `tests/identificadores.test.js` → "los identificadores de bloque son únicos en todo el árbol"
 

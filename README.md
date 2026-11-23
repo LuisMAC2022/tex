@@ -28,6 +28,9 @@ El generador recibe un objeto con este contrato conceptual:
     topic: "Tema o unidad, opcional"
   },
   macros: [{ name: "R", params: 0, body: "\\mathbb{R}" }],
+  references: [{key: "stewart1994", authors: ["Stewart, J."], year: "1994", title: "Cálculo",
+    edition: "", publisher: "Iberoamérica", place: "México", url: "", text: ""}],
+  bibliography: {style: "ieee", includeUncited: false},
   blocks: [
     {
       type: "text|equation|math-inline|definition|theorem|proposition|proof|example|note|itemize|enumerate|bibliography|image",
@@ -53,7 +56,7 @@ El generador recibe un objeto con este contrato conceptual:
 - Se permiten hasta cuatro niveles de un mismo tipo y seis entornos combinados, contando los teoremas y las listas envolventes que genera el editor. Los elementos que alcancen el límite se incorporan al último nivel disponible sin alterar su orden. Si el bloque completo ya está en el límite, sus elementos se emiten como párrafos.
 - Una lista plana sin marcadores conserva el formato `.tex` anterior. Cada nivel de sublista añade dos espacios al comienzo de sus líneas. Los bloques de «Añadir dentro» se emiten después de los elementos y antes del cierre de la lista raíz, si la lista puede abrirse.
 - Al restaurar un borrador antiguo, sus listas sin `listFormat` conservan los marcadores literales y se muestran planas. Cambiar su contenido activa la sintaxis por sangría. Las listas nuevas guardan su formato dentro del borrador.
-- `bibliography` produce una **bibliografía manual con aspecto IEEE**: cada línea no vacía y recortada del contenido se conserva literalmente y se convierte en un `\bibitem{refN}` dentro de `thebibliography`. Este entorno del núcleo de LaTeX aporta por sí mismo la numeración entre corchetes, sin BibTeX, `natbib`, `IEEEtran` ni paquetes adicionales. El campo `title` no se usa, igual que en las listas. Las claves `ref1`, `ref2`, etc. son predecibles y únicas solo dentro de cada bloque; dos bloques de bibliografía repetirán claves y LaTeX mostrará una advertencia de etiqueta duplicada, una limitación aceptada porque la aplicación no genera `\cite{}`.
+- El tipo de bloque histórico `bibliography` produce una lista manual IEEE. Cada línea no vacía se recorta y se convierte literalmente en un `\bibitem{refN}`. La conversión al catálogo del documento conserva las claves `ref1`, `ref2` y el texto de las entradas. La comprobación previa señala si coincide con una lista generada o si se usa con APA.
 - `image` usa la ruta recortada y literal de `content` y el pie opcional de `title`, escapado. No admite hijos. Sus `options` son opcionales y se guardan con el bloque.
 - `buildTheoremDefs()` deriva las declaraciones `\newtheorem` de esa misma tabla, omite los tipos predefinidos como proof y agrupa los entornos por `\theoremstyle`, de modo que el preámbulo no puede desincronizarse de los tipos disponibles: añadir un tipo es una entrada en la tabla y su `<option>` en `index.html`, y una prueba compara ambas listas.
 - **Regla de numeración:** cada entorno declarado con `\newtheorem` mantiene un contador propio, independiente y continuo en todo el documento. `proposition` comparte `\theoremstyle{plain}` con `theorem`, pero **no comparte contador** ni se reinicia por sección. Cambiar esa regla es editar una sola entrada de la tabla, y es un cambio de contrato que debe documentarse aquí.
@@ -100,7 +103,7 @@ Bajo las hipótesis del curso, ... se cumple $\iint_A f = \int \! \int f \, dx \
 ```
 
 - Los saltos CRLF y CR se normalizan a LF. Las líneas vacías de un bloque textual conservan los párrafos. Un bloque sin contenido no se emite, salvo que tenga hijos: entonces se emiten ellos.
-- La plantilla `article` incluye solamente `fontenc` (salida latina copiable), `inputenc` (fuente UTF-8), `babel` (español), `amsmath` (matemáticas), `amssymb` (los conjuntos `\mathbb` del tablero de símbolos), `amsthm` (entornos) y `graphicx` (imágenes). Cuando el contenido usa `\href` o `\url`, se añade `\usepackage[hidelinks]{hyperref}` después de los demás paquetes. El propio preámbulo documenta el motivo. El archivo usa los paquetes estándar de Overleaf y los archivos de imagen que se indiquen en los bloques.
+- La plantilla `article` carga `fontenc`, `inputenc`, `babel` en español, `amsmath`, `amssymb`, `amsthm` y `graphicx`. Tras `graphicx` se añade `natbib` cuando hay referencias o comandos propios del paquete. `\cite` por sí solo pertenece al núcleo. Si el contenido usa `\href` o `\url`, `hyperref` es el último paquete. El archivo usa los paquetes estándar de Overleaf y las imágenes indicadas en los bloques.
 - El resultado termina siempre con un salto de línea y es determinista: el mismo estado produce exactamente la misma cadena.
 - El nombre sugerido se deriva del título: minúsculas, sin diacríticos, grupos no alfanuméricos convertidos en guiones y extensión `.tex`. Si queda vacío, se usa **`notas-calculo-3.tex`**.
 
@@ -385,3 +388,17 @@ La barra inferior abre el menú de texto, fórmula o imagen según el cursor y e
 ## Etiquetas y referencias cruzadas
 
 Los prefijos `teo:`, `prop:`, `def:`, `ej:`, `nota:`, `ec:` y `fig:` identifican destinos únicos. La etiqueta se conserva al mover el bloque y se vacía en las copias. El esquema v5 migra las versiones anteriores. Las tarjetas y el menú muestran los contadores de LaTeX. Si el contenido manipula un contador con un entorno numerado o un pie manual, el menú muestra solo el nombre del destino. La comprobación previa localiza claves rotas o repetidas.
+
+## Citas y bibliografía
+
+El esquema v6 guarda `references` y `bibliography` en el documento, las instantáneas y los proyectos. Las versiones 1–5 se abren con un catálogo vacío y estilo IEEE. Las ocho referencias del curso se añaden por petición. La configuración portátil incluye la lista del curso guardada en `tex-notes:references-default:v1`.
+
+| Campo | Contrato en el documento generado |
+| --- | --- |
+| `key` | Clave única en minúsculas, cifras y guiones. Permanece fija mientras esté citada. |
+| `authors`, `year`, `title`, `edition`, `publisher`, `place`, `url` | Se escapan con `escapeMetadata`. Un autor por elemento. APA omite el lugar. El enlace se imprime con `\texttt`. |
+| `text` | LaTeX literal que sustituye la ficha tras `\bibitem`. En APA la cita necesita además autor y año. |
+| `style` | `ieee` numera por primera cita. `apa` usa autor y año y ordena por apellido, año y título. Los homónimos de un año llevan sufijo por título. |
+| `includeUncited` | Al activarlo se imprimen también los libros sin citas. En IEEE se añaden al final en el orden del panel. |
+
+`\citep` inserta una cita entre paréntesis y `\citet` integra el autor en la frase. La lista generada ocupa el final del cuerpo y se omite cuando está vacía. Dos compilaciones con pdfLaTeX resuelven las referencias.

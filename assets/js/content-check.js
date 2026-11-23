@@ -206,6 +206,7 @@
       if (issues.length) add(path, issues);
     }
     for (const { path, issue } of TexNotes.crossReferenceIssues(state)) add(path, [issue]);
+    for (const { path, issue } of TexNotes.bibliographyIssues(state)) add(path, [issue]);
     return Array.from(results.values());
   }
 

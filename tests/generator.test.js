@@ -49,6 +49,9 @@ test("el preámbulo solo carga paquetes de la lista blanca", () => {
   const packages = [...buildPreamble().matchAll(/^[ \t]*\\usepackage\s*(?:\[[^\]]*\]\s*)?\{([^}]+)\}/gm)]
     .flatMap((match) => match[1].split(",").map((name) => name.trim()));
   assert.deepEqual(packages, ["fontenc", "inputenc", "babel", "amsmath", "amssymb", "amsthm", "graphicx"]);
+  const conditional = buildPreamble([], [{type:"text", content:"\\citep{x} \\href{u}{v}"}]);
+  assert.deepEqual(Array.from(conditional.matchAll(/^\\usepackage(?:\[[^\]]*\])?\{([^}]+)\}/gm), match => match[1]),
+    [...packages, "natbib", "hyperref"]);
 });
 test("no repite \\theoremstyle al agrupar entornos del mismo estilo", () => {
   const styles = buildTheoremDefs().match(/\\theoremstyle\{(\w+)\}/g) || [];

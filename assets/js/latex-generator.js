@@ -165,7 +165,7 @@
       return (block.type !== "image" && tokens.some(token => token === "\\href" || token === "\\url")) || hasDocumentLinks(block.children);
     });
   }
-  function buildPreamble(macros = [], blocks = []) {
+  function buildPreamble(macros = [], blocks = [], references = [], bibliography = {}, info = TexNotes.citationInfo({ blocks, references })) {
     return [
       "\\documentclass[11pt]{article}",
       "% fontenc genera PDF con caracteres latinos copiables.",
@@ -182,6 +182,8 @@
       "\\usepackage{amsthm}",
       "% graphicx permite \\includegraphics para insertar imágenes.",
       "\\usepackage{graphicx}",
+      ...(info.natbib ? ["% natbib permite citas numéricas o de autor y año.",
+        bibliography.style === "apa" ? "\\usepackage[round,authoryear]{natbib}" : "\\usepackage[numbers,square,sort&compress]{natbib}"] : []),
       ...(hasDocumentLinks(blocks) ? ["\\usepackage[hidelinks]{hyperref}"] : []),
       ...(macrosToPreamble(macros) ? [macrosToPreamble(macros)] : []),
       "% Los entornos siguientes se derivan de la tabla de tipos de bloque.",
@@ -197,18 +199,20 @@
     return [`\\title{${title}}`, `\\author{${authorParts.join(" \\\\ ")}}`, `\\date{${date}}`].join("\n");
   }
 
-  function buildBody(state = {}) {
+  function buildBody(state = {}, info) {
     const metadata = state.metadata || {};
     const topic = escapeMetadata(metadata.topic).trim();
     const blocks = (Array.isArray(state.blocks) ? state.blocks : []).map((block) => blockToLatex(block)).filter(Boolean);
-    return ["\\begin{document}", "\\maketitle", topic ? `\\section{${topic}}` : "", ...blocks].filter(Boolean).join("\n\n");
+    return ["\\begin{document}", "\\maketitle", topic ? `\\section{${topic}}` : "", ...blocks,
+      TexNotes.bibliographyLatex(state, info)].filter(Boolean).join("\n\n");
   }
 
   function buildDocumentEnd() { return "\\end{document}"; }
 
   /** El archivo resultante es autocontenido: no depende de ningún .sty externo. */
   function generateLatex(state = {}) {
-    return `${buildPreamble(state.macros, state.blocks)}\n\n${buildMetadata(state.metadata)}\n\n${buildBody(state)}\n\n${buildDocumentEnd()}\n`;
+    const info = TexNotes.citationInfo(state);
+    return `${buildPreamble(state.macros, state.blocks, state.references, state.bibliography, info)}\n\n${buildMetadata(state.metadata)}\n\n${buildBody(state, info)}\n\n${buildDocumentEnd()}\n`;
   }
 
   Object.assign(TexNotes, {

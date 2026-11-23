@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
 import {loadTexNotes} from './load-app.mjs';
-const T=await loadTexNotes(['block-types.js','block-tree.js','latex-generator.js','math-symbols.js','math-preview.js','image-options.js','list-outline.js','cross-references.js', 'content-check.js','editing-assist.js','completion.js','templates.js','macros.js']);
+const T=await loadTexNotes(['block-types.js','block-tree.js','latex-generator.js','math-symbols.js','math-preview.js','image-options.js','list-outline.js','cross-references.js', 'references.js', 'content-check.js','editing-assist.js','completion.js','templates.js','macros.js']);
 const ctx=vm.createContext({}); vm.runInContext(await readFile('assets/vendor/katex/katex.min.js','utf8'),ctx);
 const macros=[{name:'R',params:0,body:String.raw`\mathbb{R}`},{name:'abs',params:1,body:String.raw`\left|#1\right|`}];
 const plain=x=>structuredClone(x);

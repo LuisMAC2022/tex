@@ -31,6 +31,7 @@
   let blocks = [];
   let blockTargets = new Map();
   let macros = [];
+  let references = [], bibliography = global.TexNotes.normalizeBibliography();
   let previewVersion = 0;
   const structurePreviewCache = new Map();
   /**
@@ -122,7 +123,10 @@
   function metadata() {
     return Object.fromEntries(METADATA_KEYS.map((name) => [name, form.elements[name].value]));
   }
-  function state() { return { documentId, metadata: metadata(), blocks: cloneBlocks(blocks), macros: macros.map(m => ({ ...m })) }; }
+  function state() {
+    return { documentId, metadata: metadata(), blocks: cloneBlocks(blocks), macros: macros.map(m => ({ ...m })),
+      references: global.TexNotes.normalizeReferences(references), bibliography: { ...bibliography } };
+  }
   function announce(message) { status.textContent = message; }
   function setMetadata(values = {}) {
     for (const name of METADATA_KEYS) form.elements[name].value = typeof values[name] === "string" ? values[name] : "";
@@ -257,6 +261,7 @@
     blockList.replaceChildren();
     $("#empty-blocks").hidden = blocks.length > 0;
     blocks.forEach((block, index) => blockList.append(blockItem(block, [index], null, [], blocks.length)));
+    syncReferenceKey();
     saveSession();
   }
 
@@ -408,8 +413,9 @@
     const block = blockAtPath(blocks, path);
     if (!block) { renderBlocks(); $("#add-block").focus(); announce("Ese bloque ya no existe; la lista se actualizó."); return; }
     const action = button.dataset.action;
+    if (action === "convert-bibliography") { convertLegacyBlock(path); return; }
 
-    if (action === "context") { openRadialAtButton(button, articleTarget(button), event.detail === 0); return; }
+    if (action === "context") { openRadialAtButton(button, articleTarget(button), !T.isPointerClick(event)); return; }
     if (action === "edit") {
       loadBlockEditor(block, path);
       $("#block-type").focus();
@@ -860,7 +866,7 @@
 
   function fillImageFields(block = {}) {
     const { width, height, angle, align, placement } = normalizeImageOptions(block.options);
-    imagePath.value = imageType(block.type) ? block.content.trim() : "";
+    imagePath.value = imageType(block.type) ? (block.content || "").trim() : "";
     imageFile.value = "";
     imageWidth.value = Math.round(width * 100);
     imageHeight.value = height ?? "";
@@ -1203,7 +1209,7 @@
     const editButton = actions.querySelector('[data-action="edit"]');
     editButton.id = editButtonId(path);
     if (badgedBlocks !== blocks) {
-      issuesByPath = new Map(checkDocument({ blocks, macros }).map(({ path: issuePath, issues }) => [pathToKey(issuePath), issues.length]));
+      issuesByPath = new Map(checkDocument({ blocks, macros, references, bibliography }).map(({ path: issuePath, issues }) => [pathToKey(issuePath), issues.length]));
       badgedBlocks = blocks;
     }
     const count = issuesByPath.get(pathToKey(path));
@@ -1219,28 +1225,39 @@
     const total = checked.reduce((count, { issues }) => count + issues.length, 0);
     const found = `Se ${total === 1 ? "encontró" : "encontraron"} ${issueCount(total)}`;
     generatedBlocks = blocks;
-    contentCheckSummary.textContent = total
-      ? `${found} en ${checked.length} ${checked.length === 1 ? "bloque" : "bloques"}.`
-      : "No se encontraron avisos.";
+    contentCheckSummary.textContent = total ? found + "." : "No se encontraron avisos.";
     contentCheckBlocks.replaceChildren();
     contentCheckBlocks.hidden = !total;
     for (const { path, issues } of checked) {
       const item = document.createElement("li");
       const link = document.createElement("a");
       link.className = "content-check-link";
-      link.href = `#${editButtonId(path)}`;
-      link.textContent = `Ir al bloque ${pathLabel(path)}`;
+      link.href = path.length ? `#${editButtonId(path)}` : "#document-references";
+      link.textContent = path.length ? `Ir al bloque ${pathLabel(path)}` : "Ir a referencias del documento";
       link.addEventListener("click", (event) => {
         event.preventDefault();
-        if (generatedBlocks === blocks) focusAction("edit", path);
+        if (generatedBlocks !== blocks) return;
+        if (path.length) focusAction("edit", path);
+        else showReferencePanel();
       });
       const details = document.createElement("ul");
       for (const issue of issues) {
         const detail = document.createElement("li");
         detail.textContent = issueText(issue);
+        if (issue.referenceKey) {
+          const edit = document.createElement("button");
+          edit.type = "button"; edit.textContent = "Editar referencia";
+          edit.addEventListener("click", () => editReference(issue.referenceKey));
+          detail.append(" ", edit);
+        }
         details.append(detail);
       }
       item.append(link, details);
+      if (issues.some(issue => issue.canConvert)) {
+        const convert = actionButton("Convertir en referencias del documento", "convert-bibliography", path, "Convertir la bibliografía del bloque " + pathLabel(path));
+        convert.addEventListener("click", () => { if (generatedBlocks === blocks) convertLegacyBlock(path); });
+        item.append(convert);
+      }
       contentCheckBlocks.append(item);
     }
     resultContentCheck.hidden = false;
@@ -1449,8 +1466,9 @@
     openAssistMenu(T.rankCompletions(token.query, entries, usage, Date.now(), mode), token, mode);
   }
   function openDocumentSuggestions(current = fieldState(), mode = writingMode(), token = T.completionToken(current)) {
-    if (token?.kind !== "reference" || mode === "comment") return false;
-    const entries = T.referenceOptions([...blockTargets.values()], token, current.value, mode);
+    if (!["reference", "citation"].includes(token?.kind) || mode === "comment") return false;
+    const entries = token.kind === "citation" ? T.citationOptions(references) :
+      T.referenceOptions([...blockTargets.values()], token, current.value, mode);
     openAssistMenu(T.rankCompletions(token.query, entries, usage, Date.now(), mode), token, mode);
     return true;
   }
@@ -1467,7 +1485,7 @@
     closeAssistMenu();
     if (acceptSpecialCompletion(entry, token)) return;
     insertWritingSnippet(entry.insert, token.start, token.end, mode === "text" && entry.mode === "math");
-    openDocumentSuggestions();
+    if (token.kind === "command") openDocumentSuggestions();
     noteUsage(entry.key);
   }
   function expandAlias(current) {
@@ -1544,13 +1562,15 @@
   $("#cancel-alias").addEventListener("click", () => { editingAlias = -1; $("#alias-trigger").value = ""; $("#alias-expansion").value = ""; $("#alias-error").textContent = ""; });
   $("#reset-aliases").addEventListener("click", () => { aliases = T.DEFAULT_ALIASES.map(a => ({ ...a })); editingAlias = -1; persistAliases(); announce("Alias predeterminados restaurados."); });
   function portableConfig() {
-    return { kind: "notas-latex-config", version: 1, aliases, templates: ownTemplates, prefs, macros: getConfigMacros() };
+    return { kind: "notas-latex-config", version: 1, aliases, templates: ownTemplates, prefs, macros: getConfigMacros(),
+      references: T.normalizeReferences(courseReferences) };
   }
   function applyPortableConfig(data, applyDefaults = true) {
     aliases = data.aliases; ownTemplates = data.templates; prefs = { autoPair: data.prefs.autoPair, vibration: data.prefs.vibration !== false }; editingAlias = -1;
     persistAliases(); writeWritingStorage("tex-notes:prefs:v1", prefs); writeWritingStorage("tex-notes:templates:v1", ownTemplates);
     $("#radial-vibration").checked = prefs.vibration; $("#auto-pair").checked = prefs.autoPair;
     pendingPairs = []; setConfigMacros(data.macros, applyDefaults); refreshTemplates();
+    if (data.references !== undefined) storeCourseReferences(data.references);
   }
   $("#export-config").addEventListener("click", () => {
     const data = portableConfig();
@@ -1563,7 +1583,7 @@
     try {
       const data = JSON.parse(await file.text()), errors = T.validateConfiguration(data);
       if (errors.length) { announce(errors.join(" ")); return; }
-      if (!global.confirm("¿Reemplazar tus alias, plantillas, preferencias y macros predeterminadas con esta configuración?")) return;
+      if (!global.confirm("¿Reemplazar con este archivo las preferencias y los catálogos incluidos en la configuración?")) return;
       applyPortableConfig(data);
       announce("Configuración importada.");
     } catch { announce("No se pudo leer la configuración. Comprueba que sea un archivo JSON válido."); }
@@ -1756,6 +1776,130 @@
   $("#use-default-macros").addEventListener("click", () => { defaultMacros = macros.map(m => ({ ...m })); writeWritingStorage("tex-notes:macros-default:v1", defaultMacros); announce("Macros predeterminadas guardadas para documentos nuevos."); });
   renderMacroList(); updateMacroPreview();
   /* --- fin [H] --- */
+
+  /* --- Referencias del documento y del curso --- */
+  const courseReferenceKey = "tex-notes:references-default:v1";
+  const savedCourse = readWritingStorage(courseReferenceKey, null);
+  let courseReferences = T.normalizeReferences(Array.isArray(savedCourse) ? savedCourse : T.COURSE_REFERENCES);
+  const referenceFields = ["key", "authors", "year", "title", "edition", "publisher", "place", "url", "text"];
+  let editingReference = null, manualReferenceKey = false;
+
+  function storeCourseReferences(entries) {
+    courseReferences = T.normalizeReferences(entries);
+    writeWritingStorage(courseReferenceKey, courseReferences);
+  }
+  function showReferencePanel() {
+    $("#metadata-details").open = true; $("#document-references").open = true;
+    $("#document-references > summary").focus();
+  }
+  function referenceForm() {
+    const raw = Object.fromEntries(referenceFields.map(name => [name, $("#ref-" + name).value]));
+    return T.normalizeReference({ ...raw, authors: raw.authors.split("\n") });
+  }
+  function referenceErrors(errors = {}) {
+    for (const name of referenceFields) {
+      const message = $("#ref-" + name + "-error");
+      if (message) message.textContent = errors[name] || "";
+      $("#ref-" + name).setAttribute("aria-invalid", String(Boolean(errors[name])));
+    }
+  }
+  function syncReferenceKey() {
+    const uses = editingReference ? T.citationInfo({ blocks }).counts.get(editingReference) || 0 : 0;
+    $("#ref-key").disabled = uses > 0;
+    if (uses) $("#ref-key").value = editingReference;
+    $("#ref-key-help").textContent = uses ? `Esta clave se usa en ${uses} cita(s). Para cambiarla, retira primero esas citas.` :
+      "Se propone con el apellido del primer autor y el año.";
+  }
+  function fillReferenceForm(entry) {
+    editingReference = entry?.key || null; manualReferenceKey = Boolean(entry);
+    for (const name of referenceFields) $("#ref-" + name).value = name === "authors" ? (entry?.authors || []).join("\n") : entry?.[name] || "";
+    referenceErrors(); syncReferenceKey();
+  }
+  function editReference(key) {
+    const entry = references.find(r => r.key === key);
+    if (!entry) return;
+    showReferencePanel(); fillReferenceForm(entry);
+    ($("#ref-key").disabled ? $("#ref-authors") : $("#ref-key")).focus();
+  }
+  function renderReferences() {
+    const list = $("#reference-list");
+    list.replaceChildren();
+    for (const entry of references) {
+      const li = document.createElement("li");
+      li.append(entry.key + " · " + (entry.title || entry.text) + " ");
+      const edit = document.createElement("button");
+      edit.type = "button"; edit.textContent = "Editar referencia";
+      edit.setAttribute("aria-label", "Editar referencia " + entry.key);
+      edit.addEventListener("click", () => editReference(entry.key));
+      const del = document.createElement("button");
+      del.type = "button"; del.textContent = "Eliminar referencia";
+      del.setAttribute("aria-label", "Eliminar referencia " + entry.key);
+      del.addEventListener("click", () => {
+        const n = T.citationInfo({ blocks }).counts.get(entry.key) || 0;
+        if (n && !global.confirm(`¿Eliminar ${entry.key}? Quedarán ${n} ${n === 1 ? "cita rota" : "citas rotas"}.`)) return;
+        rememberChange(); references = references.filter(r => r.key !== entry.key);
+        if (editingReference === entry.key) fillReferenceForm();
+        refreshBibliography(); ($("#ref-key").disabled ? $("#ref-authors") : $("#ref-key")).focus();
+        announce("Referencia eliminada " + entry.key + ".");
+      });
+      li.append(edit, " ", del); list.append(li);
+    }
+    $("#citation-style").value = bibliography.style;
+    $("#include-uncited").checked = bibliography.includeUncited;
+  }
+  function refreshBibliography() {
+    badgedBlocks = null; generatedBlocks = null; resultContentCheck.hidden = true;
+    closeAssistMenu(); renderReferences(); renderBlocks();
+  }
+  function loadReferences(data) {
+    references = T.normalizeReferences(data.references);
+    bibliography = T.normalizeBibliography(data.bibliography);
+    fillReferenceForm(); renderReferences();
+    badgedBlocks = null; generatedBlocks = null; resultContentCheck.hidden = true;
+  }
+  $("#ref-key").addEventListener("input", () => { manualReferenceKey = Boolean($("#ref-key").value); });
+  for (const name of ["authors", "year"]) $("#ref-" + name).addEventListener("input", () => {
+    if (!manualReferenceKey) $("#ref-key").value = T.suggestReferenceKey(referenceForm(), references);
+  });
+  $("#save-reference").addEventListener("click", () => {
+    syncReferenceKey();
+    const entry = referenceForm(), result = T.saveReference({blocks, references, bibliography}, entry, editingReference);
+    if (result.errors) {
+      referenceErrors(result.errors);
+      const first = Object.keys(result.errors)[0]; $("#ref-" + first).focus(); announce(result.errors[first]); return;
+    }
+    rememberChange();
+    references = result.references;
+    fillReferenceForm(); refreshBibliography(); $("#ref-key").focus(); announce("Referencia guardada " + entry.key + ".");
+  });
+  $("#cancel-reference").addEventListener("click", () => { fillReferenceForm(); $("#ref-key").focus(); announce("Edición de referencia cancelada."); });
+  for (const id of ["#citation-style", "#include-uncited"]) $(id).addEventListener("change", () => {
+    rememberChange();
+    bibliography = { style: $("#citation-style").value, includeUncited: $("#include-uncited").checked };
+    refreshBibliography(); announce("Opciones de bibliografía actualizadas.");
+  });
+  $("#add-course-references").addEventListener("click", () => {
+    const keys = new Set(references.map(entry => entry.key));
+    const extra = courseReferences.filter(entry => !keys.has(entry.key));
+    if (extra.length) { rememberChange(); references = [...references, ...T.normalizeReferences(extra)]; refreshBibliography(); }
+    announce(`Referencias del curso añadidas: ${extra.length}.`);
+  });
+  $("#save-course-references").addEventListener("click", () => {
+    storeCourseReferences(references); announce(`Lista del curso guardada con ${references.length} referencias.`);
+  });
+  blockItemExtensions.push((block, path, { more, subject }) => {
+    if (block.type === "bibliography") more.append(actionButton("Convertir en referencias del documento", "convert-bibliography", path, "Convertir " + subject + " en referencias del documento"));
+  });
+  function convertLegacyBlock(path) {
+    const result = T.convertBibliography({ blocks, references }, path);
+    if (result.error) { announce(result.error); return; }
+    if (!global.confirm("¿Convertir las líneas en referencias del documento y retirar el bloque de bibliografía?")) return;
+    const id = blockAtPath(blocks, path).id, cancelled = cancelEditForStructuralChange();
+    changeTree(result.blocks, id); references = result.references;
+    setEditorTarget({}); refreshBibliography(); focusAfterRemoval(path);
+    announce("Bibliografía convertida en referencias del documento." + cancelled);
+  }
+  renderReferences();
 
   function syncMetadataSummary(reset = false) {
     const data = metadata(), parts = [data.title, data.course, data.date].map(value => value.trim()).filter(Boolean);
@@ -2023,7 +2167,7 @@
   for (const id of ["thumb-menu","content-menu","global-menu"]) {
     const button = $("#" + id);
     button.addEventListener("pointerdown", e => e.preventDefault());
-    button.addEventListener("click", e => openRadialAtButton(button, { source: id === "global-menu" ? "global" : "editor" }, e.detail === 0));
+    button.addEventListener("click", e => openRadialAtButton(button, { source: id === "global-menu" ? "global" : "editor" }, !T.isPointerClick(e)));
   }
   blockContent.setAttribute("aria-keyshortcuts", SHORTCUTS.filter(s => s.scope === "content-widget").map(s => ariaKeyshortcuts(s)).join(" "));
   blockContent.addEventListener("keydown", e => {
@@ -2068,7 +2212,7 @@
     if (end) clearRadialPress();
   }, true);
   document.addEventListener("click", e => {
-    if (performance.now() < suppressClickUntil && e.detail) { e.preventDefault(); e.stopImmediatePropagation(); suppressClickUntil = 0; }
+    if (performance.now() < suppressClickUntil && T.isPointerClick(e)) { e.preventDefault(); e.stopImmediatePropagation(); suppressClickUntil = 0; }
   }, true);
   document.addEventListener("contextmenu", e => {
     const touch = e.pointerType === "touch" || e.sourceCapabilities?.firesTouchEvents;
@@ -2154,8 +2298,9 @@
     const draft = normalizeDraft(pendingSession);
     if (!draft) { announce("No hay una sesión válida para recuperar."); return; }
     cancelTemplateForStructuralChange();
-    setDocumentMacros(draft.macros, false);
-    rememberChange(); selectDocument(draft.documentId); setMetadata(draft.metadata); blocks = draft.blocks;
+    rememberChange();
+    setDocumentMacros(draft.macros, false); loadReferences(draft);
+    selectDocument(draft.documentId); setMetadata(draft.metadata); blocks = draft.blocks;
     const editor = pendingSession.editor || {};
     $("#block-type").value = blockType(editor.type) ? editor.type : "text";
     $("#block-title").value = typeof editor.title === "string" ? editor.title : "";
@@ -2194,7 +2339,7 @@
     if (!data) { announce("La versión guardada es incompatible."); return; }
     form.inert=false;
     cancelTemplateForStructuralChange(); clearMacroForm();
-    selectDocument(id); setDocumentMacros(data.macros,false); setMetadata(data.metadata); blocks=data.blocks;
+    selectDocument(id); setDocumentMacros(data.macros,false); loadReferences(data); setMetadata(data.metadata); blocks=data.blocks;
     resetBlockEditor(); renderBlocks(); renderEditorPreview(); output.value=""; generatedSnapshot=null;
     $("#version-diff").hidden=true;
     if (!focusById("edit",targetId)) focusBlockContent();
@@ -2290,7 +2435,12 @@
         for (const line of item.lines?.changes||[]) lines.push("  "+(line.kind==="added"?"+ ":"− ")+line.line+" "+line.text);
       }
     }
-    for (const [key,label] of [["metadata","Metadato"],["macros","Macro"]]) for (const change of diff[key]) {
+    for (const change of diff.references) {
+      const action = {added:"añadida",removed:"eliminada",modified:"modificada"}[change.kind];
+      lines.push("Referencia " + action + " · " + change.key);
+      if (change.kind === "modified") lines.push("  " + JSON.stringify(change.before) + " → " + JSON.stringify(change.after));
+    }
+    for (const [key,label] of [["metadata","Metadato"],["macros","Macro"],["bibliography","Bibliografía"]]) for (const change of diff[key]) {
       lines.push(label+" "+change.key+": "+JSON.stringify(change.before??null)+" → "+JSON.stringify(change.after??null));
     }
     return lines.join("\n") || "Sin cambios respecto a esta versión.";
@@ -2328,7 +2478,7 @@
     const snapshot=state(), config=$("#project-config").checked ? JSON.parse(JSON.stringify(portableConfig())) : null;
     withVersions(async store=>{
       let versions=[], warning="";
-      try { versions=(await store.read()).filter(v=>v.documentId===snapshot.documentId); }
+      try { versions=T.upgradeStoredVersions((await store.read()).filter(v=>v.documentId===snapshot.documentId)); }
       catch { warning=" No se pudieron incluir las versiones almacenadas."; }
       T.downloadProject({kind:"notas-latex-proyecto",version:1,exportedAt:new Date().toISOString(),documentId:snapshot.documentId,
         current:T.documentSnapshot(snapshot),versions,...(config?{config}:{})});
@@ -2365,6 +2515,7 @@
         versionStatus("Borrador guardado (migrado) disponible en Versiones.");
       } else versionStatus("El borrador anterior es ilegible. Se conserva su copia original.");
     } else rows=await store.read();
+    if (rows.some(row => row.state?.version < DRAFT_VERSION)) rows=await store.update(T.upgradeStoredVersions);
     paintVersions(rows); void reportStorage(store);
   });
   selectDocument(documentId);

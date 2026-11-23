@@ -228,18 +228,32 @@
 - todos los kinds no matemáticos extraen tramos delimitados
 - analyzeContent clasifica resultados y fallos del renderizador inyectado
 
-## `tests/pdflatex.test.js` — 2 pruebas
+## `tests/pdflatex.test.js` — 4 pruebas
 
 - pdflatex compila los fragmentos radiales y el enlace en un documento
 - pdflatex confirma los números de cada destino tras dos compilaciones
+- pdflatex confirma las ocho citas del curso y el orden de bibcite en IEEE
+- pdflatex confirma las ocho citas del curso y el orden de bibcite en APA
 
-## `tests/radial.test.js` — 5 pruebas
+## `tests/radial.test.js` — 6 pruebas
 
 - los sectores empiezan arriba, giran a la derecha y asignan el borde al siguiente
 - espera, cancelación, zona muerta, vibración y submenús en los dos modos
 - el catálogo radial deriva referencias válidas y conserva objetivos de 44 píxeles
 - los fragmentos radiales envuelven la selección literal y comparten los huecos
 - todos los fragmentos radiales pasan KaTeX en su contexto y la comprobación previa
+- el clic táctil posterior a soltar la barra se reconoce aun con detail cero y el teclado conserva el foco
+
+## `tests/references.test.js` — 8 pruebas
+
+- cada error bibliográfico identifica su campo y la clave se propone sin colisiones
+- las fichas IEEE y APA formatean autores, edición, lugar y campos literales o escapados
+- IEEE sigue las citas de padres e hijos y APA ordena por apellido, año y título
+- natbib solo se activa por una ficha o por un comando propio escrito fuera de comentarios
+- las sugerencias de cita sustituyen solo la clave actual con opcionales, estrella y varias claves
+- la migración de v5, la configuración antigua y el proyecto conservan la bibliografía
+- la conversión conserva las claves y las líneas literales y rechaza colisiones de forma atómica
+- el resumen bibliográfico distingue claves rotas, conflictos antiguos y fichas APA o sin cita
 
 ## `tests/selection-scope.test.js` — 6 pruebas
 
@@ -311,4 +325,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-232 pruebas con `node:test` más la comprobación estructural.
+243 pruebas con `node:test` más la comprobación estructural.

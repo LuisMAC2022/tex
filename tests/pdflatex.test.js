@@ -51,3 +51,18 @@ test("pdflatex confirma los números de cada destino tras dos compilaciones", op
   const aux = await compileTwice(state, {"imagen.png": png});
   for (const t of targets) assert.ok(aux.includes(`\\newlabel{${t.label}}{{${t.number}}`), aux);
 });
+
+async function checkCourseCitations(style) {
+    const references = T.COURSE_REFERENCES;
+    const state = { metadata:{title:"Libros del curso"}, references, bibliography:{style}, blocks:[
+      {type:"text",content:"Según \\citet{larson1995}, véase \\citep[p.~912]{stewart1994,spivak1993}.", children:[
+        {type:"text",content:"También \\citep{zill1996,leithold1992,swokowski1989}."}]},
+      {type:"text",content:"\\citeauthor{boyce1994} y \\citeyear{stein1995}."},
+    ]};
+    const aux = await compileTwice(state);
+    const keys = [...aux.matchAll(/\\bibcite\{([^}]+)\}/g)].map(m => m[1]);
+    assert.equal(keys.length, 8);
+    assert.deepEqual(keys, Array.from(T.printedReferences(state), r => r.entry.key));
+}
+test("pdflatex confirma las ocho citas del curso y el orden de bibcite en IEEE", optional, () => checkCourseCitations("ieee"));
+test("pdflatex confirma las ocho citas del curso y el orden de bibcite en APA", optional, () => checkCourseCitations("apa"));
