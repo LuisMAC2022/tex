@@ -451,15 +451,24 @@
     announce(`${describeBlock(block, result.path)} movido a la posición ${result.path[result.path.length - 1] + 1} de su nivel.${cancelled}`);
   });
 
-  form.addEventListener("submit", (event) => {
-    event.preventDefault(); const title = $("#note-title");
-    if (!title.value.trim()) { $("#metadata-details").open = true; $("#title-error").textContent = "Escribe un título para generar el documento."; title.setAttribute("aria-invalid", "true"); title.focus(); announce("No se generó el documento: falta el título."); return; }
+  /**
+   * Regenera «Código LaTeX» desde el estado actual. Copiar y descargar la llaman
+   * antes de exportar: si usaran el último texto generado, entregarían un .tex
+   * sin los cambios posteriores y con el nombre del título nuevo.
+   */
+  function generateDocument() {
+    const title = $("#note-title");
+    if (!title.value.trim()) { $("#metadata-details").open = true; $("#title-error").textContent = "Escribe un título para generar el documento."; title.setAttribute("aria-invalid", "true"); title.focus(); announce("No se generó el documento: falta el título."); return false; }
     $("#title-error").textContent = "";
     title.removeAttribute("aria-invalid");
     const documentState = state();
     for (const hook of beforeGenerateHooks) hook(documentState);
     output.value = generateLatex(documentState);
-    announce("Documento generado.");
+    return true;
+  }
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (generateDocument()) announce("Documento generado.");
   });
   $("#save-draft").addEventListener("click", () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: DRAFT_VERSION, ...state() })); announce("Borrador guardado únicamente en este dispositivo."); } catch { announce("No se pudo guardar el borrador; el contenido actual se conserva."); } });
   $("#restore-draft").addEventListener("click", () => {
@@ -480,10 +489,13 @@
     try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(LEGACY_STORAGE_KEY); } catch { /* el contenido abierto se conserva igualmente */ }
     $("#save-draft").focus(); announce("Borrador guardado eliminado; el contenido actual se conserva.");
   });
-  $("#download-tex").addEventListener("click", () => { if (!output.value) { announce("Genera el documento antes de descargarlo."); $("#generate").focus(); return; } downloadTex(output.value, $("#note-title").value); announce("Descarga del archivo .tex iniciada."); });
+  $("#download-tex").addEventListener("click", () => {
+    if (!generateDocument()) return;
+    downloadTex(output.value, $("#note-title").value); announce("Documento actualizado y descarga del archivo .tex iniciada.");
+  });
   $("#copy-code").addEventListener("click", async () => {
-    if (!output.value) { announce("Genera el documento antes de copiarlo."); $("#generate").focus(); return; }
-    try { await copyToClipboard(output.value, output); announce("Código LaTeX copiado."); } catch { announce("No se pudo copiar el código; permanece disponible para seleccionarlo manualmente."); }
+    if (!generateDocument()) return;
+    try { await copyToClipboard(output.value, output); announce("Documento actualizado y código LaTeX copiado."); } catch { announce("No se pudo copiar el código; permanece disponible para seleccionarlo manualmente."); }
   });
 
   function focusBlockContent() { $(blockType($("#block-type").value)?.kind === "image" ? "#image-path" : "#block-content").focus(); }

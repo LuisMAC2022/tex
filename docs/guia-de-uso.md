@@ -107,6 +107,8 @@ El bloque aparece en la lista de abajo con sus botones propios. Repite para el r
 2. Pulsa «Copiar código». Ya tienes el `.tex` entero en el portapapeles.
    - También puedes pulsar «Descargar .tex» y guardarlo como archivo. El nombre
      sale de tu título.
+   - Copiar y descargar generan el documento otra vez antes de exportarlo, así
+     que siempre llevan tus últimos cambios aunque no hayas vuelto a generar.
 3. En Overleaf: *New Project → Blank Project*. Borra todo lo que traiga el editor,
    pega lo tuyo con `Ctrl+V` y pulsa *Recompile*.
 
@@ -222,7 +224,7 @@ Tienen nombres que se parecen y hacen cosas distintas. Merece la pena leerlo una
 | «Duplicar» | Deja una copia **justo debajo**, al mismo nivel, con todo lo que tuviera dentro. De un solo paso: no eliges destino. | “Otro teorema igual que éste, para cambiarle dos cosas.” |
 | «Copiar bloque» | Guarda el bloque en una **bandeja** de la aplicación. No lo mueve ni lo cambia. Luego «Pegar bloque» lo coloca donde diga la frase del formulario. | “Quiero esta lista también dentro de aquel otro teorema.” |
 | «Copiar texto» | Manda el contenido del bloque al **portapapeles del sistema**, para pegarlo con `Ctrl+V` donde sea, incluso fuera de la aplicación. | “Me llevo este párrafo al correo.” |
-| «Copiar código» | Copia **el documento entero** ya generado. Es el de arriba, el que usas para Overleaf. | Siempre que vayas a Overleaf. |
+| «Copiar código» | Genera y copia **el documento entero**, con tus últimos cambios. Es el de arriba, el que usas para Overleaf. | Siempre que vayas a Overleaf. |
 
 Sobre la bandeja:
 
@@ -275,8 +277,8 @@ cierra cada fórmula dentro de un mismo elemento.
 Al pulsar «Generar documento», el resumen «Comprobación previa a Overleaf»
 agrupa los avisos. Usa el enlace **Ir al bloque** para enfocar su botón «Editar».
 Después de guardar cambios en un bloque o de modificar la estructura, vuelve a
-generar para actualizar el resumen. Puedes copiar o descargar el contenido
-original aunque aparezcan avisos.
+generar para actualizar el resumen; «Copiar código» y «Descargar .tex» también lo
+actualizan. Puedes copiar o descargar el contenido original aunque aparezcan avisos.
 
 ---
 
