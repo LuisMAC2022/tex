@@ -173,7 +173,7 @@ apartado: siguen corridos hasta el final del documento. Es a propósito.
 
 1. Selecciona «Imagen». En «Opciones de imagen», escribe la ruta en «Archivo de imagen» o usa «Elegir archivo…» para rellenar el nombre y obtener una miniatura local. Sube el archivo al proyecto de Overleaf en esa misma ruta. El proyecto guarda la ruta y los ajustes de la imagen.
 2. Escribe el pie en «Título del bloque (opcional)». Ajusta «Ancho de la imagen» con el deslizador o elige «Pequeña» (40 %), «Mediana» (60 %), «Grande» (80 %) o «Ancho completo» (100 %). Si indicas «Altura máxima (cm, opcional)», la escala respeta ambos límites y mantiene las proporciones antes de girar.
-3. Pulsa «Girar 90°» o ajusta «Ángulo de giro (grados)». Elige «Izquierda», «Centro» o «Derecha» en «Alineación de la imagen» y completa «Posición de la figura» o «Etiqueta de la figura (opcional)» si las necesitas.
+3. Pulsa «Girar 90°» o ajusta «Ángulo de giro (grados)». Elige «Izquierda», «Centro» o «Derecha» en «Alineación de la imagen» y completa «Posición de la figura» o «Etiqueta» si las necesitas.
 4. Comprueba la ruta o la miniatura en «Vista previa de la imagen» y usa «Añadir bloque». Para volver a cargar sus ajustes, abre «Editar» en el bloque y confirma con «Guardar cambios».
 
 La ruta vacía impide añadir la imagen. Los avisos por espacios, caracteres reservados de LaTeX, mayúsculas en la extensión o formatos distintos de PNG, JPG, JPEG y PDF permiten guardarla. Al añadir la imagen dentro de un teorema o una lista, aparece en ese sitio y el pie se compone como párrafo. El ancho es un porcentaje del ancho de texto del documento. En una lista con sangría, un porcentaje menor deja más espacio para los márgenes. «Posición de la figura» se aplica a las imágenes flotantes.
@@ -520,3 +520,9 @@ Toca **Menú** para elegir una acción de texto, fórmula o imagen. También pue
 ## Seleccionar sin arrastrar
 
 Toca **Selección** y pulsa **Siguiente** para ampliar desde el cursor. En prosa puedes pasar de palabra a oración, párrafo y bloque. En una fórmula puedes alcanzar un argumento, un término, un miembro o la fórmula completa. **Anterior** recupera exactamente la selección previa. Abre **Menú** y elige **Fracción** para usarla como numerador. El cursor queda en el denominador. Volver a tocar **Selección** desactiva el modo.
+
+## Etiquetas y referencias cruzadas
+
+En un teorema, proposición, definición, ejemplo, nota, ecuación destacada o imagen, completa «Etiqueta» o pulsa «Proponer desde el título». El prefijo se muestra junto al campo. Identifica un único bloque y sigue siendo válido después de moverlo.
+
+En «Contenido», escribe `\ref{` o `\eqref{` y elige el destino con un toque, Intro o Tab. **Referir** abre la misma lista desde el menú de texto. En prosa se añade el nombre del tipo cuando hace falta. Las ecuaciones se citan con `\eqref`. Si el menú omite el número, comprueba el PDF. En «Resultado», cada error se puede seguir hasta el bloque.

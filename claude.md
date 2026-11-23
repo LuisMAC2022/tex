@@ -216,3 +216,10 @@ En la base, el tablero empezaba en 2684 px con título vacío y en 1666 px con l
 - **TalkBack**, incluidos anuncios de la barra, los menús, la selección y las versiones. También queda pendiente la revisión con lectores de pantalla de escritorio y teclados físicos.
 - **Almacenamiento y transferencia entre equipos**. Falta comprobar concesión y revocación de persistencia, expulsión de datos y reapertura tras cerrar Chrome en Android. El Chromium de este entorno canceló la escritura en disco tanto del proyecto como de una descarga de texto de control. Se verificaron el JSON generado, su nombre y su importación. Falta trasladar el archivo descargado entre teléfono y portátil.
 - **Overleaf**, Firefox y Safari/WebKit. El Chromium gráfico del sistema abortó durante el arranque por el permiso de su socket. Las verificaciones de navegador descritas arriba se ejecutaron con Chromium headless. El procedimiento de dispositivo, almacenamiento y exportación figura en la [lista de revisión](docs/revision-manual.md#android).
+## U3.1 · Etiquetas y referencias cruzadas
+
+La fusión reúne las correcciones de `claude/ui-ux` con U0–U5 de `codex/ui-ux`. Ambas ramas habían usado DEC-022. La decisión sobre exponentes conserva su justificación como DEC-026.
+
+La migración v5 traslada la etiqueta de imagen y deduplica en orden de emisión. El editor propone claves, ofrece destinos desde el teclado y **Referir**, y señala duplicados y referencias rotas. La estructura, el historial y las plantillas conservan las reglas de identidad. Se registraron DEC-027 e INV-011.
+
+Pasaron 232 pruebas y el control estructural. Dos compilaciones con `pdflatex` confirmaron en el `.aux` los ocho destinos de la prueba, incluidas dos figuras. El ejemplo regenerado coincide byte a byte. Chromium headless abrió el sitio por `file://` y comprobó propuesta, tarjeta numerada, autocompletado con Intro y generación. No verificado en Android físico, Gboard, TalkBack, NVDA, Overleaf, Firefox o Safari. Los pasos pendientes figuran en la revisión manual.

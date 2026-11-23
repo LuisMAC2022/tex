@@ -99,6 +99,15 @@
 - los metadatos y los títulos conservan el escapado completo, barra y llaves incluidas
 - el contenido se emite igual dentro de un bloque anidado
 
+## `tests/cross-references.test.js` — 6 pruebas
+
+- las etiquetas de bloque son únicas en todo el árbol
+- la normalización y la propuesta de etiqueta usan prefijos, acentos y sufijos libres
+- las etiquetas se emiten tras el título y solo numeran ecuaciones etiquetadas
+- los contadores siguen la emisión de entornos, ecuaciones y figuras flotantes o anidadas
+- las sugerencias de referencia respetan el contexto, la palabra previa y los cierres
+- la comprobación de etiquetas localiza referencias rotas, duplicadas y de tipo incorrecto
+
 ## `tests/documentacion.test.js` — 4 pruebas
 
 - docs/pruebas.md está al día respecto de la suite
@@ -166,7 +175,7 @@
 ## `tests/identificadores.test.js` — 3 pruebas
 
 - los identificadores de bloque son únicos en todo el árbol
-- los borradores v1 a v3 migran a v4 y conservan su identidad al volver a abrir
+- los borradores anteriores migran al esquema vigente y conservan su identidad al volver a abrir
 - los identificadores del estado de ejemplo no alteran un byte de LaTeX
 
 ## `tests/image-options.test.js` — 5 pruebas
@@ -199,7 +208,7 @@
 
 ## `tests/macros.test.js` — 8 pruebas
 
-- el borrador v4 conserva macros desde v3, migra v1/v2 sin macros y rechaza versiones futuras
+- el borrador vigente conserva macros desde v3, migra v1/v2 sin macros y rechaza versiones futuras
 - el preámbulo añade newcommand literal tras graphicx y no cambia sin macros
 - la validación de macros protege nombres reservados del catálogo y entornos
 - la definición de macro valida llaves, escapes, una línea y parámetros declarados
@@ -219,9 +228,10 @@
 - todos los kinds no matemáticos extraen tramos delimitados
 - analyzeContent clasifica resultados y fallos del renderizador inyectado
 
-## `tests/pdflatex.test.js` — 1 pruebas
+## `tests/pdflatex.test.js` — 2 pruebas
 
 - pdflatex compila los fragmentos radiales y el enlace en un documento
+- pdflatex confirma los números de cada destino tras dos compilaciones
 
 ## `tests/radial.test.js` — 5 pruebas
 
@@ -301,4 +311,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-225 pruebas con `node:test` más la comprobación estructural.
+232 pruebas con `node:test` más la comprobación estructural.

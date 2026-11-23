@@ -61,7 +61,7 @@
       if (!old) { result.added.push(info); continue; }
       if (old.parent!==entry.parent || old.position!==entry.position) result.moved.push({...info,
         from:{parent:old.parent,position:old.position},to:{parent:entry.parent,position:entry.position}});
-      const fields=["type","title","content","options","listFormat"].filter(k=>!equal(old.block[k],block[k]));
+      const fields=["type","title","content","options","listFormat","label"].filter(k=>!equal(old.block[k],block[k]));
       if (fields.length) result.modified.push({...info,fields,
         ...(fields.includes("content") ? {lines:diffLines(old.block.content,block.content)} : {})});
     }

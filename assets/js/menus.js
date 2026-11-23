@@ -27,6 +27,7 @@
       command("title", "Título", "T", "focusTitle"),
       insert("link", "Enlace", "↗", "\\href{#1}{#2}#0"),
       insert("inline", "Fórmula en línea", "ƒ", "$#1$#0"),
+      insert("reference", "Referir", "↪", "\\ref{#1}#0"),
     ] },
     { context: "image", slices: [
       submenu("size", "Tamaño", "↔", [40,60,80,100].map(w => command("width-" + w, w + " %", "↔", "setImageWidth", w))),

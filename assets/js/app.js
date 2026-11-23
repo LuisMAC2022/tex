@@ -29,6 +29,7 @@
   } catch { /* Es posible editar sin almacenamiento. */ }
   let history = { past: [], future: [] }, committedMetadata, generatedSnapshot = null, lastChangedId = null;
   let blocks = [];
+  let blockTargets = new Map();
   let macros = [];
   let previewVersion = 0;
   const structurePreviewCache = new Map();
@@ -214,6 +215,8 @@
     const meta = document.createElement("p");
     meta.className = "block-meta";
     meta.textContent = `Nivel ${path.length} · ${where}`;
+    const target = blockTargets.get(block.label);
+    if (target) meta.textContent += " · " + target.word + (target.number === null ? "" : " " + target.number) + " · " + target.label;
     const preview = document.createElement("div");
     preview.className = "block-preview";
     renderBlockPreview(preview, block, { parentPath, structure: true });
@@ -250,6 +253,7 @@
   }
 
   function renderBlocks() {
+    blockTargets = new Map(global.TexNotes.referenceTargets({ blocks }).map(target => [target.label, target]));
     blockList.replaceChildren();
     $("#empty-blocks").hidden = blocks.length > 0;
     blocks.forEach((block, index) => blockList.append(blockItem(block, [index], null, [], blocks.length)));
@@ -334,6 +338,7 @@
     announce(message);
   }
   function validateBlock(type) {
+    if (!validateBlockLabel(type)) return false;
     const custom = blockFieldHooks.find((hook) => hook.validate && hook.appliesTo?.(type));
     if (custom) return custom.validate();
     const field = $("#block-content");
@@ -373,7 +378,7 @@
     const { parent } = editorTarget();
     // Cada pegado entrega una copia nueva: la bandeja conserva su bloque y dos
     // pegados del mismo origen no comparten objetos.
-    const result = insertBlock(blocks, parent, cloneBlock(tray.block));
+    const result = insertBlock(blocks, parent, global.TexNotes.copyWithoutLabels(tray.block));
     if (!result) { renderBlocks(); setEditorTarget(editorTarget()); announce("No se pudo pegar el bloque en ese destino; la lista se actualizó."); return; }
     const label = trayLabel();
     const cancelled = cancelEditForStructuralChange();
@@ -802,7 +807,7 @@
   const imageHeight = $("#image-height");
   const imageAngle = $("#image-angle");
   const imagePlacement = $("#image-placement");
-  const imageLabel = $("#image-label");
+  const blockLabelField = $("#block-label");
   const imageError = $("#image-error");
   const imageWarnings = $("#image-warnings");
   const imagePreviews = new Map();
@@ -831,6 +836,9 @@
 
   function syncImageFields() {
     const active = imageType($("#block-type").value);
+    const prefix = blockType($("#block-type").value)?.labelPrefix;
+    $("#label-fields").hidden = !prefix;
+    $("#label-prefix").textContent = prefix ? prefix + ":" : "";
     $("#proof-help").hidden = $("#block-type").value !== "proof";
     imageFields.hidden = !active;
     $("#block-content").closest(".field").hidden = active;
@@ -851,7 +859,7 @@
   }
 
   function fillImageFields(block = {}) {
-    const { width, height, angle, align, placement, label } = normalizeImageOptions(block.options);
+    const { width, height, angle, align, placement } = normalizeImageOptions(block.options);
     imagePath.value = imageType(block.type) ? block.content.trim() : "";
     imageFile.value = "";
     imageWidth.value = Math.round(width * 100);
@@ -859,7 +867,6 @@
     imageAngle.value = angle;
     imageFields.querySelector(`input[name="imageAlign"][value="${align}"]`).checked = true;
     imagePlacement.value = placement;
-    imageLabel.value = label ?? "";
     updateImageWidth();
     syncImageFields();
   }
@@ -876,7 +883,6 @@
           angle: imageAngle.value,
           align: imageFields.querySelector('input[name="imageAlign"]:checked')?.value,
           placement: imagePlacement.value,
-          label: imageLabel.value,
         }),
       };
     },
@@ -896,6 +902,43 @@
       }
       return !message;
     },
+  });
+
+  function existingLabels() {
+    const editing = blockAtPath(blocks, editorTarget().editing);
+    return T.flattenBlocks(blocks).flatMap(({ block }) => [
+      ...(block !== editing && block.label ? [block.label] : []),
+      ...T.documentCommands(block === editing ? blockDraft() : block).filter(c => c.name === "label").map(c => c.arg),
+    ]);
+  }
+  function validateBlockLabel(type) {
+    const prefix = blockType(type)?.labelPrefix, raw = blockLabelField.value.trim();
+    const label = T.normalizeLabel(raw, prefix);
+    let message = "";
+    if (prefix && raw) {
+      if (!label || (raw !== label && prefix + ":" + raw !== label))
+        message = "Usa letras minúsculas sin acentos, cifras, guiones y dos puntos.";
+      else if (existingLabels().includes(label)) message = "Ya existe esta etiqueta en el documento.";
+    }
+    $("#label-error").textContent = message;
+    blockLabelField.setAttribute("aria-invalid", String(Boolean(message)));
+    if (message) { blockLabelField.focus(); announce(message); }
+    return !message;
+  }
+  function fillBlockLabel(block = {}) {
+    blockLabelField.value = global.TexNotes.labelOf(block);
+    $("#label-error").textContent = "";
+    blockLabelField.removeAttribute("aria-invalid");
+  }
+  blockFieldHooks.push({
+    read(type) { return { label: global.TexNotes.normalizeLabel(blockLabelField.value, blockType(type)?.labelPrefix) }; },
+    fill: fillBlockLabel, clear: fillBlockLabel,
+  });
+  $("#propose-label").addEventListener("click", () => {
+    const prefix = blockType($("#block-type").value)?.labelPrefix;
+    blockLabelField.value = T.labelFromTitle($("#block-title").value, prefix, existingLabels());
+    validateBlockLabel($("#block-type").value); scheduleSessionSave();
+    blockLabelField.focus(); announce("Etiqueta propuesta " + blockLabelField.value);
   });
 
   blockItemExtensions.push((block, path, { article }) => {
@@ -1298,7 +1341,7 @@
     if (!prefs.autoPair) return;
     const current = fieldState();
     const result = T.autoPair(current, event.data, { mode: T.mathContextAt(current.value, current.selectionStart, $("#block-type").value), pending: pendingPairs });
-    if (result) { event.preventDefault(); applyAssist(result); }
+    if (result) { event.preventDefault(); applyAssist(result); openDocumentSuggestions(); }
   });
   /* @decision DEC-016 ancla:3d5a2b69 tramo:14
    * La captura en el fieldset antecede al manejador de Intro de listas. Solo
@@ -1401,8 +1444,15 @@
     if (special) { openAssistMenu(special.entries, special.token, mode); return; }
     const token = T.completionToken(current);
     if (!token) { closeAssistMenu(); return; }
+    if (openDocumentSuggestions(current, mode, token)) return;
     const entries = T.completionEntries(getCompletionMacros()).filter(e => (e.kind === "environment") === (token.kind === "environment"));
     openAssistMenu(T.rankCompletions(token.query, entries, usage, Date.now(), mode), token, mode);
+  }
+  function openDocumentSuggestions(current = fieldState(), mode = writingMode(), token = T.completionToken(current)) {
+    if (token?.kind !== "reference" || mode === "comment") return false;
+    const entries = T.referenceOptions([...blockTargets.values()], token, current.value, mode);
+    openAssistMenu(T.rankCompletions(token.query, entries, usage, Date.now(), mode), token, mode);
+    return true;
   }
   function insertWritingSnippet(source, start, end, wrapMath) {
     const current = fieldState();
@@ -1417,6 +1467,7 @@
     closeAssistMenu();
     if (acceptSpecialCompletion(entry, token)) return;
     insertWritingSnippet(entry.insert, token.start, token.end, mode === "text" && entry.mode === "math");
+    openDocumentSuggestions();
     noteUsage(entry.key);
   }
   function expandAlias(current) {
@@ -1572,7 +1623,7 @@
     $("#template-progress-text").textContent = `Plantilla «${template.name}»: paso ${index + 1} de ${template.steps.length}${next ? ` · Siguiente: ${blockLabel(next.block.type)}` : " · Último paso"}.`;
   }
   function loadTemplateStep() {
-    const { block } = templateSession.template.steps[templateSession.index];
+    const block = T.copyWithoutLabels(templateSession.template.steps[templateSession.index].block);
     const parent = T.templateParent(templateSession);
     if (!parent) { cancelTemplateForStructuralChange(); announce("La plantilla perdió su destino y se canceló."); return; }
     setEditorTarget({ parent }); selectBlockType(block.type);
@@ -1870,6 +1921,7 @@
     const result = T.applyRadialSnippet(fieldState(), source);
     applyAssist({ edit: result.edit, pending: [] }); snippetSession = result.session;
     announce(result.session ? "Hueco " + (result.session.index + 1) + " de " + result.session.holes.length : "Fragmento insertado.");
+    openDocumentSuggestions();
   }
   function goTo(destination) {
     if (destination === "preferences") $("#writing-preferences").open = true;
@@ -2065,7 +2117,7 @@
   let announcedStorageError = false;
   try { const raw = JSON.parse(global.localStorage.getItem(AUTOSAVE_KEY)); const draft = normalizeDraft(raw); pendingSession = draft ? { ...raw, ...draft } : null; } catch { /* sin almacenamiento */ }
   const hasSessionContent = global.TexNotes.sessionHasContent;
-  /* @decision DEC-019 ancla:0b9a8596 tramo:19
+  /* @decision DEC-019 ancla:e6a9b0a5 tramo:19
    * El autoguardado no escribe sesiones vacías ni reemplaza el borrador elegido.
    * Antes del primer reemplazo conserva la sesión anterior en una clave aparte.
    */
@@ -2074,6 +2126,7 @@
     const type = $("#block-type").value;
     const session = { version: DRAFT_VERSION, savedAt: new Date().toISOString(), ...state(), editor: {
       type, title: $("#block-title").value, content: blockContent.value,
+      label: blockLabelField.value,
       editingPath: editorTarget().editing, parentPath: editorTarget().parent,
       image: blockFieldHooks.find((hook) => hook.appliesTo?.("image"))?.read("image"),
     } };
@@ -2109,7 +2162,7 @@
     blockContent.value = typeof editor.content === "string" ? editor.content : "";
     const paths = { editing: Array.isArray(editor.editingPath) ? editor.editingPath : [], parent: Array.isArray(editor.parentPath) ? editor.parentPath : [] };
     if (paths.parent.length && !acceptsChildren(blockAtPath(blocks, paths.parent)?.type)) paths.parent = [];
-    for (const hook of blockFieldHooks) hook.fill?.({ ...blockDraft(), ...(editor.image || {}), type: $("#block-type").value });
+    for (const hook of blockFieldHooks) hook.fill?.({ ...(editor.image || {}), label: editor.label, type: $("#block-type").value });
     setEditorTarget(paths); renderBlocks(); renderEditorPreview(); focusBlockContent();
     $("#autosave-banner").hidden = true;
     paintVersions(knownVersions); announce("Sesión recuperada, incluido el bloque a medio escribir.");
@@ -2137,9 +2190,11 @@
   }
   function changeTree(next, id) { rememberChange(id); lastChangedId=id; blocks = next; }
   function loadVersionState(data, id, targetId) {
+    data = normalizeDraft({ ...data, documentId: id });
+    if (!data) { announce("La versión guardada es incompatible."); return; }
     form.inert=false;
     cancelTemplateForStructuralChange(); clearMacroForm();
-    selectDocument(id); setDocumentMacros(data.macros,false); setMetadata(data.metadata); blocks=T.cloneBlocks(data.blocks);
+    selectDocument(id); setDocumentMacros(data.macros,false); setMetadata(data.metadata); blocks=data.blocks;
     resetBlockEditor(); renderBlocks(); renderEditorPreview(); output.value=""; generatedSnapshot=null;
     $("#version-diff").hidden=true;
     if (!focusById("edit",targetId)) focusBlockContent();
@@ -2230,7 +2285,7 @@
       for (const item of diff[key]) {
         lines.push(label+" · "+(item.title || blockLabel(item.type))+" ("+item.id+")");
         if (item.from) lines.push("  "+(item.from.parent||"Raíz")+" · "+(item.from.position+1)+" → "+(item.to.parent||"Raíz")+" · "+(item.to.position+1));
-        if (item.fields) lines.push("  "+item.fields.map(k=>({title:"título",type:"tipo",content:"contenido",options:"opciones",listFormat:"formato de lista"})[k]).join(", "));
+        if (item.fields) lines.push("  "+item.fields.map(k=>({title:"título",type:"tipo",content:"contenido",options:"opciones",listFormat:"formato de lista",label:"etiqueta"})[k]).join(", "));
         if (item.lines?.truncated) lines.push("  Diferencia por líneas omitida por tamaño.");
         for (const line of item.lines?.changes||[]) lines.push("  "+(line.kind==="added"?"+ ":"− ")+line.line+" "+line.text);
       }

@@ -20,16 +20,14 @@
     const cm = Number(imageNumber(height)?.toFixed(2));
     const alignment = typeof align === "string" ? align.trim().toLowerCase() : "";
     const positions = typeof placement === "string" ? placement.trim().toLowerCase() : "";
-    const key = typeof label === "string"
-      ? label.normalize("NFD").toLowerCase().replace(/[^a-z0-9:-]/g, "").replace(/^fig:/, "")
-      : "";
+    const key = TexNotes.normalizeLabel(label, "fig");
     return {
       width: boundedImageNumber(width, 0.1, 1, 0.8),
       ...(cm > 0 && cm <= MAX_HEIGHT_CM ? { height: cm } : {}),
       angle: boundedImageNumber(angle, -360, 360, 0),
       align: ["center", "left", "right"].includes(alignment) ? alignment : "center",
       placement: [...PLACEMENT].filter((position) => positions.includes(position)).join("") || PLACEMENT,
-      ...(key ? { label: `fig:${key}` } : {}),
+      ...(key ? { label: key } : {}),
     };
   }
 

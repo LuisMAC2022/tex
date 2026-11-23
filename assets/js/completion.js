@@ -50,6 +50,11 @@
   function completionToken(state) {
     if(state.selectionStart!==state.selectionEnd) return null;
     const before=state.value.slice(0,state.selectionStart);
+    const reference = /\\(?:eqref|ref)\{([^{}\s,]*)$/.exec(before);
+    if (reference && !T.isEscaped(before, reference.index)) {
+      const tail = /^[a-z0-9:-]*\}?/i.exec(state.value.slice(state.selectionStart))[0];
+      return { kind: "reference", query: reference[1], start: reference.index, end: state.selectionStart + tail.length };
+    }
     const env=/\\begin\{([A-Za-z]*)$/.exec(before);
     if(env&&!T.isEscaped(before,env.index)) return {kind:'environment',query:env[1],start:env.index,end:state.selectionStart+Number(state.value[state.selectionStart]==='}')};
     const match=/(?:^|[^\\])(?:\\\\)*\\([A-Za-z]+)$/.exec(before);
@@ -61,6 +66,18 @@
       i++;
     }
     return true;
+  }
+  function referenceOptions(targets, token, value, mode) {
+    const before = value.slice(0, token.start);
+    return targets.map(target => {
+      const { word, label, number, title, typeId } = target;
+      const heading = number === null ? word : word + " " + number;
+      const alreadyNamed = new RegExp("(?:^|[^\\p{L}\\p{N}])" + word + "(?:\\s+|~)$", "iu").test(before);
+      const command = typeId === "equation" ? "\\eqref" : "\\ref";
+      const prefix = mode === "text" && typeId !== "equation" && !alreadyNamed ? word + "~" : "";
+      return { key: "ref:" + label, kind: "reference", trigger: label, label: heading + " · " + (title || label),
+        detail: label, insert: prefix + command + "{" + label + "}", mode: "any" };
+    });
   }
   function validateAlias(alias, existing = []) {
     const errors=[];
@@ -89,5 +106,5 @@
     for(const m of config.macros){ errors.push(...(T.validateMacro ? T.validateMacro(m,macros) : ['Esta versión no admite macros importadas.'])); macros.push(m); }
     return errors;
   }
-  Object.assign(T,{SHORT_WORDS,TEXT_COMMANDS,DEFAULT_ALIASES,normalizeSearch,completionEntries,usageScore,rankCompletions,recordUsage,completionToken,validSnippetMarkers,validateAlias,aliasAt,validateConfiguration});
+  Object.assign(T,{SHORT_WORDS,TEXT_COMMANDS,DEFAULT_ALIASES,normalizeSearch,completionEntries,referenceOptions,usageScore,rankCompletions,recordUsage,completionToken,validSnippetMarkers,validateAlias,aliasAt,validateConfiguration});
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -81,3 +81,8 @@ Guardián: `tests/generator.test.js` → "el preámbulo solo carga paquetes de l
 Guardián: `tests/identificadores.test.js` → "los identificadores de bloque son únicos en todo el árbol"
 
 Las copias reciben identificadores propios y los movimientos conservan los de toda la rama. Véase [DEC-024](decisiones/DEC-024-identidad-de-bloques.md).
+
+### INV-011 — Las etiquetas de bloque son únicas en todo el árbol
+Guardián: `tests/cross-references.test.js` → "las etiquetas de bloque son únicas en todo el árbol"
+
+Se conserva la primera al migrar. Duplicar, pegar y aplicar plantillas vacían las etiquetas de la copia. Mover conserva cada destino. [DEC-027](decisiones/DEC-027-etiquetas-de-bloque.md)

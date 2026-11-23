@@ -114,3 +114,8 @@ Con la rama de trabajo en el portátil, ejecuta `python3 -m http.server 8000` de
 - [ ] Guardar una versión en Chrome Android, cerrar el navegador y restaurarla después. Comprobar persistencia concedida o denegada y espacio usado. Exportar a JSON, transferir al portátil, importar y volver a Android. Comparar bloques movidos, macros y líneas. Recuperar el respaldo anterior a una importación y probar deshacer/rehacer con TalkBack.
 - [ ] Con Gboard y TalkBack, seleccionar una palabra, una fracción anidada y una celda de matriz con Anterior/Siguiente. Reducir hasta recuperar una selección hacia atrás. Envolver con Menú → Fracción, escribir el denominador y deshacer.
 - [ ] En Chrome Android, Firefox y Safari, descargar el proyecto, abrir el JSON guardado y volver a importarlo desde el selector de archivos. Comprobar nombre, título, macros y versiones después del traslado.
+
+## Destinos del documento
+
+- En Overleaf, compilar dos veces teoremas, ecuaciones y figuras etiquetadas. Comparar el PDF con los números que muestra el menú, también después de mover una rama.
+- En Android con Gboard, abrir las sugerencias con `\ref{` y mediante **Referir**. Con TalkBack y NVDA, comprobar el nombre del campo, el prefijo, sus errores y el retorno al editor.

@@ -58,22 +58,29 @@
     return type.kind === "text" ? "\n\n" : "\n";
   }
 
-  /**
-   * Serializa un bloque y su descendencia. Los hijos de un bloque que abre un
-   * entorno se emiten antes de su \end{...}; los de un bloque de texto, tras su
-   * propio contenido. El contexto indica el entorno aún abierto para los hijos.
-   * Nunca se concatenan dentro de `content`.
-   */
-  function blockToLatex(block = {}, context = {}) {
-    const { depthContext } = context;
+  function blockIsEmitted(block) {
+    return Boolean(block && (contentToLatex(block.content).trim() ||
+      (Array.isArray(block.children) && block.children.some(blockIsEmitted))));
+  }
+
+  function emissionContext(block, context) {
     const type = TexNotes.blockType(block.type) || TexNotes.blockType("text");
+    const outline = type.kind === "list" ? TexNotes.parseListOutline(contentToLatex(block.content), type.listEnvironment, block.listFormat) : null;
+    const depth = context.depthContext;
+    const childDepth = outline ? TexNotes.listOutlineDepthContext(outline, depth) :
+      type.kind === "theorem" ? TexNotes.listDepthWithEnvironment(depth, type.environment) : depth;
+    return { type, outline, childContext: childDepth === depth ? context : { parentType: type.id, depthContext: childDepth } };
+  }
+
+  const floatingImage = context => !context.parentType || context.parentType === "text";
+
+  function blockToLatex(block = {}, context = {}) {
+    if (!blockIsEmitted(block)) return "";
+    const { type, outline, childContext } = emissionContext(block, context);
+    const { depthContext } = context;
     const content = contentToLatex(block.content);
-    const outline = type.kind === "list" ? TexNotes.parseListOutline(content, type.listEnvironment, block.listFormat) : null;
-    let childDepth = depthContext;
-    if (outline) childDepth = TexNotes.listOutlineDepthContext(outline, depthContext);
-    if (type.kind === "theorem") childDepth = TexNotes.listDepthWithEnvironment(depthContext, type.environment);
-    const wrapsChildren = type.kind === "theorem" || (outline && childDepth !== depthContext);
-    const childContext = wrapsChildren ? { parentType: type.id, depthContext: childDepth } : context;
+    const label = TexNotes.labelOf(block);
+    const anchor = label ? `\\label{${label}}` : "";
     const children = (Array.isArray(block.children) ? block.children : [])
       .map((child) => ({ separator: childSeparator(child), latex: blockToLatex(child, childContext) }))
       .filter((child) => child.latex);
@@ -81,6 +88,7 @@
 
     if (type.kind === "equation") {
       const formula = content.trim();
+      if (formula && anchor) return withChildren(`\\begin{equation}${anchor}\n${content}\n\\end{equation}`);
       const [open, close] = type.delimiters || ["\\[", "\\]"];
       const math = formula ? (type.inline ? `${open}${formula}${close}` : `${open}\n${content}\n${close}`) : "";
       // Una fórmula no admite hijos. Si un estado manipulado los trae, se
@@ -90,17 +98,16 @@
     if (type.kind === "image") {
       const path = content.trim();
       if (!path) return withChildren("");
-      const { width, height, angle, align, placement, label } = TexNotes.normalizeImageOptions(block.options);
+      const { width, height, angle, align, placement } = TexNotes.normalizeImageOptions(block.options);
       const limits = [`width=${width}\\textwidth`];
       if (height) limits.push(`height=${height}cm`, "keepaspectratio");
       if (angle) limits.push(`angle=${angle}`);
       const graphics = `\\includegraphics[${limits.join(",")}]{${path}}`;
       const caption = escapeMetadata(block.title).trim();
-      const anchor = label ? `\\label{${label}}` : "";
       const countFigure = label ? "\\refstepcounter{figure}" : "";
       const alignment = { center: "\\centering", left: "\\raggedright", right: "\\raggedleft" }[align];
       let lines;
-      if (!context.parentType || context.parentType === "text") {
+      if (floatingImage(context)) {
         lines = [`\\begin{figure}[${placement}]`, alignment, graphics,
           caption ? `\\caption{${caption}}` : countFigure, anchor, "\\end{figure}"];
       } else {
@@ -122,12 +129,11 @@
       return withChildren(`\\begin{thebibliography}{${labelWidth}}\n${body}\n\\end{thebibliography}`);
     }
     const body = content.trim();
-    if (!body && !children.length) return "";
     if (type.kind === "text") {
       const heading = escapeMetadata(block.title).trim();
       return withChildren(heading ? [`\\subsection{${heading}}`, body].filter(Boolean).join("\n") : body);
     }
-    return `\\begin{${type.environment}}${optionalTitle(block.title)}\n${withChildren(body)}\n\\end{${type.environment}}`;
+    return `\\begin{${type.environment}}${optionalTitle(block.title)}${anchor}\n${withChildren(body)}\n\\end{${type.environment}}`;
   }
 
   /**
@@ -206,7 +212,7 @@
   }
 
   Object.assign(TexNotes, {
-    METADATA_KEYS, normalizeLineBreaks, escapeMetadata, contentToLatex, blockToLatex,
+    METADATA_KEYS, normalizeLineBreaks, escapeMetadata, contentToLatex, blockIsEmitted, emissionContext, floatingImage, blockToLatex,
     macrosToPreamble, buildTheoremDefs, buildPreamble, buildMetadata, buildBody, buildDocumentEnd, generateLatex,
   });
 })(typeof globalThis !== "undefined" ? globalThis : this);

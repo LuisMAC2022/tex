@@ -195,12 +195,18 @@
   }
 
   function checkDocument(state = {}) {
-    const results = [];
+    const results = new Map();
+    function add(path, issues) {
+      const key = TexNotes.pathToKey(path);
+      if (!results.has(key)) results.set(key, { path, issues: [] });
+      results.get(key).issues.push(...issues);
+    }
     for (const { block, path, parentPath } of TexNotes.flattenBlocks(state.blocks)) {
       const issues = checkBlock(block, state.blocks, parentPath, { macros: state.macros });
-      if (issues.length) results.push({ path, issues });
+      if (issues.length) add(path, issues);
     }
-    return results;
+    for (const { path, issue } of TexNotes.crossReferenceIssues(state)) add(path, [issue]);
+    return Array.from(results.values());
   }
 
   Object.assign(TexNotes, { KATEX_ONLY, checkContent, checkBlock, checkDocument });

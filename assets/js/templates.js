@@ -62,7 +62,7 @@
       steps.push({depth,block:copy});
       for(const child of children||[]) visit(child,depth+1);
     }
-    visit(T.cloneBlock(block),0);
+    visit(T.copyWithoutLabels(block),0);
     return {id,name,trigger,steps};
   }
   Object.assign(T,{BUILTIN_TEMPLATES,validateTemplate,slashCompletions,templateParent,advanceTemplate,templateFromBranch});

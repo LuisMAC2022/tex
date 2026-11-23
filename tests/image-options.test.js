@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadTexNotes } from "./load-app.mjs";
 
-const { normalizeImageOptions, imagePathWarnings } = await loadTexNotes(["image-options.js"]);
+const { normalizeImageOptions, imagePathWarnings } = await loadTexNotes(["block-types.js", "image-options.js"]);
 const defaults = { width: 0.8, angle: 0, align: "center", placement: "htbp" };
 
 test("las opciones de imagen tienen valores por defecto sin altura ni etiqueta", () => {

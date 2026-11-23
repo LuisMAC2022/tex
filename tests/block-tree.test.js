@@ -370,13 +370,15 @@ test("mover un bloque a un teorema emite su contenido literal dentro del entorno
 
 test("las opciones de imagen sobreviven a duplicar, copiar, pegar y restaurar la versión 2", () => {
   const rawImage = { type: "image", content: "figura.png", options: { width: "0.60", height: 3, angle: 90, label: "Gráfica" } };
-  const options = { width: 0.6, height: 3, angle: 90, align: "center", placement: "htbp", label: "fig:grafica" };
+  const options = { width: 0.6, height: 3, angle: 90, align: "center", placement: "htbp" };
   const original = normalizeBlocks([node("theorem", "Padre", [rawImage])]);
   const duplicated = duplicateBlock(original, [0, 0]);
   const copied = cloneBlock(blockAtPath(duplicated.blocks, [0, 1]));
   const pasted = insertBlock(duplicated.blocks, [], copied);
   const restored = normalizeDraft(JSON.parse(JSON.stringify({ version: 2, metadata: {}, blocks: pasted.blocks })));
   assert.equal(restored.migratedFrom, 2);
+  assert.equal(blockAtPath(restored.blocks, [0, 0]).label, "fig:grafica");
+  for (const path of [[0, 1], [1]]) assert.equal(blockAtPath(restored.blocks, path).label, undefined);
   for (const path of [[0, 0], [0, 1], [1]]) assert.deepEqual(mirror(blockAtPath(restored.blocks, path).options), options);
   assert.notEqual(blockAtPath(duplicated.blocks, [0, 0]).options, blockAtPath(duplicated.blocks, [0, 1]).options);
   assert.notEqual(blockAtPath(duplicated.blocks, [0, 1]).options, copied.options);

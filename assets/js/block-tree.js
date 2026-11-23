@@ -17,7 +17,7 @@
   const TexNotes = global.TexNotes || (global.TexNotes = {});
 
   /** Versión del borrador persistido. La 1 era una lista plana sin children. */
-  const DRAFT_VERSION = 4;
+  const DRAFT_VERSION = 5;
   const blockIdPattern = /^b[0-9a-z]{8}$/;
   function newId(prefix = "b") {
     const digits = new Uint8Array(8);
@@ -37,6 +37,7 @@
   function applyBlockOptions(block, options) {
     if (options !== undefined && TexNotes.blockType(block.type)?.kind === "image") {
       block.options = TexNotes.normalizeImageOptions(options);
+      delete block.options.label;
     } else {
       delete block.options;
     }
@@ -59,6 +60,9 @@
   function cloneBlocks(list) {
     return (Array.isArray(list) ? list : []).map((block) => {
       const copy = { ...block, children: cloneBlocks(block.children) };
+      const label = TexNotes.labelOf(block);
+      if (label) copy.label = label;
+      else delete copy.label;
       applyBlockOptions(copy, block.options);
       return applyListFormat(copy, block.listFormat);
     });
@@ -81,6 +85,8 @@
       const type = typeof raw.type === "string" ? raw.type : "text";
       const block = { type, title: typeof raw.title === "string" ? raw.title : "", content: hasContent ? raw.content : "", children: [] };
       if (typeof raw.id === "string" && blockIdPattern.test(raw.id)) block.id = raw.id;
+      const label = TexNotes.labelOf({ ...raw, type });
+      if (label) block.label = label;
       applyBlockOptions(block, raw.options);
       blocks.push(applyListFormat(block, raw.listFormat, defaultListFormat));
       if (TexNotes.acceptsChildren(type)) block.children = children;
@@ -89,12 +95,14 @@
     return blocks;
   }
 
-  function normalizeBlocks(list, defaultListFormat = "outline", generate = newId, existing = new Set(), fresh = false) {
+  function normalizeBlocks(list, defaultListFormat = "outline", generate = newId, existing = new Set(), fresh = false, labels = new Set()) {
     const blocks = cleanBlocks(list, defaultListFormat);
     const entries = flattenBlocks(blocks), used = new Set(existing), reserved = new Set(existing);
     for (const { block } of entries) if (block.id) reserved.add(block.id);
     let fallback = 0;
     for (const { block } of entries) {
+      if (labels.has(block.label)) delete block.label;
+      if (block.label) labels.add(block.label);
       if (fresh || !block.id || used.has(block.id)) {
         let id = generate("b");
         if (typeof id !== "string" || !blockIdPattern.test(id) || reserved.has(id)) {
@@ -137,8 +145,10 @@
    */
   function insertBlock(blocks, parentPath, block, index = -1, generate = newId) {
     if (!isPath(parentPath)) return null;
-    const used = new Set(flattenBlocks(blocks).map(entry => entry.block.id));
-    const [normalized] = normalizeBlocks([block], "outline", generate, used, true);
+    const entries = flattenBlocks(blocks);
+    const used = new Set(entries.map(entry => entry.block.id));
+    const labels = new Set(entries.map(entry => entry.block.label).filter(Boolean));
+    const [normalized] = normalizeBlocks([block], "outline", generate, used, true, labels);
     if (!normalized) return null;
     const next = cloneBlocks(blocks);
     let list = next;
@@ -162,6 +172,12 @@
     return normalizeBlock(block ? cloneBlocks([block])[0] : null);
   }
 
+  function copyWithoutLabels(block) {
+    const copy = cloneBlock(block);
+    if (copy) for (const entry of flattenBlocks([copy])) delete entry.block.label;
+    return copy;
+  }
+
   /**
    * Duplica el bloque de `path` con toda su descendencia e inserta la copia
    * inmediatamente después del original, entre sus mismos hermanos: conserva
@@ -174,7 +190,7 @@
   function duplicateBlock(blocks, path, generate = newId) {
     const source = blockAtPath(blocks, path);
     if (!source) return null;
-    return insertBlock(blocks, path.slice(0, -1), source, path.at(-1) + 1, generate);
+    return insertBlock(blocks, path.slice(0, -1), copyWithoutLabels(source), path.at(-1) + 1, generate);
   }
 
   /**
@@ -190,6 +206,10 @@
     const type = typeof patch.type === "string" ? patch.type : target.type;
     if (target.children.length && !TexNotes.acceptsChildren(type)) return null;
     const listFormat = listFormatAfterEdit(target, patch.content);
+    const label = TexNotes.labelOf({ ...target, ...patch, type });
+    if (label && flattenBlocks(next).some(entry => entry.block !== target && entry.block.label === label)) return null;
+    if (label) target.label = label;
+    else delete target.label;
     target.type = type;
     if (typeof patch.title === "string") target.title = patch.title;
     if (typeof patch.content === "string") target.content = patch.content;
@@ -328,7 +348,7 @@
 
   Object.assign(TexNotes, {
     DRAFT_VERSION, newId, pathOfId, normalizeMacros, localDateValue, sessionHasContent, cloneBlocks, cloneBlock, normalizeBlock, normalizeBlocks, blockAtPath, siblingsAtPath,
-    insertBlock, duplicateBlock, updateBlock, removeBlock, moveBlock, moveBlockTo, countBlocks, flattenBlocks,
+    insertBlock, duplicateBlock, copyWithoutLabels, updateBlock, removeBlock, moveBlock, moveBlockTo, countBlocks, flattenBlocks,
     pathToKey, keyToPath, pathLabel, normalizeDraft, listFormatAfterEdit,
   });
 })(typeof globalThis !== "undefined" ? globalThis : this);

@@ -32,6 +32,7 @@ El generador recibe un objeto con este contrato conceptual:
     {
       type: "text|equation|math-inline|definition|theorem|proposition|proof|example|note|itemize|enumerate|bibliography|image",
       title: "opcional",
+      label: "teo:clairaut", // opcional en los tipos numerados
       content: "texto",
       children: [ /* bloques con la misma forma, sin profundidad máxima */ ],
       options: { width: 0.8, angle: 0, align: "center", placement: "htbp" }, // opcional, solo en image
@@ -46,14 +47,14 @@ El generador recibe un objeto con este contrato conceptual:
 - `blocks` es una lista ordenada **de árboles**. Su orden determina exactamente el orden del cuerpo del documento, y el de `children` el de cada rama.
 - `children` es opcional: **su ausencia equivale a `children: []`**, así que un estado plano escrito para la versión anterior sigue siendo válido y no hay que reescribirlo.
 - Los tipos de bloque viven en una sola tabla, [`assets/js/block-types.js`](assets/js/block-types.js). Los bloques `definition`, `theorem`, `proposition`, `proof`, `example` y `note` se convierten en sus entornos homónimos; `text` es texto normal y, si tiene título, comienza con `\subsection`.
-- Hay **dos tipos de contenido matemático**, deliberadamente separados del texto: `equation` queda delimitado por `\[` y `\]` en líneas propias, y `math-inline` por `\(` y `\)` en una sola línea. Ambos conservan literalmente lo escrito y solo se diferencian por sus delimitadores en la tabla.
+- Una ecuación destacada sin etiqueta usa `\[ … \]`. Con etiqueta usa `\begin{equation}\label{ec:…}` y se numera. Las expresiones en línea usan `\( … \)`.
 - `itemize` y `enumerate` producen listas. Cada línea no vacía da un `\item`. Dos espacios o un tabulador forman un nivel de sangría, y cada línea puede bajar hasta un nivel respecto de la anterior. La primera línea comienza en el nivel raíz.
 - El bloque define el tipo de la lista raíz. Al abrir una sublista, el primer elemento fija su tipo con `- ` o `* ` para viñetas y un número seguido de `. ` o `) ` para numeración. Sin marcador hereda el tipo de la lista que la contiene. Los marcadores se consumen en todos los niveles. `{}- ` conserva el guion como parte del elemento.
 - Se permiten hasta cuatro niveles de un mismo tipo y seis entornos combinados, contando los teoremas y las listas envolventes que genera el editor. Los elementos que alcancen el límite se incorporan al último nivel disponible sin alterar su orden. Si el bloque completo ya está en el límite, sus elementos se emiten como párrafos.
 - Una lista plana sin marcadores conserva el formato `.tex` anterior. Cada nivel de sublista añade dos espacios al comienzo de sus líneas. Los bloques de «Añadir dentro» se emiten después de los elementos y antes del cierre de la lista raíz, si la lista puede abrirse.
-- Al restaurar un borrador antiguo, sus listas sin `listFormat` conservan los marcadores literales y se muestran planas. Cambiar su contenido activa la sintaxis por sangría. Las listas nuevas guardan su formato dentro del borrador v4.
+- Al restaurar un borrador antiguo, sus listas sin `listFormat` conservan los marcadores literales y se muestran planas. Cambiar su contenido activa la sintaxis por sangría. Las listas nuevas guardan su formato dentro del borrador.
 - `bibliography` produce una **bibliografía manual con aspecto IEEE**: cada línea no vacía y recortada del contenido se conserva literalmente y se convierte en un `\bibitem{refN}` dentro de `thebibliography`. Este entorno del núcleo de LaTeX aporta por sí mismo la numeración entre corchetes, sin BibTeX, `natbib`, `IEEEtran` ni paquetes adicionales. El campo `title` no se usa, igual que en las listas. Las claves `ref1`, `ref2`, etc. son predecibles y únicas solo dentro de cada bloque; dos bloques de bibliografía repetirán claves y LaTeX mostrará una advertencia de etiqueta duplicada, una limitación aceptada porque la aplicación no genera `\cite{}`.
-- `image` usa la ruta recortada y literal de `content` y el pie opcional de `title`, escapado. No admite hijos. Sus `options` son opcionales y se guardan en el borrador `version: 4`.
+- `image` usa la ruta recortada y literal de `content` y el pie opcional de `title`, escapado. No admite hijos. Sus `options` son opcionales y se guardan con el bloque.
 - `buildTheoremDefs()` deriva las declaraciones `\newtheorem` de esa misma tabla, omite los tipos predefinidos como proof y agrupa los entornos por `\theoremstyle`, de modo que el preámbulo no puede desincronizarse de los tipos disponibles: añadir un tipo es una entrada en la tabla y su `<option>` en `index.html`, y una prueba compara ambas listas.
 - **Regla de numeración:** cada entorno declarado con `\newtheorem` mantiene un contador propio, independiente y continuo en todo el documento. `proposition` comparte `\theoremstyle{plain}` con `theorem`, pero **no comparte contador** ni se reinicia por sección. Cambiar esa regla es editar una sola entrada de la tabla, y es un cambio de contrato que debe documentarse aquí.
 - **El contenido de un bloque llega al `.tex` tal cual se escribió.** La aplicación no inserta ningún carácter de escape en `content`: ni en prosa, ni en los entornos tipo teorema, ni en los elementos de lista, ni por supuesto en los bloques matemáticos. Escribir `\forall x \in \mathbb{R}` produce exactamente eso, y un fragmento de LaTeX pegado desde otro documento —un `align`, un `tabular`— llega intacto.
@@ -116,7 +117,8 @@ con el mismo nombre.
 | `angle` | Giro entre −360 y 360 grados. Inicialmente 0. |
 | `align` | `center`, `left` o `right`. Inicialmente `center`. |
 | `placement` | Subconjunto de `htbp`. Inicialmente `htbp`. |
-| `label` | Etiqueta opcional con prefijo `fig:`. Solo admite minúsculas ASCII, cifras, guiones y dos puntos. |
+
+La etiqueta de figura está en `block.label`. Al abrir un borrador antiguo, la aplicación traslada `options.label` al bloque.
 
 Los tamaños y el giro se redondean a dos decimales. El generador escribe los
 límites de escala antes del giro y omite el giro cero, el pie vacío y la etiqueta
@@ -351,7 +353,7 @@ que se confirman con Ctrl+Intro, con destino y profundidad relativos. Se pueden
 omitir pasos, cancelar la cola y guardar una rama como plantilla personal.
 Las plantillas personales viajan en la configuración y se gestionan en preferencias.
 
-## Macros del documento y borrador v4
+## Macros del documento y migración del borrador
 
 `macros` es un array de `{ name, params, body }`. El nombre usa letras latinas,
 params es un entero de 0 a 9 y body es literal. `buildPreamble(macros)` emite
@@ -379,3 +381,7 @@ La barra inferior abre el menú de texto, fórmula o imagen según el cursor y e
 ## Selección por alcance
 
 **Selección** permite ampliar con **Siguiente** y volver al rango anterior con **Anterior**. La prosa distingue palabra, oración, párrafo y bloque. Las fórmulas reconocen comandos, grupos, términos, miembros, delimitadores y celdas de matriz. Los rangos usan los índices del campo y conservan el contenido literal. Una selección se puede envolver con un fragmento del menú radial.
+
+## Etiquetas y referencias cruzadas
+
+Los prefijos `teo:`, `prop:`, `def:`, `ej:`, `nota:`, `ec:` y `fig:` identifican destinos únicos. La etiqueta se conserva al mover el bloque y se vacía en las copias. El esquema v5 migra las versiones anteriores. Las tarjetas y el menú muestran los contadores de LaTeX. Si el contenido manipula un contador con un entorno numerado o un pie manual, el menú muestra solo el nombre del destino. La comprobación previa localiza claves rotas o repetidas.

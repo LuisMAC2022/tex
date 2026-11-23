@@ -82,6 +82,13 @@
               </select>
             </p>
             <p class="field"><label for="block-title">Título del bloque (opcional)</label><input id="block-title" name="blockTitle" type="text"></p>
+            <div class="field" id="label-fields" hidden>
+              <label for="block-label">Etiqueta</label>
+              <small id="label-help">Prefijo del bloque <code id="label-prefix"></code>. Puedes dejar la etiqueta vacía.</small>
+              <input id="block-label" type="text" spellcheck="false" autocomplete="off" aria-describedby="label-help label-error">
+              <span id="label-error" class="error"></span>
+              <button type="button" id="propose-label">Proponer desde el título</button>
+            </div>
             <small id="proof-help" hidden>En Demostración, el título opcional sustituye al encabezado Demostración en el PDF.</small>
             <div class="field">
               <details class="field-help"><summary>Ayuda del contenido</summary>
@@ -150,11 +157,6 @@
                 <label for="image-placement">Posición de la figura</label>
                 <input id="image-placement" type="text" value="htbp" spellcheck="false" aria-describedby="image-placement-help">
                 <small id="image-placement-help">Combina h (aquí), t (arriba), b (abajo) y p (página de figuras).</small>
-              </p>
-              <p class="field">
-                <label for="image-label">Etiqueta de la figura (opcional)</label>
-                <input id="image-label" type="text" spellcheck="false" aria-describedby="image-label-help">
-                <small id="image-label-help">Se guarda con el prefijo <code>fig:</code>, por ejemplo <code>fig:grafica</code>.</small>
               </p>
             </fieldset>
             <menu class="button-row">
@@ -321,6 +323,7 @@
     <script src="assets/js/shortcuts.js"></script>
     <script src="assets/js/image-options.js"></script>
     <script src="assets/js/list-outline.js"></script>
+    <script src="assets/js/cross-references.js"></script>
     <script src="assets/js/content-check.js"></script>
     <script src="assets/js/editing-assist.js"></script>
     <script src="assets/js/completion.js"></script>

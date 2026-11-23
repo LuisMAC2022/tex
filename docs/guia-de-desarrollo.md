@@ -530,3 +530,7 @@ profesor y fecha no convierten una sesión vacía en una sesión recuperable.
 ## Selección por alcance
 
 `selection-scope.js` calcula rangos sobre la cadena UTF-16 original. La prosa usa segmentación española. El analizador matemático conserva comentarios y escapes como unidades, empareja grupos y entornos y reconoce argumentos de fracciones, raíces, índices, relaciones y separadores de matriz. `expandScope` y `shrinkScope` conservan una pila de rangos. Ninguna de estas funciones escribe en el campo.
+
+## Destinos y contadores del documento
+
+`labelPrefix` en `block-types.js` habilita la etiqueta. El formato v5 migra la etiqueta histórica de imagen y conserva la primera ocurrencia en preorden. `blockIsEmitted` y `emissionContext` se comparten entre generador y recorrido de destinos. `cross-references.js` calcula los contadores y analiza los comandos manuales. `checkDocument` combina los diagnósticos con ruta, línea y columna. Las instantáneas y `diffDocuments` incluyen el campo del bloque. [DEC-027](../decisiones/DEC-027-etiquetas-de-bloque.md)

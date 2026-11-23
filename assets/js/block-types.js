@@ -8,7 +8,7 @@
   "use strict";
   const TexNotes = global.TexNotes || (global.TexNotes = {});
 
-  /** @decision DEC-005 ancla:17be566b tramo:15
+  /** @decision DEC-005 ancla:fc78f5a2 tramo:15
    * kind: "text" | "equation" | "theorem" | "list" | "bibliography" | "image".
    * Los tipos "theorem" declaran un entorno amsthm; buildTheoremDefs() agrupa
    * sus \newtheorem por style para no repetir \theoremstyle.
@@ -33,20 +33,46 @@
    */
   const BLOCK_TYPES = [
     { id: "text", label: "Texto", kind: "text", container: true, slash: ["txt", "texto"] },
-    { id: "equation", label: "Ecuación destacada", kind: "equation", delimiters: ["\\[", "\\]"], slash: ["ec"] },
+    { id: "equation", label: "Ecuación destacada", labelPrefix: "ec", heading: "Ecuación", kind: "equation", delimiters: ["\\[", "\\]"], slash: ["ec"] },
     { id: "math-inline", label: "Expresión matemática en línea", kind: "equation", delimiters: ["\\(", "\\)"], inline: true, slash: ["el"] },
-    { id: "definition", label: "Definición", kind: "theorem", environment: "definition", heading: "Definición", style: "definition", container: true, slash: ["def"] },
-    { id: "theorem", label: "Teorema", kind: "theorem", environment: "theorem", heading: "Teorema", style: "plain", container: true, slash: ["teo"] },
-    { id: "proposition", label: "Proposición", kind: "theorem", environment: "proposition", heading: "Proposición", style: "plain", container: true, slash: ["prop"] },
+    { id: "definition", label: "Definición", labelPrefix: "def", kind: "theorem", environment: "definition", heading: "Definición", style: "definition", container: true, slash: ["def"] },
+    { id: "theorem", label: "Teorema", labelPrefix: "teo", kind: "theorem", environment: "theorem", heading: "Teorema", style: "plain", container: true, slash: ["teo"] },
+    { id: "proposition", label: "Proposición", labelPrefix: "prop", kind: "theorem", environment: "proposition", heading: "Proposición", style: "plain", container: true, slash: ["prop"] },
     { id: "proof", label: "Demostración", kind: "theorem", environment: "proof", heading: "Demostración", style: "plain", predefined: true, container: true, slash: ["dem"] },
-    { id: "example", label: "Ejemplo", kind: "theorem", environment: "example", heading: "Ejemplo", style: "definition", container: true, slash: ["ej"] },
-    { id: "note", label: "Nota", kind: "theorem", environment: "note", heading: "Nota", style: "remark", container: true, slash: ["nota"] },
+    { id: "example", label: "Ejemplo", labelPrefix: "ej", kind: "theorem", environment: "example", heading: "Ejemplo", style: "definition", container: true, slash: ["ej"] },
+    { id: "note", label: "Nota", labelPrefix: "nota", kind: "theorem", environment: "note", heading: "Nota", style: "remark", container: true, slash: ["nota"] },
     { id: "itemize", label: "Lista con viñetas", kind: "list", listEnvironment: "itemize", container: true, slash: ["lista", "vi"] },
     { id: "enumerate", label: "Lista numerada", kind: "list", listEnvironment: "enumerate", container: true, slash: ["enum", "num"] },
     { id: "bibliography", label: "Bibliografía (IEEE)", kind: "bibliography", container: false, slash: ["bib"] },
-    { id: "image", label: "Imagen", kind: "image", container: false, slash: ["img"] },
+    { id: "image", label: "Imagen", labelPrefix: "fig", heading: "Figura", kind: "image", container: false, slash: ["img"] },
   ];
 
+  function normalizeLabel(value, prefix) {
+    if (!prefix || typeof value !== "string") return "";
+    const key = value.normalize("NFD").toLowerCase().replace(/[^a-z0-9:-]/g, "");
+    const rest = key.startsWith(prefix + ":") ? key.slice(prefix.length + 1) : key;
+    return rest ? prefix + ":" + rest : "";
+  }
+
+  function labelFromTitle(title, prefix, existing = []) {
+    if (!prefix) return "";
+    const taken = new Set(existing);
+    const stem = String(title || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    let n = 1;
+    let key = prefix + ":" + (stem || n);
+    while (taken.has(key)) {
+      n++;
+      key = prefix + ":" + (stem ? stem + "-" + n : n);
+    }
+    return key;
+  }
+
+  function labelOf(block) {
+    return normalizeLabel(block.label ?? (block.type === "image" ? block.options?.label : ""), TexNotes.blockType(block.type)?.labelPrefix);
+  }
+
+  Object.assign(TexNotes, { normalizeLabel, labelFromTitle, labelOf });
   TexNotes.BLOCK_TYPES = BLOCK_TYPES;
   TexNotes.BLOCK_TYPE_IDS = BLOCK_TYPES.map((type) => type.id);
   TexNotes.blockType = (id) => BLOCK_TYPES.find((type) => type.id === id) || null;

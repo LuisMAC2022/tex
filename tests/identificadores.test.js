@@ -29,14 +29,14 @@ test("los identificadores de bloque son únicos en todo el árbol", () => {
   const edited = T.updateBlock(moved.blocks,T.pathOfId(moved.blocks,fixed),{content:"nuevo"});
   assert.equal(T.blockAtPath(edited,T.pathOfId(edited,fixed)).content,"nuevo");
 });
-test("los borradores v1 a v3 migran a v4 y conservan su identidad al volver a abrir", () => {
-  for (const version of [1,2,3]) {
+test("los borradores anteriores migran al esquema vigente y conservan su identidad al volver a abrir", () => {
+  for (const version of [1,2,3,4]) {
     const draft=T.normalizeDraft({version,metadata:{},blocks:[node("a"),node("b")]},generator());
-    assert.equal(draft.migratedFrom,version); assert.equal(draft.version,4); assert.match(draft.documentId,/^d[0-9a-z]{8}$/);
+    assert.equal(draft.migratedFrom,version); assert.equal(draft.version,T.DRAFT_VERSION); assert.match(draft.documentId,/^d[0-9a-z]{8}$/);
     const restored=T.normalizeDraft(JSON.parse(JSON.stringify(draft)),generator());
     assert.deepEqual(ids(restored.blocks),ids(draft.blocks)); assert.equal(restored.documentId,draft.documentId);
   }
-  assert.equal(T.normalizeDraft({version:5,metadata:{}}),null);
+  assert.equal(T.normalizeDraft({version:T.DRAFT_VERSION+1,metadata:{}}),null);
   const circular=node("ciclo"); circular.children.push(circular);
   assert.equal(T.normalizeDraft({version:4,metadata:{},blocks:[circular]}),null);
 });
