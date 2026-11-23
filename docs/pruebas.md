@@ -12,7 +12,7 @@
 - cada decisión citada en el código existe en decisiones/
 - ningún código vivo se apoya en una decisión reemplazada
 
-## `tests/block-tree.test.js` — 41 pruebas
+## `tests/block-tree.test.js` — 42 pruebas
 
 - la ausencia de children equivale a una lista vacía y el estado plano sigue siendo válido
 - solo los tipos declarados como contenedores admiten hijos
@@ -55,13 +55,15 @@
 - restaurar listas antiguas de ambas versiones mantiene los prefijos literales y la lista plana
 - listas nuevas y antiguas conservan su propio formato al copiar, duplicar, mover, guardar y restaurar
 - una sesión vacía no borra el autoguardado y el bloque en curso cuenta como trabajo
+- la fecha inicial es la local del día, con ceros, no la UTC
 
-## `tests/completion.test.js` — 10 pruebas
+## `tests/completion.test.js` — 11 pruebas
 
 - los fragmentos ordenan marcadores numéricos, preservan escapes y encuentran llaves vacías
 - los huecos permanecen estables al escribir y Tab termina en la posición final
 - aceptar matemáticas en prosa envuelve el fragmento y registra su cierre pendiente
 - el ranking usa el catálogo real, acentos, cuatro niveles y desempates deterministas
+- sin historial, el comando más corto encabeza las sugerencias del mismo nivel
 - el uso decae por semanas, se limita a 300 y descarta datos corruptos
 - solo una barra sin escapar y letras abren sugerencias, también los nombres de entorno
 - los alias solo coinciden con un token Unicode completo que no sea un comando
@@ -104,13 +106,14 @@
 - ningún índice apunta a una sección que ya no existe
 - cada rótulo que citan las guías sigue existiendo en la interfaz
 
-## `tests/editing-assist.test.js` — 13 pruebas
+## `tests/editing-assist.test.js` — 14 pruebas
 
 - el contexto matemático incluye aperturas incompletas, escapes, entornos y comentarios
 - autocierra llaves literales y escapadas, delimitadores y left en su contexto
 - el autocierre respeta prosa, comentarios, escapes y el carácter siguiente
 - un segundo dólar convierte un par vacío en fórmula destacada y el siguiente salta
-- la llave explícita tras un superíndice automático no se duplica
+- los exponentes y subíndices escritos de corrido no abren llaves
+- ^ y _ envuelven la selección como exponente o subíndice
 - el autocierre envuelve selecciones y conserva el texto seleccionado
 - las dobles barras de un salto no abren delimitador matemático en prosa
 - el guion literal de lista se escribe con llaves automáticas y salto del cierre
@@ -298,4 +301,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-222 pruebas con `node:test` más la comprobación estructural.
+225 pruebas con `node:test` más la comprobación estructural.

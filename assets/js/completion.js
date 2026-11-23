@@ -36,8 +36,10 @@
       const command=normalizeSearch(entry.trigger).replace(/^\\/,'');
       const words=normalizeSearch([entry.label,...(entry.keywords||[])].join(' ')).split(/\s+/);
       const rank=command.startsWith(q)?0:command.includes(q)?1:words.some(w=>w.startsWith(q))?2:words.some(w=>w.includes(q))?3:Infinity;
-      return {entry,index,rank,score:usageScore(usage[entry.key],now)};
-    }).filter(item=>item&&Number.isFinite(item.rank)).sort((a,b)=>a.rank-b.rank||b.score-a.score||a.index-b.index).slice(0,8).map(item=>item.entry);
+      return {entry,index,rank,score:usageScore(usage[entry.key],now),length:command.length};
+    // Con igual nivel y uso gana el comando más corto: \frac{a}{b} antes que
+    // \frac{\partial f}{\partial x}, aunque el catálogo liste antes la derivada.
+    }).filter(item=>item&&Number.isFinite(item.rank)).sort((a,b)=>a.rank-b.rank||b.score-a.score||a.length-b.length||a.index-b.index).slice(0,8).map(item=>item.entry);
   }
   function recordUsage(usage, key, now) {
     const entries=Object.entries(usage||{}).filter(([,v])=>v&&Number.isFinite(v.n)&&v.n>=0&&Number.isFinite(v.t));

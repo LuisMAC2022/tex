@@ -485,9 +485,7 @@
     return true;
   }
   function exportSnapshot() {
-    if (!output.value) { announce("Genera el documento antes de exportarlo."); $("#generate").focus(); return null; }
-    if ((!generatedSnapshot || generatedSnapshot.documentId !== documentId || !global.TexNotes.sameDocument(generatedSnapshot, state())) && !generateOutput()) return null;
-    return generatedSnapshot;
+    return generateOutput() ? generatedSnapshot : null;
   }
   form.addEventListener("submit", event => {
     event.preventDefault();
@@ -1715,6 +1713,8 @@
   }
   function focusMetadata() { $( $("#metadata-details").open ? "#note-title" : "#metadata-details > summary").focus(); }
   $("#metadata-details").addEventListener("input", () => syncMetadataSummary());
+  // La fecha inicial es la de hoy; un borrador o una sesión recuperada la sustituyen.
+  if (!$("#date").value) $("#date").value = global.TexNotes.localDateValue();
   syncMetadataSummary(true);
 
   const thumbBar = $("#thumb-bar");

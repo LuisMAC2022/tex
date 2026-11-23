@@ -17,7 +17,7 @@ assert.deepEqual(scripts, ["assets/vendor/katex/katex.min.js", "assets/js/block-
 assert.match(html, /<link rel="stylesheet" href="assets\/vendor\/katex\/katex\.min\.css">/, "Falta la hoja vendorizada de KaTeX");
 assert.match(html, /<input id="course"[^>]+value="Cálculo III \(1352\)">/, "El curso debe aparecer prellenado desde el temario");
 assert.match(html, /<input id="teacher"[^>]+value="Guzmán Fuentes Ricardo">/, "El profesor debe aparecer prellenado desde el temario");
-assert.match(html, /<input id="date"[^>]+type="date"[^>]+value="2026-09-13">/, "La fecha acordada debe aparecer prellenada");
+assert.match(html, /<input id="date"[^>]+type="date">/, "La fecha no debe ir fija en el HTML: app.js escribe la de hoy");
 for (const page of [html, ...await Promise.all((await readdir("diagnostico")).filter(name => name.endsWith(".html")).map(name => readFile("diagnostico/" + name, "utf8")))]) {
   assert.doesNotMatch(page, /(?:src|href)\s*=\s*["']\/(?!\/)|url\(\s*["']?\/(?!\/)/i, "Las rutas internas no deben partir de la raíz");
 }

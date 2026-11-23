@@ -313,6 +313,13 @@
       .map(({ name, params, body }) => ({ name, params, body }));
   }
 
+  /** Fecha local AAAA-MM-DD para el campo date. toISOString daría la fecha UTC,
+   * que en México ya es el día siguiente a partir de las 18:00. */
+  function localDateValue(date = new Date()) {
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  }
+
   function sessionHasContent(session) {
     const nonempty = (value) => typeof value === "string" && Boolean(value.trim());
     return Boolean(session && ((Array.isArray(session.blocks) && session.blocks.some((block) => block && typeof block === "object"))
@@ -320,7 +327,7 @@
   }
 
   Object.assign(TexNotes, {
-    DRAFT_VERSION, newId, pathOfId, normalizeMacros, sessionHasContent, cloneBlocks, cloneBlock, normalizeBlock, normalizeBlocks, blockAtPath, siblingsAtPath,
+    DRAFT_VERSION, newId, pathOfId, normalizeMacros, localDateValue, sessionHasContent, cloneBlocks, cloneBlock, normalizeBlock, normalizeBlocks, blockAtPath, siblingsAtPath,
     insertBlock, duplicateBlock, updateBlock, removeBlock, moveBlock, moveBlockTo, countBlocks, flattenBlocks,
     pathToKey, keyToPath, pathLabel, normalizeDraft, listFormatAfterEdit,
   });

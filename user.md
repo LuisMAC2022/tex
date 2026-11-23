@@ -68,3 +68,22 @@ encargo) y pega el informe en `diagnostico/resultados-android.md`.
 3. Abre `http://localhost:8000/diagnostico/android.html` en Chrome y sigue las pruebas con Gboard.
 4. Prueba ambas variantes de ventana, anota la selección y la posición del teclado y toca **Copiar informe**.
 5. Pega el JSON en [resultados-android.md](diagnostico/resultados-android.md).
+
+## 2026-11-23 — Claude
+
+Rama `ccr-20873c43-32i6nb`:
+
+- **Cinco correcciones** probadas en Chromium: `^` y `_` ya no abren llaves al
+  escribir de corrido (DEC-026); copiar y descargar regeneran el `.tex`; los
+  botones de las tarjetas recuperan su altura en el teléfono; `\frac` propone
+  primero la fracción simple; la fecha inicial es la de hoy.
+- **`agents.md` trae U3.1 y U3.2**, que se intercalan entre U3 y U4: etiquetas
+  con `\ref`/`\eqref` y citas en IEEE o APA con `natbib`. Recoge tus
+  decisiones: los dos estilos, la bibliografía al final, ecuaciones numeradas
+  solo con etiqueta y las referencias del curso solo con botón.
+
+Antes de que un agente empiece U0, fusiona esta rama en `claude/ui-ux`: el
+encargo da por hechas las correcciones.
+
+Sigue pendiente decidir qué hacer con `temario.md`: el repositorio es público y
+ese archivo contiene la contraseña de la plataforma SEA y el correo del profesor.

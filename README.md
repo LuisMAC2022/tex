@@ -41,7 +41,7 @@ El generador recibe un objeto con este contrato conceptual:
 }
 ```
 
-- El **título de la nota** es el único campo obligatorio en la interfaz. Autor, curso, profesor y fecha son opcionales. Para acelerar las entregas actuales, la interfaz inicia con el curso **Cálculo III (1352)**, el profesor **Guzmán Fuentes Ricardo** y la fecha **2026-09-13** ya escritos; siguen siendo campos editables y un borrador restaurado puede reemplazarlos.
+- El **título de la nota** es el único campo obligatorio en la interfaz. Autor, curso, profesor y fecha son opcionales. Para acelerar las entregas actuales, la interfaz inicia con el curso **Cálculo III (1352)**, el profesor **Guzmán Fuentes Ricardo** y la fecha local del día ya escritos; siguen siendo campos editables y un borrador restaurado puede reemplazarlos. La fecha la escribe `app.js` al cargar con `localDateValue()`, no el HTML.
 - El **tema o unidad** produce una `\section` cuando no está vacío.
 - `blocks` es una lista ordenada **de árboles**. Su orden determina exactamente el orden del cuerpo del documento, y el de `children` el de cada rama.
 - `children` es opcional: **su ausencia equivale a `children: []`**, así que un estado plano escrito para la versión anterior sigue siendo válido y no hay que reescribirlo.
@@ -233,10 +233,10 @@ cual, incluso cuando la comprobación encuentra errores.
 4. Para repetir una estructura hay **tres acciones distintas**, a propósito, porque copiar y duplicar no son lo mismo:
    - **Duplicar** deja la copia inmediatamente después del original, entre sus mismos hermanos y en su mismo nivel, con toda su descendencia. Es un atajo de un solo paso: no se elige destino. El foco pasa a **Editar** de la copia y, como cualquier cambio estructural, cancela una edición a medias y lo anuncia.
    - **Copiar bloque** guarda el bloque —y su rama entera— en una **bandeja** de la aplicación, sin moverlo ni modificarlo. Después, **Pegar bloque** lo inserta en el destino que muestra el formulario: la raíz, o el bloque que hayas fijado con **Añadir dentro**. La bandeja no se vacía al pegar, así que el mismo bloque se pega tantas veces y en tantos destinos como haga falta. Cada pegado es una copia profunda independiente: editar una no cambia las demás ni al original.
-   - **Copiar texto** lleva el contenido del bloque al **portapapeles del sistema**, para pegarlo con `Ctrl+V` donde quieras, dentro o fuera de la aplicación. No es lo mismo que **Copiar código**, que copia el documento entero ya generado.
+   - **Copiar texto** lleva el contenido del bloque al **portapapeles del sistema**, para pegarlo con `Ctrl+V` donde quieras, dentro o fuera de la aplicación. No es lo mismo que **Copiar código**, que genera y copia el documento entero.
    - La bandeja vive solo en la pestaña abierta: no se guarda en el borrador ni cambia su versión, porque no forma parte del documento.
 5. Pulsa **Generar documento** para actualizar el código `.tex` completo.
-6. Copia o descarga el resultado y pégalo en Overleaf. Si la API moderna del portapapeles no está disponible, se utiliza selección y copia del `textarea` como alternativa.
+6. Copia o descarga el resultado y pégalo en Overleaf. Copiar y descargar regeneran el documento antes de exportarlo, así que nunca entregan un `.tex` anterior a los últimos cambios. Si la API moderna del portapapeles no está disponible, se utiliza selección y copia del `textarea` como alternativa.
 7. **Guardar versión** conserva instantáneas en IndexedDB. Si el almacén no abre, la interfaz avisa y usa localStorage con retención reducida. **Ver cambios** compara por id, **Restaurar** crea un respaldo y **Exportar proyecto** descarga un JSON con el estado, las versiones y, opcionalmente, la configuración. **Importar proyecto** guarda un respaldo y combina las versiones por id. El autoguardado conserva el bloque a medio escribir (DEC-019).
 
 ### Apertura directa con `file://`
@@ -303,7 +303,6 @@ El MVP está terminado cuando una persona puede, usando solamente el teclado y c
 ### Siguiente ronda
 
 - **Bloque de tabla o tabla de verdad** con `tabular`, como las del Repaso −1 del temario.
-- **Referencias cruzadas** con etiquetas en teoremas y ecuaciones y una acción para insertar `\ref`.
 
 También siguen pendientes el **modelo de documento de tres niveles** (Unidad → Clase → Bloques) y el módulo de apoyo al curso con cita de asesoría, fechas `.ics` y entregables. Hoy `topic` produce una sola `\section`.
 

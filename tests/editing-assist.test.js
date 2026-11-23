@@ -12,10 +12,10 @@ test("el contexto matemático incluye aperturas incompletas, escapes, entornos y
  }
 });
 test("autocierra llaves literales y escapadas, delimitadores y left en su contexto", () => {
- for(const [before,data,mode,after] of [['§','{','text','{§}'],[String.raw`\§`,'{','text',String.raw`\{§\}`],[String.raw`\left\§`,'{','math',String.raw`\left\{§\right\}`],['§','(','math','(§)'],['§','[','math','[§]'],[String.raw`\left§`,'(','math',String.raw`\left(§\right)`],[String.raw`\left§`,'[','math',String.raw`\left[§\right]`],[String.raw`\left§`,'|','math',String.raw`\left|§\right|`],[String.raw`\§`,'(','text',String.raw`\(§\)`],[String.raw`\§`,'[','text',String.raw`\[§\]`],['§','$','text','$§$'],['x§','^','math','x^{§}'],['x§','_','math','x_{§}']]) assert.equal(view(pair(before,data,mode).edit),after,before+data);
+ for(const [before,data,mode,after] of [['§','{','text','{§}'],[String.raw`\§`,'{','text',String.raw`\{§\}`],[String.raw`\left\§`,'{','math',String.raw`\left\{§\right\}`],['§','(','math','(§)'],['§','[','math','[§]'],[String.raw`\left§`,'(','math',String.raw`\left(§\right)`],[String.raw`\left§`,'[','math',String.raw`\left[§\right]`],[String.raw`\left§`,'|','math',String.raw`\left|§\right|`],[String.raw`\§`,'(','text',String.raw`\(§\)`],[String.raw`\§`,'[','text',String.raw`\[§\]`],['§','$','text','$§$']]) assert.equal(view(pair(before,data,mode).edit),after,before+data);
 });
 test("el autocierre respeta prosa, comentarios, escapes y el carácter siguiente", () => {
- for(const [text,data,mode] of [['§palabra','$','text'],['§palabra','{','math'],['§','(','text'],['§','[','text'],['§','{','comment'],[String.raw`\§`,'$','text'],['§','^2','math'],['§','^','text']]) assert.equal(pair(text,data,mode),null);
+ for(const [text,data,mode] of [['§palabra','$','text'],['§palabra','{','math'],['§','(','text'],['§','[','text'],['§','{','comment'],[String.raw`\§`,'$','text'],['§','^2','math'],['§','^','text'],['x§','^','math'],['x§','_','math']]) assert.equal(pair(text,data,mode),null);
  for(const next of ['', ' ',')',']','}','$',',','.',';',':','\n']) assert.ok(pair('§'+next,'{'));
 });
 test("un segundo dólar convierte un par vacío en fórmula destacada y el siguiente salta", () => {
@@ -23,9 +23,21 @@ test("un segundo dólar convierte un par vacío en fórmula destacada y el sigui
  assert.equal(view(second.edit),'$$§$$');
  assert.equal(view(T.autoPair(second.edit,'$',{mode:'math',pending:second.pending}).edit),'$$$$§');
 });
-test("la llave explícita tras un superíndice automático no se duplica", () => {
- const first=pair('x§','^'); const second=T.autoPair(first.edit,'{',{mode:'math',pending:first.pending});
- assert.equal(view(second.edit),'x^{§}');
+test("los exponentes y subíndices escritos de corrido no abren llaves", () => {
+ let s={value:'',selectionStart:0,selectionEnd:0};
+ for(const ch of 'x^2 + y_1 = r^2') {
+  const r=T.autoPair(s,ch,{mode:'math'});
+  s=r ? r.edit : {value:s.value+ch,selectionStart:s.selectionStart+1,selectionEnd:s.selectionStart+1};
+ }
+ assert.equal(s.value,'x^2 + y_1 = r^2');
+ assert.equal(view(pair('x^§','{').edit),'x^{§}');
+});
+test("^ y _ envuelven la selección como exponente o subíndice", () => {
+ for(const [data,want] of [['^','x^{ab}'],['_','x_{ab}']]) {
+  const r=T.autoPair({value:'xab',selectionStart:1,selectionEnd:3},data,{mode:'math'});
+  assert.equal(r.edit.value,want); assert.equal(r.edit.value.slice(r.edit.selectionStart,r.edit.selectionEnd),'ab');
+ }
+ assert.equal(T.autoPair({value:'xab',selectionStart:1,selectionEnd:3},'^',{mode:'text'}),null);
 });
 test("el autocierre envuelve selecciones y conserva el texto seleccionado", () => {
  for(const [data,mode,end] of [['{','text','}'],['$','text','$'],['(','math',')'],['[','math',']']]) {

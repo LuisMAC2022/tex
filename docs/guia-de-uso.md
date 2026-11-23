@@ -77,8 +77,9 @@ página. No hace falta nada más.
 
 ### Rellenar la cabecera
 
-Arriba, en «Datos del documento», ya vienen escritos el curso, el profesor y una
-fecha. Cámbialos si no son los tuyos.
+Arriba, en «Datos del documento», ya vienen escritos el curso, el profesor y la
+fecha de hoy. Cámbialos si no son los tuyos; al restaurar un borrador vuelve su
+fecha guardada.
 
 **El único campo obligatorio es el título.** Sin título la aplicación no genera el
 documento y te lo dice junto al campo. Autor, curso, profesor y fecha son opcionales.
@@ -107,6 +108,8 @@ El bloque aparece en la lista de abajo con sus botones propios. Repite para el r
 2. Pulsa «Copiar código». Ya tienes el `.tex` entero en el portapapeles.
    - También puedes pulsar «Descargar .tex» y guardarlo como archivo. El nombre
      sale de tu título.
+   - Copiar y descargar generan el documento otra vez antes de exportarlo, así
+     que siempre llevan tus últimos cambios aunque no hayas vuelto a generar.
 3. En Overleaf: *New Project → Blank Project*. Borra todo lo que traiga el editor,
    pega lo tuyo con `Ctrl+V` y pulsa *Recompile*.
 
@@ -222,7 +225,7 @@ Tienen nombres que se parecen y hacen cosas distintas. Merece la pena leerlo una
 | «Duplicar» | Deja una copia **justo debajo**, al mismo nivel, con todo lo que tuviera dentro. De un solo paso: no eliges destino. | “Otro teorema igual que éste, para cambiarle dos cosas.” |
 | «Copiar bloque» | Guarda el bloque en una **bandeja** de la aplicación. No lo mueve ni lo cambia. Luego «Pegar bloque» lo coloca donde diga la frase del formulario. | “Quiero esta lista también dentro de aquel otro teorema.” |
 | «Copiar texto» | Manda el contenido del bloque al **portapapeles del sistema**, para pegarlo con `Ctrl+V` donde sea, incluso fuera de la aplicación. | “Me llevo este párrafo al correo.” |
-| «Copiar código» | Copia **el documento entero** ya generado. Es el de arriba, el que usas para Overleaf. | Siempre que vayas a Overleaf. |
+| «Copiar código» | Genera y copia **el documento entero**, con tus últimos cambios. Es el de arriba, el que usas para Overleaf. | Siempre que vayas a Overleaf. |
 
 Sobre la bandeja:
 
@@ -275,8 +278,8 @@ cierra cada fórmula dentro de un mismo elemento.
 Al pulsar «Generar documento», el resumen «Comprobación previa a Overleaf»
 agrupa los avisos. Usa el enlace **Ir al bloque** para enfocar su botón «Editar».
 Después de guardar cambios en un bloque o de modificar la estructura, vuelve a
-generar para actualizar el resumen. Puedes copiar o descargar el contenido
-original aunque aparezcan avisos.
+generar para actualizar el resumen; «Copiar código» y «Descargar .tex» también lo
+actualizan. Puedes copiar o descargar el contenido original aunque aparezcan avisos.
 
 ---
 
@@ -413,16 +416,20 @@ oferta. «Guardar versión» conserva un punto de restauración independiente.
 ## Autocierre en Contenido
 
 En «Preferencias de escritura», «Cerrar automáticamente llaves y delimitadores»
-activa el cierre de llaves y fórmulas. Paréntesis, corchetes y exponentes se
-completan solo en matemáticas. Las llaves envuelven la selección; un cierre ya
-pendiente se salta al teclearlo. Retroceso elimina un par automático vacío.
+activa el cierre de llaves y fórmulas. Paréntesis y corchetes se completan solo
+en matemáticas. `^` y `_` se escriben tal cual: `x^2 + y^2` queda como lo
+tecleas. Si seleccionas texto en matemáticas, `^` y `_` lo envuelven como
+exponente o subíndice. Para un grupo largo escribe `{`, que se cierra sola.
+Las llaves envuelven la selección; un cierre ya pendiente se salta al teclearlo. Retroceso elimina un par automático vacío.
 Intro tras una apertura de entorno añade su cierre salvo en listas y bibliografía.
 Los comentarios, las teclas muertas y la composición conservan la escritura normal.
 
 ## Sugerencias, huecos y alias
 
 Escribe una barra y al menos una letra en «Contenido». El menú propone hasta
-ocho comandos según el texto, sus nombres en español y el uso reciente. ↑ y ↓
+ocho comandos según el texto, sus nombres en español y el uso reciente; a
+igualdad, primero el más sencillo (`\frac` propone la fracción antes que las
+derivadas). ↑ y ↓
 cambian de opción; Intro, Tab o tocar una opción la insertan. Escape cierra el
 menú sin borrar lo escrito. En prosa, aceptar matemáticas añade sus dólares.
 Tras una apertura de entorno también se sugieren nombres.

@@ -112,7 +112,6 @@ footer { padding-block: .5rem 2rem; }
   /* A 320 px la sangría por nivel se reduce para que un bloque de nivel 3 siga
      siendo legible sin desplazamiento horizontal. */
   .block-list, .block-children { padding-inline-start: .85rem; }
-  .block-actions button { flex: 1 1 8rem; }
   .symbol-board > details > :not(summary) { margin-inline: .75rem; }
   .symbol-board .field { grid-template-columns: 1fr; }
 }
@@ -248,7 +247,10 @@ summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
   .structure-panel > h3 { margin-block-start: 0; }
 }
 @media (max-width: 38rem) {
+  /* En columna, flex-basis mide la altura: con 8rem cada botón medía 128 px y
+     una tarjeta, 434 px. Los botones toman la altura de su contenido. */
   .block-actions { flex-direction: column; align-items: stretch; }
+  .block-actions > button, .block-actions > .block-more { flex: 0 0 auto; }
   .block-children { padding-inline-start: .65rem; }
 }
 

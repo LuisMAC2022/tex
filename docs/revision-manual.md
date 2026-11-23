@@ -36,6 +36,7 @@ por ronda de revisión, no al cambiar código.
 - [ ] Usar `prefers-reduced-motion: reduce` y verificar que no aparece movimiento inesperado.
 - [ ] Guardar, recargar, restaurar y eliminar una versión de un árbol de varios niveles; probar también una entrada corrupta y un borrador plano `version: 1` para comprobar la migración y su anuncio.
 - [ ] Denegar permiso del portapapeles y confirmar que un fallo conserva el resultado y comunica una alternativa.
+- [ ] Generar, añadir un bloque y cambiar el título sin volver a generar; usar «Copiar código» y «Descargar .tex» y confirmar que ambos llevan el bloque y el título nuevos. Sin título, ninguno exporta y el foco va al título.
 - [ ] Abrir `index.html` por doble clic (`file://`) y confirmar que se añaden bloques, se genera, se copia y se descarga sin errores en consola.
 - [ ] Con `file://` y sin conexión, verificar que las fuentes matemáticas cargan y que la vista previa es legible en ambos temas.
 - [ ] Previsualizar `$x \in \mathbb{R}$` en prosa y una ecuación destacada con el teclado. El foco debe permanecer en el editor.
