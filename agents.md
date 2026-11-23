@@ -94,8 +94,9 @@ terminar N1, N2, N3 y N4.
 - Como máximo 8 sectores por anillo, 44 px de arco en el radio medio y 44 px de
   grosor. Fragmentos con `#1`–`#9`, `#0` y `\#`.
 - Atajos: nada con Alt+Mayús. La tecla Menú solo en «Contenido» (DEC-022).
-- La pulsación larga dentro de «Contenido» sigue desactivada hasta tener el
-  diagnóstico del teléfono (`diagnostico/resultados-android.md` sigue vacío).
+- La pulsación larga dentro de «Contenido» sigue desactivada. Falta el informe
+  JSON del diagnóstico; las observaciones del teléfono ya están en
+  [resultados-android.md](diagnostico/resultados-android.md).
 
 **Cambio respecto a U2.** Hoy la pulsación larga sobre una tarjeta carga el
 bloque en el editor y abre el menú de su contenido. Desde N3 abre el **menú del
@@ -617,12 +618,11 @@ bloquear el guardado.
   `79e1098`: se desplazan con el dedo, ◀ y ▶ las recorren y `≡` las cierra.
 - Comprueba con `deslizar` que la lista de destinos de «Mover bloque» se
   desplaza con el dedo.
-- **Gboard, solo con datos del teléfono:**
-  - Si el diagnóstico muestra que la composición impide abrir la lista, recalcula
-    el token en `compositionend` y en `input` con `insertCompositionText`. La
-    regla va en `completionTokenAfterInput`, pura.
-  - Con el mismo informe, decide `LONG_PRESS_IN_FIELD`.
-  - Sin datos, no toques ninguna de las dos cosas.
+- **Gboard.** La persona comprobó el 2026-11-23 en su teléfono que las
+  sugerencias de `\` y los menús funcionan con Gboard, y que la barra queda
+  sobre el teclado. **No cambies el manejo de la composición.**
+  - `LONG_PRESS_IN_FIELD` sigue en `false` mientras no llegue el informe JSON
+    de la prueba 2 del diagnóstico. Sin informe, no lo toques.
 
 ---
 
