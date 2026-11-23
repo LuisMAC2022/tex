@@ -133,3 +133,11 @@ orden:
 3. **`temario.md` sigue teniendo la contraseña de SEA** en un repositorio
    público. Borrarlo del archivo no la saca del historial de Git: lo seguro es
    cambiar la contraseña.
+
+### Respuestas del 2026-11-23
+
+- **Paneles:** confirmado. N4 queda así en `agents.md`.
+- **Contraseña de SEA:** se cambiará.
+- **Diagnóstico del teléfono:** pendiente. Lo más sencillo es publicar esta rama
+  en `main`; así la página de diagnóstico queda en GitHub Pages y se abre
+  directamente en el teléfono, sin portátil ni cable.

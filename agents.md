@@ -117,7 +117,7 @@ A1 → A2 → N1 → N2 → N3 → N4 → A3 → N5 → A5+N6 → A4
 | N1 | Barra del pulgar compacta: «Selección» pasa a ser un modo | A2 |
 | N2 | «Tipo de bloque» como chip con menú radial | A2 |
 | N3 | Tarjetas compactas y menú radial del bloque | A2 |
-| N4 | Paneles en el teléfono | N1–N3; **confirmación de la persona** |
+| N4 | Paneles en el teléfono (confirmado) | N1–N3 |
 | A3 | Configuración portátil por partes | A1 |
 | N5 | Menús personales | A2, A3, N1 |
 | A5+N6 | Fuentes de sugerencias explícitas y listas táctiles en todas partes | A1; los datos del teléfono para la parte de Gboard |
@@ -449,9 +449,8 @@ resumen de imagen de [B].
 
 ## N4 — Paneles en el teléfono
 
-**Antes de empezar, busca en `user.md` o `claude.md` la confirmación de la
-persona.** Si eligió seguir con una sola página, haz solo los puntos marcados
-con ◆.
+**Confirmado por la persona el 2026-11-23: paneles, no una sola página.** Los
+puntos marcados con ◆ se hacen igualmente.
 
 - Con `(pointer: coarse) and (max-width: 47.99rem)`, la página pasa a cuatro
   paneles. Una barra de pestañas fija arriba, de 48 px, los selecciona:
