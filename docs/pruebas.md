@@ -12,6 +12,11 @@
 - cada decisión citada en el código existe en decisiones/
 - ningún código vivo se apoya en una decisión reemplazada
 
+## `tests/arquitectura.test.js` — 2 pruebas
+
+- app.js no supera su presupuesto de bytes
+- cada script propio se carga en index.html y lo revisa check:js
+
 ## `tests/block-tree.test.js` — 42 pruebas
 
 - la ausencia de children equivale a una lista vacía y el estado plano sigue siendo válido
@@ -335,4 +340,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-250 pruebas con `node:test` más la comprobación estructural.
+252 pruebas con `node:test` más la comprobación estructural.

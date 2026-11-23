@@ -18,7 +18,7 @@
 Para quien vaya a entender o extender esta aplicación. Da por sabido JavaScript;
 no da por sabido nada de este repositorio.
 
-**Antes de tocar nada, lee [`INVARIANTES.md`](../INVARIANTES.md).** Son ocho reglas
+**Antes de tocar nada, lee [`INVARIANTES.md`](../INVARIANTES.md).** Son reglas
 con guardián real: violarlas no rompe el estilo, rompe `npm test`.
 
 ---
@@ -80,12 +80,19 @@ Los scripts se cargan como clásicos **en este orden**. La aplicación usa
 | 8 | `shortcuts.js` | registro de atajos y sus nombres | no |
 | 9 | `image-options.js` | opciones de imagen y avisos de ruta | no |
 | 10 | `list-outline.js` | análisis, límites, exportación y edición de listas | no |
-| 11 | `content-check.js` | comprobación del contenido | no |
-| 12 | `editing-assist.js` | pares, fragmentos y sesiones de huecos | no |
-| 13 | `completion.js` | sugerencias, uso, alias y configuración | no |
-| 14 | `templates.js` | plantillas por pasos y comandos / | no |
-| 15 | `macros.js` | validación y adaptación de macros a KaTeX | no |
-| 16 | `app.js` | interfaz del editor | sí |
+| 11 | `cross-references.js` | etiquetas, destinos numerados y comandos emitidos | no |
+| 12 | `references.js` | fuentes, citas y bibliografía IEEE o APA | no |
+| 13 | `content-check.js` | comprobación del contenido | no |
+| 14 | `editing-assist.js` | pares, fragmentos y sesiones de huecos | no |
+| 15 | `completion.js` | sugerencias, uso, alias, configuración y colocación de la lista | no |
+| 16 | `templates.js` | plantillas por pasos y comandos / | no |
+| 17 | `macros.js` | validación y adaptación de macros a KaTeX | no |
+| 18 | `menus.js` | datos de los menús radiales | no |
+| 19 | `radial.js` | geometría, máquina de estados y vista de los menús radiales | solo su fábrica, al llamarla |
+| 20 | `versions.js` | instantáneas, versiones, diferencias y proyecto JSON | no |
+| 21 | `version-storage.js` | IndexedDB con respaldo en localStorage | almacenamiento |
+| 22 | `selection-scope.js` | selección por alcance en prosa y matemáticas | no |
+| 23 | `app.js` | cableado de la interfaz | sí |
 
 Las pruebas de Node ejecutan las funciones puras con `node:vm`. La interacción
 de `app.js` se prueba en Chromium con Playwright cuando está instalado
@@ -122,6 +129,58 @@ Qué exporta cada uno, si necesitas buscar una función:
   avisos por ruta. La sección D de `app.js` los presenta mediante
   `editorPreviewHooks`, `blockItemExtensions` y `beforeGenerateHooks`.
 - **`file-download.js`**: `sanitizeFilename`, `downloadTex`.
+
+
+### Dentro de `app.js`
+
+`app.js` es un único cierre. Sus secciones no se llaman por un contrato: leen y
+escriben variables del cierre. El mapa siguiente dice dónde está cada parte. Busca
+el marcador literal; los números de línea cambian.
+
+| Marcador | Qué contiene | Estado propio | Puntos de enganche |
+| --- | --- | --- | --- |
+| inicio del archivo | estado del documento, vista previa del editor | `blocks`, `history`, `macros`, `references`, `documentId` | declara los cinco ganchos |
+| `Nombres de cada nodo` y `Editor: a qué nodo apunta` | rótulos de los nodos y destino del formulario | — | — |
+| `Lista anidada` | tarjetas de la estructura | `blockTargets` | `blockItemExtensions`, `previewRenderers` |
+| `Bandeja de copia` | bandeja, portapapeles, validar y confirmar el bloque, generar | `tray` | `blockFieldHooks`, `beforeGenerateHooks` |
+| `[A] Atajos del tablero` | tablero de símbolos | `recentSymbols`, `symbolOrigin` | — |
+| `[B] Imagen` | campos de imagen y etiqueta del bloque | — | los tres ganchos de bloque |
+| `[C] Listas` | sangría y vista de listas | `loadedListBlock` | `blockFieldHooks`, `previewRenderers`, `editorPreviewHooks` |
+| `[D] Comprobación` | avisos previos a Overleaf | `issuesByPath` | `editorPreviewHooks`, `blockItemExtensions`, `beforeGenerateHooks` |
+| `[E] Mover` | diálogo de traslado | `movingPath` | `blockItemExtensions` |
+| `[F] Asistente de escritura` | autocierre, sugerencias de `\`, huecos, alias, configuración portátil | `prefs`, `aliases`, `usage`, `snippetSession`, `assistState` | declara las ranuras que asignan [G] y [H] |
+| `[G] Comandos / y plantillas` | `/` y plantillas por pasos | `slashSession`, `templateSession` | asigna `specialCompletions`, `acceptSpecialCompletion`, `refreshTemplates` y **envuelve** `closeAssistMenu` |
+| `[H] Macros del documento` | macros | `defaultMacros` | asigna `getCompletionMacros`, `getConfigMacros`, `setConfigMacros` |
+| `Referencias del documento y del curso` | fuentes y citas | `courseReferences` | `blockItemExtensions` |
+| `const thumbBar` (sin marcador) | barra del pulgar, hoja de símbolos, selección por alcance | `scopeMode`, `scopeRange` | `blockFieldHooks` |
+| `let radialState` (sin marcador) | gestos y apertura de los menús radiales | `radialState`, `radialModel` | `radialCommands` |
+| `Autoguardado separado` | sesión sin guardar y su recuperación | `pendingSession` | — |
+| `function selectDocument` hasta el final | historial estructural, versiones, proyecto JSON y arranque | `knownVersions` | — |
+
+Dos trampas que no se ven al leer una sección suelta:
+
+- **Ranuras asignadas más abajo.** [F] declara `let setConfigMacros = () => {}` y
+  la llama. La función real la asigna [H]. Si mueves [H] o cambias su orden de
+  arranque, [F] sigue llamando a la versión vacía sin ningún error.
+- **`closeAssistMenu` tiene dos dueños.** [F] lo define y [G] lo sustituye por otro
+  que también cierra la sesión `/`. Cualquier cambio en el menú de sugerencias
+  tiene que mirar ambas secciones.
+
+### Dónde va el código nuevo
+
+`app.js` tiene un presupuesto de bytes que solo baja (INV-012,
+[DEC-030](../decisiones/DEC-030-app-js-solo-cableado.md)). Antes de escribir:
+
+| Si lo nuevo es… | …va en | y se prueba con |
+| --- | --- | --- |
+| una regla: calcular, validar, transformar texto o árbol | un script clásico propio o uno existente con ese dueño | `tests/*.test.js` y `load-app.mjs` |
+| un dato: catálogo, menú, plantilla | el catálogo que ya existe (`menus.js`, `math-symbols.js`, `block-types.js`…) | la prueba de coherencia de ese catálogo |
+| una interacción que lee el DOM y aplica una regla | el mínimo cableado en `app.js`, compensando bytes | `tests/interfaz.test.js` |
+| una interacción con estado propio | un controlador propio, cuando exista su patrón (encargo vigente en `agents.md`) | `tests/interfaz.test.js` |
+
+Un script nuevo exige cuatro listas al día: `index.html`, `tests/check-site.mjs`,
+`check:js` de `package.json` y el cargador de sus pruebas. `tests/arquitectura.test.js`
+comprueba las dos primeras contra `assets/js/`.
 
 ---
 

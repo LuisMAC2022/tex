@@ -88,3 +88,8 @@ Las copias reciben identificadores propios y los movimientos conservan los de to
 Guardián: `tests/cross-references.test.js` → "las etiquetas de bloque son únicas en todo el árbol"
 
 Se conserva la primera al migrar. Duplicar, pegar y aplicar plantillas vacían las etiquetas de la copia. Mover conserva cada destino. [DEC-027](decisiones/DEC-027-etiquetas-de-bloque.md)
+
+### INV-012 — `app.js` no crece: lo nuevo vive en su propio script
+Guardián: `tests/arquitectura.test.js` → "app.js no supera su presupuesto de bytes"
+
+El presupuesto está en la prueba y solo baja. Al extraer una sección se rebaja en el mismo commit. Subirlo exige una decisión nueva. [DEC-030](decisiones/DEC-030-app-js-solo-cableado.md)
