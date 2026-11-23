@@ -8,8 +8,9 @@
 De: Claude · Fecha: 2026-11-22 · Rama base: `claude/ui-ux`
 Para: el agente que lo implemente (Astra, Codex u otro)
 
-Son seis paquetes, U0–U5, y se hacen en orden. Las decisiones de producto ya
-están tomadas con la persona usuaria. Tu trabajo es implementarlas sin romper el
+Son seis paquetes, U0–U5, y se hacen en orden. Entre U3 y U4 se intercalan
+U3.1 y U3.2 (etiquetas y citas), descritos al final de este archivo. Las
+decisiones de producto ya están tomadas con la persona usuaria. Tu trabajo es implementarlas sin romper el
 contrato del repositorio. Lee el encargo completo antes de escribir código:
 varias trampas de un paquete afectan a otro.
 
@@ -704,8 +705,8 @@ Añade estas instrucciones a `docs/revision-manual.md`, junto con una sección
 ## 5. Fuera de este encargo
 
 - **Python, ejecución y notebooks.** Sin decidir.
-- **Referencias cruzadas `\label` / `\ref`.** Siguiente ronda; se apoyarán en
-  U3.
+- ~~Referencias cruzadas `\label` / `\ref`.~~ Ya no queda fuera: son U3.1 y
+  U3.2, al final de este archivo.
 - **Varios documentos en una biblioteca.** U4 deja preparado `documentId`.
 - **Pasar de «línea N del `.tex`» al bloque que la produjo.** Mencionado en
   DEC-021.
@@ -752,3 +753,396 @@ const { chromium, devices } = require("playwright");
   await browser.close();
 })();
 ```
+
+---
+
+# Encargo complementario: etiquetas y citas (U3.1 y U3.2)
+
+De: Claude · Fecha: 2026-11-23 · Se intercala **después de U3 y antes de U4**
+Para: el mismo agente que implemente U0–U5
+
+Son dos paquetes que se entregan por separado, en orden. Todo lo de las
+secciones 0 a 3 del encargo anterior sigue vigente aquí, incluidas R1–R7: el
+archivo `examples/calculo-3.tex` no cambia en ninguno de los dos paquetes.
+
+**Rama base:** la de U3. Antes de empezar U0, la rama
+`ccr-20873c43-32i6nb` debe estar fusionada en `claude/ui-ux`: trae cinco
+correcciones que este encargo da por hechas (autocierre de `^`/`_` según
+DEC-022, exportación siempre regenerada, fecha de hoy, orden de sugerencias y
+tarjetas en el teléfono). Si no lo está, detente y pregúntalo en `claude.md`.
+
+## Decisiones ya tomadas (no las reabras)
+
+- **Dos estilos de cita por documento:** IEEE (predeterminado) y APA 7.ª ed.
+  El contenido es el mismo en los dos: se cita con `\citep` y `\citet` de
+  `natbib`, y cambiar de estilo no obliga a tocar ninguna cita.
+- **La bibliografía generada va siempre al final del documento.**
+- **Una ecuación destacada se numera si y solo si tiene etiqueta.**
+- **Las ocho referencias del temario se cargan solo con un botón.** Nunca se
+  precargan en un documento nuevo.
+- **Sin BibTeX ni `biblatex`, sin `cleveref`, sin red.** La aplicación escribe
+  la palabra «Teorema» porque conoce el tipo del bloque.
+
+## Lo que ya está comprobado con `pdflatex`
+
+Con TeX Live 2023 y el preámbulo actual de la aplicación, en este orden de
+paquetes más `natbib` tras `graphicx`:
+
+| Se escribe | IEEE `[numbers,square,sort&compress]` | APA `[round,authoryear]` |
+| --- | --- | --- |
+| `\citep[p.~912]{stewart1994}` | [1, p. 912] | (Stewart, 1994, p. 912) |
+| `\citet{larson1995}` | Larson y Hostetler [2] | Larson y Hostetler (1995) |
+| `\citep{spivak1993,stewart1994}` | [1, 3] | (Spivak, 1993; Stewart, 1994) |
+| `\cite{stewart1994}` | [1] | Stewart (1994): **cambia de sentido** |
+| `\citep{noexiste}` | [?], solo un aviso | (?), solo un aviso |
+
+Trampas comprobadas, que el diseño de abajo ya resuelve:
+
+- **El bloque «Bibliografía (IEEE)» antiguo con APA no compila:**
+  `natbib` rechaza un `\bibitem{ref1}` sin autor y año («Bibliography not
+  compatible with author-year citations») y todas las citas salen «?».
+- **El bloque antiguo junto a la bibliografía generada, en IEEE, compila mal:**
+  dos listas «Referencias», ambas empezando en [1], y las citas son ambiguas.
+- `\bibitem[Stewart(1994)]{clave}` sirve para los dos estilos: APA usa el
+  autor y el año; IEEE los ignora y numera.
+- `babel` en español titula `thebibliography` «Referencias» y las figuras
+  «Figura»; los nombres «Teorema», «Definición»… ya los declara el preámbulo con
+  `\newtheorem`. No hay que traducir nada.
+
+---
+
+## U3.1 — Etiquetas y referencias cruzadas
+
+**Objetivo:** remitir a teoremas, ecuaciones y figuras con `\ref`/`\eqref`,
+con el número correcto en el menú, sin inventar claves y con un error visible
+si una referencia queda rota (en Overleaf solo sale «??»).
+
+### Modelo
+
+- Campo opcional `label` (cadena) **en el bloque**, no en `content`. Así
+  sobrevive a mover, reordenar y deshacer.
+- Qué tipos lo admiten se declara en `block-types.js` (INV-005) con una
+  propiedad `labelPrefix`: `theorem` → `teo`, `proposition` → `prop`,
+  `definition` → `def`, `example` → `ej`, `note` → `nota`, `equation` → `ec`,
+  `image` → `fig`. Sin `labelPrefix` no hay etiqueta: `proof` (no lleva número),
+  `math-inline`, `text`, las listas y la bibliografía. `normalizeDraft` descarta
+  la etiqueta de un tipo que no la admite.
+- **Formato:** `<prefijo>:<resto>`, con `resto` en `[a-z0-9:-]+`. Generaliza la
+  regla que hoy está en `normalizeImageOptions` (NFD, minúsculas, quitar lo no
+  válido, reponer el prefijo) a una función pura `normalizeLabel(value, prefix)`
+  y úsala también para las imágenes.
+- `options.label` de las imágenes migra a `label` al normalizar. La salida es
+  idéntica: pruébalo.
+- **Unicidad:** las etiquetas son únicas en todo el árbol. `normalizeDraft`
+  conserva la primera y vacía las repetidas. «Duplicar», «Pegar bloque» y cada
+  aplicación de plantilla **vacían** la etiqueta de la copia, y
+  `templateFromBranch` la quita. Mover la conserva. Es una invariante nueva con
+  guardián en `INVARIANTES.md` (siguiente número libre).
+- `labelFromTitle(title, prefix, existing)`, pura: slug del título sin
+  diacríticos, palabras separadas por `-`, y sufijo `-2`, `-3`… si ya existe.
+  Sin título propone `<prefijo>:1`, `<prefijo>:2`…
+- `DRAFT_VERSION = 5`; las versiones 1 a 4 migran y las posteriores se
+  rechazan, como hizo P5. La clave de almacenamiento no cambia.
+
+### Generador
+
+- Teorema y afines: `\begin{theorem}[Clairaut]\label{teo:clairaut}`, la
+  etiqueta en la misma línea, tras el título opcional.
+- Ecuación con etiqueta:
+
+  ```tex
+  \begin{equation}\label{ec:clairaut}
+  f_{xy}(a,b) = f_{yx}(a,b)
+  \end{equation}
+  ```
+
+  Sin etiqueta, exactamente el `\[ … \]` de hoy.
+- Imagen: la salida de hoy, leyendo `block.label`.
+- Sin etiquetas, la salida no cambia en un solo byte (R7).
+
+### Números que muestra el menú
+
+`referenceTargets(state)`, pura, devuelve en orden de emisión
+`{ label, typeId, word, number, path, title }`:
+
+- Cada entorno tipo teorema tiene su contador, continuo en todo el documento
+  (regla de numeración del README).
+- El contador de ecuaciones solo avanza con ecuaciones etiquetadas.
+- El de figuras avanza con una imagen de ruta no vacía que, o bien es flotante
+  (raíz o dentro de texto) y tiene pie, o bien tiene etiqueta. Es lo que hace hoy
+  `blockToLatex` con `\caption` y `\refstepcounter{figure}`.
+- Un bloque que el generador no emite (vacío y sin hijos) no cuenta. **No
+  copies esa condición:** extrae de `blockToLatex` una función compartida que
+  diga si un bloque se emite, para que no diverjan.
+- Si algún contenido abre a mano un entorno que avanza ese contador (un
+  `\begin{theorem}`, un `equation`/`align`/`gather`/`multline`/`flalign`/
+  `alignat` sin asterisco, o un `\caption`), fuera de comentarios, ese tipo
+  sale con `number: null`. Se muestra sin número, nunca con uno equivocado.
+
+### Insertar una referencia
+
+- `completionToken` reconoce `\ref{` y `\eqref{` (consulta: lo escrito tras
+  `{`). Cada opción se rotula «Teorema 2 · Clairaut», o «Teorema · Clairaut»
+  si `number` es `null`.
+- **En prosa**, aceptar reemplaza lo tecleado por `Teorema~\ref{teo:clairaut}`,
+  `Figura~\ref{fig:…}` o `\eqref{ec:…}`; para una ecuación usa siempre
+  `\eqref`, aunque se tecleara `\ref{`. Si justo antes ya pone la palabra («el
+  Teorema~» o «el teorema »), inserta solo el comando.
+- **En matemáticas**, solo el comando, sin palabra.
+- Todo con `applyFieldEdit` (R1).
+- Editor: campo «Etiqueta» (solo en los tipos con prefijo, con el prefijo
+  visible), botón «Proponer desde el título», errores junto al campo. La etiqueta
+  de imagen de hoy pasa a ser este campo.
+- Estructura: cada tarjeta etiquetada muestra «Teorema 2 · teo:clairaut».
+- Tras U2: en `menus.js`, el contexto `text` suma el sector «Referir»
+  (`\ref{#1}#0`, que abre este mismo menú). Siguen siendo como mucho 8 sectores.
+
+### Comprobación previa del documento
+
+Hoy `checkBlock` mira cada bloque. Añade a `content-check.js` una pasada pura
+`checkDocument(state)` cuyos avisos llevan ruta, línea y columna y se suman al
+resumen de «Resultado» con el mismo «Ir al bloque»:
+
+| Caso | Severidad |
+| --- | --- |
+| `\ref{x}` o `\eqref{x}` sin destino (etiqueta de bloque o `\label` escrito en el contenido) | Error |
+| Etiqueta repetida, de bloque o escrita a mano | Error |
+| `\eqref` hacia algo que no es una ecuación | Aviso |
+| `\label` escrito a mano en un bloque de texto o lista, fuera de un entorno matemático | Aviso: remitiría a la sección |
+
+Ignora lo comentado con `%` usando `mathContextAt`.
+
+### Pruebas
+
+- `normalizeLabel`, `labelFromTitle`, migración v1–v4 → v5 y traslado de la
+  etiqueta de imagen.
+- Copias sin etiqueta: duplicar, pegar, plantilla y `templateFromBranch`.
+- Generador: cadenas exactas con y sin etiqueta; ejemplo idéntico.
+- `referenceTargets`: contadores separados, demostración sin número, bloque
+  vacío que no cuenta, figura flotante con y sin pie frente a figura dentro de
+  un teorema, y `null` ante entornos escritos a mano.
+- Menú: token, rótulos y texto insertado en prosa, en matemáticas y con la
+  palabra ya escrita.
+- `checkDocument`: cada fila de la tabla.
+- **`pdflatex`** (en `tests/pdflatex.test.js` de U2; omitida si no está
+  instalado): compila dos veces un documento con todos los destinos y
+  referencias, comprueba que el registro no tiene «undefined references» y que
+  cada `\newlabel` del `.aux` tiene el número de `referenceTargets`.
+
+**Documentación:** README (contrato: `label`, ecuación numerada), las dos
+guías, la invariante nueva y una decisión con el porqué: etiqueta en el bloque y
+no en el contenido, numerar solo con etiqueta, palabra escrita por la aplicación
+en vez de `cleveref`, y `number: null` antes que un número falso.
+
+---
+
+## U3.2 — Citas bibliográficas
+
+**Objetivo:** citar libros con `\citep`/`\citet` en IEEE o APA, generar la
+bibliografía sola y detectar cualquier cita rota antes de Overleaf.
+
+### Modelo
+
+- Estado: `references` (array) y `bibliography: { style: "ieee" | "apa",
+  includeUncited: false }`. `DRAFT_VERSION = 6`; migra v1–v5 con
+  `references: []` y el estilo `ieee`.
+- Cada entrada:
+
+  ```js
+  {
+    key: "stewart1994",
+    authors: ["Stewart, J."], // uno por elemento: «Apellido, Iniciales»; iniciales opcionales
+    year: "1994",
+    title: "Cálculo",
+    edition: "",               // entero ≥ 2 como texto, o vacío
+    publisher: "Iberoamérica",
+    place: "México",           // solo lo usa IEEE: APA 7 omite el lugar
+    url: "",
+    text: "",                  // texto libre: sustituye al formato de los campos
+  }
+  ```
+
+- `validateReference(entry, existing)`, pura y con mensajes por campo:
+  - `key` en `^[a-z0-9][a-z0-9-]*$`, única;
+  - o `text` no vacío, o al menos un autor, título y año de cuatro cifras;
+  - con estilo APA, una entrada de solo `text` necesita igualmente autor y año,
+    porque la cita los imprime.
+- `suggestReferenceKey(entry, existing)`: apellido del primer autor sin
+  diacríticos y en minúsculas, más el año: `stewart1994`; si existe,
+  `stewart1994b`, `stewart1994c`…
+- **La clave no se edita mientras algún contenido la cite.** El campo se
+  desactiva y dice por qué. Renombrar queda fuera de este paquete.
+- **Escape:** los campos estructurados pasan por `escapeMetadata`, como los
+  metadatos (INV-003). `text` llega **literal**, como el contenido (INV-002):
+  es la salida para fuentes raras y es lo que hoy hace el bloque antiguo con
+  cada línea, que la conversión traslada ahí. Escríbelo en la tabla de contrato
+  del README.
+
+### Generador
+
+- **`natbib` se carga si hay alguna referencia o si algún contenido usa un
+  comando de `natbib`** (`\citep`, `\citet`, `\citealt`, `\citealp`,
+  `\citeauthor`, `\citeyear`, con o sin `*`). Sin eso, `\citep` sería un
+  comando indefinido y el documento no compilaría. El `\cite` simple no basta
+  para cargarlo: es del núcleo de LaTeX.
+- Va justo después de `graphicx`, con su línea de comentario como los demás
+  paquetes, y antes de las macros. Si U2 ya añadió `hyperref`, ese sigue
+  siendo el último.
+- Opciones: IEEE `[numbers,square,sort&compress]`; APA `[round,authoryear]`.
+- Añade `natbib` a la lista blanca de INV-009 y a la prueba
+  «el preámbulo solo carga paquetes de la lista blanca», con el caso condicional,
+  igual que se hizo con `hyperref`. No cambia el porqué de la invariante.
+- **Bibliografía:** antes de `\end{document}`, tras una línea en blanco, solo
+  si hay entradas que imprimir (las citadas, o todas con `includeUncited`):
+
+  ```tex
+  \begin{thebibliography}{9}
+  \bibitem[Stewart(1994)]{stewart1994} J.~Stewart, \emph{Cálculo}. México: Iberoamérica, 1994.
+  \end{thebibliography}
+  ```
+
+  El argumento de `thebibliography` son tantos `9` como cifras tenga el número
+  de entradas, como hoy.
+- **Orden:** IEEE, por primera cita en orden de emisión (los comandos de cita,
+  `\cite` incluido, de cada bloque y luego sus hijos), y después las no citadas
+  en el orden del panel. APA: por apellido del primer autor
+  (`localeCompare` con `es`, sensibilidad `base`), año y título.
+- **Etiqueta de `\bibitem`:** un autor, «Stewart»; dos, «Larson y Hostetler»;
+  tres o más, «Zill et~al.». Si dos entradas impresas comparten etiqueta y año,
+  el año lleva `a`, `b`… por orden de título, en la etiqueta y en el texto APA.
+- **Formato IEEE** (libro):
+  `J.~Stewart, \emph{Cálculo}, 2.ª ed. México: Iberoamérica, 1994.`
+  - Autores: «J.~Stewart»; dos, «R.~Larson y R.~Hostetler»; de tres a seis,
+    «A, B y C»; más de seis, el primero seguido de `\emph{et al.}`.
+  - Sin edición se omite «, 2.ª ed.»; sin lugar, «Iberoamérica, 1994.».
+- **Formato APA 7** (libro):
+  `Stewart, J. (1994). \emph{Cálculo} (2.ª ed.). Iberoamérica.`
+  - Autores: «Larson, R. y Hostetler, R.»; de tres a veinte,
+    «A, B, C y D», sin coma antes de la «y».
+- Sin iniciales se escribe solo el apellido. `url`, si existe, se añade como
+  ` \texttt{<url escapada>}`. Una entrada con `text` imprime ese texto tal cual
+  tras su `\bibitem`.
+- Sin referencias ni comandos de `natbib`, la salida no cambia en un solo
+  byte. Esto incluye un documento con el bloque antiguo, que sigue generando lo
+  mismo que hoy.
+
+### Citar
+
+- `completionToken` reconoce el argumento de `\cite`, `\citep`, `\citet` y
+  demás, también tras un opcional (`\citep[p.~912]{`). La consulta es lo escrito
+  tras el último `{` o `,`, para citar varias claves. Rótulo de cada opción:
+  «Stewart (1994) · Cálculo». Aceptar inserta solo la clave.
+- `TEXT_COMMANDS` suma `\citep{}` («Cita entre paréntesis») y `\citet{}`
+  («Cita en la frase»). No sumes `\cite`: cambia de sentido con el estilo.
+- Tras U2: el contexto `text` de `menus.js` suma «Citar», un submenú con «Entre
+  paréntesis» (`\citep{#1}#0`) y «En la frase» (`\citet{#1}#0`). Con «Referir»
+  de U3.1 son 8 sectores: no añadas más.
+
+### Interfaz
+
+Panel plegable «Referencias del documento» dentro de «Datos del documento»,
+junto a «Macros del documento» y con su mismo patrón:
+
+- Lista con «Editar referencia» y «Eliminar referencia»; eliminar una
+  referencia citada pide confirmación y dice cuántas citas quedarán rotas.
+- Campos: «Clave», «Autores» (uno por línea, «Apellido, Iniciales»), «Año»,
+  «Título», «Edición», «Editorial», «Lugar», «Enlace» y «Texto libre»; botones
+  «Guardar referencia» y «Cancelar referencia». La clave se propone al escribir
+  el primer autor y el año, y se puede cambiar mientras no esté citada.
+- «Estilo de citas» con dos opciones, IEEE y APA, y la casilla «Incluir
+  también las no citadas».
+- «Añadir las referencias del curso» añade las del temario y omite las claves
+  que ya existan. «Guardar como referencias del curso» sustituye esa lista por
+  las del documento actual, en `tex-notes:references-default:v1`, y la
+  configuración portátil la exporta e importa. Un archivo de configuración sin
+  ese campo sigue siendo válido.
+- En la tarjeta de un bloque «Bibliografía (IEEE)» antiguo, «Convertir en
+  referencias del documento»:
+  - cada línea no vacía pasa a `{ key: "refN", text: <línea> }`, con la N de
+    su posición, para que un `\cite{ref1}` escrito a mano siga valiendo;
+  - si alguna clave ya existe, no cambia nada y lo explica;
+  - el bloque se elimina con las reglas de cualquier cambio estructural:
+    confirmación, cancelar la edición en curso, anunciar y devolver el foco.
+
+### Referencias del curso
+
+Constante `COURSE_REFERENCES` en un archivo nuevo, `assets/js/references.js`,
+junto con las funciones puras de formato y orden. Cópialas de `temario.md`
+**tal como están**; no completes datos de memoria. En particular, «Larson y
+Hostetler» no trae iniciales y se queda sin ellas.
+
+| Clave | Autores | Año | Título | Editorial | Lugar |
+| --- | --- | --- | --- | --- | --- |
+| `leithold1992` | Leithold, L. | 1992 | El cálculo con geometría | Harla | México |
+| `spivak1993` | Spivak, M. | 1993 | Cálculo infinitesimal | Reverté | México |
+| `stein1995` | Stein, S. | 1995 | Cálculo y geometría analítica | McGraw Hill | México |
+| `stewart1994` | Stewart, J. | 1994 | Cálculo | Iberoamérica | México |
+| `boyce1994` | Boyce, D. | 1994 | Cálculo | CECSA | México |
+| `larson1995` | Larson; Hostetler | 1995 | Cálculo y geometría analítica | McGraw Hill | México |
+| `swokowski1989` | Swokowski, E. | 1989 | Cálculo con geometría analítica | Iberoamérica | México |
+| `zill1996` | Zill, D. | 1996 | Cálculo con geometría analítica | Iberoamérica | México |
+
+### Comprobación previa
+
+Amplía `checkDocument`:
+
+| Caso | Severidad |
+| --- | --- |
+| Clave citada sin referencia | Error: el PDF mostraría «[?]» o «(?)» |
+| Bloque de bibliografía antiguo con el estilo APA | Error: no compila |
+| Bloque de bibliografía antiguo y bibliografía generada a la vez | Error: dos listas que empiezan en [1] |
+| Entrada impresa sin autor o año con el estilo APA | Error |
+| Referencia que nadie cita, sin «Incluir también las no citadas» | Aviso |
+
+Los dos errores del bloque antiguo ofrecen la conversión.
+
+### Pruebas
+
+- `validateReference`, `suggestReferenceKey` y la clave bloqueada si está
+  citada.
+- Formato exacto en los dos estilos con 1, 2, 3 y 7 autores, sin iniciales, con
+  edición, con enlace, con `&` o `_` en la editorial (se escapan) y con `text`
+  (literal).
+- Orden IEEE con citas en hijos y citas de varias claves; orden APA con acentos
+  («Álvarez» antes que «Boyce»); letras de año.
+- Condición de `natbib`: sin referencias ni comandos, preámbulo y ejemplo
+  idénticos; con `\citep` y sin referencias, se carga.
+- Migración v5 → v6; configuración con y sin referencias.
+- Conversión del bloque antiguo, incluida la colisión de claves.
+- Cada fila de la comprobación previa.
+- **`pdflatex`** (omitida si no está): las ocho referencias del curso citadas
+  en ambos estilos compilan sin «Citation undefined», y el orden de los
+  `\bibcite` del `.aux` coincide con el calculado.
+
+**Documentación:** README (contrato de `references` y `bibliography`, escape
+de los campos frente a `text`, preámbulo condicional), las dos guías (todos los
+rótulos nuevos en `docs/guia-de-uso.md`) y una decisión: datos estructurados,
+`natbib` para los dos estilos, `\citep`/`\citet` en vez de `\cite`, bibliografía
+al final, clave inmutable mientras esté citada y `text` literal.
+
+---
+
+## Ajustes que esto impone a U4
+
+- Las instantáneas, las versiones y el archivo de proyecto guardan también
+  `references` y `bibliography`, con el `DRAFT_VERSION` vigente (6 tras U3.2),
+  no con el 4 que cita U4.
+- `diffDocuments` compara las referencias por `key` (añadidas, eliminadas y
+  modificadas), el estilo y la etiqueta de cada bloque.
+
+## Revisión manual (añádela a `docs/revision-manual.md`)
+
+- Compilar en Overleaf un documento con teoremas, ecuaciones y figuras
+  etiquetados y las ocho referencias del curso, en IEEE y en APA; comparar cada
+  número del menú con el PDF.
+- Cambiar de estilo sin tocar el contenido y volver a compilar.
+- En Android, que `\citep{` y `\ref{` abran el menú con Gboard. Si U0 confirmó
+  que la composición bloquea las sugerencias, «Citar» y «Referir» del menú
+  radial son la vía.
+- Con TalkBack y con NVDA, recorrer el panel de referencias y sus errores.
+
+## Informe
+
+Uno por paquete en `claude.md`, como en U0–U5: qué hiciste, qué mediste, qué
+decisiones e invariantes registraste y **qué no pudiste verificar**, en
+particular si `pdflatex` se ejecutó o se omitió.

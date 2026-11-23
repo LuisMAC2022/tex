@@ -303,11 +303,10 @@ El MVP está terminado cuando una persona puede, usando solamente el teclado y c
 ### Siguiente ronda
 
 - **Bloque de tabla o tabla de verdad** con `tabular`, como las del Repaso −1 del temario.
-- **Referencias cruzadas** con etiquetas en teoremas y ecuaciones y una acción para insertar `\ref`.
 
 También siguen pendientes el **modelo de documento de tres niveles** (Unidad → Clase → Bloques) y el módulo de apoyo al curso con cita de asesoría, fechas `.ics` y entregables. Hoy `topic` produce una sola `\section`.
 
-En curso, según el encargo de `agents.md` en la rama `claude/ui-ux`: distribución para Android con barra del pulgar, menús radiales contextuales, identificadores estables de bloque, versiones con archivo de proyecto y selección por alcance.
+En curso, según el encargo de `agents.md` en la rama `claude/ui-ux`: distribución para Android con barra del pulgar, menús radiales contextuales, identificadores estables de bloque, etiquetas con `\ref`/`\eqref` y citas bibliográficas en IEEE o APA, versiones con archivo de proyecto y selección por alcance.
 
 Quedan expresamente fuera por ahora: TeX en WASM, TikZ/PGFPlots, traducción de errores de TeX, paleta de comandos, buscar y reemplazar, infraestructura de sincronización y cualquier ida y vuelta desde el `.tex` o desde Overleaf a la aplicación. La ejecución de Python está sin decidir y no forma parte de ese encargo.
 
