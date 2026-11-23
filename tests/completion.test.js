@@ -88,3 +88,12 @@ test("completar un entorno descarta el cierre consumido y conserva los pares ext
 \end{align}#0`);
  assert.equal(T.activePairs(completed.edit,kept).length,1);
 });
+test("la lista de sugerencias queda junto al cursor y por encima de la barra y el teclado", () => {
+ const area={top:8,bottom:500};
+ assert.deepEqual(plain(T.placeSuggestions({top:100,bottom:120},200,area)),{top:124,maxHeight:200});
+ assert.deepEqual(plain(T.placeSuggestions({top:400,bottom:420},200,area)),{top:196,maxHeight:200});
+ assert.deepEqual(plain(T.placeSuggestions({top:200,bottom:220},400,area)),{top:224,maxHeight:276});
+ assert.deepEqual(plain(T.placeSuggestions({top:300,bottom:320},400,area)),{top:8,maxHeight:288});
+ assert.deepEqual(plain(T.placeSuggestions({top:20,bottom:480},200,area)),{top:300,maxHeight:200});
+ assert.deepEqual(plain(T.placeSuggestions({top:600,bottom:620},200,area)),{top:296,maxHeight:200});
+});

@@ -1408,22 +1408,28 @@
     if (!assistState) return;
     const rect = blockContent.getBoundingClientRect();
     const narrow = global.matchMedia("(max-width: 38rem)").matches;
-    let x = rect.left, y = rect.bottom;
-    if (!narrow) {
-      const mirror = document.createElement("div"), marker = document.createElement("span");
-      const style = getComputedStyle(blockContent);
-      for (const key of ["font", "lineHeight", "letterSpacing", "padding", "border", "boxSizing", "tabSize", "textIndent"]) mirror.style[key] = style[key];
-      Object.assign(mirror.style, { position: "fixed", visibility: "hidden", whiteSpace: "pre-wrap", overflowWrap: "break-word", width: `${rect.width}px`, left: `${rect.left}px`, top: `${rect.top}px` });
-      mirror.textContent = blockContent.value.slice(0, blockContent.selectionStart);
-      marker.textContent = "\u200b"; mirror.append(marker); document.body.append(mirror);
-      const caret = marker.getBoundingClientRect();
-      x = caret.left - blockContent.scrollLeft; y = caret.bottom - blockContent.scrollTop;
-      mirror.remove();
-    }
+    const mirror = document.createElement("div"), marker = document.createElement("span");
+    const style = getComputedStyle(blockContent);
+    for (const key of ["font", "lineHeight", "letterSpacing", "padding", "border", "boxSizing", "tabSize", "textIndent"]) mirror.style[key] = style[key];
+    Object.assign(mirror.style, { position: "fixed", visibility: "hidden", whiteSpace: "pre-wrap", overflowWrap: "break-word", width: `${rect.width}px`, left: `${rect.left}px`, top: `${rect.top}px` });
+    mirror.textContent = blockContent.value.slice(0, blockContent.selectionStart);
+    marker.textContent = "\u200b"; mirror.append(marker); document.body.append(mirror);
+    const caret = marker.getBoundingClientRect();
+    mirror.remove();
+    const clamp = (value) => Math.max(rect.top, Math.min(value, rect.bottom));
+    const anchor = { top: clamp(caret.top - blockContent.scrollTop), bottom: clamp(caret.bottom - blockContent.scrollTop) };
+    const x = narrow ? rect.left : caret.left - blockContent.scrollLeft;
+    // La barra del pulgar y el teclado virtual tapan el borde inferior.
+    const view = global.visualViewport, top = (view?.offsetTop ?? 0) + 8;
+    const bottom = (view ? view.offsetTop + view.height : global.innerHeight) - ($("#thumb-bar")?.offsetHeight || 0) - 8;
+    const scrolled = assistList.scrollTop;
+    assistList.style.maxHeight = "";
     assistList.style.width = `${Math.max(0, Math.min(narrow ? rect.width : 420, global.innerWidth - 16))}px`;
-    const width = assistList.offsetWidth, height = assistList.offsetHeight;
+    const width = assistList.offsetWidth, place = T.placeSuggestions(anchor, assistList.offsetHeight, { top, bottom });
+    assistList.style.maxHeight = `${place.maxHeight}px`;
     assistList.style.left = `${Math.max(8, Math.min(x, global.innerWidth - width - 8))}px`;
-    assistList.style.top = `${Math.max(8, Math.min(y, global.innerHeight - height - 8))}px`;
+    assistList.style.top = `${place.top}px`;
+    assistList.scrollTop = scrolled;
   }
   function selectAssist(index, speak = true) {
     if (!assistState) return;
@@ -1444,7 +1450,10 @@
       const name = document.createElement("strong"), detail = document.createElement("span");
       name.textContent = entry.label; detail.textContent = entry.detail || entry.trigger;
       option.append(name, detail);
-      option.addEventListener("pointerdown", (event) => { event.preventDefault(); acceptAssist(i); });
+      // Aceptar en pointerdown impedía desplazar la lista con el dedo: el primer
+      // toque del gesto elegía la opción. pointerdown solo conserva el foco.
+      option.addEventListener("pointerdown", (event) => event.preventDefault());
+      option.addEventListener("click", () => acceptAssist(i));
       return option;
     }));
     assistList.hidden = false;
@@ -1530,7 +1539,8 @@
   blockContent.addEventListener("blur", closeAssistMenu);
   blockContent.addEventListener("scroll", positionAssistMenu);
   global.addEventListener("resize", positionAssistMenu);
-  document.addEventListener("scroll", positionAssistMenu, true);
+  global.visualViewport?.addEventListener("resize", positionAssistMenu);
+  document.addEventListener("scroll", (event) => { if (event.target !== assistList) positionAssistMenu(); }, true);
   blockFieldHooks.push({ fill() { snippetSession = null; closeAssistMenu(); }, clear() { snippetSession = null; closeAssistMenu(); } });
 
   let editingAlias = -1;
@@ -2013,7 +2023,8 @@
       "Cursor en la posición " + (scopeRange.start + 1) + ".");
   }
   function thumbStep(direction) {
-    closeAssistMenu();
+    // Con sugerencias abiertas, la barra las recorre como las flechas del teclado.
+    if (assistState) { selectAssist(assistState.index + direction); return; }
     if (scopeMode) { stepScope(direction); return; }
     const current = fieldState();
     const hole = direction > 0 ? T.nextSnippetHole(current, snippetSession) : T.previousSnippetHole(current, snippetSession);
@@ -2053,7 +2064,7 @@
   function articleTarget(node) { return { source: "card", path: keyToPath(node.closest("article").dataset.path) }; }
   function radialTarget(node) {
     if (node.closest("#thumb-menu, #content-menu") || node === blockContent) return { source: "editor" };
-    if (node.closest("input,textarea,select,button,a,summary,[contenteditable],dialog,.radial-layer")) return null;
+    if (node.closest("input,textarea,select,button,a,summary,[contenteditable],dialog,.radial-layer,#assist-list")) return null;
     if (node.closest("#block-list article")) return articleTarget(node);
     return { source: "global" };
   }

@@ -57,7 +57,7 @@
 - una sesión vacía no borra el autoguardado y el bloque en curso cuenta como trabajo
 - la fecha inicial es la local del día, con ceros, no la UTC
 
-## `tests/completion.test.js` — 11 pruebas
+## `tests/completion.test.js` — 12 pruebas
 
 - los fragmentos ordenan marcadores numéricos, preservan escapes y encuentran llaves vacías
 - los huecos permanecen estables al escribir y Tab termina en la posición final
@@ -70,6 +70,7 @@
 - los alias predeterminados son válidos y no invaden palabras cortas del español
 - la configuración se valida completa antes de aplicar cambios
 - completar un entorno descarta el cierre consumido y conserva los pares exteriores
+- la lista de sugerencias queda junto al cursor y por encima de la barra y el teclado
 
 ## `tests/content-check.test.js` — 14 pruebas
 
@@ -325,4 +326,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-243 pruebas con `node:test` más la comprobación estructural.
+244 pruebas con `node:test` más la comprobación estructural.

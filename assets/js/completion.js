@@ -131,5 +131,21 @@
     }
     return errors;
   }
-  Object.assign(T,{SHORT_WORDS,TEXT_COMMANDS,DEFAULT_ALIASES,normalizeSearch,completionEntries,referenceOptions,citationOptions,usageScore,rankCompletions,recordUsage,completionToken,validSnippetMarkers,validateAlias,aliasAt,validateConfiguration});
+  /**
+   * Coloca la lista de sugerencias junto al cursor sin salir del área visible
+   * (la ventana menos la barra del pulgar y el teclado). Va debajo si cabe o si
+   * debajo hay al menos tanto sitio como encima; si no, encima. Si ningún lado
+   * tiene sitio para una opción, cubre el borde inferior del área.
+   */
+  function placeSuggestions(anchor, height, area, gap = 4, min = 44) {
+    // Un cursor tapado por el teclado cuenta como si estuviera en el borde.
+    const inside = (y) => Math.max(area.top, Math.min(y, area.bottom));
+    const top = inside(anchor.top), bottom = inside(anchor.bottom);
+    const below = area.bottom - bottom - gap, above = top - area.top - gap;
+    if (height <= below || (below >= above && below >= min)) return { top: bottom + gap, maxHeight: Math.min(height, below) };
+    if (above >= min) { const h = Math.min(height, above); return { top: top - gap - h, maxHeight: h }; }
+    const h = Math.min(height, Math.max(min, area.bottom - area.top));
+    return { top: Math.max(area.top, area.bottom - h), maxHeight: h };
+  }
+  Object.assign(T,{SHORT_WORDS,placeSuggestions,TEXT_COMMANDS,DEFAULT_ALIASES,normalizeSearch,completionEntries,referenceOptions,citationOptions,usageScore,rankCompletions,recordUsage,completionToken,validSnippetMarkers,validateAlias,aliasAt,validateConfiguration});
 })(typeof globalThis !== 'undefined' ? globalThis : this);
