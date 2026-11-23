@@ -87,3 +87,49 @@ encargo da por hechas las correcciones.
 
 Sigue pendiente decidir qué hacer con `temario.md`: el repositorio es público y
 ese archivo contiene la contraseña de la plataforma SEA y el correo del profesor.
+
+## 2026-11-23 — Claude (navegación móvil y arquitectura)
+
+Rama `ccr-fd83b476-6mra7f`.
+
+**Ya puedes probarlo en el teléfono:** escribe `\` y unas letras. La lista se
+desplaza con el dedo sin elegir nada. Antes, el primer toque del gesto insertaba
+la opción que quedaba debajo. Con la lista abierta, **Anterior** y **Siguiente**
+de la barra recorren las opciones, y la lista ya no queda bajo la barra ni bajo
+el teclado.
+
+**Para que el código deje de ser una caja negra:**
+
+- La interfaz se prueba ahora en Chromium (DEC-029, reemplaza a DEC-007). En
+  cada rama y PR, GitHub ejecuta la suite completa, con la interfaz.
+- `app.js` tiene un presupuesto de tamaño que solo baja (INV-012, DEC-030).
+- La guía de desarrollo trae el mapa de sus secciones y dónde va el código nuevo.
+
+**El plan completo está en `agents.md`.** Lo implementa otro agente en este
+orden:
+
+1. Pruebas que fijan lo que hay.
+2. Registro único de acciones.
+3. Barra compacta: «Selección» pasa a ser un modo junto a las flechas y queda
+   sitio para **Mi botón**.
+4. «Tipo de bloque» como chip con menú radial.
+5. Tarjetas de 275 a ≤140 px con un menú radial del bloque.
+6. Paneles en el teléfono.
+7. Menús personales, con editor y JSON.
+8. Listas táctiles en todas partes.
+9. Informe de errores sin consola.
+
+**Necesito tres cosas de ti:**
+
+1. **¿Paneles o una sola página?** En el teléfono la página mide unas 7
+   pantallas. Propongo cuatro pestañas arriba: Escribir, Estructura, Documento
+   y Más. La alternativa es seguir con una sola página y solo compactarla.
+   Contesta aquí o en `claude.md` antes de N4.
+2. **El diagnóstico del teléfono sigue vacío**
+   ([resultados-android.md](diagnostico/resultados-android.md)). Lo necesito
+   para dos cosas: decidir si las sugerencias funcionan con la composición de
+   Gboard y si la pulsación larga dentro de «Contenido» puede activarse. El
+   procedimiento está más arriba, en «Diagnóstico en tu teléfono».
+3. **`temario.md` sigue teniendo la contraseña de SEA** en un repositorio
+   público. Borrarlo del archivo no la saca del historial de Git: lo seguro es
+   cambiar la contraseña.
