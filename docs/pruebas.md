@@ -12,7 +12,7 @@
 - cada decisión citada en el código existe en decisiones/
 - ningún código vivo se apoya en una decisión reemplazada
 
-## `tests/block-tree.test.js` — 41 pruebas
+## `tests/block-tree.test.js` — 42 pruebas
 
 - la ausencia de children equivale a una lista vacía y el estado plano sigue siendo válido
 - solo los tipos declarados como contenedores admiten hijos
@@ -55,6 +55,7 @@
 - restaurar listas antiguas de ambas versiones mantiene los prefijos literales y la lista plana
 - listas nuevas y antiguas conservan su propio formato al copiar, duplicar, mover, guardar y restaurar
 - una sesión vacía no borra el autoguardado y el bloque en curso cuenta como trabajo
+- la fecha inicial es la local del día, con ceros, no la UTC
 
 ## `tests/completion.test.js` — 11 pruebas
 
@@ -261,4 +262,4 @@ No usa `node:test`: es un script con 46 aserciones sobre `index.html` (doctype, 
 
 ---
 
-200 pruebas con `node:test` más la comprobación estructural.
+201 pruebas con `node:test` más la comprobación estructural.

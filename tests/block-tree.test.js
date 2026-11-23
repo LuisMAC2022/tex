@@ -435,3 +435,9 @@ test("una sesión vacía no borra el autoguardado y el bloque en curso cuenta co
  for(const session of [null,{}, {metadata:{title:'',course:'Cálculo III'},blocks:[],editor:{type:'text',title:'',content:''}}, {editor:{content:23,title:{}}}]) assert.equal(sessionHasContent(session),false);
  for(const session of [{blocks:[{content:'x'}]},{metadata:{title:'Notas de clase'}},{editor:{title:'En curso'}},{editor:{content:'$x'}},{editor:{image:{content:'grafica.png'}}}]) assert.equal(sessionHasContent(session),true);
 });
+test("la fecha inicial es la local del día, con ceros, no la UTC", async () => {
+ const {localDateValue}=await loadTexNotes();
+ assert.equal(localDateValue(new Date(2026, 0, 5, 23, 59)),'2026-01-05');
+ assert.equal(localDateValue(new Date(2026, 10, 23, 0, 0)),'2026-11-23');
+ assert.match(localDateValue(),/^\d{4}-\d{2}-\d{2}$/);
+});

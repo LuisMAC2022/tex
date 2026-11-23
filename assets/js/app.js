@@ -1688,6 +1688,8 @@
   }
   function focusMetadata() { $( $("#metadata-details").open ? "#note-title" : "#metadata-details > summary").focus(); }
   $("#metadata-details").addEventListener("input", () => syncMetadataSummary());
+  // La fecha inicial es la de hoy; un borrador o una sesión recuperada la sustituyen.
+  if (!$("#date").value) $("#date").value = global.TexNotes.localDateValue();
   syncMetadataSummary(true);
 
   function renderShortcutPanel() {

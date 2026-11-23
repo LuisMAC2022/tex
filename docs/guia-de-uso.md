@@ -77,8 +77,9 @@ página. No hace falta nada más.
 
 ### Rellenar la cabecera
 
-Arriba, en «Datos del documento», ya vienen escritos el curso, el profesor y una
-fecha. Cámbialos si no son los tuyos.
+Arriba, en «Datos del documento», ya vienen escritos el curso, el profesor y la
+fecha de hoy. Cámbialos si no son los tuyos; al restaurar un borrador vuelve su
+fecha guardada.
 
 **El único campo obligatorio es el título.** Sin título la aplicación no genera el
 documento y te lo dice junto al campo. Autor, curso, profesor y fecha son opcionales.
