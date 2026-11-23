@@ -1,0 +1,60 @@
+/**
+ * Arnés de las pruebas de interfaz (DEC-029).
+ *
+ * Playwright es opcional: package.json sigue sin dependencias (INV-006). Si no
+ * se encuentra, las pruebas de interfaz se omiten con un motivo visible, igual
+ * que las de pdflatex. Con TEX_UI_TESTS=required —lo que hace CI— la ausencia
+ * de Playwright es un fallo, no una omisión, para que nadie fusione creyendo
+ * que la interfaz se probó.
+ *
+ * Se resuelve con require y no con import porque así respeta NODE_PATH y una
+ * instalación global o con `npm install --no-save`.
+ */
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+let playwright = null;
+try { playwright = require("playwright"); } catch { /* se informa en `omitir` */ }
+
+export const OBLIGATORIAS = process.env.TEX_UI_TESTS === "required";
+export const omitir = !playwright && !OBLIGATORIAS && "Playwright no está instalado: pruebas de interfaz omitidas";
+const PAGINA = new URL("../index.html", import.meta.url).href;
+
+let navegador = null;
+async function lanzar() {
+  if (!playwright) throw new Error("TEX_UI_TESTS=required pero Playwright no está instalado");
+  navegador ??= await playwright.chromium.launch();
+  return navegador;
+}
+
+/** Cierra el navegador compartido. Va en el `after` de cada archivo. */
+export async function cerrar() { await navegador?.close(); navegador = null; }
+
+/**
+ * Abre la aplicación limpia (almacenamiento vacío) en un contexto nuevo.
+ * `dispositivo` es un nombre de `playwright.devices`, p. ej. "Pixel 7"; sin él,
+ * escritorio de 1366×768. Devuelve la página y la lista de errores de la
+ * página, que cada prueba debe comprobar vacía.
+ */
+export async function abrir(dispositivo) {
+  const opciones = dispositivo ? playwright.devices[dispositivo] : { viewport: { width: 1366, height: 768 } };
+  const contexto = await (await lanzar()).newContext(opciones);
+  const pagina = await contexto.newPage();
+  const errores = [];
+  pagina.on("pageerror", (error) => errores.push(error.message));
+  pagina.on("console", (mensaje) => { if (mensaje.type() === "error") errores.push(mensaje.text()); });
+  await pagina.goto(PAGINA);
+  return { pagina, contexto, errores, cdp: () => contexto.newCDPSession(pagina) };
+}
+
+/**
+ * Arrastra un dedo en vertical desde `inicio` y lo levanta. Usa CDP porque la
+ * API de alto nivel de Playwright solo toca, no desliza.
+ */
+export async function deslizar(sesion, inicio, desplazamiento, pasos = 8) {
+  await sesion.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [inicio] });
+  for (let i = 1; i <= pasos; i++) {
+    await sesion.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: inicio.x, y: inicio.y + desplazamiento * i / pasos }] });
+  }
+  await sesion.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+}

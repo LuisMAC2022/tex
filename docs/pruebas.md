@@ -187,6 +187,15 @@
 - los avisos de ruta distinguen espacios, mayúsculas y formatos incompatibles
 - avisa si el nombre contiene caracteres reservados de LaTeX
 
+## `tests/interfaz.test.js` — 6 pruebas
+
+- la página abre sin errores en escritorio y en el teléfono
+- añadir un bloque y generar deja su contenido literal en el código LaTeX
+- el dedo desplaza las sugerencias de la barra invertida sin elegir ninguna
+- Anterior y Siguiente recorren las sugerencias y tocar una la inserta
+- la lista de sugerencias queda por encima de la barra del pulgar
+- el botón Menú de la barra abre el menú del contexto y Escape devuelve el foco
+
 ## `tests/invariantes.test.js` — 4 pruebas
 
 - INVARIANTES.md declara invariantes con identificadores únicos
@@ -326,4 +335,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-244 pruebas con `node:test` más la comprobación estructural.
+250 pruebas con `node:test` más la comprobación estructural.

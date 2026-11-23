@@ -88,7 +88,8 @@ Los scripts se cargan como clásicos **en este orden**. La aplicación usa
 | 16 | `app.js` | interfaz del editor | sí |
 
 Las pruebas de Node ejecutan las funciones puras con `node:vm`. La interacción
-de `app.js` se verifica en el navegador ([DEC-007](../decisiones/DEC-007-sin-dom-en-pruebas.md)).
+de `app.js` se prueba en Chromium con Playwright cuando está instalado
+([DEC-029](../decisiones/DEC-029-pruebas-de-interfaz-en-chromium.md)).
 
 > **Nunca los conviertas en módulos ES.** Con `file://` el navegador bloquea por CORS
 > la descarga de un módulo y la interfaz queda inerte. Es INV-004 y
@@ -359,21 +360,37 @@ Cómo se reparten:
 | `invariantes.test.js` | que cada invariante siga teniendo guardián |
 | `anclas.test.js` | que ningún bloque `@decision` haya derivado |
 | `documentacion.test.js` | enlaces, anclas de índice, rótulos y el inventario |
+| `interfaz.test.js` | el cableado de `app.js` en Chromium: foco, gestos, menús; se omite sin Playwright |
 | `check-site.mjs` | lo estructural del HTML; **no** usa `node:test` |
 
 Dos cosas que conviene saber antes de escribir la primera:
 
-**No hay DOM.** `tests/load-app.mjs` ejecuta los scripts del navegador en un contexto
+**Las pruebas puras no tienen DOM.** `tests/load-app.mjs` ejecuta los scripts del navegador en un contexto
 `node:vm`, en el mismo orden que `index.html`, y clona los datos al realm de la prueba.
 Así se prueba exactamente el código que se publica, sin mantener una segunda copia en
 formato módulo — y sin añadir una dependencia, que sería violar INV-006 para poder
 vigilarlo.
 
-**Por eso `app.js` no tiene pruebas automatizadas.** Los botones por bloque, el foco y
-los anuncios se comprueban a mano, con la lista de
-[revisión manual](../README.md#revisión-manual). No es un descuido: es
-[DEC-007](../decisiones/DEC-007-sin-dom-en-pruebas.md), y la contrapartida es que la
-lógica debe vivir fuera de `app.js` siempre que se pueda.
+**La interfaz se prueba en un navegador real, no en un DOM simulado.**
+`tests/interfaz.test.js` usa el arnés `tests/navegador.mjs`, que abre `index.html` por
+`file://` en Chromium, en escritorio o con un teléfono emulado (`abrir("Pixel 7")`), y
+recoge los errores de la página. Playwright **no** está en `package.json` (INV-006): el
+arnés lo usa si está instalado y, si no, las pruebas se omiten con motivo. Para
+ejecutarlas en local:
+
+```sh
+npm install --no-save --no-package-lock playwright@1.63.0
+npx playwright install chromium
+TEX_UI_TESTS=required npm test   # falla, en vez de omitir, si falta Playwright
+```
+
+CI (`.github/workflows/pruebas.yml`) las ejecuta en cada rama y PR con
+`TEX_UI_TESTS=required`. Para deslizar un dedo, `deslizar()` envía eventos táctiles por
+CDP. El porqué está en [DEC-029](../decisiones/DEC-029-pruebas-de-interfaz-en-chromium.md).
+Las reglas siguen fuera de `app.js` siempre que se pueda: una prueba pura es más
+rápida y determinista que una de interfaz. Lo que Chromium emulado no reproduce
+(Android físico, Gboard, TalkBack, NVDA, Overleaf) sigue en la
+[revisión manual](revision-manual.md).
 
 Las pruebas comparan el archivo de referencia byte a byte. Si está instalado, `pdflatex` compila también los fragmentos radiales en un directorio temporal con `-no-shell-escape`. Overleaf se revisa manualmente.
 

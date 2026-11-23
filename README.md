@@ -291,9 +291,11 @@ El inventario de cada prueba, con su nombre y su archivo, está en
 `npm run inventario`, así que no puede quedarse atrás; `tests/documentacion.test.js`
 exige que esté al día.
 
-Por qué `app.js` no tiene pruebas automatizadas y qué se comprueba a mano en su
-lugar: [DEC-007](decisiones/DEC-007-sin-dom-en-pruebas.md) y
-[`docs/revision-manual.md`](docs/revision-manual.md).
+La interfaz se prueba en Chromium con `tests/interfaz.test.js` cuando Playwright
+está instalado; sin él, esas pruebas se omiten con un motivo visible y CI las
+exige ([DEC-029](decisiones/DEC-029-pruebas-de-interfaz-en-chromium.md)). Lo que
+un navegador emulado no reproduce —Android físico, Gboard, lectores de pantalla y
+Overleaf— se comprueba a mano con [`docs/revision-manual.md`](docs/revision-manual.md).
 
 ## Hitos
 

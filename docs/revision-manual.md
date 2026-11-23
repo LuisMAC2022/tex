@@ -1,9 +1,10 @@
 # Revisión manual
 
-Procedimiento que se ejecuta a mano, porque `app.js` no tiene pruebas
-automatizadas: no hay DOM en el entorno de pruebas y no se añaden dependencias
-para tenerlo ([DEC-007](../decisiones/DEC-007-sin-dom-en-pruebas.md)). Se recorre
-por ronda de revisión, no al cambiar código.
+Procedimiento que se ejecuta a mano. Las pruebas de `tests/interfaz.test.js`
+recorren en Chromium el cableado de `app.js` cuando Playwright está instalado
+([DEC-029](../decisiones/DEC-029-pruebas-de-interfaz-en-chromium.md)), pero no
+reproducen un teléfono físico, Gboard, TalkBack, NVDA ni Overleaf. Esta lista se
+recorre por ronda de revisión, no al cambiar código.
 
 - [ ] Recorrer toda la página con `Tab` y `Shift+Tab`, activar acciones con teclado y comprobar que no hay trampas.
 - [ ] Activar el enlace de salto y verificar un foco visible en todos los controles.
