@@ -1693,13 +1693,8 @@
   }
   renderReferences();
 
-  function syncMetadataSummary(reset = false) {
-    const data = metadata(), parts = [data.title, data.course, data.date].map(value => value.trim()).filter(Boolean);
-    $("#datos-heading").textContent = ["Datos del documento", ...parts].join(" · ");
-    if (reset || !data.title.trim()) $("#metadata-details").open = !data.title.trim();
-  }
-  function focusMetadata() { $( $("#metadata-details").open ? "#note-title" : "#metadata-details > summary").focus(); }
-  $("#metadata-details").addEventListener("input", () => syncMetadataSummary());
+  const panels = T.createPanels(document, { metadata, imageType });
+  const { refresh: syncMetadataSummary, goTo, focusMetadata } = panels;
   // La fecha inicial es la de hoy; un borrador o una sesión recuperada la sustituyen.
   if (!$("#date").value) $("#date").value = global.TexNotes.localDateValue();
   syncMetadataSummary(true);
@@ -1719,12 +1714,6 @@
     applyAssist({ edit: result.edit, pending: [] }); snippetSession = result.session;
     announce(result.session ? "Hueco " + (result.session.index + 1) + " de " + result.session.holes.length : "Fragmento insertado.");
     openDocumentSuggestions();
-  }
-  function goTo(destination) {
-    if (destination === "preferences") $("#writing-preferences").open = true;
-    const target = $(({ content: imageType($("#block-type").value) ? "#image-path" : "#block-content",
-      tree: "#global-menu", result: "#generate", versions: "#versions-heading", preferences: "#writing-preferences > summary" })[destination]);
-    target.focus(); target.scrollIntoView({ block: "nearest" });
   }
   function applyRadialAction(action, from) {
     if (action.type === "insert") putRadialSnippet(action.snippet);

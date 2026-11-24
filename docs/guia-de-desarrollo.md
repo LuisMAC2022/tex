@@ -166,7 +166,7 @@ Dos trampas que no se ven al leer una sección suelta:
   que también cierra la sesión `/`. Cualquier cambio en el menú de sugerencias
   tiene que mirar ambas secciones.
 
-La lista anidada y la restauración de foco viven en `structure-view.js`. El destino del formulario, el vaciado de sus campos y el cambio de tipo viven en `block-form.js`. Las operaciones de tarjeta y la recuperación del foco viven en `block-actions.js`. La aplicación aporta el árbol actual y las funciones que aplican los cambios.
+Los destinos de navegación y el resumen de los datos viven en `mobile-panels.js`. La lista anidada y la restauración de foco viven en `structure-view.js`. El destino del formulario, el vaciado de sus campos y el cambio de tipo viven en `block-form.js`. Las operaciones de tarjeta y la recuperación del foco viven en `block-actions.js`. La aplicación aporta el árbol actual y las funciones que aplican los cambios.
 
 ### Dónde va el código nuevo
 
