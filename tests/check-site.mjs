@@ -13,7 +13,7 @@ assert.match(html, /<main id="contenido-principal" tabindex="-1">/, "El destino 
 // Restricción file://: scripts clásicos en orden de dependencia, nunca módulos ES.
 assert.doesNotMatch(html, /<script[^>]+type="module"/, "los scripts no deben ser módulos ES");
 const scripts = [...html.matchAll(/<script src="(assets\/[^"]+)"><\/script>/g)].map((match) => match[1]);
-assert.deepEqual(scripts, ["assets/vendor/katex/katex.min.js", "assets/js/block-types.js", "assets/js/block-tree.js", "assets/js/latex-generator.js", "assets/js/file-download.js", "assets/js/math-symbols.js", "assets/js/text-insertion.js", "assets/js/math-preview.js", "assets/js/shortcuts.js", "assets/js/image-options.js", "assets/js/list-outline.js", "assets/js/cross-references.js", "assets/js/references.js", "assets/js/content-check.js", "assets/js/editing-assist.js", "assets/js/completion.js", "assets/js/templates.js", "assets/js/macros.js", "assets/js/menus.js", "assets/js/radial.js", "assets/js/versions.js", "assets/js/version-storage.js", "assets/js/selection-scope.js", "assets/js/app.js"], "faltan scripts o el orden de carga es incorrecto");
+assert.deepEqual(scripts, ["assets/vendor/katex/katex.min.js", "assets/js/block-types.js", "assets/js/block-tree.js", "assets/js/latex-generator.js", "assets/js/file-download.js", "assets/js/math-symbols.js", "assets/js/text-insertion.js", "assets/js/math-preview.js", "assets/js/shortcuts.js", "assets/js/image-options.js", "assets/js/list-outline.js", "assets/js/cross-references.js", "assets/js/references.js", "assets/js/content-check.js", "assets/js/editing-assist.js", "assets/js/completion.js", "assets/js/templates.js", "assets/js/macros.js", "assets/js/menus.js", "assets/js/radial.js", "assets/js/versions.js", "assets/js/version-storage.js", "assets/js/selection-scope.js", "assets/js/radial-controller.js", "assets/js/app.js"], "faltan scripts o el orden de carga es incorrecto");
 assert.match(html, /<link rel="stylesheet" href="assets\/vendor\/katex\/katex\.min\.css">/, "Falta la hoja vendorizada de KaTeX");
 assert.match(html, /<input id="course"[^>]+value="Cálculo III \(1352\)">/, "El curso debe aparecer prellenado desde el temario");
 assert.match(html, /<input id="teacher"[^>]+value="Guzmán Fuentes Ricardo">/, "El profesor debe aparecer prellenado desde el temario");
@@ -121,5 +121,6 @@ const { RADIAL_COMMANDS } = await loadTexNotes(["block-types.js", "menus.js"]);
 const app = await readFile("assets/js/app.js", "utf8");
 const registry = app.slice(app.indexOf("const radialCommands = {"), app.indexOf("function applyRadialAction"));
 for (const name of RADIAL_COMMANDS) assert.ok(new RegExp("^    " + name + "\\(", "m").test(registry), "Falta el comando radial " + name);
-assert.match(app, /blockContent\.addEventListener\("keydown", e => \{\s*if \(!matchShortcut\(e, "content-widget"\)/);
+const controller = await readFile("assets/js/radial-controller.js", "utf8");
+assert.match(controller, /listen\(blockContent, "keydown", e => \{\s*if \(!matchShortcut\(e, "content-widget"\)/);
 assert.match(thumb[1], /id="thumb-selection"[^>]*aria-pressed="false"/, "Selección expone su modo inicial");
