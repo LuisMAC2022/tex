@@ -26,6 +26,7 @@
     });
     function articleTarget(node) { return { source: "card", path: keyToPath(node.closest("article").dataset.path) }; }
     function radialTarget(node) {
+      if (node.closest('#thumb-symbols')) return { source: "editor", name: "Categorías de símbolos", slices: T.symbolCategorySlices() };
       if (node.closest("#thumb-menu, #content-menu") || node === blockContent) return { source: "editor" };
       if (node.closest("input,textarea,select,button,a,summary,[contenteditable],dialog,.radial-layer,#assist-list")) return null;
       if (node.closest("#block-list article")) return articleTarget(node);
@@ -70,7 +71,7 @@
       const { parent, highlight } = radialState, model = radialModel;
       const items = parent < 0 ? model.slices : model.slices[parent].children;
       const ring = parent < 0 ? model.root : model.child(parent);
-      const name = parent < 0 ? "Menú de " + contextNames[model.context] : model.slices[parent].label;
+      const name = parent < 0 ? (model.target.name || "Menú de " + contextNames[model.context]) : model.slices[parent].label;
       radialView.draw(ring, items, name, radialState, model);
       if (before.parent !== parent || event.type === "open" || event.type === "hold") announce(name + ", " + items.length + " opciones.");
       if (radialState.haptic && vibration()) navigator.vibrate?.(10);
@@ -89,7 +90,7 @@
       const context = T.actionContext({ source: target.source === "card" ? "content" : target.source, blockKind: kind,
         mathMode: target.source === "editor" && writingMode(), scopeMode: target.source === "editor" && getScopeMode() });
       const field = kind === "image" ? imagePath : blockContent;
-      const slices = T.slicesFor(context, type), area = viewport(), origin = { ...point, mode, bar };
+      const slices = target.slices || T.slicesFor(context, type), area = viewport(), origin = { ...point, mode, bar };
       const scrollPositions = radialScrollPositions(press?.node || document.elementFromPoint?.(point.x, point.y));
       radialModel = { target, context, origin, scrollPositions, originField: captureSymbolOrigin(field), ...T.radialLayout(slices, origin, area) };
       radialDispatch({ type: "open", mode, point, keyboard }, keyboard);
@@ -126,19 +127,23 @@
       suppressClickUntil = 0;
       if (!e.isPrimary || (press && press.id !== e.pointerId)) { radialDispatch({ type: "second" }); return; }
       if (radialModel || e.button !== 0) return;
-      const node = e.target, bar = !!node.closest("#thumb-menu");
-      if (!bar && (e.pointerType === "mouse" || (node === blockContent && !T.LONG_PRESS_IN_FIELD))) return;
+      const node = e.target, bar = !!node.closest("#thumb-menu"), deferred = !!node.closest("[data-drag-ring]");
+      if (!bar && !deferred && (e.pointerType === "mouse" || (node === blockContent && !T.LONG_PRESS_IN_FIELD))) return;
       const target = radialTarget(node); if (!target) return;
       const point = { x: e.clientX, y: e.clientY };
-      press = { node, id: e.pointerId, point, target, bar, scrollPositions: radialScrollPositions(node) };
+      press = { node, id: e.pointerId, point, target, bar, deferred, scrollPositions: radialScrollPositions(node) };
       radialDispatch({ type: "down", point });
       if (bar) { e.preventDefault(); openRadial(target, point, "drag", false, true); }
-      else holdTimer = setTimeout(() => { if (press) openRadial(target, point, "drag"); }, T.RADIAL_HOLD);
+      else if (!deferred) holdTimer = setTimeout(() => { if (press) openRadial(target, point, "drag"); }, T.RADIAL_HOLD);
     }, true);
     for (const name of ["pointermove","pointerup","pointercancel"]) listen(document, name, e => {
       if (!press || e.pointerId !== press.id) return;
       if (name === "pointercancel") { radialDispatch({ type: "cancel" }); return; }
       const point = { x: e.clientX, y: e.clientY }, end = name === "pointerup";
+      if (!end && press.deferred && !radialModel) {
+        if (Math.hypot(point.x - press.point.x, point.y - press.point.y) <= T.RADIAL_SLOP) return;
+        openRadial(press.target, press.point, "drag", false, !!press.node.closest("#thumb-bar"));
+      }
       if (end && radialModel) suppressClickUntil = performance.now() + 350;
       if (end && press.bar && Math.hypot(point.x - press.point.x, point.y - press.point.y) <= T.RADIAL_SLOP) {
         const original = press; clearRadialPress(); openRadial(original.target, original.point, "tap", false, true); return;

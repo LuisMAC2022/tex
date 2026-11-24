@@ -1,5 +1,8 @@
 (function (T) {
   "use strict";
+  function thumbMode({ listOpen, scopeMode }) { return listOpen ? "suggestions" : scopeMode ? "selection" : "cursor"; }
+  function scrubSteps(dx, step = 28) { return step > 0 && Number.isFinite(dx) ? Math.trunc(dx / step) || 0 : 0; }
+  Object.assign(T, { thumbMode, scrubSteps });
   T.createThumbBar = function (document, deps) {
     const $ = selector => document.querySelector(selector);
     const global = document.defaultView;
@@ -63,11 +66,23 @@
     });
     const scopeButton = $("#thumb-selection");
     let scopeMode = null, scopeStack = [], scopeRange = null;
+    const modeNames = { cursor: ["⌶", "Modo cursor"], selection: ["↔", "Selección por alcance"], suggestions: ["≡", "Sugerencias. Cerrar lista"] };
+    function refreshMode(speak = true) {
+      const mode = thumbMode({ listOpen: getListIndex() !== undefined, scopeMode });
+      const [icon, name] = modeNames[mode], changed = scopeButton.dataset.mode !== mode;
+      scopeButton.dataset.mode = mode;
+      scopeButton.firstElementChild.textContent = icon;
+      scopeButton.setAttribute("aria-label", name);
+      scopeButton.setAttribute("aria-pressed", String(mode === "selection"));
+      if (changed && speak) announce(name + ".");
+    }
+    const listObserver = new MutationObserver(() => refreshMode());
+    listObserver.observe($("#assist-list"), { attributes: true, attributeFilter: ["hidden"] });
     function clearScope() {
       scopeMode = null;
       scopeStack = [];
       scopeRange = null;
-      scopeButton.setAttribute("aria-pressed", "false");
+      refreshMode();
     }
     function currentScopeRange() {
       return { start: blockContent.selectionStart, end: blockContent.selectionEnd, direction: blockContent.selectionDirection };
@@ -77,6 +92,7 @@
       blockContent.setSelectionRange(range.start, range.end, range.direction || "forward");
     }
     function toggleScope() {
+      if (getListIndex() !== undefined) { closeAssistMenu(); refreshMode(); return; }
       const range = currentScopeRange();
       if (scopeMode) {
         clearScope();
@@ -84,7 +100,7 @@
       } else {
         scopeMode = T.scopeModeAt(blockContent.value, range, $("#block-type").value);
         scopeRange = range;
-        scopeButton.setAttribute("aria-pressed", "true");
+        refreshMode(false);
         closeAssistMenu();
         announce("Selección por alcance. Siguiente amplía, Anterior reduce.");
       }
@@ -131,6 +147,40 @@
       if (keyboard) symbolSearch.focus();
       announce("Tablero de símbolos abierto.");
     }
+    const navigation = $(".thumb-navigation");
+    let gesture = null, holdTimer, omitClick = false;
+    function stopGesture() {
+      clearTimeout(holdTimer);
+      gesture = null;
+    }
+    listen(navigation, "pointerdown", event => {
+      omitClick = false;
+      if (!event.isPrimary || event.button !== 0) { stopGesture(); return; }
+      gesture = { id: event.pointerId, x: event.clientX, steps: 0 };
+      event.target.setPointerCapture(event.pointerId);
+      if (event.target.closest("#thumb-next")) holdTimer = setTimeout(() => {
+        if (getListIndex() !== undefined) return;
+        if (!scopeMode) toggleScope();
+        stepScope(1); omitClick = true;
+      }, T.RADIAL_HOLD);
+    });
+    listen(navigation, "pointermove", event => {
+      if (gesture?.id !== event.pointerId) return;
+      const dx = event.clientX - gesture.x;
+      if (Math.abs(dx) > 8) clearTimeout(holdTimer);
+      const steps = scrubSteps(dx), delta = steps - gesture.steps;
+      if (!delta) return;
+      gesture.steps = steps; omitClick = true;
+      for (let i = 0; i < Math.abs(delta); i++) {
+        thumbStep(Math.sign(delta));
+        if (deps.vibration()) navigator.vibrate?.(10);
+      }
+    });
+    listen(navigation, "pointerup", stopGesture);
+    listen(navigation, "pointercancel", stopGesture);
+    listen(navigation, "click", event => {
+      if (omitClick && T.isPointerClick(event)) { event.stopPropagation(); omitClick = false; }
+    });
     listen(thumbBar, "click", event => {
       const button = event.target.closest("[data-action-id]");
       if (button && button.id !== "thumb-menu") T.runAction(button.dataset.actionId, {
@@ -141,7 +191,7 @@
 
     return { refresh: syncThumbViewport, showSymbolSheet, closeSymbolSheet, clearScope, toggleScope, toggleSymbols, thumbStep,
       getScopeMode: () => scopeMode,
-      dispose() { listeners.abort(); resize?.disconnect(); },
+      dispose() { stopGesture(); listObserver.disconnect(); listeners.abort(); resize?.disconnect(); },
     };
   };
 })(globalThis.TexNotes);

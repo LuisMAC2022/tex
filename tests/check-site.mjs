@@ -111,11 +111,11 @@ assert.deepEqual(faltantes, [], `El bloque oscuro no redefine: ${faltantes.join(
 
 console.log("HTML estructural, tipos de bloque, anidamiento, copia de bloques, tablero de símbolos y rutas internas: correctos");
 
-const thumb = html.match(/<div id="thumb-bar" role="toolbar" aria-label="Acciones de escritura">([\s\S]*?)<\/div>/);
+const thumb = html.match(/<div id="thumb-bar" role="toolbar" aria-label="Acciones de escritura">([\s\S]*?)<\/fieldset>/);
 assert.ok(thumb, "Falta la barra de acciones de escritura");
-const thumbButtons = [...thumb[1].matchAll(/<button ([^>]+)><span[^>]*>[^<]*<\/span>([^<]+)<\/button>/g)];
-assert.deepEqual(thumbButtons.map(b => b[2]), ["Menú", "Anterior", "Siguiente", "Selección", "Símbolos", "Añadir"]);
-assert.ok(thumbButtons.every(b => b[1].includes('type="button"')), "Los botones de la barra no envían el formulario");
+const thumbButtons = [...thumb[1].matchAll(/<button ([^>]+)>/g)].map(m => m[1]);
+assert.deepEqual(thumbButtons.map(b => /id="thumb-([^"]+)"/.exec(b)?.[1]), ["menu", "prev", "selection", "next", "symbols", "personal", "add"]);
+assert.ok(thumbButtons.every(b => b.includes('type="button"') && b.includes('aria-label=')), "Cada acción de la barra tiene nombre y no envía el formulario");
 
 const { actionById } = await loadTexNotes(["shortcuts.js", "actions.js"]);
 for (const [, id] of html.matchAll(/data-action-id="([^"]+)"/g)) assert.ok(actionById(id), "Falta la acción " + id);

@@ -201,6 +201,13 @@
 
 - cada acción del catálogo tiene un manejador en la página
 
+## `tests/interfaz-barra.test.js` — 4 pruebas
+
+- la barra alterna cursor, selección y sugerencias conservando el foco
+- Mi botón deshace el texto y a 320 píxeles los siete objetivos caben
+- arrastrar navega por unidades y mantener Siguiente amplía una vez
+- arrastrar desde Símbolos elige la categoría que abre la hoja
+
 ## `tests/interfaz-editor.test.js` — 3 pruebas
 
 - Añadir bloque y Ctrl+Intro conservan el orden, el LaTeX y el foco de captura
@@ -369,6 +376,11 @@
 - diffEdit calcula inserciones, borrados y reemplazos mínimos sin cambios ficticios
 - diffEdit nunca divide un par sustituto UTF-16 en sus límites
 
+## `tests/thumb-bar.test.js` — 2 pruebas
+
+- la lista abierta tiene prioridad sobre el alcance y el cursor
+- el arrastre cuenta pasos completos con signo cada 28 píxeles
+
 ## `tests/versions.test.js` — 5 pruebas
 
 - el historial limita cien pasos, restaura en ambas direcciones y descarta la rama rehecha
@@ -383,4 +395,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-274 pruebas con `node:test` más la comprobación estructural.
+280 pruebas con `node:test` más la comprobación estructural.

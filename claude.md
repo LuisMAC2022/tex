@@ -250,3 +250,9 @@ Quedan fuera de esta medición Android físico, Gboard, TalkBack y el portapapel
 Las tarjetas, los controles de escritura, los comandos de los anillos y los atajos consultan los identificadores de `actions.js`. La apertura radial y las operaciones de tarjeta tienen controladores propios. La prueba de coherencia contrasta el catálogo con los manejadores que registra la página. Las 25 pruebas de interfaz de A1 siguen pasando con los mismos casos.
 
 `app.js` pasó de 136 995 a 123 064 bytes. Su presupuesto bajó de 137 000 a 123 500 bytes. Chromium verificó los controles en escritorio y Pixel 7 emulado. La prueba manual con teclados físicos de distintas distribuciones queda pendiente. La ejecución de A1 en GitHub Actions también pasó.
+
+## N1 — Barra del pulgar
+
+La navegación ocupa 144 px (tres teclas de 48) frente a unos 207 px a 412 de ancho. Mi botón deshace y el modo central indica cursor, selección o sugerencias. Se probaron también el arrastre horizontal, la pulsación mantenida y la elección de categoría desde Símbolos. Las cuatro nuevas pruebas táctiles fallaron antes del cambio y pasaron después. A 320 px caben los siete objetivos de al menos 44 px.
+
+Anexo A (Pixel 7, antes y después): altura 6094 → 6094 px, Contenido 2056 → 2056, Estructura 2838 → 2838, Generar 4307 → 4307, tarjetas 276/275/275 → 276/275/275. Los siete anchos finales son 67/48/48/48/67/67/67 px. `app.js` pasó de 123 064 a 117 321 bytes, con presupuesto de 117 500. Pasaron las 280 pruebas locales con Chromium. Los tiradores de Gboard, TalkBack y el alcance con una mano requieren un teléfono físico.

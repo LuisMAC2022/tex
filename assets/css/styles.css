@@ -260,14 +260,16 @@ summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
   body { padding-block-end: calc(var(--thumb-height, 56px) + env(safe-area-inset-bottom)); }
   #thumb-bar {
     position: fixed; z-index: 8; inset-inline: 0; bottom: var(--keyboard-inset, 0px);
-    display: flex; justify-content: center; padding-block-end: env(safe-area-inset-bottom);
+    display: grid; grid-template-columns: minmax(44px, 1fr) 144px repeat(3, minmax(44px, 1fr)); padding-block-end: env(safe-area-inset-bottom);
     background: var(--surface); border-block-start: 1px solid var(--border);
   }
   #thumb-bar button {
-    display: grid; align-content: center; justify-items: center; flex: 1 1 0; min-width: 48px; min-height: 48px;
-    max-width: 7rem; padding: .15rem; line-height: 1.1; font-size: .72rem; border-radius: 0;
+    display: grid; align-content: center; justify-items: center; min-width: 44px; min-height: 48px;
+    width: 100%; padding: .15rem; line-height: 1.1; font-size: .72rem; border-radius: 0;
   }
-  #thumb-bar button span { font-size: 1.15rem; }
+  #thumb-bar button [aria-hidden] { font-size: 1.15rem; }
+  .thumb-navigation { display: grid; grid-template-columns: repeat(3, 48px); touch-action: none; }
+  #thumb-symbols { touch-action: pinch-zoom; }
   .symbol-board:not(.symbol-sheet) { display: none; }
   .symbol-sheet {
     position: fixed; inset-inline: 0; bottom: calc(var(--thumb-height, 56px) + var(--keyboard-inset, 0px));
@@ -309,3 +311,5 @@ summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 #version-diff { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 24rem; overflow: auto; }
 
 #thumb-selection[aria-pressed="true"] { background: var(--accent-soft); color: var(--text); box-shadow: inset 0 -4px 0 var(--primary); }
+
+@media (pointer: coarse) and (max-width: 359px) { #thumb-bar .thumb-label { display: none; } }

@@ -538,3 +538,11 @@ En «Contenido», escribe `\ref{` o `\eqref{` y elige el destino con un toque, I
 En un bloque «Bibliografía (IEEE)», abre «Más acciones» y pulsa «Convertir en referencias del documento». Cada línea conserva su LaTeX y su clave `ref1`, `ref2`… Si una clave ya está ocupada, el aviso la identifica. Se puede deshacer la conversión con «Deshacer cambio».
 
 «Guardar como referencias del curso» sustituye el catálogo que ofrece el botón de añadir. La configuración portátil traslada ese catálogo entre dispositivos. «Guardar versión» y «Exportar proyecto» conservan las referencias y el estilo del documento.
+
+### Barra del pulgar
+
+En el teléfono, Anterior y Siguiente recorren los huecos de un fragmento y después las unidades de LaTeX. El botón central muestra el modo. Toca ⌶ para activar la selección por alcance, ↔ para volver al cursor o ≡ para cerrar las sugerencias. Con la lista abierta, las dos flechas recorren las opciones. Mi botón deshace la última edición de Contenido.
+
+Puedes arrastrar horizontalmente en el grupo de las tres teclas para avanzar o retroceder un paso por cada 28 px. Cada toque en una flecha hace un paso. Mantener Siguiente activa la selección y la amplía una vez. La misma operación se hace tocando el modo y después Siguiente. Con el teclado, recorre la barra con flechas y activa el botón con Intro.
+
+Toca Símbolos para abrir la hoja y elegir una categoría. También puedes arrastrar desde Símbolos hasta una categoría y levantar el dedo para abrirla. A menos de 360 px se muestran los iconos con sus nombres accesibles.

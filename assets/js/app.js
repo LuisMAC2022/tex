@@ -1851,7 +1851,7 @@
 
   const coarsePointer = global.matchMedia("(pointer: coarse)");
   const thumb = T.createThumbBar(document, {
-    blockContent, symbolBoard, symbolDetails, symbolSearch, coarsePointer, announce, returnToSymbolOrigin,
+    blockContent, symbolBoard, symbolDetails, symbolSearch, coarsePointer, announce, returnToSymbolOrigin, vibration: () => prefs.vibration,
     ensureSymbolOrigin: () => { symbolOrigin ??= captureSymbolOrigin(blockContent); }, closeAssistMenu: () => closeAssistMenu(),
     fieldState, getListIndex: () => assistState?.index, selectAssist, getSnippet: () => snippetSession,
     setSnippet: next => { snippetSession = next; },

@@ -4,6 +4,13 @@
   const insert = (id, label, icon, snippet) => ({ id, label, icon, action: { type: "insert", snippet } });
   const command = (id, label, icon, action, ...args) => ({ id, label, icon, action, args });
   const submenu = (id, label, icon, slices) => ({ id, label, icon, action: { type: "submenu", slices } });
+  T.symbolCategorySlices = function () {
+    const ids = ["recent", "greek-lower", "logic", "sets", "relations", "integrals"];
+    const icons = ["◷", "α", "⇒", "∈", "≤", "∫"];
+    const slices = ids.map((id, index) => ({ id: "category-" + id, label: T.SYMBOL_BOARD_GROUPS.find(g => g.id === id).label,
+      icon: icons[index], action: { type: "action", id: "symbols.open", args: [id] } }));
+    return [...slices, { id: "category-more", label: "Más…", icon: "…", action: { type: "action", id: "symbols.open" } }];
+  };
   T.RADIAL_MENUS = [
     { context: "formula", slices: [
       insert("frac", "Fracción", "a⁄b", "\\frac{#1}{#2}#0"),

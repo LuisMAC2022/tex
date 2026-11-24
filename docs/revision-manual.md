@@ -126,3 +126,7 @@ Con la rama de trabajo en el portátil, ejecuta `python3 -m http.server 8000` de
 - En Overleaf, compilar dos veces en IEEE un documento con teoremas, ecuaciones, figuras y las ocho referencias del curso. Comparar los números del menú con el PDF. Cambiar a APA sin editar el contenido y repetir la compilación.
 - En Android con Gboard, probar `\citep{`, `\ref{` y la selección de otra clave después de una coma. Abrir también **Citar** y **Referir** desde la barra y comprobar el foco con el teclado desplegado.
 - Con TalkBack en Android y NVDA en escritorio, recorrer el panel, provocar un error por campo y seguirlo desde el resumen. Comprobar el anuncio de clave bloqueada, la cantidad de citas al eliminar y el foco al cancelar o convertir.
+
+### Barra del pulgar
+
+En Android con Gboard abierto, verifica que se ven las siete teclas, que se puede arrastrar en ambos sentidos con una mano y que los tiradores nativos permiten ajustar una selección. Con TalkBack, recorre el botón de modo en cursor, selección y sugerencias. Comprueba que los cambios se anuncian y el campo mantiene el foco de escritura.
