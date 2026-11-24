@@ -397,16 +397,18 @@ Los pasos de dispositivo están en la [revisión manual](docs/revision-manual.md
 
 ## Arranque, importación y formato del documento · 24 de noviembre de 2026
 
-### R1 · Parche aplicado, pendiente de validación de interfaz
+### R1 · Publicado y validado en GitHub Actions
 
 Sobre `921422a` se aplicó el parche de arranque, lectura del almacenamiento bloqueado y menú táctil. Se añadió la regresión de almacenamiento y se regeneró el inventario. `app.js` pasó de 95 180 a 95 193 bytes, dentro del presupuesto de 95 300. Pasaron `npm run inventario`, `npm run check:js`, la comprobación estructural independiente y `git diff --check`.
 
 Con `TEX_UI_TESTS=required npm test` se registraron 318 pruebas, 259 aprobadas, 59 fallidas y cero omitidas. Las 55 de interfaz fallaron antes de validar el comportamiento. Al configurar un directorio temporal escribible y el ejecutable local, Chromium abortó al intentar crear un socket. El entorno rechazó la solicitud para ejecutar la suite con ese permiso. Las cuatro de compilación encontraron el binario de pdfLaTeX, pero falta el formato pdflatex.fmt. El gestor de paquetes carece de acceso al bloqueo de dpkg para completar la instalación.
 
-R1 queda local. Pendientes el push y la verificación de «Pruebas» para este cambio. El flujo de Pages prueba antes de desplegar y su disparador automático escucha main. Si se sirvió esta rama, una posible explicación es la publicación directa desde una rama en Settings → Pages. Falta verificar la configuración efectiva.
+R1 se publicó como `5b12815` en `design/jerarquia-espaciado`, con el mismo árbol que el commit local `e1eda5d`. El flujo [Pruebas](https://github.com/luismac2022/tex/actions/runs/45495230650) terminó en verde con la interfaz obligatoria y la revisión de sintaxis. La compilación con pdfLaTeX sigue pendiente. Para ese mismo commit terminó en verde [pages build and deployment](https://github.com/luismac2022/tex/actions/runs/45495229909) en la rama de diseño. Es el flujo automático de Pages, distinto de `pages.yml`. La consulta pública de la configuración de Pages devolvió 404.
 
-### R2 · Duda sobre INV-004
+### R2 · Alcance del respaldo de una sesión pendiente
 
-Registrar project-import.js en index.html, como exige R2, hace fallar la igualdad exacta de tests/check-site.mjs (línea 16), guardián de INV-004. ¿Se autoriza añadir los nuevos scripts en orden de dependencia a la lista esperada, conservando la misma aserción de igualdad y la comprobación de scripts clásicos? Se dejó intacto el guardián.
+Se autorizó añadir los nuevos scripts a la lista ordenada del guardián de INV-004. La prueba de importación en un navegador limpio espera hoy el mensaje «Proyecto importado con respaldo». El criterio 4 cambia ese comportamiento y pide comprobar que la lista de respaldos queda vacía.
 
-R2, F1, F2, F3 y F4 quedan pendientes. No hay cambios de esos paquetes.
+Al contrastar el criterio 1 con el modelo apareció un caso de pérdida de datos. Una sesión cuyo único contenido es el texto del editor satisface `sessionHasContent` en `assets/js/block-tree.js`. Las versiones creadas con `addVersion` pasan por `documentSnapshot` en `assets/js/versions.js`, que excluye el editor. Restaurar ese respaldo produciría un documento vacío. El criterio 2 cubre el editor visible al importar, que puede contener texto distinto del editor de la sesión pendiente. ¿Debe restaurarse el texto pendiente en su editor original o debe recuperarse como un bloque nuevo? La elección cambia el contenido de la versión restaurada.
+
+R2 está detenido en esa decisión. F1, F2, F3 y F4 quedan pendientes. El tamaño de `app.js` sigue en 95 193 bytes.
