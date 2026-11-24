@@ -50,7 +50,7 @@ test("el dedo desplaza las sugerencias de la barra invertida sin elegir ninguna"
   await escribirComando(pagina, "\\ri");
   const caja = await pagina.locator("#assist-list > li").nth(1).boundingBox();
   await deslizar(await cdp(), { x: caja.x + 40, y: caja.y + 20 }, -96);
-  await pagina.waitForTimeout(200);
+  await pagina.waitForFunction(() => document.querySelector("#assist-list").scrollTop > 0);
   assert.equal(await pagina.inputValue("#block-content"), "\\ri", "deslizar no inserta");
   assert.ok(await pagina.locator("#assist-list").isVisible(), "la lista sigue abierta");
   assert.ok(await pagina.evaluate(() => document.querySelector("#assist-list").scrollTop) > 0, "la lista se desplazó");

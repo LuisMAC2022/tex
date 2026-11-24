@@ -430,6 +430,8 @@ Así se prueba exactamente el código que se publica, sin mantener una segunda c
 formato módulo — y sin añadir una dependencia, que sería violar INV-006 para poder
 vigilarlo.
 
+Los recorridos por área están en `tests/interfaz-editor.test.js`, `tests/interfaz-estructura.test.js`, `tests/interfaz-menus.test.js`, `tests/interfaz-escritura.test.js` y `tests/interfaz-versiones.test.js`. Cada prueba abre un contexto limpio. `mantener` deja el dedo apoyado, `arrastrar` recorre los puntos y lo levanta, `codigo` genera el documento y `foco` devuelve el identificador activo.
+
 **La interfaz se prueba en un navegador real, no en un DOM simulado.**
 `tests/interfaz.test.js` usa el arnés `tests/navegador.mjs`, que abre `index.html` por
 `file://` en Chromium, en escritorio o con un teléfono emulado (`abrir("Pixel 7")`), y

@@ -236,3 +236,11 @@ En Chromium headless probé el submenú **Citar**, la aceptación de una segunda
 En un Pixel 7 emulado, Chromium enviaba un clic táctil con `detail: 0` al soltar la barra. Ese clic cerraba el menú recién abierto. Se incorporó el tipo de puntero a la detección y se verificaron por toque la apertura de **Citar**, el submenú y la aceptación de la clave. El arrastre sobre una selección insertó la fórmula una sola vez. Mayús+F10 y Escape conservaron la navegación con teclado y el retorno del foco.
 
 Pendientes de revisión manual en esta ronda: Android físico con Gboard, TalkBack, NVDA, Overleaf, Firefox y Safari/WebKit. Los casos están en la [revisión manual](docs/revision-manual.md#citas-y-bibliografía).
+
+## A1 — Caracterización del editor, la estructura, los menús, la escritura y las versiones
+
+Las pruebas de interfaz pasan de 6 a 25. Los 25 recorridos tardaron 4,4 s en Chromium con contextos nuevos. Comprueban foco, anuncios, gestos, código LaTeX y persistencia a través de la interfaz. Pages ejecuta la suite con Chromium antes de publicar los archivos versionados. `app.js` empezó y terminó con 136 995 bytes (presupuesto de 137 000).
+
+**Precisión autorizada.** Probé los 13 tipos en un Pixel 7 emulado. El botón Menú abrió texto con diez tipos, fórmula con dos e imagen con uno. El cuarto contexto se abrió con Menú general en Estructura. La persona autorizó cubrir esas dos rutas en A1.
+
+Quedan fuera de esta medición Android físico, Gboard, TalkBack y el portapapeles del sistema en el teléfono.

@@ -58,3 +58,41 @@ export async function deslizar(sesion, inicio, desplazamiento, pasos = 8) {
   }
   await sesion.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
 }
+
+/** Inicia una pulsación larga. El llamador puede añadir otro dedo antes de levantarlo. */
+export async function mantener(sesion, punto, ms = 400) {
+  await sesion.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [punto] });
+  await new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export async function arrastrar(sesion, puntos) {
+  const [inicio, ...recorrido] = puntos;
+  await sesion.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [inicio] });
+  for (const punto of recorrido) {
+    await sesion.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [punto] });
+  }
+  await sesion.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+}
+
+export async function codigo(pagina) {
+  await pagina.getByRole("button", { name: "Generar documento" }).click();
+  return pagina.locator("#latex-output").inputValue();
+}
+
+export const foco = pagina => pagina.evaluate(() => document.activeElement.id);
+
+export async function centro(locator) {
+  await locator.scrollIntoViewIfNeeded();
+  const caja = await locator.boundingBox();
+  return { x: caja.x + caja.width / 2, y: caja.y + caja.height / 2 };
+}
+
+export async function sesionDePrueba(t, dispositivo) {
+  const sesion = await abrir(dispositivo);
+  sesion.pagina.setDefaultTimeout(6000);
+  t.after(async () => {
+    await sesion.contexto.close();
+    if (sesion.errores.length) throw new Error(sesion.errores.join("\n"));
+  });
+  return sesion;
+}

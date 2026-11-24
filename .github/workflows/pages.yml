@@ -25,11 +25,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Instalar Playwright y Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.63.0
+          npx playwright install --with-deps chromium
       - run: npm test
+        env:
+          TEX_UI_TESTS: required
+      - run: npm run check:js
+      - name: Preparar los archivos públicos
+        run: |
+          git checkout-index --all --prefix="$RUNNER_TEMP/site/"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: ${{ runner.temp }}/site
       - name: Publicar en GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

@@ -192,6 +192,40 @@
 - los avisos de ruta distinguen espacios, mayúsculas y formatos incompatibles
 - avisa si el nombre contiene caracteres reservados de LaTeX
 
+## `tests/interfaz-editor.test.js` — 3 pruebas
+
+- Añadir bloque y Ctrl+Intro conservan el orden, el LaTeX y el foco de captura
+- editar, cancelar y guardar respetan el texto del bloque original
+- los cambios de tipo muestran las ayudas y los campos de figura llegan al documento
+
+## `tests/interfaz-escritura.test.js` — 4 pruebas
+
+- el autocierre y Tab completan delimitadores, alias y huecos sucesivos
+- la lista de barra diagonal selecciona un tipo y actualiza el formulario
+- las sugerencias de referencias y citas insertan los destinos del documento
+- Selección amplía y reduce el alcance y la hoja de símbolos devuelve el foco
+
+## `tests/interfaz-estructura.test.js` — 4 pruebas
+
+- editar y añadir dentro sitúan el foco en el tipo y conservan el nivel de los hijos
+- duplicar, subir y bajar conservan la identidad visible y el foco de la acción
+- copiar y pegar usan la bandeja y el foco pasa a la copia
+- eliminar un padre pide confirmación, mueve el foco y permite deshacer y rehacer
+
+## `tests/interfaz-menus.test.js` — 5 pruebas
+
+- la barra abre texto, fórmula e imagen y Menú general abre acciones generales
+- mantener una tarjeta carga su contenido y mantener la estructura vacía abre el menú general
+- clic derecho y Mayús+F10 abren el anillo y Griegas inserta el símbolo elegido
+- el arrastre desde Menú envuelve la selección en el primer argumento
+- un segundo dedo cancela el anillo antes de aplicar una acción
+
+## `tests/interfaz-versiones.test.js` — 3 pruebas
+
+- guardar, comparar y restaurar una versión conserva el respaldo
+- un proyecto exportado se importa en un navegador con almacenamiento vacío
+- recuperar tras recargar devuelve los bloques y el texto a medio escribir
+
 ## `tests/interfaz.test.js` — 6 pruebas
 
 - la página abre sin errores en escritorio y en el teléfono
@@ -340,4 +374,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-252 pruebas con `node:test` más la comprobación estructural.
+271 pruebas con `node:test` más la comprobación estructural.
