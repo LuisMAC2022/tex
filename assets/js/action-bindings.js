@@ -10,7 +10,7 @@
     }
     function openMenu(args, source = "editor") {
       const button = args.button || $(source === "global" ? "#global-menu" : "#content-menu");
-      d.radial.openAtButton(button, args.target || { source }, args.keyboard);
+      d.radial.openAtButton(button, args.target || { source, button }, args.keyboard);
     }
     function deleteImage() {
       const path = d.editorTarget().editing, block = d.getBlock(path);

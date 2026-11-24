@@ -114,6 +114,7 @@
     function focusAction(action, path) {
       const button = blockList.querySelector(`button[data-action="${action}"][data-path="${pathToKey(path)}"]`);
       if (!button || button.disabled) return false;
+      deps.reveal(button);
       let disclosure = button.closest("details");
       while (disclosure) { disclosure.open = true; disclosure = disclosure.parentElement.closest("details"); }
       button.focus();

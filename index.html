@@ -17,6 +17,15 @@
     </header>
 
     <main id="contenido-principal" tabindex="-1">
+      <nav id="mobile-navigation" aria-label="Navegación de la aplicación" hidden>
+        <div role="tablist" aria-label="Paneles del editor">
+          <button type="button" role="tab" id="tab-write" data-panel="write" aria-controls="panel-write">Escribir</button>
+          <button type="button" role="tab" id="tab-tree" data-panel="tree" aria-controls="panel-tree">Estructura</button>
+          <button type="button" role="tab" id="tab-document" data-panel="document" aria-controls="panel-document">Documento</button>
+          <button type="button" role="tab" id="tab-more" data-panel="more" aria-controls="panel-more">Más</button>
+        </div>
+        <button type="button" id="panel-menu" data-action-id="radial.global" aria-label="Abrir menú general" aria-haspopup="menu" hidden>✥</button>
+      </nav>
       <p id="autosave-banner" hidden><span id="autosave-message"></span> <button id="recover-session" type="button">Recuperar sesión</button> <button id="discard-session" type="button" class="secondary">Descartar</button></p>
       <form id="document-form" novalidate>
         <section aria-labelledby="datos-heading">

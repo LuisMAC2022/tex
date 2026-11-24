@@ -75,6 +75,7 @@ export async function arrastrar(sesion, puntos) {
 }
 
 export async function codigo(pagina) {
+  await irAlPanel(pagina, "Documento");
   await pagina.getByRole("button", { name: "Generar documento" }).click();
   return pagina.locator("#latex-output").inputValue();
 }
@@ -95,4 +96,9 @@ export async function sesionDePrueba(t, dispositivo) {
     if (sesion.errores.length) throw new Error(sesion.errores.join("\n"));
   });
   return sesion;
+}
+
+export async function irAlPanel(pagina, nombre) {
+  const tab = pagina.getByRole("tab", { name: nombre, exact: true });
+  if (await tab.isVisible()) await tab.click();
 }

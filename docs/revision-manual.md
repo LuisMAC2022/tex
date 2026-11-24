@@ -138,3 +138,7 @@ En Android, comprueba con TalkBack el nombre completo del tipo, la elección des
 ### Tarjetas
 
 Con TalkBack, usa ⋯ en el primero y el último de varios hermanos. Comprueba los nombres completos y el anuncio de los sectores deshabilitados. Repite el recorrido sosteniendo la tarjeta con una mano y comprueba el regreso del foco después de duplicar y eliminar.
+
+### Paneles móviles
+
+Cambia de pestaña con Gboard abierto y con TalkBack. Después de editar una tarjeta o seguir un aviso desde Documento, comprueba el foco y la posición del campo sobre el teclado. Revisa el enlace de salto y el retorno a la misma posición al alternar paneles.

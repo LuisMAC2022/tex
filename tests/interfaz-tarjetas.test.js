@@ -1,12 +1,13 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
-import { cerrar, omitir, sesionDePrueba } from "./navegador.mjs";
+import { cerrar, irAlPanel, omitir, sesionDePrueba } from "./navegador.mjs";
 
 after(cerrar);
 const opts = { skip: omitir };
 async function crear(p, value) {
   await p.fill("#block-content", value);
   await p.tap("#thumb-add");
+  await irAlPanel(p, "Estructura");
 }
 const tarjetas = p => p.locator("#block-list article");
 const acciones = card => card.getByRole("button", { name: /^Acciones para / });

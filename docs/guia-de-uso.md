@@ -556,3 +556,9 @@ Toca ＋ Título para escribir el título opcional, o ＋ Pie en una figura. La 
 ### Acciones de una tarjeta
 
 En el teléfono, ✎ edita, ↳ prepara un hijo en un contenedor y ⋯ abre las acciones de la tarjeta. También puedes mantener pulsada la tarjeta y arrastrar hasta una de las ocho posiciones. Con teclado, enfoca ⋯ y pulsa Intro. Subir está arriba y Bajar abajo. Las acciones deshabilitadas conservan su sitio. Pegar dentro incorpora una copia de la bandeja como hijo del bloque. Ver todo despliega las vistas de más de tres líneas. La ayuda se abre con Cómo funciona la estructura.
+
+### Paneles del teléfono
+
+Usa Escribir para editar, Estructura para ordenar los bloques, Documento para los datos y el código, y Más para las versiones y preferencias. La barra superior permanece visible. Con el foco en sus pestañas, usa las flechas, Inicio o Fin. Cada panel recuerda dónde estabas al desplazarte. En Estructura, Documento y Más, ✥ abre el menú general. Ir a… cambia a la pestaña de destino. El botón Editar de una tarjeta vuelve a Escribir.
+
+La vista matemática empieza plegada en el teléfono. Toca su resumen para abrirla. La aplicación recuerda la elección en ese navegador. Al salir de Documento, los datos se pliegan si ya tienen título.

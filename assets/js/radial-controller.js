@@ -89,7 +89,7 @@
       const context = T.actionContext({ source: target.source, blockKind: kind,
         mathMode: target.source === "editor" && writingMode(), scopeMode: target.source === "editor" && getScopeMode() });
       const isCard = context === "card";
-      const field = isCard ? document.querySelector('article[data-path="' + T.pathToKey(target.path) + '"] [data-action="edit"]') : kind === "image" ? imagePath : blockContent;
+      const field = target.source === "global" && target.button ? target.button : isCard ? document.querySelector('article[data-path="' + T.pathToKey(target.path) + '"] [data-action="edit"]') : kind === "image" ? imagePath : blockContent;
       const summary = isCard ? deps.cardState(target.path) : {};
       const slices = target.slices || T.slicesFor(context, type, summary), area = viewport(), origin = { ...point, mode, bar, full: isCard };
       const scrollPositions = radialScrollPositions(press?.node || document.elementFromPoint?.(point.x, point.y));
@@ -104,7 +104,7 @@
     const chip = $("#type-chip");
     listen(chip, "pointerdown", event => event.preventDefault());
     listen(chip, "click", event => openRadialAtButton(chip, radialTarget(chip), !T.isPointerClick(event)));
-    for (const id of ["thumb-menu","content-menu","global-menu"]) {
+    for (const id of ["thumb-menu","content-menu","global-menu","panel-menu"]) {
       const button = $("#" + id);
       listen(button, "pointerdown", e => e.preventDefault());
       listen(button, "click", e => T.runAction(button.dataset.actionId, { button, keyboard: !T.isPointerClick(e) }));

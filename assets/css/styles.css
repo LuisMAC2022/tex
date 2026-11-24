@@ -345,3 +345,20 @@ summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 @media (pointer: coarse) {
   .block-preview .katex-display { margin-block: 0; }
 }
+
+#mobile-navigation { display: none; }
+@media (pointer: coarse) and (max-width: 47.99rem) {
+  html { scroll-padding-block-start: 52px; }
+  body { padding-block-start: 48px; }
+  #mobile-navigation:not([hidden]) { display: flex; position: fixed; inset: 0 0 auto; z-index: 10; height: 48px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  #mobile-navigation [role="tablist"] { flex: 1; display: flex; }
+  #mobile-navigation button { flex: 1; min-width: 44px; padding: .25rem; border-radius: 0; background: var(--surface); color: var(--text); }
+  #mobile-navigation [aria-selected="true"] { font-weight: 750; box-shadow: inset 0 -4px var(--primary); }
+  #mobile-navigation #panel-menu { flex: 0 0 46px; }
+  .site-header { padding-block: .3rem; }
+  .site-header p { display: none; }
+  .site-header h1 { font-size: 1.35rem; white-space: nowrap; }
+  [role="tabpanel"] > section { padding: .6rem; }
+  [role="tabpanel"] .structure-panel { min-width: 0; }
+  [role="tabpanel"][hidden] { display: none; }
+}

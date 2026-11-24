@@ -148,7 +148,7 @@
   /* --- Editor: a qué nodo apunta el formulario --- */
 
   const blockForm = global.TexNotes.createBlockForm(document, {
-    getBlock: path => blockAtPath(blocks, path), describeBlock, describeLocation, updateTrayControls, blockFieldHooks, renderEditorPreview, cancelTemplateForStructuralChange,
+    reveal: node => panels.reveal(node), getBlock: path => blockAtPath(blocks, path), describeBlock, describeLocation, updateTrayControls, blockFieldHooks, renderEditorPreview, cancelTemplateForStructuralChange,
   });
   const { editorTarget, setEditorTarget, clearBlockFields, resetBlockEditor, selectBlockType, loadBlockEditor } = blockForm;
 
@@ -167,7 +167,7 @@
   /* --- Lista anidada --- */
 
   const structure = global.TexNotes.createStructureView(document, {
-    getBlocks: () => blocks, getTarget: label => blockTargets.get(label),
+    reveal: node => panels.reveal(node), getBlocks: () => blocks, getTarget: label => blockTargets.get(label),
     refreshTargets: tree => { blockTargets = new Map(global.TexNotes.referenceTargets({ blocks: tree }).map(target => [target.label, target])); },
     describeBlock, renderBlockPreview, blockItemExtensions, syncReferenceKey, saveSession,
   });
@@ -325,7 +325,7 @@
     catch { announce("No se pudo copiar el código; permanece disponible para seleccionarlo manualmente."); }
   });
 
-  function focusBlockContent() { $(blockType($("#block-type").value)?.kind === "image" ? "#image-path" : "#block-content").focus(); }
+  function focusBlockContent() { panels.focusTarget($(blockType($("#block-type").value)?.kind === "image" ? "#image-path" : "#block-content")); }
   // Se amplía en [F] cuando hay un menú de escritura.
   let closeAssistMenu = () => {};
 
@@ -1584,6 +1584,7 @@
     writeWritingStorage(courseReferenceKey, courseReferences);
   }
   function showReferencePanel() {
+    panels.reveal($("#document-references"));
     $("#metadata-details").open = true; $("#document-references").open = true;
     $("#document-references > summary").focus();
   }
@@ -1693,7 +1694,7 @@
   }
   renderReferences();
 
-  const panels = T.createPanels(document, { metadata, imageType });
+  const panels = T.createPanels(document, { metadata, imageType, announce, closeWriting() { closeAssistMenu(); closeSymbolSheet(); } });
   const { refresh: syncMetadataSummary, goTo, focusMetadata } = panels;
   // La fecha inicial es la de hoy; un borrador o una sesión recuperada la sustituyen.
   if (!$("#date").value) $("#date").value = global.TexNotes.localDateValue();

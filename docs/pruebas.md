@@ -237,6 +237,12 @@
 - el arrastre desde Menú envuelve la selección en el primer argumento
 - un segundo dedo cancela el anillo antes de aplicar una acción
 
+## `tests/interfaz-paneles.test.js` — 3 pruebas
+
+- las cuatro pestañas alternan con flechas, Inicio y Fin y recuerdan la vista matemática
+- Ir a, el editor de una tarjeta y los avisos revelan y enfocan su destino
+- los cuatro paneles caben en dos pantallas con cinco bloques de una línea
+
 ## `tests/interfaz-tarjetas.test.js` — 3 pruebas
 
 - la tarjeta de una línea cabe en 140 px y presenta ocho acciones en posiciones fijas
@@ -408,4 +414,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-287 pruebas con `node:test` más la comprobación estructural.
+290 pruebas con `node:test` más la comprobación estructural.

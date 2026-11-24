@@ -1,6 +1,6 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
-import { cerrar, foco, omitir, sesionDePrueba } from "./navegador.mjs";
+import { cerrar, foco, irAlPanel, omitir, sesionDePrueba } from "./navegador.mjs";
 
 after(cerrar);
 const opts = { skip: omitir };
@@ -48,7 +48,9 @@ test("el escritorio mantiene el selector y el título y el teléfono ahorra al m
   assert.ok(await escritorio.getByLabel("Tipo de bloque", { exact: true }).isVisible());
   assert.ok(await escritorio.locator("#block-title").isVisible());
   const { pagina: p } = await sesionDePrueba(t, "Pixel 7");
+  await irAlPanel(p, "Documento");
   await p.fill("#note-title", "Prueba");
+  await irAlPanel(p, "Escribir");
   for (const [tipo, texto] of [["text","Uno"],["definition","Dos"],["equation","x"]]) {
     await p.selectOption("#block-type", tipo);
     await p.fill("#block-content", texto);

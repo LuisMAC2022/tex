@@ -21,8 +21,8 @@
       if (clipped) { type.tabIndex = -1; type.setAttribute("aria-hidden", "true"); }
       else { type.removeAttribute("tabindex"); type.removeAttribute("aria-hidden"); }
     }
-    function showTitle() { titleExpanded = true; refresh(); title.focus(); }
-    function focusType() { (mobile.matches ? typeChip : type).focus(); }
+    function showTitle() { deps.reveal(title); titleExpanded = true; refresh(); title.focus(); }
+    function focusType() { const field = mobile.matches ? typeChip : type; deps.reveal(field); field.focus(); }
     function pickType() {
       if (mobile.matches && typeof type.showPicker === "function") {
         try { type.showPicker(); return; } catch { /* Se ofrece el control nativo visible. */ }

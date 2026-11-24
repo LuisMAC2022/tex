@@ -1,6 +1,6 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
-import { cerrar, omitir, sesionDePrueba, centro, mantener, arrastrar, foco } from "./navegador.mjs";
+import { cerrar, omitir, sesionDePrueba, irAlPanel, centro, mantener, arrastrar, foco } from "./navegador.mjs";
 
 after(cerrar);
 const opciones = { skip: omitir };
@@ -16,6 +16,7 @@ test("la barra abre texto, fórmula e imagen y Menú general abre acciones gener
     await menu(p, "Menú de " + nombre).waitFor();
     await p.keyboard.press("Escape");
   }
+  await irAlPanel(p, "Estructura");
   await p.tap("#global-menu");
   await menu(p, "Menú de acciones generales").waitFor();
 });
@@ -23,11 +24,14 @@ test("la barra abre texto, fórmula e imagen y Menú general abre acciones gener
 test("mantener una tarjeta abre sus acciones y mantener la estructura vacía abre el menú general", opciones, async t => {
   const { pagina: p, cdp } = await sesionDePrueba(t, "Pixel 7");
   const s = await cdp();
+  await irAlPanel(p, "Estructura");
   await mantener(s, await centro(p.locator("#empty-blocks")));
   await menu(p, "Menú de acciones generales").waitFor();
   await soltar(s);
+  await irAlPanel(p, "Escribir");
   await p.fill("#block-content", "Contenido guardado");
   await p.tap("#thumb-add");
+  await irAlPanel(p, "Estructura");
   await mantener(s, await centro(p.locator("#block-list article h4")));
   await menu(p, "Menú del bloque").waitFor();
   assert.equal(await p.inputValue("#block-content"), "");

@@ -7,13 +7,15 @@
  */
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
-import { abrir, cerrar, deslizar, omitir } from "./navegador.mjs";
+import { abrir, cerrar, deslizar, irAlPanel, omitir } from "./navegador.mjs";
 
 after(cerrar);
 const opciones = { skip: omitir };
 
 async function escribirComando(pagina, texto) {
+  await irAlPanel(pagina, "Documento");
   await pagina.fill("#note-title", "Prueba");
+  await irAlPanel(pagina, "Escribir");
   await pagina.selectOption("#block-type", "equation");
   await pagina.locator("#block-content").tap();
   await pagina.keyboard.type(texto);
