@@ -448,7 +448,7 @@ reales; fr una fracción; pd una derivada parcial. Las tildes forman parte del
 disparador, por lo que “lím” no activa “lim”.
 
 «Restablecer alias predeterminados» repone la lista incluida. «Exportar configuración» descarga notas-latex-configuracion.json; «Importar configuración»
-valida el archivo completo y pide confirmación antes de reemplazar tus preferencias.
+valida el archivo completo y pide confirmación antes de aplicar las partes incluidas. Las partes ausentes conservan tus valores actuales.
 El historial de **Recientes** del tablero sigue siendo independiente.
 
 ## Comandos de tipo y plantillas

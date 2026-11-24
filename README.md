@@ -379,13 +379,17 @@ estructura. Los metadatos se pueden plegar y su resumen identifica el documento.
 Las tarjetas mantienen Editar y Añadir dentro visibles y agrupan el resto en
 Más acciones. El panel de teclado describe el asistente y la navegación nativa.
 
+En el teléfono, las pestañas Escribir, Estructura, Documento y Más conservan su posición al cambiar. En Escribir, el tipo de bloque y el título se abren desde la cabecera del editor. En Estructura, cada tarjeta resume el contenido y el botón ⋯ abre sus ocho acciones.
+
 ## Menús de escritura en el teléfono
 
 La barra inferior abre el menú de texto, fórmula o imagen según el cursor y el tipo de bloque. Cada tarjeta ofrece su menú y la estructura ofrece el menú general. Se puede elegir por toque, teclado o arrastre. En el campo Contenido, Menú y Mayús+F10 abren el primer sector. Los fragmentos comparten los huecos de la barra y las inserciones pasan por el historial nativo. La pulsación larga dentro de Contenido conserva la selección de texto de Android; ahí el menú se abre con el botón de la barra ([DEC-031](decisiones/DEC-031-pulsacion-larga-en-contenido.md)).
 
+En **Más → Preferencias de escritura → Mis menús** se pueden diseñar hasta seis anillos y asignar una acción o un anillo a Mi botón. La configuración portátil v2 los traslada junto con los alias, plantillas, macros, referencias y preferencias. También importa los archivos v1. El informe local de errores se consulta, copia y borra desde Más.
+
 ## Selección por alcance
 
-**Selección** permite ampliar con **Siguiente** y volver al rango anterior con **Anterior**. La prosa distingue palabra, oración, párrafo y bloque. Las fórmulas reconocen comandos, grupos, términos, miembros, delimitadores y celdas de matriz. Los rangos usan los índices del campo y conservan el contenido literal. Una selección se puede envolver con un fragmento del menú radial.
+El botón de modo **⌶** activa la selección por alcance **↔**. Permite ampliar con **Siguiente** y volver al rango anterior con **Anterior**. La prosa distingue palabra, oración, párrafo y bloque. Las fórmulas reconocen comandos, grupos, términos, miembros, delimitadores y celdas de matriz. Los rangos usan los índices del campo y conservan el contenido literal. Una selección se puede envolver con un fragmento del menú radial.
 
 ## Etiquetas y referencias cruzadas
 

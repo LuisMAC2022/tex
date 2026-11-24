@@ -69,33 +69,51 @@ Los scripts se cargan como clásicos **en este orden**. La aplicación usa
 
 | Orden | Archivo | Qué posee | Toca el DOM |
 | --- | --- | --- | --- |
-| 0 | `katex.min.js` | composición matemática local | biblioteca |
-| 1 | `block-types.js` | la tabla de tipos de bloque | no |
-| 2 | `block-tree.js` | el árbol: rutas y operaciones puras | no |
-| 3 | `latex-generator.js` | el estado → la cadena `.tex` | no |
-| 4 | `file-download.js` | nombre de archivo y descarga | sí |
-| 5 | `math-symbols.js` | catálogo de símbolos, búsqueda y navegación del tablero | no |
-| 6 | `text-insertion.js` | insertar en la posición del cursor | apenas |
-| 7 | `math-preview.js` | extracción y análisis de tramos | no |
-| 8 | `shortcuts.js` | registro de atajos y sus nombres | no |
-| 9 | `image-options.js` | opciones de imagen y avisos de ruta | no |
-| 10 | `list-outline.js` | análisis, límites, exportación y edición de listas | no |
-| 11 | `cross-references.js` | etiquetas, destinos numerados y comandos emitidos | no |
-| 12 | `references.js` | fuentes, citas y bibliografía IEEE o APA | no |
-| 13 | `content-check.js` | comprobación del contenido | no |
-| 14 | `editing-assist.js` | pares, fragmentos y sesiones de huecos | no |
-| 15 | `completion.js` | sugerencias, uso, alias, configuración y colocación de la lista | no |
-| 16 | `templates.js` | plantillas por pasos y comandos / | no |
-| 17 | `macros.js` | validación y adaptación de macros a KaTeX | no |
-| 18 | `menus.js` | datos de los menús radiales | no |
-| 19 | `radial.js` | geometría, máquina de estados y vista de los menús radiales | solo su fábrica, al llamarla |
-| 20 | `versions.js` | instantáneas, versiones, diferencias y proyecto JSON | no |
-| 21 | `version-storage.js` | IndexedDB con respaldo en localStorage | almacenamiento |
-| 22 | `selection-scope.js` | selección por alcance en prosa y matemáticas | no |
-| 23 | `app.js` | cableado de la interfaz | sí |
+| 0 | `clipboard.js` | copia de texto para el código, los bloques y los informes | al copiar |
+| 1 | `error-report.js` | registro, retención y formato de errores | no |
+| 2 | `local-errors.js` | aviso, persistencia y consulta de errores | al iniciar el informe |
+| 3 | `katex.min.js` | composición matemática local | biblioteca |
+| 4 | `block-types.js` | la tabla de tipos de bloque | no |
+| 5 | `block-tree.js` | el árbol: rutas y operaciones puras | no |
+| 6 | `latex-generator.js` | el estado → la cadena `.tex` | no |
+| 7 | `file-download.js` | nombre de archivo y descarga | sí |
+| 8 | `math-symbols.js` | catálogo de símbolos, búsqueda y navegación del tablero | no |
+| 9 | `text-insertion.js` | insertar en la posición del cursor | apenas |
+| 10 | `math-preview.js` | extracción y análisis de tramos | no |
+| 11 | `shortcuts.js` | registro de atajos y sus nombres | no |
+| 12 | `actions.js` | catálogo de acciones, contexto y manejadores | no |
+| 13 | `image-options.js` | opciones de imagen y avisos de ruta | no |
+| 14 | `list-outline.js` | análisis, límites, exportación y edición de listas | no |
+| 15 | `cross-references.js` | etiquetas, destinos numerados y comandos emitidos | no |
+| 16 | `references.js` | fuentes, citas y bibliografía IEEE o APA | no |
+| 17 | `content-check.js` | comprobación del contenido | no |
+| 18 | `editing-assist.js` | pares, fragmentos y sesiones de huecos | no |
+| 19 | `completion.js` | sugerencias, uso, alias y colocación de la lista | no |
+| 20 | `templates.js` | plantillas por pasos y comandos / | no |
+| 21 | `macros.js` | validación y adaptación de macros a KaTeX | no |
+| 22 | `config-parts.js` | registro y migración de las partes del archivo portátil | no |
+| 23 | `menus.js` | datos de los menús radiales | no |
+| 24 | `radial.js` | geometría, máquina de estados y vista de los menús radiales | solo su fábrica, al llamarla |
+| 25 | `versions.js` | instantáneas, versiones, diferencias y proyecto JSON | no |
+| 26 | `version-storage.js` | IndexedDB con respaldo en localStorage | almacenamiento |
+| 27 | `selection-scope.js` | selección por alcance en prosa y matemáticas | no |
+| 28 | `menu-config.js` | validación y resolución de los anillos personales | no |
+| 29 | `radial-controller.js` | activación, punteros y teclado del menú radial | al crear el controlador |
+| 30 | `block-actions.js` | ejecución y foco de las acciones de tarjeta | al crear el controlador |
+| 31 | `action-bindings.js` | manejadores que conectan los controles con el registro | al ejecutar una acción |
+| 32 | `thumb-bar.js` | barra del pulgar, alcance y hoja de símbolos | al crear el controlador |
+| 33 | `block-form.js` | tipo, título, destino y edición del bloque | al crear el controlador |
+| 34 | `structure-view.js` | tarjetas, vistas resumidas y foco de la estructura | al crear el controlador |
+| 35 | `mobile-panels.js` | pestañas, destinos, desplazamiento y foco | al crear el controlador |
+| 36 | `portable-config.js` | lectura, importación y exportación de las partes | al crear el controlador |
+| 37 | `alias-editor.js` | alta, edición y persistencia de alias | al crear el controlador |
+| 38 | `menu-editor.js` | editor de anillos, sectores y asignación de Mi botón | al crear el controlador |
+| 39 | `suggestion-sources.js` | registro y prioridad de las fuentes de sugerencias | no |
+| 40 | `suggestion-list.js` | presentación, selección y cierre de sugerencias | al crear el controlador |
+| 41 | `move-dialog.js` | elección de destino y traslado del bloque | al crear el controlador |
+| 42 | `app.js` | cableado de la interfaz | sí |
 
-Las pruebas de Node ejecutan las funciones puras con `node:vm`. La interacción
-de `app.js` se prueba en Chromium con Playwright cuando está instalado
+Las pruebas de Node ejecutan las funciones puras con `node:vm`. La interacción de los controladores y su conexión con `app.js` se prueban en Chromium con Playwright cuando está instalado
 ([DEC-029](../decisiones/DEC-029-pruebas-de-interfaz-en-chromium.md)).
 
 > **Nunca los conviertas en módulos ES.** Con `file://` el navegador bloquea por CORS
@@ -454,7 +472,7 @@ rápida y determinista que una de interfaz. Lo que Chromium emulado no reproduce
 
 Las pruebas comparan el archivo de referencia byte a byte. Si está instalado, `pdflatex` compila también los fragmentos radiales en un directorio temporal con `-no-shell-escape`. Overleaf se revisa manualmente.
 
-Los sectores se definen en `assets/js/menus.js`. Se puede añadir un fragmento, referenciar un símbolo por id, crear un submenú o invocar un comando existente editando ese archivo. Para un comando nuevo hay que registrar su función en `runAction` de `app.js`. Los rótulos de tipos y símbolos se resuelven desde sus catálogos. La geometría y las transiciones se prueban en `tests/radial.test.js`.
+Los sectores se definen en `assets/js/menus.js`. Se puede añadir un fragmento, referenciar un símbolo por id, crear un submenú o invocar un comando existente editando ese archivo. Un comando nuevo declara sus contextos en `actions.js` y conecta su manejador en `action-bindings.js` mediante `registerActionHandlers`. Los rótulos de tipos y símbolos se resuelven desde sus catálogos. La geometría y las transiciones se prueban en `tests/radial.test.js`.
 
 ---
 

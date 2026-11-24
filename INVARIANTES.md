@@ -93,3 +93,9 @@ Se conserva la primera al migrar. Duplicar, pegar y aplicar plantillas vacían l
 Guardián: `tests/arquitectura.test.js` → "app.js no supera su presupuesto de bytes"
 
 El presupuesto está en la prueba y solo baja. Al extraer una sección se rebaja en el mismo commit. Subirlo exige una decisión nueva. [DEC-030](decisiones/DEC-030-app-js-solo-cableado.md)
+
+### INV-013 — Los sectores conservan su posición al cambiar de disponibilidad
+Guardián: `tests/actions.test.js` → "el menú del bloque conserva sus ocho posiciones cuando cambian los sectores habilitados"
+Guardián: `tests/menu-config.test.js` → "la resolución mantiene las ocho posiciones e incorpora los sectores predeterminados"
+
+Un sector deshabilitado mantiene su sitio en el anillo. En un menú personal, la persona elige las posiciones y los intercambios. Las estadísticas de uso pertenecen a las sugerencias de escritura. [DEC-032](decisiones/DEC-032-menu-de-la-tarjeta.md)

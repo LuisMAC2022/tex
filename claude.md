@@ -239,6 +239,12 @@ Pendientes de revisión manual en esta ronda: Android físico con Gboard, TalkBa
 
 ## A1 — Caracterización del editor, la estructura, los menús, la escritura y las versiones
 
+| Medida | Al empezar | Al terminar |
+| --- | ---: | ---: |
+| Pruebas superadas | 252 | 271 |
+| Tamaño de `app.js` (bytes) | 136 995 | 136 995 |
+| Presupuesto (bytes) | 137 000 | 137 000 |
+
 Las pruebas de interfaz pasan de 6 a 25. Los 25 recorridos tardaron 4,4 s en Chromium con contextos nuevos. Comprueban foco, anuncios, gestos, código LaTeX y persistencia a través de la interfaz. Pages ejecuta la suite con Chromium antes de publicar los archivos versionados. `app.js` empezó y terminó con 136 995 bytes (presupuesto de 137 000).
 
 **Precisión autorizada.** Probé los 13 tipos en un Pixel 7 emulado. El botón Menú abrió texto con diez tipos, fórmula con dos e imagen con uno. El cuarto contexto se abrió con Menú general en Estructura. La persona autorizó cubrir esas dos rutas en A1.
@@ -247,11 +253,23 @@ Quedan fuera de esta medición Android físico, Gboard, TalkBack y el portapapel
 
 ## A2 — Registro de acciones y contexto
 
+| Medida | Al empezar | Al terminar |
+| --- | ---: | ---: |
+| Pruebas superadas | 271 | 274 |
+| Tamaño de `app.js` (bytes) | 136 995 | 123 064 |
+| Presupuesto (bytes) | 137 000 | 123 500 |
+
 Las tarjetas, los controles de escritura, los comandos de los anillos y los atajos consultan los identificadores de `actions.js`. La apertura radial y las operaciones de tarjeta tienen controladores propios. La prueba de coherencia contrasta el catálogo con los manejadores que registra la página. Las 25 pruebas de interfaz de A1 siguen pasando con los mismos casos.
 
 `app.js` pasó de 136 995 a 123 064 bytes. Su presupuesto bajó de 137 000 a 123 500 bytes. Chromium verificó los controles en escritorio y Pixel 7 emulado. La prueba manual con teclados físicos de distintas distribuciones queda pendiente. La ejecución de A1 en GitHub Actions también pasó.
 
 ## N1 — Barra del pulgar
+
+| Medida | Al empezar | Al terminar |
+| --- | ---: | ---: |
+| Pruebas superadas | 274 | 280 |
+| Tamaño de `app.js` (bytes) | 123 064 | 117 321 |
+| Presupuesto (bytes) | 123 500 | 117 500 |
 
 La navegación ocupa 144 px (tres teclas de 48) frente a unos 207 px a 412 de ancho. Mi botón deshace y el modo central indica cursor, selección o sugerencias. Se probaron también el arrastre horizontal, la pulsación mantenida y la elección de categoría desde Símbolos. Las cuatro nuevas pruebas táctiles fallaron antes del cambio y pasaron después. A 320 px caben los siete objetivos de al menos 44 px.
 
@@ -259,17 +277,35 @@ Anexo A (Pixel 7, antes y después): altura 6094 → 6094 px, Contenido 2056 →
 
 ## N2 — Tipo de bloque y título
 
+| Medida | Al empezar | Al terminar |
+| --- | ---: | ---: |
+| Pruebas superadas | 280 | 283 |
+| Tamaño de `app.js` (bytes) | 117 321 | 115 109 |
+| Presupuesto (bytes) | 117 500 | 115 500 |
+
 En la pantalla táctil, el chip y el submenú Nuevo bloque comparten los siete tipos y Más…. El título o pie vacío se abre desde el chip. El selector nativo mantiene todas las opciones. Las tres pruebas nuevas fallaron antes del cambio. Verifican el borrador, las ayudas, la vista previa, los controles de escritorio, la activación de teclado para el selector y la alternativa cuando falta showPicker.
 
 El campo Contenido subió de 2056 a 1909 px (147 px). Anexo A: altura 6094 → 5947 px, Estructura 2838 → 2690, Generar 4307 → 4159 y tarjetas 276/275/275 px en ambas mediciones. `app.js` pasó de 117 321 a 115 109 bytes; presupuesto 115 500. Pasaron 283 pruebas locales. El selector del sistema y el anuncio del chip en TalkBack quedan para Android físico.
 
 ## N3 — Tarjetas y menú del bloque
 
+| Medida | Al empezar | Al terminar |
+| --- | ---: | ---: |
+| Pruebas superadas | 283 | 287 |
+| Tamaño de `app.js` (bytes) | 115 109 | 109 526 |
+| Presupuesto (bytes) | 115 500 | 110 500 |
+
 Las tarjetas del anexo A pasaron de 276/275/275 a 110/108/133 px. La ecuación integral medía inicialmente 165 px. Una prueba que reproducía esa altura pasó después de quitar el margen exterior de la fórmula en la tarjeta. La altura de la página bajó de 5947 a 5200 px; Contenido y Estructura quedaron en 1909 y 2690 px. Generar pasó de 4159 a 3412.
 
 El botón ⋯ y la pulsación larga abren ocho acciones de bloque. La prueba táctil comprueba las posiciones, los estados deshabilitados, la bandeja y el foco tras duplicar y eliminar. La pulsación larga conserva lo que se escribe en el editor. [DEC-032](decisiones/DEC-032-menu-de-la-tarjeta.md) registra el cambio. Se actualizó la comprobación estructural de la ayuda plegable. `app.js` pasó de 115 109 a 109 526 bytes, con presupuesto de 110 500. Pasaron las 287 pruebas. Pendientes de comprobación física, el arrastre a una mano y el recorrido con TalkBack.
 
 ## N4 — Cuatro paneles en el teléfono
+
+| Medida | Al empezar | Al terminar |
+| --- | ---: | ---: |
+| Pruebas superadas | 287 | 290 |
+| Tamaño de `app.js` (bytes) | 109 526 | 108 898 |
+| Presupuesto (bytes) | 110 500 | 109 000 |
 
 Escribir, Estructura, Documento y Más conservan los campos y la posición de desplazamiento. Se probaron los cinco destinos de Ir a…, las teclas de las pestañas, Editar desde una tarjeta y el enlace desde un aviso. La vista matemática recuerda su estado al recargar. Las tres pruebas nuevas fallaron antes de crear los paneles y pasaron después.
 
@@ -279,18 +315,82 @@ Al repetir N4 durante la extracción siguiente se reprodujo una carrera entre to
 
 ## A3 — Configuración portátil por partes
 
+| Medida | Al empezar | Al terminar |
+| --- | ---: | ---: |
+| Pruebas superadas | 290 | 294 |
+| Tamaño de `app.js` (bytes) | 108 898 | 107 901 |
+| Presupuesto (bytes) | 109 000 | 108 000 |
+
 El archivo de configuración v2 describe la versión y los datos de cada parte. La prueba compara los valores migrados con un archivo v1 exportado desde la interfaz de la rama de partida. Chromium también verificó una importación parcial, el aviso por una parte desconocida y la descarga posterior. Pasaron las 294 pruebas. `app.js` pasó de 108 898 a 107 901 bytes y su presupuesto bajó a 108 000. El traslado de archivos entre un teléfono físico y un portátil queda para la revisión manual.
 
 ## N5 — Menús personales
+
+| Medida | Al empezar | Al terminar |
+| --- | ---: | ---: |
+| Pruebas superadas | 294 | 300 |
+| Tamaño de `app.js` (bytes) | 107 901 | 105 160 |
+| Presupuesto (bytes) | 108 000 | 105 500 |
 
 Mis menús permite sustituir un contexto o enlazar un anillo independiente. La prueba táctil crea dos sectores, inserta el fragmento en una ecuación, abre el anillo desde Mi botón y vuelve a importar la configuración en una sesión nueva. Otros recorridos comprueban el intercambio sin arrastrar, la restauración, los submenús enlazados y el aviso de KaTeX. Los dos primeros recorridos fallaron antes de implementar el editor. Las 300 pruebas pasaron con Chromium. Los ocho sectores cumplen 44 px de grosor y de arco en el radio medio. `app.js` pasó de 107 901 a 105 160 bytes. El presupuesto bajó a 105 500. El alcance con una mano, TalkBack y el traslado físico del archivo se mantienen en la revisión manual.
 
 ## A5 y N6 — Fuentes de sugerencias y listas táctiles
 
+| Medida | Al empezar | Al terminar |
+| --- | ---: | ---: |
+| Pruebas superadas | 300 | 306 |
+| Tamaño de `app.js` (bytes) | 105 160 | 97 706 |
+| Presupuesto (bytes) | 105 500 | 98 000 |
+
 Cada token conserva la fuente que lo reconoce y lo acepta. La lista se encarga de cerrarse y la sesión de barra diagonal se suscribe al cierre. Las tres listas se desplazaron con gestos CDP en Chromium. Una vez terminado el desplazamiento, ◀ y ▶ recorrieron las opciones y ≡ cerró la lista con el foco en Contenido. El selector de destinos medía una sola fila en la prueba inicial. En el teléfono emulado muestra hasta cinco filas y se verificó un traslado después de deslizar con el dedo. Pasaron las 306 pruebas. Se repasaron las anclas DEC-015 y DEC-016 al trasladar el estado de las sugerencias. `app.js` pasó de 105 160 a 97 706 bytes. Su presupuesto bajó a 98 000. La composición y la barra con Gboard en esta rama quedan pendientes de Android físico.
 
 ## A4 — Informe local de errores
 
+| Medida | Al empezar | Al terminar |
+| --- | ---: | ---: |
+| Pruebas superadas | 306 | 310 |
+| Tamaño de `app.js` (bytes) | 97 706 | 96 893 |
+| Presupuesto (bytes) | 98 000 | 97 000 |
+
 El aviso y el informe recogieron una excepción real y dos promesas rechazadas en Chromium. La prueba copió el informe, comprobó su contenido en el portapapeles, recargó la página y borró las entradas. Las dos pruebas de interfaz fallaron antes de añadir el informe. La prueba de formato conserva los veinte errores más recientes y tres líneas de pila por error. Pasaron las 310 pruebas y la comprobación estructural. `app.js` pasó de 97 706 a 96 893 bytes. El presupuesto bajó a 97 000. El permiso del portapapeles, su alternativa de selección y el aviso con TalkBack quedan para el teléfono físico.
 
 Al revisar N5 con todos los paquetes integrados, una prueba mostró que Mi botón seguía habilitado para una acción de imagen en un bloque de texto. Ahora consulta el contexto del editor. Un anillo enlazado también conserva las acciones de tarjeta deshabilitadas cuando se abre desde otro contexto. Las dos regresiones quedaron cubiertas en la suite de 312 pruebas.
+
+## Cierre de la rama codex/latexst
+
+### Medición del anexo A
+
+Chromium con un Pixel 7 emulado de 412 × 839 px CSS, título Prueba y los tres bloques del anexo. Todas las medidas son píxeles CSS. En N4 las coordenadas se miden desde el inicio del panel correspondiente.
+
+| Medida | Base y A2 | N1 | N2 | N3 | N4 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Altura de la página o de sus paneles | 6094 | 6094 | 5947 | 5200 | Escribir 1520, Estructura 871, Documento 1310, Más 1093 |
+| Altura de la cabecera | 183 | 183 | 183 | 183 | 33 |
+| Inicio del editor | 1502 | 1502 | 1512 | 1512 | 362 en Escribir |
+| Inicio del campo Contenido | 2056 | 2056 | 1909 | 1909 | 759 en Escribir |
+| Inicio de Estructura | 2838 | 2838 | 2690 | 2690 | 100 en Estructura |
+| Generar documento | 4307 | 4307 | 4159 | 3412 | 355 en Documento |
+| Versiones | 5062 | 5062 | 4914 | 4168 | 112 en Más |
+| Preferencias de escritura | 5643 | 5643 | 5495 | 4749 | 691 en Más |
+| Altura de texto, definición y ecuación | 276/275/275 | 276/275/275 | 276/275/275 | 110/108/133 | 110/108/133 |
+| Anchos de los botones de la barra | 6 × 69 | 67/48/48/48/67/67/67 | Igual a N1 | Igual a N1 | Igual a N1 en Escribir |
+
+La repetición sobre la rama completa midió 1137 px en Más al incorporar el informe de errores. Las demás medidas de N4 coincidieron. Otro recorrido añadió cinco bloques de una línea y verificó el máximo de dos pantallas en cada panel.
+
+### Comprobaciones de cierre
+
+La suite local pasó de 252 a 312 pruebas. Las 50 pruebas de interfaz tardaron 10,1 s en una ejecución independiente de Chromium. La suite completa incluyó las compilaciones con `pdflatex`, la comprobación estructural y la comparación byte a byte de `examples/calculo-3.tex`. También pasó `npm run check:js`.
+
+El presupuesto de `app.js` pasó de 137 000 a 97 000 bytes. El archivo ocupa 96 893 bytes frente a los 136 995 de la rama de partida. DEC-032 documenta la pulsación larga en tarjetas. INV-013 registra la posición estable de los sectores con guardianes para las tarjetas y para los menús personales.
+
+### Precisiones al contrastar el encargo
+
+En la rama original, el botón Menú de la barra ofrecía tres contextos según el campo. El menú general tenía su propio botón. A1 caracteriza esas dos rutas con autorización de la persona. La línea de base reproducida aquí difiere ligeramente de las cifras de partida en `agents.md`. La tabla emplea las mediciones tomadas con el mismo guion y el mismo navegador en cada etapa. La lista original de Mover bloque era un selector de una fila. El modo táctil presenta hasta cinco filas para que el desplazamiento y la elección de destino se puedan comprobar.
+
+### Pendiente de verificación manual
+
+- En Android físico, abrir Gboard y probar composición, tiradores nativos, selección por alcance, posición de la barra y conservación del teclado al cambiar de panel. Probar el arrastre y la vibración con una mano. La observación de la persona el 23 de noviembre de 2026 corresponde a la rama de partida.
+- Con TalkBack, comprobar los nombres y anuncios del chip, los modos, las tarjetas, las cinco pestañas de edición de sectores, el foco entre paneles y el informe de errores. Con un teclado físico y NVDA, recorrer esos mismos controles.
+- En Chrome de Android, probar el selector de tipos del sistema, el portapapeles con permiso denegado, la persistencia tras cerrar la aplicación y la transferencia del proyecto y de la configuración a un portátil.
+- Verificar los recorridos en Firefox y Safari/WebKit y compilar el documento en Overleaf. Las compilaciones de esta ronda se hicieron con `pdflatex` local.
+
+Los pasos de dispositivo están en la [revisión manual](docs/revision-manual.md).
