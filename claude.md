@@ -288,3 +288,7 @@ Mis menús permite sustituir un contexto o enlazar un anillo independiente. La p
 ## A5 y N6 — Fuentes de sugerencias y listas táctiles
 
 Cada token conserva la fuente que lo reconoce y lo acepta. La lista se encarga de cerrarse y la sesión de barra diagonal se suscribe al cierre. Las tres listas se desplazaron con gestos CDP en Chromium. Una vez terminado el desplazamiento, ◀ y ▶ recorrieron las opciones y ≡ cerró la lista con el foco en Contenido. El selector de destinos medía una sola fila en la prueba inicial. En el teléfono emulado muestra hasta cinco filas y se verificó un traslado después de deslizar con el dedo. Pasaron las 306 pruebas. Se repasaron las anclas DEC-015 y DEC-016 al trasladar el estado de las sugerencias. `app.js` pasó de 105 160 a 97 706 bytes. Su presupuesto bajó a 98 000. La composición y la barra con Gboard en esta rama quedan pendientes de Android físico.
+
+## A4 — Informe local de errores
+
+El aviso y el informe recogieron una excepción real y dos promesas rechazadas en Chromium. La prueba copió el informe, comprobó su contenido en el portapapeles, recargó la página y borró las entradas. Las dos pruebas de interfaz fallaron antes de añadir el informe. La prueba de formato conserva los veinte errores más recientes y tres líneas de pila por error. Pasaron las 310 pruebas y la comprobación estructural. `app.js` pasó de 97 706 a 96 893 bytes. El presupuesto bajó a 97 000. El permiso del portapapeles, su alternativa de selección y el aviso con TalkBack quedan para el teléfono físico.

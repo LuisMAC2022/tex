@@ -576,3 +576,7 @@ Los anillos se incluyen en **Exportar configuración**. Las posiciones se conser
 ### Recorrer una lista al escribir
 
 Al escribir `/`, `\`, `\ref{` o `\citep{`, desliza el dedo por las opciones. También puedes usar ◀ y ▶, o las flechas del teclado. Tocar una opción o pulsar Intro la acepta. El centro ≡ o Escape cierra la lista y deja el cursor en Contenido. En **Estructura → ⋯ → Mover…**, recorre los destinos con el dedo o las flechas, elige uno y pulsa **Mover bloque**.
+
+### Consultar un fallo en el teléfono
+
+El primer error de la sesión muestra **Copiar informe**. También puedes abrir **Más → Informe de errores** para leer o copiar los veinte errores más recientes de este navegador. Cada entrada indica la fecha, el panel o menú abierto, el mensaje y hasta tres líneas de la pila. **Borrar informe** elimina las entradas de este navegador. El informe solo sale del dispositivo si lo copias y decides compartirlo.

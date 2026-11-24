@@ -623,3 +623,5 @@ profesor y fecha no convierten una sesión vacía en una sesión recuperable.
 Registra `key`, `version`, `defaults` y `validate` con `registerConfigPart`. Si cambia la versión de la parte, añade su migración. La aplicación aporta un lector y un aplicador para esa clave. La envoltura v2 guarda cada parte como `{version, value}` dentro de `parts`. El archivo plano v1 se migra antes de validar. Solo se aplican las partes presentes y se informa de las desconocidas.
 
 `menu-config.js` registra la parte portátil `menus`, valida los enlaces y resuelve cada posición sobre las ocho del contexto. Mi botón guarda un id de acción o `ring:<id>`. El controlador de `menu-editor.js` conserva la edición hasta guardar y usa la geometría de `radial.js` para el dibujo estático y el anillo flotante.
+
+`error-report.js` construye y formatea las entradas del informe sin acceder a la página. `local-errors.js` escucha los errores y los rechazos de promesas desde el arranque, guarda las últimas veinte entradas en `tex-notes:errors:v1` y comparte la copia al portapapeles con el resto del editor.

@@ -377,3 +377,7 @@ summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 
 #move-block-destination[size]:not([size="1"]) { max-height: min(14rem, 36dvh); overflow-y: auto; overscroll-behavior: contain; }
 #move-block-destination[size]:not([size="1"]) option { min-height: 44px; padding: .6rem .4rem; }
+
+#error-notice:not([hidden]) { position: fixed; z-index: 15; inset-inline-end: .5rem; bottom: calc(.5rem + var(--thumb-height, 0px) + var(--keyboard-inset, 0px)); max-width: min(28rem, calc(100% - 1rem)); padding: .5rem; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: .5rem; box-shadow: var(--shadow); }
+#error-notice-status { display: block; }
+#error-report-text { width: 100%; }

@@ -150,3 +150,7 @@ En Android con TalkBack, recorrer las ocho posiciones por nombre y las cinco pes
 ### A5 y N6 · Sugerencias y destinos
 
 Con Gboard abierto y en composición, escribir una barra, una referencia y una cita. Desplazar cada lista y usar ◀, ▶ y ≡ por encima del teclado. En Mover bloque, seleccionar un destino tras desplazar la lista en el teléfono y comprobar su anuncio con TalkBack. La comprobación de Gboard del 23 de noviembre corresponde a la versión previa.
+
+### A4 · Informe local
+
+En Android real, comprobar un aviso con TalkBack y copiar el informe con el teclado abierto. Comprobar el permiso del portapapeles y la selección manual cuando el navegador lo deniegue. Borrar el informe y volver a abrir la aplicación.

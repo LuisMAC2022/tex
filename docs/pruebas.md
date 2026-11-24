@@ -150,6 +150,11 @@
 - Anterior recorre los huecos después de escribir en dos argumentos
 - el cursor recorre comandos, escapes y grafemas completos y respeta los comentarios
 
+## `tests/error-report.test.js` — 2 pruebas
+
+- el informe conserva veinte errores, tres líneas de pila y los más recientes primero
+- acepta rechazos sin pila, un valor ilegible y un almacén antiguo ilegible
+
 ## `tests/generator.test.js` — 37 pruebas
 
 - los metadatos y los títulos escapan todos los caracteres reservados
@@ -238,6 +243,11 @@
 - duplicar, subir y bajar conservan la identidad visible y el foco de la acción
 - copiar y pegar usan la bandeja y el foco pasa a la copia
 - eliminar un padre pide confirmación, mueve el foco y permite deshacer y rehacer
+
+## `tests/interfaz-informe.test.js` — 2 pruebas
+
+- un error real ofrece copiar el informe y Más permite consultarlo y borrarlo
+- una promesa rechazada se registra en la misma sesión y conserva un único aviso
 
 ## `tests/interfaz-listas-tactiles.test.js` — 4 pruebas
 
@@ -448,4 +458,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-306 pruebas con `node:test` más la comprobación estructural.
+310 pruebas con `node:test` más la comprobación estructural.
