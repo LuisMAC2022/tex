@@ -263,9 +263,8 @@
   }
   $("#add-block").addEventListener("click", () => T.runAction("block.commit"));
 
-  $("#paste-block").addEventListener("click", () => {
+  function pasteBlock(parent = editorTarget().parent) {
     if (!tray) { updateTrayControls(); announce("La bandeja está vacía: copia un bloque antes de pegar."); return; }
-    const { parent } = editorTarget();
     // Cada pegado entrega una copia nueva: la bandeja conserva su bloque y dos
     // pegados del mismo origen no comparten objetos.
     const result = insertBlock(blocks, parent, global.TexNotes.copyWithoutLabels(tray.block));
@@ -275,7 +274,8 @@
     changeTree(result.blocks, result.id); renderBlocks(); setEditorTarget(editorTarget());
     if (!focusById("edit", result.id)) $("#add-block").focus();
     announce(`${label} pegado como bloque ${pathLabel(result.path)} ${describeLocation(parent)}. Sigue en la bandeja para pegarlo otra vez.${cancelled}`);
-  });
+  }
+  $("#paste-block").addEventListener("click", () => pasteBlock());
 
   $("#cancel-edit").addEventListener("click", () => {
     const cancelled = editorTarget().editing.length;
@@ -1085,30 +1085,22 @@
   const movePosition = $("#move-block-position");
   let movingPath = [];
 
-  blockItemExtensions.push((_block, path, { more, subject }) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = "Mover a…";
-    button.setAttribute("aria-label", `Mover a… · Bloque ${subject}`);
-    button.setAttribute("aria-haspopup", "dialog");
-    button.addEventListener("click", () => {
-      movingPath = path;
-      const sourceKey = pathToKey(path);
-      const options = [moveDestination.options[0]];
-      for (const { block, path: parentPath } of flattenBlocks(blocks)) {
-        const key = pathToKey(parentPath);
-        if (!acceptsChildren(block.type) || key === sourceKey || key.startsWith(`${sourceKey}.`)) continue;
-        options.push(new Option(describeBlock(block, parentPath), key));
-      }
-      $("#move-block-subject").textContent = `Bloque ${subject}`;
-      moveDestination.replaceChildren(...options);
-      moveDestination.value = pathToKey(path.slice(0, -1));
-      movePosition.value = "end";
-      button.focus();
-      moveDialog.showModal();
-    });
-    more.append(button);
-  });
+  function openMove(path) {
+    const subject = describeBlock(blockAtPath(blocks, path), path);
+    movingPath = path;
+    const sourceKey = pathToKey(path);
+    const options = [moveDestination.options[0]];
+    for (const { block, path: parentPath } of flattenBlocks(blocks)) {
+      const key = pathToKey(parentPath);
+      if (!acceptsChildren(block.type) || key === sourceKey || key.startsWith(`${sourceKey}.`)) continue;
+      options.push(new Option(describeBlock(block, parentPath), key));
+    }
+    $("#move-block-subject").textContent = `Bloque ${subject}`;
+    moveDestination.replaceChildren(...options);
+    moveDestination.value = pathToKey(path.slice(0, -1));
+    movePosition.value = "end";
+    moveDialog.showModal();
+  }
 
   $("#move-block-cancel").addEventListener("click", () => moveDialog.close());
   $("#move-block-form").addEventListener("submit", (event) => {
@@ -1482,16 +1474,12 @@
   $("#cancel-template").addEventListener("click", () => {
     templateSession = null; renderTemplateProgress(); focusBlockContent(); announce("Plantilla cancelada; el contenido del paso actual se conserva.");
   });
-  blockItemExtensions.push((block, path, { more, subject }) => {
-    const button = document.createElement("button"); button.type = "button"; button.textContent = "Guardar como plantilla";
-    button.setAttribute("aria-label", `Guardar como plantilla ${subject}`); button.setAttribute("aria-haspopup", "dialog");
-    button.addEventListener("click", () => {
-      renamingTemplate = -1; savedTemplateBranch = cloneBlock(block);
-      $("#template-name").value = block.title || blockLabel(block.type); $("#template-trigger").value = ""; $("#template-error").textContent = "";
-      templateDialog.showModal();
-    });
-    more.append(button);
-  });
+  function saveBlockTemplate(path) {
+    const block = blockAtPath(blocks, path);
+    renamingTemplate = -1; savedTemplateBranch = cloneBlock(block);
+    $("#template-name").value = block.title || blockLabel(block.type); $("#template-trigger").value = ""; $("#template-error").textContent = "";
+    templateDialog.showModal();
+  }
   refreshTemplates = () => {
     $("#own-template-list").replaceChildren(...ownTemplates.map((template, index) => {
       const item = document.createElement("li"), rename = document.createElement("button"), remove = document.createElement("button");
@@ -1694,9 +1682,6 @@
   $("#save-course-references").addEventListener("click", () => {
     storeCourseReferences(references); announce(`Lista del curso guardada con ${references.length} referencias.`);
   });
-  blockItemExtensions.push((block, path, { more, subject }) => {
-    if (block.type === "bibliography") more.append(actionButton("Convertir en referencias del documento", "convert-bibliography", path, "Convertir " + subject + " en referencias del documento"));
-  });
   function convertLegacyBlock(path) {
     const result = T.convertBibliography({ blocks, references }, path);
     if (result.error) { announce(result.error); return; }
@@ -1749,11 +1734,11 @@
   const radial = T.createRadialController(document, {
     blockContent, imagePath, blockEditor, closeAssistMenu: () => closeAssistMenu(), closeSymbolSheet,
     getBlock: path => blockAtPath(blocks, path), loadBlockEditor, writingMode,
-    getScopeMode: thumb.getScopeMode, captureSymbolOrigin, applyRadialAction, announce, vibration: () => prefs.vibration,
+    cardState: path => T.blockActionState(blocks, path, Boolean(tray)), getScopeMode: thumb.getScopeMode, captureSymbolOrigin, applyRadialAction, announce, vibration: () => prefs.vibration,
   });
 
   T.registerActionHandlers(T.createActionBindings(document, {
-    radial, handleBlockAction, editorTarget, getBlock: path => blockAtPath(blocks, path), announce, describeBlock,
+    radial, openMove, saveBlockTemplate, pasteBlock, handleBlockAction, editorTarget, getBlock: path => blockAtPath(blocks, path), announce, describeBlock,
     closeAssistMenu: () => closeAssistMenu(), closeSymbolSheet, commitBlock, thumbStep, toggleScope, toggleSymbols,
     shiftListSelection, putSnippet: putRadialSnippet, travelStructure, resetBlockEditor, selectBlockType,
     focusBlockContent, blockForm, goTo, openSymbolSearch, selectSymbolCategory,

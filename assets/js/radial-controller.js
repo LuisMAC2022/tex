@@ -14,7 +14,7 @@
     }
     let radialState = T.radialReduce(null, {}), radialModel = null, press = null, holdTimer;
     let suppressClickUntil = 0;
-    const contextNames = { text: "texto", image: "imagen", formula: "fórmula", global: "acciones generales" };
+    const contextNames = { text: "texto", image: "imagen", formula: "fórmula", global: "acciones generales", card: "bloque" };
     const viewport = () => {
       const v = global.visualViewport;
       return { x: v?.offsetLeft || 0, y: v?.offsetTop || 0, width: v?.width ?? innerWidth, height: v?.height ?? innerHeight };
@@ -72,7 +72,7 @@
       const { parent, highlight } = radialState, model = radialModel;
       const items = parent < 0 ? model.slices : model.slices[parent].children;
       const ring = parent < 0 ? model.root : model.child(parent);
-      const name = parent < 0 ? (model.target.name || "Menú de " + contextNames[model.context]) : model.slices[parent].label;
+      const name = parent < 0 ? (model.target.name || (model.context === "card" ? "Menú del bloque" : "Menú de " + contextNames[model.context])) : model.slices[parent].label;
       radialView.draw(ring, items, name, radialState, model);
       if (before.parent !== parent || event.type === "open" || event.type === "hold") announce(name + ", " + items.length + " opciones.");
       if (radialState.haptic && vibration()) navigator.vibrate?.(10);
@@ -83,15 +83,15 @@
       let type = $("#block-type").value;
       if (target.source === "card") {
         const block = getBlock(target.path); if (!block) return;
-        type = block.type; loadBlockEditor(block, target.path);
-        blockContent.setSelectionRange(blockContent.value.length, blockContent.value.length);
+        type = block.type;
       }
       const kind = blockType(type)?.kind;
-      // En la ruta histórica de tarjeta el menú corresponde al contenido cargado.
-      const context = T.actionContext({ source: target.source === "card" ? "content" : target.source, blockKind: kind,
+      const context = T.actionContext({ source: target.source, blockKind: kind,
         mathMode: target.source === "editor" && writingMode(), scopeMode: target.source === "editor" && getScopeMode() });
-      const field = kind === "image" ? imagePath : blockContent;
-      const slices = target.slices || T.slicesFor(context, type), area = viewport(), origin = { ...point, mode, bar };
+      const isCard = context === "card";
+      const field = isCard ? document.querySelector('article[data-path="' + T.pathToKey(target.path) + '"] [data-action="edit"]') : kind === "image" ? imagePath : blockContent;
+      const summary = isCard ? deps.cardState(target.path) : {};
+      const slices = target.slices || T.slicesFor(context, type, summary), area = viewport(), origin = { ...point, mode, bar, full: isCard };
       const scrollPositions = radialScrollPositions(press?.node || document.elementFromPoint?.(point.x, point.y));
       radialModel = { target, context, origin, scrollPositions, originField: captureSymbolOrigin(field), ...T.radialLayout(slices, origin, area) };
       radialDispatch({ type: "open", mode, point, keyboard }, keyboard);

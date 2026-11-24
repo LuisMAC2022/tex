@@ -262,3 +262,9 @@ Anexo A (Pixel 7, antes y después): altura 6094 → 6094 px, Contenido 2056 →
 En la pantalla táctil, el chip y el submenú Nuevo bloque comparten los siete tipos y Más…. El título o pie vacío se abre desde el chip. El selector nativo mantiene todas las opciones. Las tres pruebas nuevas fallaron antes del cambio. Verifican el borrador, las ayudas, la vista previa, los controles de escritorio, la activación de teclado para el selector y la alternativa cuando falta showPicker.
 
 El campo Contenido subió de 2056 a 1909 px (147 px). Anexo A: altura 6094 → 5947 px, Estructura 2838 → 2690, Generar 4307 → 4159 y tarjetas 276/275/275 px en ambas mediciones. `app.js` pasó de 117 321 a 115 109 bytes; presupuesto 115 500. Pasaron 283 pruebas locales. El selector del sistema y el anuncio del chip en TalkBack quedan para Android físico.
+
+## N3 — Tarjetas y menú del bloque
+
+Las tarjetas del anexo A pasaron de 276/275/275 a 110/108/133 px. La ecuación integral medía inicialmente 165 px. Una prueba que reproducía esa altura pasó después de quitar el margen exterior de la fórmula en la tarjeta. La altura de la página bajó de 5947 a 5200 px; Contenido y Estructura quedaron en 1909 y 2690 px. Generar pasó de 4159 a 3412.
+
+El botón ⋯ y la pulsación larga abren ocho acciones de bloque. La prueba táctil comprueba las posiciones, los estados deshabilitados, la bandeja y el foco tras duplicar y eliminar. La pulsación larga conserva lo que se escribe en el editor. [DEC-032](decisiones/DEC-032-menu-de-la-tarjeta.md) registra el cambio. Se actualizó la comprobación estructural de la ayuda plegable. `app.js` pasó de 115 109 a 109 526 bytes, con presupuesto de 110 500. Pasaron las 287 pruebas. Pendientes de comprobación física, el arrastre a una mano y el recorrido con TalkBack.

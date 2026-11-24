@@ -27,7 +27,7 @@
   function fitMenu(origin, viewport, n, parent = null) {
     const x = viewport.x || 0, y = viewport.y || 0, right = x + viewport.width, bottom = y + viewport.height;
     const make = (kind, inner, outer, start, span) => ({ kind, inner, outer, start, span, n, x: origin.x, y: origin.y });
-    const half = origin.bar || bottom - origin.y < 102 || viewport.height < 216;
+    const half = !origin.full && (origin.bar || bottom - origin.y < 102 || viewport.height < 216);
     const root = half ? make("half", 86, 146, -Math.PI / 2, Math.PI) : make("full", 32, 104, -Math.PI / n, TAU);
     if (parent) {
       const fan = make("fan", parent.outer + 8, parent.outer + 72, parent.angle - 5 * Math.PI / 12, 5 * Math.PI / 6);
@@ -55,14 +55,14 @@
       return children.get(index);
     } };
   }
-  function slicesFor(context, blockType) {
+  function slicesFor(context, blockType, summary = {}) {
     const source = T.RADIAL_MENUS.find(m => m.context === context)?.slices || [];
     function resolve(slice) {
       const action = slice.action;
       if (typeof action === "string") {
         const command = T.actionById(action);
         const label = action === "write.list" && T.blockType(blockType)?.kind === "list" ? "Sangrar" : slice.label || command.label;
-        return { ...slice, label, icon: slice.icon || command.icon, action: { type: "action", id: action, args: slice.args } };
+        return { ...slice, label, icon: slice.icon || command.icon, disabled: command.enabled ? !command.enabled(summary) : false, action: { type: "action", id: action, args: slice.args } };
       }
       if (action.type === "symbol") {
         const s = T.MATH_SYMBOLS.find(s => s.id === action.symbol);
@@ -112,6 +112,7 @@
     if (event.type === "pick") {
       const element = items()?.[event.index];
       if (!element) return cancel();
+      if (element.disabled) return s;
       return element.children ? { ...s, phase: "tap", parent: event.index, highlight: 0 } : finish(element.action);
     }
     if (s.phase !== "drag" || !event.point) return s;
@@ -128,7 +129,7 @@
     }
     if (event.type === "up") {
       const hit = (parent < 0 ? layout.slices : children(parent))?.[highlight];
-      if (!hit) return cancel();
+      if (!hit || hit.disabled) return cancel();
       return hit.children ? { ...s, phase: "tap", parent: highlight, highlight: 0 } : finish(hit.action);
     }
     return { ...s, parent, highlight, haptic: highlight >= 0 && (highlight !== s.highlight || parent !== s.parent) };
@@ -172,6 +173,7 @@
         items.forEach((item, i) => {
           const path = doc.createElementNS(ns, "path"); path.setAttribute("d", arcPath(ring, i)); path.dataset.index = i;
           const button = doc.createElement("button"); button.type = "button"; button.setAttribute("role", "menuitem"); button.dataset.index = i;
+          if (item.disabled) { button.setAttribute("aria-disabled", "true"); path.classList.add("disabled"); }
           if (item.children) button.setAttribute("aria-haspopup", "menu");
           const icon = doc.createElement("span"); icon.setAttribute("aria-hidden", "true"); icon.textContent = item.icon;
           const label = doc.createElement("span"); label.textContent = item.label;

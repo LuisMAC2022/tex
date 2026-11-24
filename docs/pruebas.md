@@ -4,10 +4,11 @@
 > Su versión de referencia es la suite; si discrepan, manda la suite.
 > `tests/documentacion.test.js` comprueba que esté al día.
 
-## `tests/actions.test.js` — 2 pruebas
+## `tests/actions.test.js` — 3 pruebas
 
 - los identificadores de acciones son únicos y todo control remite a un contexto conocido
 - el contexto de acción distingue tarjeta, documento, imagen, texto y matemáticas
+- el menú del bloque conserva sus ocho posiciones cuando cambian los sectores habilitados
 
 ## `tests/anclas.test.js` — 5 pruebas
 
@@ -231,10 +232,16 @@
 ## `tests/interfaz-menus.test.js` — 5 pruebas
 
 - la barra abre texto, fórmula e imagen y Menú general abre acciones generales
-- mantener una tarjeta carga su contenido y mantener la estructura vacía abre el menú general
+- mantener una tarjeta abre sus acciones y mantener la estructura vacía abre el menú general
 - clic derecho y Mayús+F10 abren el anillo y Griegas inserta el símbolo elegido
 - el arrastre desde Menú envuelve la selección en el primer argumento
 - un segundo dedo cancela el anillo antes de aplicar una acción
+
+## `tests/interfaz-tarjetas.test.js` — 3 pruebas
+
+- la tarjeta de una línea cabe en 140 px y presenta ocho acciones en posiciones fijas
+- Ver todo expande una vista de más de tres líneas y pegar dentro respeta la bandeja
+- una ecuación de una línea conserva sus límites de integral en la tarjeta compacta
 
 ## `tests/interfaz-tipo.test.js` — 3 pruebas
 
@@ -401,4 +408,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-283 pruebas con `node:test` más la comprobación estructural.
+287 pruebas con `node:test` más la comprobación estructural.

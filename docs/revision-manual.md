@@ -134,3 +134,7 @@ En Android con Gboard abierto, verifica que se ven las siete teclas, que se pued
 ### Selector de tipo y título
 
 En Android, comprueba con TalkBack el nombre completo del tipo, la elección desde el anillo y la apertura del selector nativo con Más…. Verifica que ＋ Pie coloca el foco en el título de la imagen y abre Gboard.
+
+### Tarjetas
+
+Con TalkBack, usa ⋯ en el primero y el último de varios hermanos. Comprueba los nombres completos y el anuncio de los sectores deshabilitados. Repite el recorrido sosteniendo la tarjeta con una mano y comprueba el regreso del foco después de duplicar y eliminar.

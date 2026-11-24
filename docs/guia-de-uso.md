@@ -552,3 +552,7 @@ Toca Símbolos para abrir la hoja y elegir una categoría. También puedes arras
 Toca el chip con el tipo actual junto a Nuevo bloque para elegir entre siete tipos. También puedes arrastrar desde el chip hacia una opción y soltar. Más… abre el selector completo. Con teclado, usa Intro en el chip y las flechas e Intro en el anillo. Cambiar el tipo desde el chip conserva el contenido en edición.
 
 Toca ＋ Título para escribir el título opcional, o ＋ Pie en una figura. La acción Título del menú de texto abre el mismo campo. En el escritorio el selector y el campo de título permanecen visibles.
+
+### Acciones de una tarjeta
+
+En el teléfono, ✎ edita, ↳ prepara un hijo en un contenedor y ⋯ abre las acciones de la tarjeta. También puedes mantener pulsada la tarjeta y arrastrar hasta una de las ocho posiciones. Con teclado, enfoca ⋯ y pulsa Intro. Subir está arriba y Bajar abajo. Las acciones deshabilitadas conservan su sitio. Pegar dentro incorpora una copia de la bandeja como hijo del bloque. Ver todo despliega las vistas de más de tres líneas. La ayuda se abre con Cómo funciona la estructura.

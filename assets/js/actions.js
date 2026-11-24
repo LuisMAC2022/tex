@@ -39,6 +39,9 @@
     action("block.up", "Subir", "↑", card, { enabled: c => c.position > 0 }),
     action("block.down", "Bajar", "↓", card, { enabled: c => c.position + 1 < c.siblings }),
     action("block.convert-bibliography", "Convertir en referencias del documento", "§", card, { enabled: c => c.type === "bibliography" }),
+    action("block.move", "Mover…", "↗", card),
+    action("block.template", "Guardar como plantilla", "☆", card),
+    action("block.pasteInside", "Pegar dentro", "⇥", card, { enabled: c => c.container && c.hasTray }),
     action("symbols.open", "Abrir símbolos", "Ω", editor),
     action("symbols.toggle", null, "Ω", editor),
     action("symbols.escape", null, "×", editor),
@@ -58,6 +61,13 @@
     if (blockKind === "equation" || mathMode === "math" || scopeMode === "math") return "formula";
     return "text";
   }
+  function blockActionState(blocks, path, hasTray) {
+    const block = T.blockAtPath(blocks, path);
+    if (!block) return {};
+    const parent = T.blockAtPath(blocks, path.slice(0, -1));
+    return { type: block.type, position: path.at(-1), siblings: parent ? parent.children.length : blocks.length,
+      container: T.acceptsChildren(block.type), hasTray };
+  }
   const actionHandlers = Object.create(null);
   function registerActionHandlers(handlers) {
     for (const [id, handler] of Object.entries(handlers)) {
@@ -68,5 +78,5 @@
   function runAction(id, args = {}, origen = {}) {
     return actionHandlers[id]?.(args, origen);
   }
-  Object.assign(T, { ACTIONS, actionById, actionsFor, actionContext, actionHandlers, registerActionHandlers, runAction });
+  Object.assign(T, { ACTIONS, actionById, actionsFor, actionContext, blockActionState, actionHandlers, registerActionHandlers, runAction });
 })(globalThis.TexNotes);

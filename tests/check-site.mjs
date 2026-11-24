@@ -56,7 +56,7 @@ for (const [id, texto] of [["block-help", help[1]], ["symbol-board-intro", html.
 assert(ids.has("paste-block"), "Falta el botón de pegar el bloque de la bandeja");
 assert(ids.has("tray-summary"), "Falta el resumen visible de la bandeja de copia");
 assert.match(html, /<button id="paste-block"[^>]*\bhidden\b[^>]*>Pegar bloque<\/button>/, "«Pegar bloque» debe existir oculto hasta que haya algo en la bandeja");
-const estructura = html.match(/<h3>Estructura actual<\/h3>\s*<p>([\s\S]*?)<\/p>/);
+const estructura = html.match(/<h3>Estructura actual<\/h3>\s*<details class="structure-help"><summary>Cómo funciona la estructura<\/summary><p>([\s\S]*?)<\/p>/);
 assert(estructura, "Falta la explicación de la estructura actual");
 for (const accion of ["Duplicar", "Copiar bloque", "Copiar texto", "Pegar bloque"]) {
   assert(estructura[1].includes(accion), `La explicación de la estructura debe distinguir «${accion}»`);

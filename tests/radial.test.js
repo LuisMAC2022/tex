@@ -49,7 +49,7 @@ test("espera, cancelación, zona muerta, vibración y submenús en los dos modos
   assert.equal(step(tap,{type:"escape"}).parent,-1);
 });
 test("el catálogo radial deriva referencias válidas y conserva objetivos de 44 píxeles", () => {
-  assert.deepEqual(T.RADIAL_MENUS.map(m => m.context),["formula","text","image","global"]);
+  assert.deepEqual(T.RADIAL_MENUS.map(m => m.context),["formula","text","image","card","global"]);
   const ids = new Set(), actions = new Set(["insert","symbol","action","submenu","blockTypes"]);
   function walk(items) {
     assert.ok(items.length > 0 && items.length <= 8);

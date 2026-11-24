@@ -324,3 +324,24 @@ summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
   #native-type-field.native-clipped { position: absolute; overflow: hidden; clip-path: inset(50%); width: 1px; height: 1px; margin: 0; padding: 0; }
   .block-editor > .block-target { margin-block: .25rem; }
 }
+
+.structure-tools { display: flex; gap: .25rem; flex-wrap: nowrap; }
+.structure-tools > button { flex: 1; min-width: 0; padding: .3rem; }
+.structure-help > summary, .preview-toggle { min-height: 44px; }
+.radial-layer [aria-disabled="true"] { text-decoration: line-through; }
+.radial-layer path.disabled { stroke-dasharray: 3 3; }
+@media (pointer: coarse) {
+  .block-list article { padding: .35rem .45rem; }
+  .card-heading { display: flex; align-items: baseline; justify-content: space-between; gap: .4rem; }
+  .card-heading h4, .card-heading .block-meta { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card-heading .block-meta { flex-shrink: 0; max-width: 48%; font-size: .8rem; }
+  .block-preview { margin: .1rem 0; }
+  .block-preview:not(.expanded) { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .block-preview > :first-child { margin-top: 0; }
+  .block-preview > :last-child { margin-bottom: 0; }
+  .block-actions { flex-flow: row nowrap; margin: .1rem 0 0; gap: .25rem; }
+  .block-actions > button { width: 44px; height: 44px; padding: .2rem; }
+}
+@media (pointer: coarse) {
+  .block-preview .katex-display { margin-block: 0; }
+}

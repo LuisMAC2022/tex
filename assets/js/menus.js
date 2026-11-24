@@ -50,6 +50,9 @@
       command("replace", "Reemplazar", "↺", "image.file"),
       command("delete", "Eliminar", "×", "image.delete"),
     ] },
+    { context: "card", slices: ["up", "duplicate", "copy", "copy-text", "down", "move", "delete", "pasteInside"].map(name => ({
+      id: "card-" + name, action: "block." + name,
+    })) },
     { context: "global", slices: [
       { id: "new", label: "Nuevo bloque", icon: "+", action: { type: "blockTypes",
         ids: ["text","equation","math-inline","definition","theorem","proof","example"] } },

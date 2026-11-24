@@ -20,7 +20,7 @@ test("la barra abre texto, fórmula e imagen y Menú general abre acciones gener
   await menu(p, "Menú de acciones generales").waitFor();
 });
 
-test("mantener una tarjeta carga su contenido y mantener la estructura vacía abre el menú general", opciones, async t => {
+test("mantener una tarjeta abre sus acciones y mantener la estructura vacía abre el menú general", opciones, async t => {
   const { pagina: p, cdp } = await sesionDePrueba(t, "Pixel 7");
   const s = await cdp();
   await mantener(s, await centro(p.locator("#empty-blocks")));
@@ -29,8 +29,8 @@ test("mantener una tarjeta carga su contenido y mantener la estructura vacía ab
   await p.fill("#block-content", "Contenido guardado");
   await p.tap("#thumb-add");
   await mantener(s, await centro(p.locator("#block-list article h4")));
-  await menu(p, "Menú de texto").waitFor();
-  assert.equal(await p.inputValue("#block-content"), "Contenido guardado");
+  await menu(p, "Menú del bloque").waitFor();
+  assert.equal(await p.inputValue("#block-content"), "");
   await soltar(s);
 });
 

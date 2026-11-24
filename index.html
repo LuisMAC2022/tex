@@ -234,10 +234,12 @@
 
           <div class="structure-panel">
           <h3>Estructura actual</h3>
-          <p>Cada bloque indica su nivel y su bloque padre. «Subir» y «Bajar» mueven el bloque solo entre sus hermanos, sin sacarlo de su nivel. Para repetir una estructura hay tres acciones distintas: <strong>«Duplicar»</strong> deja una copia justo después del original; <strong>«Copiar bloque»</strong> lo guarda en una bandeja y luego eliges el destino con «Pegar bloque», las veces que haga falta; <strong>«Copiar texto»</strong> lleva su contenido al portapapeles del sistema para pegarlo donde quieras, dentro o fuera de la aplicación.</p>
+          <details class="structure-help"><summary>Cómo funciona la estructura</summary><p>Cada bloque indica su nivel y su bloque padre. «Subir» y «Bajar» mueven el bloque solo entre sus hermanos, sin sacarlo de su nivel. Para repetir una estructura hay tres acciones distintas: <strong>«Duplicar»</strong> deja una copia justo después del original; <strong>«Copiar bloque»</strong> lo guarda en una bandeja y luego eliges el destino con «Pegar bloque», las veces que haga falta; <strong>«Copiar texto»</strong> lleva su contenido al portapapeles del sistema para pegarlo donde quieras, dentro o fuera de la aplicación.</p></details>
+          <div class="structure-tools">
           <button type="button" id="global-menu" data-action-id="radial.global" class="secondary" aria-haspopup="menu">Menú general</button>
           <button type="button" id="undo-structure" class="secondary" disabled>Deshacer cambio</button>
           <button type="button" id="redo-structure" class="secondary" disabled>Rehacer cambio</button>
+          </div>
           <p id="empty-blocks">Todavía no hay bloques.</p>
           <ol id="block-list" class="block-list"></ol>
           </div>

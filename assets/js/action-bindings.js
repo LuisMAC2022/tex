@@ -20,6 +20,9 @@
     }
     const handlers = Object.fromEntries(T.actionsFor("card").map(a => [a.id, args => cardAction(a.id.slice(6), args)]));
     return Object.assign(handlers, {
+      "block.move": args => d.openMove(args.path || d.editorTarget().editing),
+      "block.template": args => d.saveBlockTemplate(args.path || d.editorTarget().editing),
+      "block.pasteInside": args => d.pasteBlock(args.path || d.editorTarget().editing),
       "radial.menu": args => openMenu(args),
       "radial.shiftMenu": args => openMenu(args),
       "radial.global": args => openMenu(args, "global"),

@@ -28,3 +28,12 @@ test("el contexto de acción distingue tarjeta, documento, imagen, texto y matem
     [{ source: "editor", blockKind: "theorem" }, "text"],
   ]) assert.equal(T.actionContext(state), expected);
 });
+
+test("el menú del bloque conserva sus ocho posiciones cuando cambian los sectores habilitados", () => {
+  const primero = T.slicesFor("card", "text", { position: 0, siblings: 2, container: true, hasTray: false });
+  const ultimo = T.slicesFor("card", "text", { position: 1, siblings: 2, container: true, hasTray: true });
+  assert.equal(primero.length, 8);
+  assert.deepEqual(primero.map(s => s.id), ultimo.map(s => s.id));
+  assert.deepEqual(Array.from(primero.filter(s => s.disabled), s => s.id), ["card-up", "card-pasteInside"]);
+  assert.deepEqual(Array.from(ultimo.filter(s => s.disabled), s => s.id), ["card-down"]);
+});
