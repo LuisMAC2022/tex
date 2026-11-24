@@ -394,3 +394,19 @@ En la rama original, el botón Menú de la barra ofrecía tres contextos según 
 - Verificar los recorridos en Firefox y Safari/WebKit y compilar el documento en Overleaf. Las compilaciones de esta ronda se hicieron con `pdflatex` local.
 
 Los pasos de dispositivo están en la [revisión manual](docs/revision-manual.md).
+
+## Arranque, importación y formato del documento · 24 de noviembre de 2026
+
+### R1 · Parche aplicado, pendiente de validación de interfaz
+
+Sobre `921422a` se aplicó el parche de arranque, lectura del almacenamiento bloqueado y menú táctil. Se añadió la regresión de almacenamiento y se regeneró el inventario. `app.js` pasó de 95 180 a 95 193 bytes, dentro del presupuesto de 95 300. Pasaron `npm run inventario`, `npm run check:js`, la comprobación estructural independiente y `git diff --check`.
+
+Con `TEX_UI_TESTS=required npm test` se registraron 318 pruebas, 259 aprobadas, 59 fallidas y cero omitidas. Las 55 de interfaz fallaron antes de validar el comportamiento. Al configurar un directorio temporal escribible y el ejecutable local, Chromium abortó al intentar crear un socket. El entorno rechazó la solicitud para ejecutar la suite con ese permiso. Las cuatro de compilación encontraron el binario de pdfLaTeX, pero falta el formato pdflatex.fmt. El gestor de paquetes carece de acceso al bloqueo de dpkg para completar la instalación.
+
+R1 queda local. Pendientes el push y la verificación de «Pruebas» para este cambio. El flujo de Pages prueba antes de desplegar y su disparador automático escucha main. Si se sirvió esta rama, una posible explicación es la publicación directa desde una rama en Settings → Pages. Falta verificar la configuración efectiva.
+
+### R2 · Duda sobre INV-004
+
+Registrar project-import.js en index.html, como exige R2, hace fallar la igualdad exacta de tests/check-site.mjs (línea 16), guardián de INV-004. ¿Se autoriza añadir los nuevos scripts en orden de dependencia a la lista esperada, conservando la misma aserción de igualdad y la comprobación de scripts clásicos? Se dejó intacto el guardián.
+
+R2, F1, F2, F3 y F4 quedan pendientes. No hay cambios de esos paquetes.

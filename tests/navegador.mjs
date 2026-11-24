@@ -33,16 +33,19 @@ export async function cerrar() { await navegador?.close(); navegador = null; }
 /**
  * Abre la aplicación limpia (almacenamiento vacío) en un contexto nuevo.
  * `dispositivo` es un nombre de `playwright.devices`, p. ej. "Pixel 7"; sin él,
- * escritorio de 1366×768. Devuelve la página y la lista de errores de la
- * página, que cada prueba debe comprobar vacía.
+ * escritorio de 1366×768. `preparar`, si se da, corre en la página antes que
+ * la aplicación (p. ej. para simular un navegador sin almacenamiento).
+ * Devuelve la página y la lista de errores de la página, que cada prueba debe
+ * comprobar vacía.
  */
-export async function abrir(dispositivo) {
+export async function abrir(dispositivo, preparar) {
   const opciones = dispositivo ? playwright.devices[dispositivo] : { viewport: { width: 1366, height: 768 } };
   const contexto = await (await lanzar()).newContext(opciones);
   const pagina = await contexto.newPage();
   const errores = [];
   pagina.on("pageerror", (error) => errores.push(error.message));
   pagina.on("console", (mensaje) => { if (mensaje.type() === "error") errores.push(mensaje.text()); });
+  if (preparar) await pagina.addInitScript(preparar);
   await pagina.goto(PAGINA);
   return { pagina, contexto, errores, cdp: () => contexto.newCDPSession(pagina) };
 }

@@ -98,6 +98,6 @@ test("el autoguardado distingue cambios pendientes, guardado correcto y error si
   schedule();
   pending();
   assert.equal(status.textContent, "Sesión guardada en este navegador");
-  assert.equal(T.session.read(document.defaultView.localStorage).editor.content, "Ahora");
+  assert.equal(T.session.read(document.defaultView).editor.content, "Ahora");
   assert.equal(JSON.parse(items.get("tex-notes:autosave:previous")).editor.content, "Antes");
 });

@@ -34,6 +34,18 @@ test("la página abre sin errores en escritorio y en el teléfono", opciones, as
   }
 });
 
+test("la página abre sin errores aunque el navegador bloquee el almacenamiento del sitio", opciones, async () => {
+  // Con los datos del sitio bloqueados, leer `localStorage` lanza SecurityError.
+  const { pagina, contexto, errores } = await abrir(undefined, () => {
+    Object.defineProperty(window, "localStorage", { get() { throw new DOMException("bloqueado", "SecurityError"); } });
+  });
+  await pagina.locator("#block-content").fill("Sin almacenamiento");
+  await pagina.getByRole("button", { name: "Añadir bloque" }).click();
+  assert.equal(await pagina.locator("#block-list article").count(), 1);
+  assert.deepEqual(errores, []);
+  await contexto.close();
+});
+
 test("añadir un bloque y generar deja su contenido literal en el código LaTeX", opciones, async () => {
   const { pagina, contexto, errores } = await abrir();
   await pagina.fill("#note-title", "Nota de prueba");

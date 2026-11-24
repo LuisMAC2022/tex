@@ -1550,8 +1550,8 @@
   $("#block-type").addEventListener("change", renderEditorPreview);
 
   /* --- Autoguardado separado del borrador explícito --- */
-  const { session: autosave, hasSessionContent } = T;
-  let pendingSession = autosave.read(localStorage);
+  const { session: autosave, sessionHasContent: hasSessionContent } = T;
+  let pendingSession = autosave.read(global);
   const { save: sessionSave, schedule: scheduleSessionSave } = autosave.bind(document, form, () => pendingSession, () => ({
     version: DRAFT_VERSION, ...state(), editor: {
       type: $("#block-type").value, title: $("#block-title").value, content: blockContent.value,

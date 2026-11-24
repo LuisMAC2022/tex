@@ -141,6 +141,8 @@
       if (coarse.matches) {
         for (const button of actions.children) button.textContent = T.actionById("block." + button.dataset.action).icon;
         const menu = actionButton("⋯", "context", path, "Acciones para " + subject);
+        // «⋯» ya abre el menú del bloque: no se repite dentro de «Más acciones».
+        menuButton.remove();
         menu.setAttribute("aria-haspopup", "menu"); actions.append(menu, disclosure);
       } else actions.append(disclosure);
       const head = document.createElement("div"); head.className = "card-heading"; head.append(heading, meta);

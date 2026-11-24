@@ -151,9 +151,10 @@
     newestFirst,pruneVersions,mergeVersions,addVersion,migrateSingleDraft,upgradeStoredVersions,validateProject});
   const autosaveKey = "tex-notes:autosave:v1";
   T.session = {
-    read(storage) {
+    // Recibe la ventana: leer `localStorage` lanza si el sitio no tiene almacenamiento.
+    read(win) {
       try {
-        const raw = JSON.parse(storage.getItem(autosaveKey));
+        const raw = JSON.parse(win.localStorage.getItem(autosaveKey));
         const draft = T.normalizeDraft(raw);
         return draft ? { ...raw, ...draft } : null;
       } catch { return null; }

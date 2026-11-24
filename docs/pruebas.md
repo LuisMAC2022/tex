@@ -302,9 +302,10 @@
 - un proyecto exportado se importa en un navegador con almacenamiento vacío
 - recuperar tras recargar devuelve los bloques y el texto a medio escribir
 
-## `tests/interfaz.test.js` — 6 pruebas
+## `tests/interfaz.test.js` — 7 pruebas
 
 - la página abre sin errores en escritorio y en el teléfono
+- la página abre sin errores aunque el navegador bloquee el almacenamiento del sitio
 - añadir un bloque y generar deja su contenido literal en el código LaTeX
 - el dedo desplaza las sugerencias de la barra invertida sin elegir ninguna
 - Anterior y Siguiente recorren las sugerencias y tocar una la inserta
@@ -468,4 +469,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-317 pruebas con `node:test` más la comprobación estructural.
+318 pruebas con `node:test` más la comprobación estructural.
