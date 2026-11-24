@@ -256,11 +256,12 @@
 - la lista de citas se desplaza con el dedo y se recorre con la barra
 - Mover bloque permite recorrer destinos con el dedo y trasladar al elegido
 
-## `tests/interfaz-menus-personales.test.js` — 3 pruebas
+## `tests/interfaz-menus-personales.test.js` — 4 pruebas
 
 - un anillo de fórmula, Mi botón y el intercambio conservan las posiciones
 - el editor intercambia posiciones sin arrastrar y permite restaurar el menú
 - el submenú admite un enlace a otro anillo y el aviso de KaTeX permite guardar
+- Mi botón habilita una acción de imagen solo en su contexto
 
 ## `tests/interfaz-menus.test.js` — 5 pruebas
 
@@ -345,11 +346,12 @@
 - todos los kinds no matemáticos extraen tramos delimitados
 - analyzeContent clasifica resultados y fallos del renderizador inyectado
 
-## `tests/menu-config.test.js` — 3 pruebas
+## `tests/menu-config.test.js` — 4 pruebas
 
 - la resolución mantiene las ocho posiciones e incorpora los sectores predeterminados
 - cada error identifica su campo y los ciclos incluyen enlaces de submenú
 - un anillo independiente conserva enlaces, huecos y submenús en el archivo portátil
+- un enlace a las acciones de tarjeta conserva el sector de mover deshabilitado en el editor
 
 ## `tests/pdflatex.test.js` — 4 pruebas
 
@@ -458,4 +460,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-310 pruebas con `node:test` más la comprobación estructural.
+312 pruebas con `node:test` más la comprobación estructural.

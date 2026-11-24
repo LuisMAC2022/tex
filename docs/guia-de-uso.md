@@ -541,7 +541,7 @@ En un bloque «Bibliografía (IEEE)», abre «Más acciones» y pulsa «Converti
 
 ### Barra del pulgar
 
-En el teléfono, Anterior y Siguiente recorren los huecos de un fragmento y después las unidades de LaTeX. El botón central muestra el modo. Toca ⌶ para activar la selección por alcance, ↔ para volver al cursor o ≡ para cerrar las sugerencias. Con la lista abierta, las dos flechas recorren las opciones. Mi botón deshace la última edición de Contenido.
+En el teléfono, Anterior y Siguiente recorren los huecos de un fragmento y después las unidades de LaTeX. El botón central muestra el modo. Toca ⌶ para activar la selección por alcance, ↔ para volver al cursor o ≡ para cerrar las sugerencias. Con la lista abierta, las dos flechas recorren las opciones. Por defecto, Mi botón deshace la última edición de Contenido. Si le asignas una acción, el botón se habilita en los contextos de esa acción.
 
 Puedes arrastrar horizontalmente en el grupo de las tres teclas para avanzar o retroceder un paso por cada 28 px. Cada toque en una flecha hace un paso. Mantener Siguiente activa la selección y la amplía una vez. La misma operación se hace tocando el modo y después Siguiente. Con el teclado, recorre la barra con flechas y activa el botón con Intro.
 

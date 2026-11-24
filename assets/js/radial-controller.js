@@ -80,6 +80,10 @@
       if (radialState.haptic && vibration()) navigator.vibrate?.(10);
       if (focus) radialView.focus(Math.max(0, highlight));
     }
+    function contextFor(source, kind) {
+      return T.actionContext({ source, blockKind: kind,
+        mathMode: source === "editor" && writingMode(), scopeMode: source === "editor" && getScopeMode() });
+    }
     function openRadial(target, point, mode, keyboard = false, bar = false) {
       closeAssistMenu(); closeSymbolSheet();
       let type = $("#block-type").value;
@@ -88,8 +92,7 @@
         type = block.type;
       }
       const kind = blockType(type)?.kind;
-      const context = T.actionContext({ source: target.source, blockKind: kind,
-        mathMode: target.source === "editor" && writingMode(), scopeMode: target.source === "editor" && getScopeMode() });
+      const context = contextFor(target.source, kind);
       const isCard = context === "card";
       const field = target.source === "global" && target.button ? target.button : isCard ? document.querySelector('article[data-path="' + T.pathToKey(target.path) + '"] [data-action="edit"]') : kind === "image" ? imagePath : blockContent;
       const summary = isCard ? deps.cardState(target.path) : {};
@@ -106,8 +109,22 @@
       openRadial(target, { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }, "tap", keyboard, button === $("#thumb-menu"));
     }
     const personal = $("#thumb-personal");
+    function updatePersonalButton() {
+      const action = T.actionById(personal.dataset.actionId);
+      const contexts = action?.contexts || [];
+      const always = personal.dataset.ring || contexts.includes("global") || ["text", "formula", "image"].every(c => contexts.includes(c));
+      personal.disabled = !always && !contexts.includes(contextFor("editor", blockType($("#block-type").value)?.kind));
+    }
+    const assignment = new MutationObserver(updatePersonalButton);
+    assignment.observe(personal, { attributes: true, attributeFilter: ["data-action-id", "data-ring"] });
+    for (const event of ["input", "change", "selectionchange", "focusin"]) listen(document, event, updatePersonalButton);
+    updatePersonalButton();
     listen(personal, "click", e => {
-      if (personal.dataset.ring) openRadialAtButton(personal, { source: "editor", ringId: personal.dataset.ring }, !T.isPointerClick(e));
+      updatePersonalButton();
+      if (personal.disabled) return;
+      const keyboard = !T.isPointerClick(e);
+      if (personal.dataset.ring) openRadialAtButton(personal, { source: "editor", ringId: personal.dataset.ring }, keyboard);
+      else T.runAction(personal.dataset.actionId, {button: personal, keepFieldFocus: true, keyboard}, {source: "editor"});
     });
     const chip = $("#type-chip");
     listen(chip, "pointerdown", event => event.preventDefault());
@@ -191,6 +208,7 @@
       dispose() {
         clearRadialPress();
         listeners.abort();
+        assignment.disconnect();
         radialView.layer.remove();
       },
     };

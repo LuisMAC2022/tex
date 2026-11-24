@@ -292,3 +292,5 @@ Cada token conserva la fuente que lo reconoce y lo acepta. La lista se encarga d
 ## A4 — Informe local de errores
 
 El aviso y el informe recogieron una excepción real y dos promesas rechazadas en Chromium. La prueba copió el informe, comprobó su contenido en el portapapeles, recargó la página y borró las entradas. Las dos pruebas de interfaz fallaron antes de añadir el informe. La prueba de formato conserva los veinte errores más recientes y tres líneas de pila por error. Pasaron las 310 pruebas y la comprobación estructural. `app.js` pasó de 97 706 a 96 893 bytes. El presupuesto bajó a 97 000. El permiso del portapapeles, su alternativa de selección y el aviso con TalkBack quedan para el teléfono físico.
+
+Al revisar N5 con todos los paquetes integrados, una prueba mostró que Mi botón seguía habilitado para una acción de imagen en un bloque de texto. Ahora consulta el contexto del editor. Un anillo enlazado también conserva las acciones de tarjeta deshabilitadas cuando se abre desde otro contexto. Las dos regresiones quedaron cubiertas en la suite de 312 pruebas.

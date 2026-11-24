@@ -14,7 +14,7 @@
     }
     function deleteImage() {
       const path = d.editorTarget().editing, block = d.getBlock(path);
-      if (!block) return d.announce("Guarda la imagen antes de eliminarla de la estructura.");
+      if (T.blockType(block?.type)?.kind !== "image") return d.announce("Guarda la imagen antes de eliminarla de la estructura.");
       if (!block.children.length && !doc.defaultView.confirm("¿Eliminar " + d.describeBlock(block, path) + "?")) return;
       return cardAction("delete", { path });
     }

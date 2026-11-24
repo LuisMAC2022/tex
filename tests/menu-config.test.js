@@ -34,3 +34,13 @@ test("un anillo independiente conserva enlaces, huecos y submenús en el archivo
   assert.equal(T.resolveMenu(data,"text","text",{},"dos").slices[0].children[0].disabled,true);
   assert.equal(T.migrateMenus(null).button,"edit.undo");
 });
+test("un enlace a las acciones de tarjeta conserva el sector de mover deshabilitado en el editor",()=>{
+  const data=T.defaultMenus();
+  data.rings=[ring("tarjeta",[],"card")];
+  const inCard=T.resolveMenu(data,"card","text",{},"tarjeta").slices;
+  const fromEditor=T.resolveMenu(data,"text","text",{},"tarjeta").slices;
+  assert.equal(inCard[5].action.id,"block.move");
+  assert.equal(inCard[5].disabled,false);
+  assert.equal(fromEditor[5].action.id,"block.move");
+  assert.equal(fromEditor[5].disabled,true);
+});

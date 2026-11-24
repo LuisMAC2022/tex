@@ -93,7 +93,13 @@
       if (s.submenu) return { label:s.label || "Submenú", icon:s.icon || "…", children:s.submenu.map(resolve) };
       return { label:s.label || data.rings.find(r => r.id === s.ring)?.label, icon:s.icon || "↗", action:{type:"ring",id:s.ring} };
     }
-    return { name:ring.label, slices:MENU_DIRECTIONS.map((_,i) => ring.slices[i] ? resolve(ring.slices[i]) : defaults[i] || empty()) };
+    function inherited(item) {
+      if (!item) return empty();
+      if (item.children) return { ...item, children: item.children.map(inherited) };
+      const action = item.action?.type === "action" && T.actionById(item.action.id);
+      return action && !action.contexts.includes(context) ? { ...item, disabled: true } : item;
+    }
+    return { name:ring.label, slices:MENU_DIRECTIONS.map((_,i) => ring.slices[i] ? resolve(ring.slices[i]) : inherited(defaults[i])) };
   }
   T.registerConfigPart({ key:"menus", version:1, defaults:defaultMenus, validate:validateMenus, migrate:migrateMenus });
   Object.assign(T,{ MENU_DIRECTIONS,MENU_CONTEXTS,defaultMenus,validateMenus,migrateMenus,resolveMenu });

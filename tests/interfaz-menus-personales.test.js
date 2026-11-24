@@ -78,3 +78,12 @@ test("el submenú admite un enlace a otro anillo y el aviso de KaTeX permite gua
   await p.getByRole("menuitem",{name:"Macro del curso",exact:true}).tap();
   assert.equal(await p.locator("#block-content").inputValue(),"\\micurso{}");
 });
+test("Mi botón habilita una acción de imagen solo en su contexto", {skip:omitir}, async t=>{
+  const {pagina:p}=await sesionDePrueba(t,"Pixel 7");
+  await preferencias(p); await p.selectOption("#menu-button","image.delete");
+  await irAlPanel(p,"Escribir");
+  const button=p.locator("#thumb-personal");
+  assert.ok(await button.isDisabled());
+  await p.selectOption("#block-type","image"); assert.ok(await button.isEnabled());
+  await p.selectOption("#block-type","text"); assert.ok(await button.isDisabled());
+});
