@@ -96,6 +96,12 @@
     function savePreview() {
       if (media.matches) try { win.localStorage.setItem(previewKey, preview.open ? "open" : "closed"); } catch { /* Solo para esta sesión. */ }
     }
+    preview.querySelector("summary").addEventListener("click", event => {
+      if (!media.matches) return;
+      event.preventDefault();
+      preview.open = !preview.open;
+      savePreview();
+    }, options);
     preview.addEventListener("toggle", savePreview, options);
     win.addEventListener("pagehide", savePreview, options);
     media.addEventListener("change", syncLayout, options);
