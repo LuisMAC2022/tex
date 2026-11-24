@@ -1986,9 +1986,9 @@
       const snapshot=state(), currentFocus=focusId();
       const rows=await store.update(all=>T.addVersion(T.mergeVersions(all,project.versions),snapshot,optionsFor("respaldo","Antes de importar"),store.limit));
       rememberChange(currentFocus,snapshot); loadVersionState(project.current,project.documentId,null);
-      if (project.config) applyPortableConfig(project.config,false);
+      const warnings = project.config ? applyPortableConfig(project.config,false) : [];
       paintVersions(rows); void reportStorage(store,true);
-      versionStatus("Proyecto importado con respaldo previo."+(skipped.length?" Versiones omitidas: "+skipped.join(", ")+".":""));
+      versionStatus("Proyecto importado con respaldo previo."+(skipped.length?" Versiones omitidas: "+skipped.join(", ")+".":"") + (warnings.length ? " " + warnings.join(" ") : ""));
     },true);
   });
   withVersions(async store=>{

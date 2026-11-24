@@ -83,6 +83,12 @@
 - completar un entorno descarta el cierre consumido y conserva los pares exteriores
 - la lista de sugerencias queda junto al cursor y por encima de la barra y el teclado
 
+## `tests/config-parts.test.js` — 3 pruebas
+
+- el archivo v1 exportado por el navegador migra sin pérdida e intercambia cada parte
+- una parte ausente conserva el valor local y una desconocida produce un aviso
+- los errores señalan la parte y el campo sin aplicar valores inválidos
+
 ## `tests/content-check.test.js` — 14 pruebas
 
 - detecta llaves desparejadas y respeta las escapadas
@@ -208,6 +214,10 @@
 - Mi botón deshace el texto y a 320 píxeles los siete objetivos caben
 - arrastrar navega por unidades y mantener Siguiente amplía una vez
 - arrastrar desde Símbolos elige la categoría que abre la hoja
+
+## `tests/interfaz-configuracion.test.js` — 1 pruebas
+
+- importar una parte conserva los alias y avisa de una parte desconocida
 
 ## `tests/interfaz-editor.test.js` — 3 pruebas
 
@@ -414,4 +424,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-290 pruebas con `node:test` más la comprobación estructural.
+294 pruebas con `node:test` más la comprobación estructural.

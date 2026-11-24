@@ -1,0 +1,21 @@
+import test, { after } from "node:test";
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { cerrar, omitir, sesionDePrueba } from "./navegador.mjs";
+after(cerrar);
+test("importar una parte conserva los alias y avisa de una parte desconocida", { skip: omitir }, async t => {
+  const { pagina: p } = await sesionDePrueba(t);
+  await p.click("#writing-preferences > summary");
+  const total = await p.locator("#alias-list tr").count();
+  p.once("dialog", dlg => dlg.accept());
+  const file = {kind:"notas-latex-config", version:2, parts:{ prefs:{version:1,value:{autoPair:false,vibration:true}}, extra:{version:1,value:3}}};
+  await p.setInputFiles("#import-config", {name:"preferencias.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(file))});
+  await p.locator("#app-status").filter({hasText:/extra/}).waitFor();
+  assert.equal(await p.locator("#auto-pair").isChecked(),false);
+  assert.equal(await p.locator("#alias-list tr").count(),total);
+  const wait = p.waitForEvent("download");
+  await p.click("#export-config");
+  const out = JSON.parse(await readFile(await (await wait).path(),"utf8"));
+  assert.equal(out.version,2);
+  assert.equal(out.parts.prefs.value.autoPair,false);
+});

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { loadTexNotes } from "./load-app.mjs";
-const T = await loadTexNotes(['block-types.js','math-symbols.js','math-preview.js','editing-assist.js','references.js','completion.js']);
+const T = await loadTexNotes(['block-types.js','math-symbols.js','math-preview.js','editing-assist.js','references.js','completion.js','config-parts.js']);
 const state = (value, cursor=value.length) => ({value,selectionStart:cursor,selectionEnd:cursor});
 const plain = value => structuredClone(value);
 

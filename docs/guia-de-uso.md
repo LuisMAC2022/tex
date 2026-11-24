@@ -562,3 +562,5 @@ En el teléfono, ✎ edita, ↳ prepara un hijo en un contenedor y ⋯ abre las 
 Usa Escribir para editar, Estructura para ordenar los bloques, Documento para los datos y el código, y Más para las versiones y preferencias. La barra superior permanece visible. Con el foco en sus pestañas, usa las flechas, Inicio o Fin. Cada panel recuerda dónde estabas al desplazarte. En Estructura, Documento y Más, ✥ abre el menú general. Ir a… cambia a la pestaña de destino. El botón Editar de una tarjeta vuelve a Escribir.
 
 La vista matemática empieza plegada en el teléfono. Toca su resumen para abrirla. La aplicación recuerda la elección en ese navegador. Al salir de Documento, los datos se pliegan si ya tienen título.
+
+La configuración portátil v2 acepta también archivos v1. Al importar se comprueba cada parte antes de confirmar. Las partes ausentes conservan los ajustes del dispositivo y la aplicación avisa si omite una parte desconocida.

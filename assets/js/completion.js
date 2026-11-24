@@ -112,25 +112,6 @@
     const alias=aliases.find(a=>a.trigger===match[0]&&(a.mode!=='text'||mode==='text'));
     return alias ? {alias,start:match.index,end:state.selectionStart} : null;
   }
-  function validateConfiguration(config) {
-    if(!config||config.kind!=='notas-latex-config'||config.version!==1) return ['El archivo no es una configuración compatible.'];
-    if(!Array.isArray(config.aliases)||!Array.isArray(config.templates)||!Array.isArray(config.macros)||!config.prefs||typeof config.prefs.autoPair!=='boolean') return ['Faltan alias, plantillas, macros o preferencias válidas.'];
-    const errors=[], aliases=[], templates=[], macros=[];
-    for(const a of config.aliases){ errors.push(...validateAlias(a,aliases)); aliases.push(a); }
-    for(const t of config.templates){ errors.push(...(T.validateTemplate ? T.validateTemplate(t,[...(T.BUILTIN_TEMPLATES||[]),...templates]) : ['Esta versión no admite plantillas importadas.'])); templates.push(t); }
-    for(const m of config.macros){ errors.push(...(T.validateMacro ? T.validateMacro(m,macros) : ['Esta versión no admite macros importadas.'])); macros.push(m); }
-    if (config.references !== undefined) {
-      if (!Array.isArray(config.references)) errors.push("La lista de referencias del curso es inválida.");
-      else {
-        const seen = [];
-        for (const reference of config.references) {
-          errors.push(...Object.values(T.validateReference(reference, seen)));
-          seen.push(reference);
-        }
-      }
-    }
-    return errors;
-  }
   /**
    * Coloca la lista de sugerencias junto al cursor sin salir del área visible
    * (la ventana menos la barra del pulgar y el teclado). Va debajo si cabe o si
@@ -147,5 +128,5 @@
     const h = Math.min(height, Math.max(min, area.bottom - area.top));
     return { top: Math.max(area.top, area.bottom - h), maxHeight: h };
   }
-  Object.assign(T,{SHORT_WORDS,placeSuggestions,TEXT_COMMANDS,DEFAULT_ALIASES,normalizeSearch,completionEntries,referenceOptions,citationOptions,usageScore,rankCompletions,recordUsage,completionToken,validSnippetMarkers,validateAlias,aliasAt,validateConfiguration});
+  Object.assign(T,{SHORT_WORDS,placeSuggestions,TEXT_COMMANDS,DEFAULT_ALIASES,normalizeSearch,completionEntries,referenceOptions,citationOptions,usageScore,rankCompletions,recordUsage,completionToken,validSnippetMarkers,validateAlias,aliasAt});
 })(typeof globalThis !== 'undefined' ? globalThis : this);

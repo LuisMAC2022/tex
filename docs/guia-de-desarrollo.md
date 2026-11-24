@@ -623,4 +623,8 @@ profesor y fecha no convierten una sesión vacía en una sesión recuperable.
 
 `references.js` contiene las ocho referencias de `temario.md`, la validación por campo, la asignación de claves y la ordenación de fichas. `citationInfo` recorre los bloques emitidos en preorden y reúne los usos, las claves citadas y las bibliografías manuales. El generador lo comparte para seleccionar `natbib` e imprimir una sola lista al final. `printedReferences` calcula los sufijos por título entre las entradas que se imprimirán.
 
-`normalizeDraft` migra v1–v5 a v6. Cada instantánea contiene una copia de los autores y las opciones. La configuración portátil v1 admite el catálogo del curso en el campo opcional `references`. `convertBibliography` valida todas las claves antes de retirar el bloque. La interfaz registra la conversión como un solo cambio en el historial. [DEC-028](../decisiones/DEC-028-citas-y-bibliografia.md)
+`normalizeDraft` migra v1–v5 a v6. Cada instantánea contiene una copia de los autores y las opciones. La configuración v2 registra `references` como parte y acepta también el archivo plano v1. `convertBibliography` valida todas las claves antes de retirar el bloque. La interfaz registra la conversión como un solo cambio en el historial. [DEC-028](../decisiones/DEC-028-citas-y-bibliografia.md)
+
+### Registrar una parte de configuración
+
+Registra `key`, `version`, `defaults` y `validate` con `registerConfigPart`. Si cambia la versión de la parte, añade su migración. La aplicación aporta un lector y un aplicador para esa clave. La envoltura v2 guarda cada parte como `{version, value}` dentro de `parts`. El archivo plano v1 se migra antes de validar. Solo se aplican las partes presentes y se informa de las desconocidas.

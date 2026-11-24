@@ -276,3 +276,7 @@ Escribir, Estructura, Documento y Más conservan los campos y la posición de de
 En el anexo A la página única medía 5200 px. Las alturas de cada panel son 1520/871/1310/1093 px, respectivamente. Contenido empieza en 759 px de Escribir, frente a 1909. La estructura empieza en 100 px y Generar en 355 px dentro de sus paneles. Las tarjetas mantienen 110/108/133 px. También se comprobó el límite de dos pantallas con cinco bloques. La cabecera bajó de 183 a 33 px. `app.js` pasó de 109 526 a 108 898 bytes; presupuesto 109 000. Pasaron las 290 pruebas. Quedan pendientes del teléfono real el teclado virtual y el recorrido con TalkBack.
 
 Al repetir N4 durante la extracción siguiente se reprodujo una carrera entre tocar el resumen y recargar la página. El control táctil ahora escribe la elección en el mismo clic. Se repitieron las pruebas de los paneles y la suite completa.
+
+## A3 — Configuración portátil por partes
+
+El archivo de configuración v2 describe la versión y los datos de cada parte. La prueba compara los valores migrados con un archivo v1 exportado desde la interfaz de la rama de partida. Chromium también verificó una importación parcial, el aviso por una parte desconocida y la descarga posterior. Pasaron las 294 pruebas. `app.js` pasó de 108 898 a 107 901 bytes y su presupuesto bajó a 108 000. El traslado de archivos entre un teléfono físico y un portátil queda para la revisión manual.

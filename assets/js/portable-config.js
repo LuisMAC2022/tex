@@ -4,13 +4,13 @@
     const $ = selector => doc.querySelector(selector), win = doc.defaultView;
     const events = new AbortController(), options = { signal: events.signal };
     function portableConfig() {
-      return { kind: "notas-latex-config", version: 1, aliases: parts.aliases.read(), templates: parts.templates.read(),
-        prefs: parts.prefs.read(), macros: parts.macros.read(), references: parts.references.read() };
+      return T.buildConfig(Object.fromEntries(Object.entries(parts).map(([key, part]) => [key, part.read()])));
     }
     function applyPortableConfig(data, applyDefaults = true) {
-      for (const key of ["aliases", "templates", "prefs", "macros", "references"]) {
-        if (data[key] !== undefined) parts[key].apply(data[key], applyDefaults);
-      }
+      const checked = T.validateConfig(data);
+      if (checked.errors.length) throw Error(checked.errors.join(" "));
+      for (const [key, value] of Object.entries(checked.values)) parts[key].apply(value, applyDefaults);
+      return checked.warnings;
     }
     $("#export-config").addEventListener("click", () => {
       const data = portableConfig();
@@ -21,11 +21,11 @@
     $("#import-config").addEventListener("change", async (event) => {
       const file = event.target.files[0]; if (!file) return;
       try {
-        const data = JSON.parse(await file.text()), errors = T.validateConfiguration(data);
+        const data = JSON.parse(await file.text()), { errors, warnings } = T.validateConfig(data);
         if (errors.length) { announce(errors.join(" ")); return; }
-        if (!win.confirm("¿Reemplazar con este archivo las preferencias y los catálogos incluidos en la configuración?")) return;
+        if (!win.confirm(["¿Reemplazar con este archivo las partes incluidas en la configuración?", ...warnings].join(" "))) return;
         applyPortableConfig(data);
-        announce("Configuración importada.");
+        announce(["Configuración importada.", ...warnings].join(" "));
       } catch { announce("No se pudo leer la configuración. Comprueba que sea un archivo JSON válido."); }
       finally { event.target.value = ""; }
     }, options);
