@@ -10,7 +10,7 @@
     const moveDestination = $("#move-block-destination");
     const movePosition = $("#move-block-position");
     let movingPath = [];
-  
+
     function openMove(path) {
       const subject = describeBlock(blockAtPath(getBlocks(), path), path);
       movingPath = path;
@@ -23,11 +23,13 @@
       }
       $("#move-block-subject").textContent = `Bloque ${subject}`;
       moveDestination.replaceChildren(...options);
+      const touch = document.defaultView.matchMedia("(pointer: coarse)").matches;
+      moveDestination.size = touch && options.length > 1 ? Math.min(5, options.length) : 1;
       moveDestination.value = pathToKey(path.slice(0, -1));
       movePosition.value = "end";
       moveDialog.showModal();
     }
-  
+
     $("#move-block-cancel").addEventListener("click", () => moveDialog.close(), options);
     $("#move-block-form").addEventListener("submit", (event) => {
       event.preventDefault();
@@ -39,7 +41,7 @@
         announce("No se pudo mover el bloque a ese destino.");
         return;
       }
-  
+
       const previous = editorTarget();
       const cancelled = cancelEditForStructuralChange();
       changeTree(result.blocks, movedId);

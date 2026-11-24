@@ -148,23 +148,16 @@ el marcador literal; los números de línea cambian.
 | `[C] Listas` | sangría y vista de listas | `loadedListBlock` | `blockFieldHooks`, `previewRenderers`, `editorPreviewHooks` |
 | `[D] Comprobación` | avisos previos a Overleaf | `issuesByPath` | `editorPreviewHooks`, `blockItemExtensions`, `beforeGenerateHooks` |
 | `[E] Mover` | conecta el diálogo de traslado en `move-dialog.js` | el controlador conserva el bloque de origen | `changeTree` |
-| `[F] Asistente de escritura` | autocierre, sugerencias de `\`, huecos, alias, configuración portátil | `prefs`, `aliases`, `usage`, `snippetSession`, `assistState` | declara las ranuras que asignan [G] y [H] |
-| `[G] Comandos / y plantillas` | `/` y plantillas por pasos | `slashSession`, `templateSession` | asigna `specialCompletions`, `acceptSpecialCompletion`, `refreshTemplates` y **envuelve** `closeAssistMenu` |
-| `[H] Macros del documento` | macros | `defaultMacros` | asigna `getCompletionMacros`, `getConfigMacros`, `setConfigMacros` |
+| `[F] Asistente de escritura` | autocierre, sugerencias de `\`, huecos, alias, configuración portátil | `prefs`, `usage`, `snippetSession` | conecta la lista con su registro de fuentes |
+| `[G] Comandos / y plantillas` | `/` y plantillas por pasos | `slashSession`, `templateSession` | aplica los tipos y plantillas y se suscribe al cierre de la lista |
+| `[H] Macros del documento` | macros | `defaultMacros` | expone `setConfigMacros` para la configuración portátil |
 | `Referencias del documento y del curso` | fuentes y citas | `courseReferences` | `blockItemExtensions` |
 | `createThumbBar` | conecta la barra y la hoja de símbolos en `thumb-bar.js` | el controlador conserva el alcance | `blockFieldHooks` |
 | `createRadialController` | conecta el editor a los gestos y al teclado de `radial-controller.js` | el controlador conserva el anillo y los punteros | `runAction` |
 | `Autoguardado separado` | sesión sin guardar y su recuperación | `pendingSession` | — |
 | `function selectDocument` hasta el final | historial estructural, versiones, proyecto JSON y arranque | `knownVersions` | — |
 
-Dos trampas que no se ven al leer una sección suelta:
-
-- **Ranuras asignadas más abajo.** [F] declara `let setConfigMacros = () => {}` y
-  la llama. La función real la asigna [H]. Si mueves [H] o cambias su orden de
-  arranque, [F] sigue llamando a la versión vacía sin ningún error.
-- **`closeAssistMenu` tiene dos dueños.** [F] lo define y [G] lo sustituye por otro
-  que también cierra la sesión `/`. Cualquier cambio en el menú de sugerencias
-  tiene que mirar ambas secciones.
+El registro de `suggestion-sources.js` consulta, por orden, las fuentes de comandos de barra diagonal, referencias y citas, y comandos y entornos LaTeX. Cada token identifica la fuente que acepta su opción. El cierre pertenece a `suggestion-list.js`. La sesión de barra diagonal se suscribe a ese cierre. Las preferencias leen las macros predeterminadas y aplican el cambio mediante una función declarada en [H].
 
 La lista, su posición y el foco de las sugerencias viven en `suggestion-list.js`. El formulario y la persistencia de alias se conectan mediante `alias-editor.js`. La lectura y el intercambio del JSON se conectan desde `portable-config.js`. Los destinos de navegación y el resumen de los datos viven en `mobile-panels.js`. La lista anidada y la restauración de foco viven en `structure-view.js`. El destino del formulario, el vaciado de sus campos y el cambio de tipo viven en `block-form.js`. Las operaciones de tarjeta y la recuperación del foco viven en `block-actions.js`. La aplicación aporta el árbol actual y las funciones que aplican los cambios.
 

@@ -146,3 +146,7 @@ Cambia de pestaña con Gboard abierto y con TalkBack. Después de editar una tar
 ### N5 · Mis menús
 
 En Android con TalkBack, recorrer las ocho posiciones por nombre y las cinco pestañas de una posición. Probar Intercambiar con… con una mano y teclado físico. Exportar la configuración del teléfono e importarla en el portátil. Comprobar el rótulo y los dos primeros sectores del anillo.
+
+### A5 y N6 · Sugerencias y destinos
+
+Con Gboard abierto y en composición, escribir una barra, una referencia y una cita. Desplazar cada lista y usar ◀, ▶ y ≡ por encima del teclado. En Mover bloque, seleccionar un destino tras desplazar la lista en el teléfono y comprobar su anuncio con TalkBack. La comprobación de Gboard del 23 de noviembre corresponde a la versión previa.

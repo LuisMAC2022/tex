@@ -326,8 +326,6 @@
   });
 
   function focusBlockContent() { panels.focusTarget($(blockType($("#block-type").value)?.kind === "image" ? "#image-path" : "#block-content")); }
-  // Se amplía en [F] cuando hay un menú de escritura.
-  let closeAssistMenu = () => {};
 
   /* --- [A] Atajos del tablero --- */
 
@@ -1142,36 +1140,24 @@
   function noteUsage(key) { usage = T.recordUsage(usage, key, Date.now()); writeWritingStorage("tex-notes:usage:v1", usage); }
   const aliasEditor = T.createAliasEditor(document, { readWritingStorage, writeWritingStorage, announce });
   let ownTemplates = [];
-  let getCompletionMacros = () => [];
-  let getConfigMacros = () => [];
-  let setConfigMacros = () => {};
-  let refreshTemplates = () => {};
-  let specialCompletions = () => null;
-  let acceptSpecialCompletion = () => false;
   let snippetSession = null;
-  const suggestions = T.createSuggestionList(document, {blockContent, announce, acceptAssist, onEmpty: () => closeAssistMenu()});
-  const {open: openAssistMenu, select: selectAssist} = suggestions;
-  closeAssistMenu = suggestions.close;
+  const suggestions = T.createSuggestionList(document, {blockContent, announce, acceptAssist});
+  const {open: openAssistMenu, select: selectAssist, close: closeAssistMenu} = suggestions;
+  const sources = T.createWritingSources({
+    slashActive: () => slashSession, templates: () => [...T.BUILTIN_TEMPLATES, ...ownTemplates],
+    references: () => references, targets: () => [...blockTargets.values()], macros: () => macros, usage: () => usage, now: Date.now,
+  });
   function writingMode() { return T.mathContextAt(blockContent.value, blockContent.selectionStart, $("#block-type").value); }
   function updateAssistMenu(event) {
     if (T.isApplyingFieldEdit()) return;
     if (event.isComposing || event.inputType !== "insertText" || event.data?.length !== 1) { closeAssistMenu(); return; }
-    const current = fieldState(), mode = writingMode();
-    if (mode === "comment") { closeAssistMenu(); return; }
-    const special = specialCompletions(current, event);
-    if (special) { openAssistMenu(special.entries, special.token, mode); return; }
-    const token = T.completionToken(current);
-    if (!token) { closeAssistMenu(); return; }
-    if (openDocumentSuggestions(current, mode, token)) return;
-    const entries = T.completionEntries(getCompletionMacros()).filter(e => (e.kind === "environment") === (token.kind === "environment"));
-    openAssistMenu(T.rankCompletions(token.query, entries, usage, Date.now(), mode), token, mode);
+    const found = sources.find(fieldState(), event, writingMode());
+    if (found) openAssistMenu(found.entries, found.token);
+    else closeAssistMenu();
   }
-  function openDocumentSuggestions(current = fieldState(), mode = writingMode(), token = T.completionToken(current)) {
-    if (!["reference", "citation"].includes(token?.kind) || mode === "comment") return false;
-    const entries = token.kind === "citation" ? T.citationOptions(references) :
-      T.referenceOptions([...blockTargets.values()], token, current.value, mode);
-    openAssistMenu(T.rankCompletions(token.query, entries, usage, Date.now(), mode), token, mode);
-    return true;
+  function openDocumentSuggestions() {
+    const found = sources.find(fieldState(), null, writingMode(), "document");
+    if (found) openAssistMenu(found.entries, found.token);
   }
   function insertWritingSnippet(source, start, end, wrapMath) {
     const current = fieldState();
@@ -1182,12 +1168,14 @@
   }
   function acceptAssist(index = suggestions.state?.index) {
     if (!suggestions.state) return;
-    const { entries, token, mode } = suggestions.state, entry = entries[index];
+    const { entries, token } = suggestions.state, entry = entries[index];
+    const edit = sources.accept(entry, token);
     closeAssistMenu();
-    if (acceptSpecialCompletion(entry, token)) return;
-    insertWritingSnippet(entry.insert, token.start, token.end, mode === "text" && entry.mode === "math");
-    if (token.kind === "command") openDocumentSuggestions();
+    if (!edit) return;
     noteUsage(entry.key);
+    if (edit.kind !== "snippet") { applySlashChoice(edit); return; }
+    insertWritingSnippet(edit.source, edit.start, edit.end, edit.wrapMath);
+    if (edit.openDocument) openDocumentSuggestions();
   }
   function expandAlias(current) {
     const mode = writingMode(), found = T.aliasAt(current, aliasEditor.read(), mode);
@@ -1242,7 +1230,7 @@
       writeWritingStorage("tex-notes:prefs:v1", prefs);
       $("#radial-vibration").checked = prefs.vibration; $("#auto-pair").checked = prefs.autoPair;
     } },
-    macros: { read: () => getConfigMacros(), apply: (value, defaults) => setConfigMacros(value, defaults) },
+    macros: { read: () => defaultMacros, apply: setConfigMacros },
     references: { read: () => T.normalizeReferences(courseReferences), apply: value => storeCourseReferences(value) },
   }, announce);
   /* --- fin [F] --- */
@@ -1257,31 +1245,22 @@
   if (Array.isArray(storedTemplates)) {
     for (const template of storedTemplates) if (!T.validateTemplate(template, [...T.BUILTIN_TEMPLATES, ...ownTemplates]).length) ownTemplates.push(template);
   }
-  const closeCompletionMenu = closeAssistMenu;
-  closeAssistMenu = () => { slashSession = false; closeCompletionMenu(); };
+  suggestions.onClose(() => { slashSession = false; });
   blockContent.addEventListener("beforeinput", (event) => {
     if (!T.isApplyingFieldEdit() && !event.isComposing && event.inputType === "insertText" && event.data === "/" && !blockContent.value) slashSession = true;
   });
-  specialCompletions = (current) => {
-    if (!slashSession) return null;
-    const result = T.slashCompletions(current, [...T.BUILTIN_TEMPLATES, ...ownTemplates]);
-    if (!result || !result.entries.length) { closeAssistMenu(); return { entries: [], token: { kind: "slash" } }; }
-    return result;
-  };
-  acceptSpecialCompletion = (entry, token) => {
+  function applySlashChoice(entry) {
     if (entry.kind === "template") {
       const target = editorTarget();
       templateSession = { template: entry.template, index: 0, basePath: target.editing.length ? target.editing.slice(0, -1) : target.parent, paths: [] };
-      noteUsage(entry.key); loadTemplateStep(); return true;
+      loadTemplateStep(); return;
     }
-    if (entry.kind !== "type") return false;
     selectBlockType(entry.typeId);
-    if (token.title !== undefined) $("#block-title").value = token.title;
+    if (entry.title !== undefined) $("#block-title").value = entry.title;
     applyAssist({ value: "", selectionStart: 0, selectionEnd: 0 });
-    snippetSession = null; pendingPairs = []; renderEditorPreview(); focusBlockContent(); noteUsage(entry.key);
-    announce(`Tipo: ${blockLabel(entry.typeId)}.${token.title ? ` Título: ${token.title}.` : ""}`);
-    return true;
-  };
+    snippetSession = null; pendingPairs = []; renderEditorPreview(); focusBlockContent();
+    announce(`Tipo: ${blockLabel(entry.typeId)}.${entry.title ? ` Título: ${entry.title}.` : ""}`);
+  }
   function renderTemplateProgress() {
     const progress = $("#template-progress");
     progress.hidden = !templateSession;
@@ -1328,7 +1307,7 @@
     $("#template-name").value = block.title || blockLabel(block.type); $("#template-trigger").value = ""; $("#template-error").textContent = "";
     templateDialog.showModal();
   }
-  refreshTemplates = () => {
+  function refreshTemplates() {
     $("#own-template-list").replaceChildren(...ownTemplates.map((template, index) => {
       const item = document.createElement("li"), rename = document.createElement("button"), remove = document.createElement("button");
       rename.type = remove.type = "button"; rename.textContent = "Renombrar plantilla"; remove.textContent = "Borrar plantilla";
@@ -1337,7 +1316,7 @@
       remove.addEventListener("click", () => { ownTemplates.splice(index, 1); writeWritingStorage("tex-notes:templates:v1", ownTemplates); refreshTemplates(); $("#writing-preferences > summary").focus(); announce("Plantilla borrada."); });
       item.append(`${template.name} · /${template.trigger} `, rename, remove); return item;
     }));
-  };
+  }
   $("#save-template-cancel").addEventListener("click", () => templateDialog.close());
   $("#save-template-form").addEventListener("submit", (event) => {
     event.preventDefault();
@@ -1361,12 +1340,10 @@
   }
   const existingSnapshot = [STORAGE_KEY, LEGACY_STORAGE_KEY, "tex-notes:autosave:v1"].some(key => normalizeDraft(readWritingStorage(key, null)));
   if (!existingSnapshot) macros = defaultMacros.map(m => ({ ...m }));
-  getCompletionMacros = () => macros;
-  getConfigMacros = () => defaultMacros;
-  setConfigMacros = (next, applyDefaults = true) => {
+  function setConfigMacros(next, applyDefaults = true) {
     defaultMacros = next.map(m => ({ ...m })); writeWritingStorage("tex-notes:macros-default:v1", defaultMacros);
     if (applyDefaults && !blocks.length && !blockContent.value.trim() && !$("#block-title").value.trim() && !$("#note-title").value.trim()) setDocumentMacros(defaultMacros);
-  };
+  }
   function setDocumentMacros(next, draw = true) {
     if (draw) rememberChange();
     macros = next.map(m => ({ ...m })); previewVersion++; badgedBlocks = null;
@@ -1551,7 +1528,7 @@
   const coarsePointer = global.matchMedia("(pointer: coarse)");
   const thumb = T.createThumbBar(document, {
     blockContent, symbolBoard, symbolDetails, symbolSearch, coarsePointer, announce, returnToSymbolOrigin, vibration: () => prefs.vibration,
-    ensureSymbolOrigin: () => { symbolOrigin ??= captureSymbolOrigin(blockContent); }, closeAssistMenu: () => closeAssistMenu(),
+    ensureSymbolOrigin: () => { symbolOrigin ??= captureSymbolOrigin(blockContent); }, closeAssistMenu,
     fieldState, getListIndex: () => suggestions.state?.index, selectAssist, getSnippet: () => snippetSession,
     setSnippet: next => { snippetSession = next; },
   });
@@ -1570,14 +1547,14 @@
     if (action.type === "action") T.runAction(action.id, { ...from, value: action.args?.[0] }, from);
   }
   const radial = T.createRadialController(document, {
-    blockContent, imagePath, blockEditor, closeAssistMenu: () => closeAssistMenu(), closeSymbolSheet,
+    blockContent, imagePath, blockEditor, closeAssistMenu, closeSymbolSheet,
     getBlock: path => blockAtPath(blocks, path), loadBlockEditor, writingMode,
     resolveMenu: menuEditor.resolve, cardState: path => T.blockActionState(blocks, path, Boolean(tray)), getScopeMode: thumb.getScopeMode, captureSymbolOrigin, applyRadialAction, announce, vibration: () => prefs.vibration,
   });
 
   T.registerActionHandlers(T.createActionBindings(document, {
     radial, openMove, saveBlockTemplate, pasteBlock, handleBlockAction, editorTarget, getBlock: path => blockAtPath(blocks, path), announce, describeBlock,
-    closeAssistMenu: () => closeAssistMenu(), closeSymbolSheet, commitBlock, thumbStep, toggleScope, toggleSymbols,
+    closeAssistMenu, closeSymbolSheet, commitBlock, thumbStep, toggleScope, toggleSymbols,
     shiftListSelection, putSnippet: putRadialSnippet, travelStructure, resetBlockEditor, selectBlockType,
     focusBlockContent, blockForm, goTo, openSymbolSearch, selectSymbolCategory,
     returnToSymbolOrigin, updateSymbolSearch, focusSymbolAt,

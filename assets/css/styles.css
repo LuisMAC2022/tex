@@ -374,3 +374,6 @@ summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 #slice-tools { margin-top: 1rem; }
 #slice-dialog :is(button, select), #personal-menus :is(button, select) { min-height: 44px; }
 #slice-preview { overflow-x: auto; padding: .25rem; }
+
+#move-block-destination[size]:not([size="1"]) { max-height: min(14rem, 36dvh); overflow-y: auto; overscroll-behavior: contain; }
+#move-block-destination[size]:not([size="1"]) option { min-height: 44px; padding: .6rem .4rem; }

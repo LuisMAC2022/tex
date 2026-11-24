@@ -239,6 +239,13 @@
 - copiar y pegar usan la bandeja y el foco pasa a la copia
 - eliminar un padre pide confirmación, mueve el foco y permite deshacer y rehacer
 
+## `tests/interfaz-listas-tactiles.test.js` — 4 pruebas
+
+- la lista de barra diagonal se desplaza con el dedo y se recorre con la barra
+- la lista de referencias se desplaza con el dedo y se recorre con la barra
+- la lista de citas se desplaza con el dedo y se recorre con la barra
+- Mover bloque permite recorrer destinos con el dedo y trasladar al elegido
+
 ## `tests/interfaz-menus-personales.test.js` — 3 pruebas
 
 - un anillo de fórmula, Mi botón y el intercambio conservan las posiciones
@@ -379,6 +386,11 @@
 - Ctrl+Intro incorpora bloques y en macOS usa Meta sin confundir AltGr
 - Menú y Mayús+F10 se reservan al campo Contenido
 
+## `tests/suggestion-sources.test.js` — 2 pruebas
+
+- la prioridad y la aceptación son de la misma fuente
+- barra diagonal, referencias, citas, comandos y entornos reconocen sus tokens
+
 ## `tests/symbols.test.js` — 21 pruebas
 
 - inserta al principio, en medio y al final del contenido
@@ -436,4 +448,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-300 pruebas con `node:test` más la comprobación estructural.
+306 pruebas con `node:test` más la comprobación estructural.

@@ -1,13 +1,15 @@
 (function (T) {
   "use strict";
-  T.createSuggestionList = function (document, { blockContent, announce, acceptAssist, onEmpty }) {
+  T.createSuggestionList = function (document, { blockContent, announce, acceptAssist }) {
     const global = document.defaultView, $ = selector => document.querySelector(selector);
     const events = new AbortController(), options = {signal:events.signal};
+    const closeListeners = new Set();
     let assistState = null;
     const assistList = $("#assist-list");
     function close() {
       assistState = null; assistList.hidden = true; assistList.replaceChildren();
       for (const name of ["aria-autocomplete", "aria-controls", "aria-activedescendant"]) blockContent.removeAttribute(name);
+      for (const callback of closeListeners) callback();
     }
     function positionAssistMenu() {
       if (!assistState) return;
@@ -45,10 +47,10 @@
       active.scrollIntoView({ block: "nearest" });
       if (speak) announce(`${assistState.entries[assistState.index].label}. ${assistState.index + 1} de ${assistState.entries.length}.`);
     }
-    function openAssistMenu(entries, token, mode) {
-      if (!entries.length) { onEmpty(); return; }
+    function openAssistMenu(entries, token) {
+      if (!entries.length) { close(); return; }
       const opened = !assistState;
-      assistState = { entries, token: { ...token, cursor: blockContent.selectionStart }, mode, index: 0 };
+      assistState = { entries, token: { ...token, cursor: blockContent.selectionStart }, index: 0 };
       assistList.replaceChildren(...entries.map((entry, i) => {
         const option = document.createElement("li");
         option.id = `assist-option-${i}`; option.setAttribute("role", "option");
@@ -71,6 +73,7 @@
     global.visualViewport?.addEventListener("resize", positionAssistMenu, options);
     document.addEventListener("scroll", (event) => { if (event.target !== assistList) positionAssistMenu(); }, { ...options, capture: true });
     return { get state() { return assistState; }, open: openAssistMenu, select: selectAssist, close,
-      dispose() { events.abort(); close(); } };
+      onClose(callback) { closeListeners.add(callback); return () => closeListeners.delete(callback); },
+      dispose() { events.abort(); close(); closeListeners.clear(); } };
   };
 })(globalThis.TexNotes);

@@ -572,3 +572,7 @@ Abre **Más → Preferencias de escritura → Mis menús**. Elige un contexto co
 Puedes insertar un fragmento con huecos, buscar un símbolo, escoger una acción o crear un submenú. En **Submenú** también puedes enlazar otro anillo. El aviso de vista previa permite guardar comandos propios que KaTeX desconoce. Guarda la posición y elige un anillo o acción en **Asignar Mi botón**. Para cambiar el orden, abre la posición y usa **Intercambiar con…**. Con un puntero también puedes arrastrarla sobre su destino. **Restaurar esta posición** recupera el sector original. **Restaurar el menú** devuelve el contexto a su disposición inicial.
 
 Los anillos se incluyen en **Exportar configuración**. Las posiciones se conservan al utilizar un anillo o trasladarlo a otro navegador.
+
+### Recorrer una lista al escribir
+
+Al escribir `/`, `\`, `\ref{` o `\citep{`, desliza el dedo por las opciones. También puedes usar ◀ y ▶, o las flechas del teclado. Tocar una opción o pulsar Intro la acepta. El centro ≡ o Escape cierra la lista y deja el cursor en Contenido. En **Estructura → ⋯ → Mover…**, recorre los destinos con el dedo o las flechas, elige uno y pulsa **Mover bloque**.
