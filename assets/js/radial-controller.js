@@ -61,7 +61,9 @@
         radialView.hide(); clearRadialPress();
         if (!model) return;
         focusWritingOrigin(model.originField);
-        if (radialState.action) applyRadialAction(radialState.action, { ...model.target, context: model.context });
+        if (radialState.action?.type === "ring") {
+          openRadial({ ...model.target, ringId: radialState.action.id }, model.origin, "tap", focus, model.origin.bar);
+        } else if (radialState.action) applyRadialAction(radialState.action, { ...model.target, context: model.context });
         else if (radialState.cancelled) announce("Menú cerrado.");
         return;
       }
@@ -91,7 +93,9 @@
       const isCard = context === "card";
       const field = target.source === "global" && target.button ? target.button : isCard ? document.querySelector('article[data-path="' + T.pathToKey(target.path) + '"] [data-action="edit"]') : kind === "image" ? imagePath : blockContent;
       const summary = isCard ? deps.cardState(target.path) : {};
-      const slices = target.slices || T.slicesFor(context, type, summary), area = viewport(), origin = { ...point, mode, bar, full: isCard };
+      const menu = target.slices ? target : deps.resolveMenu(context, type, summary, target.ringId);
+      if (!target.slices) target = { ...target, name: menu.name };
+      const slices = menu.slices, area = viewport(), origin = { ...point, mode, bar, full: isCard };
       const scrollPositions = radialScrollPositions(press?.node || document.elementFromPoint?.(point.x, point.y));
       radialModel = { target, context, origin, scrollPositions, originField: captureSymbolOrigin(field), ...T.radialLayout(slices, origin, area) };
       radialDispatch({ type: "open", mode, point, keyboard }, keyboard);
@@ -101,6 +105,10 @@
       const rect = button.getBoundingClientRect();
       openRadial(target, { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }, "tap", keyboard, button === $("#thumb-menu"));
     }
+    const personal = $("#thumb-personal");
+    listen(personal, "click", e => {
+      if (personal.dataset.ring) openRadialAtButton(personal, { source: "editor", ringId: personal.dataset.ring }, !T.isPointerClick(e));
+    });
     const chip = $("#type-chip");
     listen(chip, "pointerdown", event => event.preventDefault());
     listen(chip, "click", event => openRadialAtButton(chip, radialTarget(chip), !T.isPointerClick(event)));

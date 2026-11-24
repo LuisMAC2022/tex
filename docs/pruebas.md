@@ -239,6 +239,12 @@
 - copiar y pegar usan la bandeja y el foco pasa a la copia
 - eliminar un padre pide confirmación, mueve el foco y permite deshacer y rehacer
 
+## `tests/interfaz-menus-personales.test.js` — 3 pruebas
+
+- un anillo de fórmula, Mi botón y el intercambio conservan las posiciones
+- el editor intercambia posiciones sin arrastrar y permite restaurar el menú
+- el submenú admite un enlace a otro anillo y el aviso de KaTeX permite guardar
+
 ## `tests/interfaz-menus.test.js` — 5 pruebas
 
 - la barra abre texto, fórmula e imagen y Menú general abre acciones generales
@@ -321,6 +327,12 @@
 - los tipos matemáticos usan todo el contenido y derivan displayMode de la tabla
 - todos los kinds no matemáticos extraen tramos delimitados
 - analyzeContent clasifica resultados y fallos del renderizador inyectado
+
+## `tests/menu-config.test.js` — 3 pruebas
+
+- la resolución mantiene las ocho posiciones e incorpora los sectores predeterminados
+- cada error identifica su campo y los ciclos incluyen enlaces de submenú
+- un anillo independiente conserva enlaces, huecos y submenús en el archivo portátil
 
 ## `tests/pdflatex.test.js` — 4 pruebas
 
@@ -424,4 +436,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-294 pruebas con `node:test` más la comprobación estructural.
+300 pruebas con `node:test` más la comprobación estructural.

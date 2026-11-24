@@ -362,3 +362,15 @@ summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
   [role="tabpanel"] .structure-panel { min-width: 0; }
   [role="tabpanel"][hidden] { display: none; }
 }
+
+#menu-diagram { position: relative; width: 232px; height: 232px; max-width: 100%; margin: .5rem auto; }
+#menu-diagram svg { width: 100%; height: 100%; }
+#menu-diagram path { fill: var(--surface); stroke: currentColor; stroke-width: 1; }
+#menu-diagram button { position: absolute; transform: translate(-50%, -50%); width: 44px; height: 44px; min-width: 44px; padding: 0; }
+#slice-dialog { width: min(34rem, 94vw); max-height: 85dvh; overflow-y: auto; }
+#slice-tabs, #slice-children { display: flex; flex-wrap: wrap; gap: .25rem; }
+#slice-dialog [hidden] { display: none; }
+#slice-tabs [aria-selected="true"] { font-weight: bold; text-decoration: underline; }
+#slice-tools { margin-top: 1rem; }
+#slice-dialog :is(button, select), #personal-menus :is(button, select) { min-height: 44px; }
+#slice-preview { overflow-x: auto; padding: .25rem; }

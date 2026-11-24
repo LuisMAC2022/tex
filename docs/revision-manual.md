@@ -142,3 +142,7 @@ Con TalkBack, usa ⋯ en el primero y el último de varios hermanos. Comprueba l
 ### Paneles móviles
 
 Cambia de pestaña con Gboard abierto y con TalkBack. Después de editar una tarjeta o seguir un aviso desde Documento, comprueba el foco y la posición del campo sobre el teclado. Revisa el enlace de salto y el retorno a la misma posición al alternar paneles.
+
+### N5 · Mis menús
+
+En Android con TalkBack, recorrer las ocho posiciones por nombre y las cinco pestañas de una posición. Probar Intercambiar con… con una mano y teclado físico. Exportar la configuración del teléfono e importarla en el portátil. Comprobar el rótulo y los dos primeros sectores del anillo.

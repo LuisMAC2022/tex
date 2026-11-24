@@ -564,3 +564,11 @@ Usa Escribir para editar, Estructura para ordenar los bloques, Documento para lo
 La vista matemática empieza plegada en el teléfono. Toca su resumen para abrirla. La aplicación recuerda la elección en ese navegador. Al salir de Documento, los datos se pliegan si ya tienen título.
 
 La configuración portátil v2 acepta también archivos v1. Al importar se comprueba cada parte antes de confirmar. Las partes ausentes conservan los ajustes del dispositivo y la aplicación avisa si omite una parte desconocida.
+
+### Diseñar un menú personal
+
+Abre **Más → Preferencias de escritura → Mis menús**. Elige un contexto como Fórmula para sustituir su anillo, o **Nuevo anillo** para crear uno independiente. Ponle nombre y toca una de las ocho posiciones del dibujo. Con teclado, llega a la posición con Tab e Intro, y recorre las pestañas de la hoja con las flechas.
+
+Puedes insertar un fragmento con huecos, buscar un símbolo, escoger una acción o crear un submenú. En **Submenú** también puedes enlazar otro anillo. El aviso de vista previa permite guardar comandos propios que KaTeX desconoce. Guarda la posición y elige un anillo o acción en **Asignar Mi botón**. Para cambiar el orden, abre la posición y usa **Intercambiar con…**. Con un puntero también puedes arrastrarla sobre su destino. **Restaurar esta posición** recupera el sector original. **Restaurar el menú** devuelve el contexto a su disposición inicial.
+
+Los anillos se incluyen en **Exportar configuración**. Las posiciones se conservan al utilizar un anillo o trasladarlo a otro navegador.

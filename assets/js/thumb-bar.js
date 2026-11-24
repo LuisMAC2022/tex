@@ -183,7 +183,7 @@
     });
     listen(thumbBar, "click", event => {
       const button = event.target.closest("[data-action-id]");
-      if (button && button.id !== "thumb-menu") T.runAction(button.dataset.actionId, {
+      if (button && !button.dataset.ring && button.id !== "thumb-menu") T.runAction(button.dataset.actionId, {
         keepFieldFocus: true, keyboard: !T.isPointerClick(event), button,
       }, { source: "editor" });
     });

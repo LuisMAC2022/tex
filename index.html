@@ -288,6 +288,17 @@
             <summary>Preferencias de escritura</summary>
             <label class="check-field"><input id="auto-pair" type="checkbox" checked> Cerrar automáticamente llaves y delimitadores</label>
             <label class="check-field"><input id="radial-vibration" type="checkbox" checked> Vibración</label>
+            <details id="personal-menus">
+              <summary>Mis menús</summary>
+              <p class="field"><label for="menu-choice">Anillo</label><select id="menu-choice"></select></p>
+              <p class="field"><label for="menu-name">Nombre del anillo</label><input id="menu-name" type="text"></p>
+              <p class="field"><label for="menu-context">Sustituye al menú</label><select id="menu-context"></select></p>
+              <button type="button" id="menu-save">Guardar anillo</button>
+              <div id="menu-diagram" role="group" aria-label="Editar las ocho posiciones"></div>
+              <button type="button" id="menu-reset" class="secondary">Restaurar el menú</button>
+              <p class="field"><label for="menu-button">Asignar Mi botón</label><select id="menu-button"></select></p>
+              <p id="menu-error" role="status"></p>
+            </details>
             <h3>Mis plantillas</h3><ul id="own-template-list"></ul>
             <h3>Mis alias</h3>
             <div class="table-scroll"><table><thead><tr><th>Disparador</th><th>Expansión</th><th>Modo</th><th>Acciones</th></tr></thead><tbody id="alias-list"></tbody></table></div>
@@ -316,6 +327,29 @@
           <ul id="keyboard-shortcuts"></ul>
         </details>
       </form>
+      <dialog id="slice-dialog" aria-labelledby="slice-heading">
+        <h2 id="slice-heading">Editar posición</h2>
+        <div id="slice-tabs" role="tablist" aria-label="Clase de sector"></div>
+        <div id="slice-panel" role="tabpanel">
+          <p class="field" data-kinds="snippet submenu"><label for="slice-label">Rótulo</label><input type="text" id="slice-label"></p>
+          <p class="field" data-kinds="snippet submenu"><label for="slice-icon">Icono</label><input type="text" id="slice-icon"></p>
+          <div data-kinds="snippet">
+            <label for="slice-snippet">Fragmento con huecos #0 a #9</label><textarea id="slice-snippet" rows="3" spellcheck="false"></textarea>
+            <div id="slice-preview" aria-label="Vista previa del fragmento"></div><p id="slice-warning" role="status"></p>
+          </div>
+          <div data-kinds="symbol"><label for="slice-search">Buscar símbolo</label><input type="search" id="slice-search">
+            <label for="slice-symbol">Símbolo del tablero</label><select id="slice-symbol"></select></div>
+          <p class="field" data-kinds="action"><label for="slice-action">Acción del sector</label><select id="slice-action"></select></p>
+          <div data-kinds="submenu"><label for="slice-link">Abrir al elegir este sector</label><select id="slice-link"></select>
+            <div id="slice-children" role="group" aria-label="Posiciones del submenú"></div></div>
+          <p data-kinds="empty">La posición recupera su valor predeterminado o queda vacía.</p>
+        </div>
+        <p id="slice-error" role="status"></p>
+        <button id="slice-save" type="button">Guardar posición</button> <button id="slice-cancel" type="button" class="secondary">Cancelar</button>
+        <div id="slice-tools"><label for="slice-swap">Intercambiar con…</label><select id="slice-swap"></select>
+          <button id="slice-exchange" type="button" class="secondary">Intercambiar</button>
+          <button id="slice-reset" type="button" class="secondary">Restaurar esta posición</button></div>
+      </dialog>
       <dialog id="move-block-dialog" aria-labelledby="move-block-heading" aria-describedby="move-block-subject">
         <form id="move-block-form" method="dialog">
           <h2 id="move-block-heading">Mover bloque</h2>
@@ -377,7 +411,8 @@
     <script src="assets/js/versions.js"></script>
     <script src="assets/js/version-storage.js"></script>
     <script src="assets/js/selection-scope.js"></script>
-    <script src="assets/js/radial-controller.js"></script>
+    <script src="assets/js/menu-config.js"></script>
+  <script src="assets/js/radial-controller.js"></script>
   <script src="assets/js/block-actions.js"></script>
   <script src="assets/js/action-bindings.js"></script>
   <script src="assets/js/thumb-bar.js"></script>
@@ -386,6 +421,7 @@
   <script src="assets/js/mobile-panels.js"></script>
   <script src="assets/js/portable-config.js"></script>
   <script src="assets/js/alias-editor.js"></script>
+  <script src="assets/js/menu-editor.js"></script>
   <script src="assets/js/app.js"></script>
   </body>
 </html>

@@ -142,6 +142,23 @@
     return "M " + coord(a, ring.outer) + " A " + ring.outer + " " + ring.outer + " 0 " + large + " 1 " + coord(b, ring.outer)
       + " L " + coord(b, ring.inner) + " A " + ring.inner + " " + ring.inner + " 0 " + large + " 0 " + coord(a, ring.inner) + " Z";
   }
+  function drawStaticRing(doc, container, items) {
+    const size = 232, middle = size / 2, ns = "http://www.w3.org/2000/svg";
+    const ring = fitMenu({ x: middle, y: middle, full: true }, { width: size, height: size }, items.length);
+    const art = doc.createElementNS(ns, "svg");
+    art.setAttribute("viewBox", "0 0 " + size + " " + size); art.setAttribute("aria-hidden", "true");
+    container.replaceChildren(art);
+    items.forEach((item, i) => {
+      const path = doc.createElementNS(ns, "path");
+      path.setAttribute("d", arcPath(ring, i)); path.dataset.slot = i; art.append(path);
+      const point = pointAt(ring, centerAngle(ring, i), (ring.inner + ring.outer) / 2);
+      const button = doc.createElement("button"); button.type = "button"; button.dataset.slot = i;
+      button.textContent = item.icon; button.title = T.MENU_DIRECTIONS[i] + " · " + item.label;
+      button.setAttribute("aria-label", button.title); button.draggable = true;
+      button.style.left = (100 * point.x / size) + "%"; button.style.top = (100 * point.y / size) + "%";
+      container.append(button);
+    });
+  }
   // Chromium también emite clics táctiles con detail 0. Una activación
   // desde el teclado carece de puntero y debe poder llevar el foco al menú.
   function isPointerClick(event) {
@@ -204,5 +221,5 @@
       hide() { layer.hidden = true; lastRing = lastItems = null; } };
   }
   Object.assign(T, { RADIAL_HOLD: HOLD, RADIAL_SLOP: SLOP, LONG_PRESS_IN_FIELD, angleOf, centerAngle, sectorAt,
-    fitMenu, radialLayout, slicesFor, applyRadialSnippet, radialReduce, isPointerClick, createRadialView });
+    fitMenu, radialLayout, slicesFor, applyRadialSnippet, radialReduce, isPointerClick, drawStaticRing, createRadialView });
 })(globalThis.TexNotes);

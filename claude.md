@@ -280,3 +280,7 @@ Al repetir N4 durante la extracción siguiente se reprodujo una carrera entre to
 ## A3 — Configuración portátil por partes
 
 El archivo de configuración v2 describe la versión y los datos de cada parte. La prueba compara los valores migrados con un archivo v1 exportado desde la interfaz de la rama de partida. Chromium también verificó una importación parcial, el aviso por una parte desconocida y la descarga posterior. Pasaron las 294 pruebas. `app.js` pasó de 108 898 a 107 901 bytes y su presupuesto bajó a 108 000. El traslado de archivos entre un teléfono físico y un portátil queda para la revisión manual.
+
+## N5 — Menús personales
+
+Mis menús permite sustituir un contexto o enlazar un anillo independiente. La prueba táctil crea dos sectores, inserta el fragmento en una ecuación, abre el anillo desde Mi botón y vuelve a importar la configuración en una sesión nueva. Otros recorridos comprueban el intercambio sin arrastrar, la restauración, los submenús enlazados y el aviso de KaTeX. Los dos primeros recorridos fallaron antes de implementar el editor. Las 300 pruebas pasaron con Chromium. Los ocho sectores cumplen 44 px de grosor y de arco en el radio medio. `app.js` pasó de 107 901 a 105 160 bytes. El presupuesto bajó a 105 500. El alcance con una mano, TalkBack y el traslado físico del archivo se mantienen en la revisión manual.

@@ -1338,8 +1338,9 @@
   document.addEventListener("scroll", (event) => { if (event.target !== assistList) positionAssistMenu(); }, true);
   blockFieldHooks.push({ fill() { snippetSession = null; closeAssistMenu(); }, clear() { snippetSession = null; closeAssistMenu(); } });
 
+  const menuEditor = T.createMenuEditor(document, { readWritingStorage, writeWritingStorage, announce });
   const { portableConfig, applyPortableConfig } = T.createPortableConfig(document, {
-    aliases: aliasEditor,
+    menus: menuEditor, aliases: aliasEditor,
     templates: { read: () => ownTemplates, apply(value) {
       ownTemplates = value; writeWritingStorage("tex-notes:templates:v1", value); refreshTemplates();
     } },
@@ -1678,7 +1679,7 @@
   const radial = T.createRadialController(document, {
     blockContent, imagePath, blockEditor, closeAssistMenu: () => closeAssistMenu(), closeSymbolSheet,
     getBlock: path => blockAtPath(blocks, path), loadBlockEditor, writingMode,
-    cardState: path => T.blockActionState(blocks, path, Boolean(tray)), getScopeMode: thumb.getScopeMode, captureSymbolOrigin, applyRadialAction, announce, vibration: () => prefs.vibration,
+    resolveMenu: menuEditor.resolve, cardState: path => T.blockActionState(blocks, path, Boolean(tray)), getScopeMode: thumb.getScopeMode, captureSymbolOrigin, applyRadialAction, announce, vibration: () => prefs.vibration,
   });
 
   T.registerActionHandlers(T.createActionBindings(document, {
