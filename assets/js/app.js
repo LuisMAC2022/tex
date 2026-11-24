@@ -336,23 +336,7 @@
     // El catálogo sigue disponible si el navegador impide leer el historial.
   }
 
-  function symbolButton(symbol) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "symbol-button";
-    button.dataset.command = symbol.command;
-    button.dataset.symbolId = symbol.id;
-    button.tabIndex = -1;
-    button.setAttribute("aria-label", symbolAccessibleName(symbol));
-    // La longitud del glifo elige su tamaño dentro de una casilla fija.
-    button.dataset.glyphLength = String(Math.min([...symbol.symbol].length, 7));
-    const glyph = document.createElement("span");
-    glyph.className = "symbol-glyph";
-    glyph.textContent = symbol.symbol;
-    button.append(glyph);
-    return button;
-  }
-
+  const favorites = global.TexNotes.createSymbolFavorites(document, applySymbolFilter);
   function renderSymbolBoard() {
     for (const group of SYMBOL_BOARD_GROUPS) {
       const button = document.createElement("button");
@@ -380,12 +364,13 @@
     const query = symbolSearch.value.trim();
     const category = activeSymbolGroup === RECENT_SYMBOL_GROUP.id
       ? recentSymbols.map((id) => symbolCatalog.get(id))
-      : symbolsByGroup(activeSymbolGroup);
+      : favorites.category(activeSymbolGroup, symbolCatalog) ?? symbolsByGroup(activeSymbolGroup);
     const visible = query ? filterMathSymbols(query) : category;
     symbolGrid.replaceChildren(...visible.map((symbol, index) => {
       const item = document.createElement("li");
       item.setAttribute("role", "presentation");
-      const button = symbolButton(symbol);
+      const button = T.symbolButton(document, symbol);
+      favorites.decorate(button);
       if (index === 0) button.tabIndex = 0;
       item.append(button);
       return item;
@@ -584,7 +569,7 @@
   });
   symbolGrid.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-symbol-id]");
-    if (button) insertSymbol(button.dataset.symbolId);
+    if (button && !favorites.toggle(button)) insertSymbol(button.dataset.symbolId);
   });
 
   /* --- fin [A] --- */
@@ -712,11 +697,12 @@
     }
     $("#label-error").textContent = message;
     blockLabelField.setAttribute("aria-invalid", String(Boolean(message)));
-    if (message) { blockLabelField.focus(); announce(message); }
+    if (message) { $("#label-fields").open = true; blockLabelField.focus(); announce(message); }
     return !message;
   }
   function fillBlockLabel(block = {}) {
     blockLabelField.value = global.TexNotes.labelOf(block);
+    $("#label-fields").open = Boolean(blockLabelField.value);
     $("#label-error").textContent = "";
     blockLabelField.removeAttribute("aria-invalid");
   }
@@ -1500,7 +1486,7 @@
   }
   renderReferences();
 
-  const panels = T.createPanels(document, { metadata, imageType, announce, closeWriting() { closeAssistMenu(); closeSymbolSheet(); } });
+  const panels = T.createPanels(document, { metadata, imageType, announce, closeWriting() { closeAssistMenu(); closeSymbolSheet(); symbolOrigin = null; } });
   const { refresh: syncMetadataSummary, goTo, focusMetadata } = panels;
   // La fecha inicial es la de hoy; un borrador o una sesión recuperada la sustituyen.
   if (!$("#date").value) $("#date").value = global.TexNotes.localDateValue();
@@ -1564,46 +1550,21 @@
   $("#block-type").addEventListener("change", renderEditorPreview);
 
   /* --- Autoguardado separado del borrador explícito --- */
-  const AUTOSAVE_KEY = "tex-notes:autosave:v1";
-  let pendingSession = null;
-  let autosaveTimer;
-  let autosaveReady = false;
-  let backedUpSession = false;
-  let announcedStorageError = false;
-  try { const raw = JSON.parse(global.localStorage.getItem(AUTOSAVE_KEY)); const draft = normalizeDraft(raw); pendingSession = draft ? { ...raw, ...draft } : null; } catch { /* sin almacenamiento */ }
-  const hasSessionContent = global.TexNotes.sessionHasContent;
-  /* @decision DEC-019 ancla:e6a9b0a5 tramo:19
-   * El autoguardado no escribe sesiones vacías ni reemplaza el borrador elegido.
-   * Antes del primer reemplazo conserva la sesión anterior en una clave aparte.
-   */
-  function saveSession() {
-    if (!autosaveReady) return;
-    const type = $("#block-type").value;
-    const session = { version: DRAFT_VERSION, savedAt: new Date().toISOString(), ...state(), editor: {
-      type, title: $("#block-title").value, content: blockContent.value,
-      label: blockLabelField.value,
-      editingPath: editorTarget().editing, parentPath: editorTarget().parent,
-      image: blockFieldHooks.find((hook) => hook.appliesTo?.("image"))?.read("image"),
-    } };
-    if (!hasSessionContent(session)) return;
-    try {
-      if (!backedUpSession && hasSessionContent(pendingSession)) global.localStorage.setItem("tex-notes:autosave:previous", JSON.stringify(pendingSession));
-      global.localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(session));
-      backedUpSession = true;
-    } catch {
-      if (!announcedStorageError) { announce("No se pudo autoguardar la sesión; guarda o descarga tu trabajo."); announcedStorageError = true; }
-    }
-  }
-  function scheduleSessionSave() { global.clearTimeout(autosaveTimer); autosaveTimer = global.setTimeout(saveSession, 800); }
-  form.addEventListener("input", scheduleSessionSave);
-  form.addEventListener("change", scheduleSessionSave);
-  document.addEventListener("visibilitychange", () => { if (document.hidden) saveSession(); });
-  global.addEventListener("pagehide", saveSession);
+  const { session: autosave, hasSessionContent } = T;
+  let pendingSession = autosave.read(localStorage);
+  const { save: sessionSave, schedule: scheduleSessionSave } = autosave.bind(document, form, () => pendingSession, () => ({
+    version: DRAFT_VERSION, ...state(), editor: {
+      type: $("#block-type").value, title: $("#block-title").value, content: blockContent.value,
+      label: blockLabelField.value, editingPath: editorTarget().editing, parentPath: editorTarget().parent,
+      image: blockFieldHooks.find(hook => hook.appliesTo?.("image"))?.read("image"),
+    },
+  }));
+  function saveSession() { sessionSave(); }
   if (hasSessionContent(pendingSession) && normalizeDraft(pendingSession)) {
     $("#autosave-banner").hidden = false;
     const savedDate = new Date(pendingSession.savedAt);
     const date = Number.isFinite(savedDate.getTime()) ? savedDate.toLocaleString("es-MX") : "fecha desconocida";
-    $("#autosave-message").textContent = `Hay una sesión sin guardar del ${date} con ${countBlocks(pendingSession.blocks)} bloques.`;
+    $("#autosave-message").textContent = `Hay una sesión guardada en este navegador del ${date} con ${countBlocks(pendingSession.blocks)} bloques.`;
   }
   $("#recover-session").addEventListener("click", () => {
     const draft = normalizeDraft(pendingSession);
@@ -1621,13 +1582,12 @@
     for (const hook of blockFieldHooks) hook.fill?.({ ...(editor.image || {}), label: editor.label, type: $("#block-type").value });
     setEditorTarget(paths); renderBlocks(); renderEditorPreview(); focusBlockContent();
     $("#autosave-banner").hidden = true;
-    paintVersions(knownVersions); announce("Sesión recuperada, incluido el bloque a medio escribir.");
+    paintVersions(knownVersions); $("#session-status").textContent = "Sesión recuperada"; announce("Sesión recuperada, incluido el bloque a medio escribir.");
   });
   $("#discard-session").addEventListener("click", () => {
-    try { global.localStorage.removeItem(AUTOSAVE_KEY); } catch { /* la aplicación sigue disponible */ }
+    try { autosave.discard(localStorage); } catch { /* la aplicación sigue disponible */ }
     pendingSession = null; $("#autosave-banner").hidden = true; focusBlockContent(); announce("Sesión anterior descartada.");
   });
-  autosaveReady = true;
 
   function selectDocument(id) {
     documentId = id;
@@ -1656,7 +1616,7 @@
     if (!focusById("edit",targetId)) focusBlockContent();
     // Se persiste también la restauración de un estado vacío.
     if (!hasSessionContent(state())) {
-      try { localStorage.removeItem(AUTOSAVE_KEY); } catch { /* almacenamiento no disponible */ }
+      try { autosave.discard(localStorage); } catch { /* almacenamiento no disponible */ }
     }
   }
   function travelStructure(direction) {

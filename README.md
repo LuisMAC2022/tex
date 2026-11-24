@@ -2,6 +2,13 @@
 
 Aplicación web estática para consolidar apuntes de clase y exportarlos como un archivo LaTeX para compilar en Overleaf. El editor y las versiones del documento funcionan en el navegador, con KaTeX y sus fuentes incluidos en el sitio.
 
+El espacio de escritura incluye un modo de concentración, un esquema
+plegable con buscador, vista previa matemática y símbolos favoritos. En
+ventanas estrechas se organiza en pestañas. La aplicación es la copia
+maestra del documento. El proyecto JSON contiene la copia editable y el
+archivo .tex se genera para compilar.
+
+
 > Invariantes vigiladas: [`INVARIANTES.md`](INVARIANTES.md) · por qué de cada
 > decisión: [`decisiones/`](decisiones/) · reglas para agentes:
 > [`PROTOCOLO.md`](PROTOCOLO.md) · cómo se usa:

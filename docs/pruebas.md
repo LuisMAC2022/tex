@@ -237,6 +237,13 @@
 - las sugerencias de referencias y citas insertan los destinos del documento
 - Selección amplía y reduce el alcance y la hoja de símbolos devuelve el foco
 
+## `tests/interfaz-espacio.test.js` — 4 pruebas
+
+- el esquema localiza y edita un bloque entre cincuenta y recuerda su vista
+- plegar una rama conserva su estado y buscar un hijo muestra su ruta
+- el modo de concentración y los paneles estrechos conservan borrador y selección
+- una integral doble marcada como favorita se inserta desde la hoja táctil
+
 ## `tests/interfaz-estructura.test.js` — 4 pruebas
 
 - editar y añadir dentro sitúan el foco en el tipo y conservan el nivel de los hijos
@@ -446,13 +453,14 @@
 - la lista abierta tiene prioridad sobre el alcance y el cursor
 - el arrastre cuenta pasos completos con signo cada 28 píxeles
 
-## `tests/versions.test.js` — 5 pruebas
+## `tests/versions.test.js` — 6 pruebas
 
 - el historial limita cien pasos, restaura en ambas direcciones y descarta la rama rehecha
 - las diferencias por id abarcan posición, padre, opciones, lista, macros y líneas
 - la retención conserva las manuales y cuenta las automáticas por documento
 - las exportaciones se deduplican por contenido y la migración del borrador es idempotente
 - el proyecto valida, informa qué versiones omite y combina por id sin sobrescribir
+- el autoguardado distingue cambios pendientes, guardado correcto y error sin perder la copia previa
 
 ## `tests/check-site.mjs` — comprobación estructural
 
@@ -460,4 +468,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-312 pruebas con `node:test` más la comprobación estructural.
+317 pruebas con `node:test` más la comprobación estructural.

@@ -67,3 +67,37 @@ test("el proyecto valida, informa qué versiones omite y combina por id sin sobr
   assert.deepEqual(plain(T.validateProject({...project,versions:[{...v,createdAt:"2026"}]}).skipped),["v"]);
   for(const raw of ["{",null,{...project,version:7},{...project,current:{version:7}},{...project,current:{version:4,metadata:{},blocks:"texto",macros:[]}}]) assert.ok(T.validateProject(raw).error);
 });
+
+test("el autoguardado distingue cambios pendientes, guardado correcto y error sin perder la copia previa", () => {
+  const previous = { ...state("Anterior"), editor: { content: "Antes" } };
+  const current = { ...state("Actual"), editor: { content: "Ahora" } };
+  const status = { textContent: "" };
+  const items = new Map();
+  const form = new EventTarget();
+  const document = new EventTarget();
+  let pending;
+  let blocked = true;
+  document.querySelector = () => status;
+  document.defaultView = Object.assign(new EventTarget(), {
+    localStorage: {
+      setItem(key, value) {
+        if (blocked) throw new Error("Almacenamiento bloqueado");
+        items.set(key, value);
+      },
+      getItem: key => items.get(key),
+    },
+    setTimeout(callback) { pending = callback; },
+    clearTimeout() { pending = undefined; },
+  });
+  const { schedule } = T.session.bind(document, form, () => previous, () => current);
+  schedule();
+  assert.equal(status.textContent, "Cambios pendientes de guardar");
+  pending();
+  assert.equal(status.textContent, "No se pudo guardar la sesión en este navegador");
+  blocked = false;
+  schedule();
+  pending();
+  assert.equal(status.textContent, "Sesión guardada en este navegador");
+  assert.equal(T.session.read(document.defaultView.localStorage).editor.content, "Ahora");
+  assert.equal(JSON.parse(items.get("tex-notes:autosave:previous")).editor.content, "Antes");
+});

@@ -55,10 +55,9 @@ es siempre el mismo y va en una sola dirección:
 
 Tres consecuencias que conviene saber desde el principio:
 
-- **Overleaf manda.** Si corriges algo allí, la corrección **no vuelve** a esta
-  aplicación. No existe forma de reimportar. Así que decide pronto dónde vas a
-  seguir trabajando: aquí mientras construyes la estructura, y en Overleaf a partir
-  de la primera corrección seria.
+- **La aplicación es la copia maestra.** Corrige aquí los apuntes y vuelve a
+  generar el archivo para compilarlo en Overleaf. Exporta el proyecto JSON
+  para conservar o trasladar una copia editable.
 - **Nada sale de tu navegador.** No hay servidor, no hay cuenta, no se envía nada a
   ninguna parte. Funciona sin internet.
 - **Y por eso mismo, tu trabajo vive solo en este navegador y en este aparato.** Si
@@ -396,8 +395,7 @@ aplicación en un proyecto en blanco, en vez de subir un archivo.
 ### Si nada de esto encaja
 
 Fíjate en el **número de línea** que da Overleaf y mira esa línea en el editor: casi
-siempre el problema está ahí o en la anterior. Y recuerda que a partir de la primera
-corrección seria conviene seguir en Overleaf, no aquí.
+siempre el problema está ahí o en la anterior. Corrige el bloque de origen en la aplicación y vuelve a generar el archivo.
 
 ## Captura continua y recuperación
 
@@ -580,3 +578,28 @@ Al escribir `/`, `\`, `\ref{` o `\citep{`, desliza el dedo por las opciones. Tam
 ### Consultar un fallo en el teléfono
 
 El primer error de la sesión muestra **Copiar informe**. También puedes abrir **Más → Informe de errores** para leer o copiar los veinte errores más recientes de este navegador. Cada entrada indica la fecha, el panel o menú abierto, el mensaje y hasta tres líneas de la pila. **Borrar informe** elimina las entradas de este navegador. El informe solo sale del dispositivo si lo copias y decides compartirlo.
+
+## Espacio de trabajo
+
+Empieza a escribir en «Contenido». En escritorio, «Documento» lleva al título
+de la nota y «Exportación» lleva a «Generar documento» y a la comprobación previa.
+Abre «Etiqueta del bloque» para editar una etiqueta o proponerla desde el título.
+«Concentración» amplía el editor y oculta controles secundarios. En pantallas
+amplias, alterna el panel «Estructura» y abre «Revisión» para ver las fórmulas
+del bloque con KaTeX. En ventanas estrechas, las pestañas se adaptan al ancho
+aunque se use un ratón.
+
+En «Estructura actual», el selector «Vista» alterna entre «Esquema» y «Tarjetas».
+«Buscar bloques» filtra por tipo, título y contenido. Cada resultado conserva
+la ruta de sus antecesores. Usa los controles de plegado de las ramas para
+ocultar o mostrar sus descendientes. La vista y los estados de las ramas se
+recuerdan en este navegador.
+
+En «Símbolos matemáticos», activa «Editar favoritos» y elige los símbolos que
+quieras guardar. Desactívalo para volver a insertar símbolos y abre **Favoritos**
+para acceder a los seleccionados. **Recientes** muestra las últimas inserciones.
+
+El estado del editor indica cuándo hay cambios pendientes, cuándo la sesión
+se guardó en este navegador y cuándo falló el guardado. «Guardar versión»
+crea una instantánea explícita. El proyecto JSON conserva el documento
+editable y el archivo .tex sirve para compilar.

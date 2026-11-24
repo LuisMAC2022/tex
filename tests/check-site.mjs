@@ -83,7 +83,7 @@ for (const type of BLOCK_TYPES) {
 }
 
 // Tablero de símbolos: plegable, buscable y con un contenedor propio para los grupos.
-assert.match(html, /<details id="symbol-details" open>\s*<summary><h3 id="simbolos-heading">Símbolos matemáticos<\/h3><\/summary>/, "El muelle debe abrir por defecto y tener encabezado");
+assert.match(html, /<details id="symbol-details">\s*<summary><h3 id="simbolos-heading">Símbolos matemáticos<\/h3><\/summary>/, "El tablero debe empezar plegado y tener encabezado");
 assert.match(html, /<input id="symbol-search"[^>]+type="search"[^>]+aria-describedby="symbol-search-help">/, "Falta la búsqueda de símbolos descrita");
 assert.match(html, /<p id="symbol-results" class="status" role="status">/, "Falta la región de resultados de la búsqueda");
 assert(ids.has("symbol-groups"), "Falta el contenedor de grupos de símbolos");

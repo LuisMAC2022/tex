@@ -21,7 +21,11 @@ async function probarSugerencias(t,command) {
   }
   if(command==="\\ref{"){
     for(let i=0;i<8;i++){
-      await p.selectOption("#block-type","equation");await p.fill("#block-label","ec:prueba"+i);await p.fill("#block-content",String(i));await p.tap("#thumb-add");
+      await p.selectOption("#block-type", "equation");
+      await p.locator("#label-fields > summary").tap();
+      await p.fill("#block-label", "ec:prueba" + i);
+      await p.fill("#block-content", String(i));
+      await p.tap("#thumb-add");
     }
     await p.selectOption("#block-type","text");
   }

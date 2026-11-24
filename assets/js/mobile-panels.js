@@ -7,12 +7,51 @@
   };
   T.createPanels = function (doc, deps) {
     const $ = selector => doc.querySelector(selector), win = doc.defaultView;
-    const media = win.matchMedia("(pointer: coarse) and (max-width: 47.99rem)");
+    const media = win.matchMedia("(max-width: 47.99rem)");
     const events = new AbortController(), options = { signal: events.signal };
     const navigation = $("#mobile-navigation"), tabs = Array.from(navigation.querySelectorAll('[role="tab"]'));
     const panels = new Map(), positions = new Map(), original = [];
     const preview = $(".math-preview-panel"), previewKey = "tex-notes:mobile-preview:v1";
     let active = null, desktopPreview = preview.open;
+
+    const concentration = $("#focus-writing"), structure = $(".structure-panel");
+    const structureToggle = $("#toggle-structure"), review = $("#review-writing");
+    const workspace = $(".editor-workspace");
+    const layoutKey = "tex-notes:workspace:v1";
+    let layout = {};
+    try { layout = JSON.parse(win.localStorage.getItem(layoutKey)) || {}; } catch { /* Sesión en memoria. */ }
+    function saveLayout() {
+      try { win.localStorage.setItem(layoutKey, JSON.stringify(layout)); } catch { /* Sesión en memoria. */ }
+    }
+    function paintLayout() {
+      const focused = Boolean(layout.focus);
+      doc.body.classList.toggle("writing-focus", focused);
+      concentration.setAttribute("aria-pressed", String(focused));
+      structure.hidden = !media.matches && (focused || Boolean(layout.hideStructure));
+      structureToggle.setAttribute("aria-expanded", String(!structure.hidden));
+      workspace.classList.toggle("structure-folded", structure.hidden);
+      review.setAttribute("aria-expanded", String(preview.open && !focused));
+    }
+    concentration.addEventListener("click", () => {
+      layout.focus = !layout.focus;
+      paintLayout(); saveLayout();
+    }, options);
+    structureToggle.addEventListener("click", () => {
+      layout.hideStructure = !layout.hideStructure;
+      paintLayout(); saveLayout();
+    }, options);
+    review.addEventListener("click", () => {
+      preview.open = !preview.open;
+      paintLayout();
+      if (preview.open) preview.querySelector("summary").focus();
+    }, options);
+    preview.addEventListener("toggle", paintLayout, options);
+    $("#workspace-document").addEventListener("click", () => {
+      const details = $("#metadata-details");
+      details.open = true;
+      focusTarget($("#note-title"));
+    }, options);
+    $("#workspace-export").addEventListener("click", () => goTo("result"), options);
 
     function syncMetadataSummary(reset = false) {
       const data = deps.metadata(), parts = [data.title, data.course, data.date].map(value => value.trim()).filter(Boolean);
@@ -46,6 +85,11 @@
     function reveal(element) {
       const panel = element?.closest('[role="tabpanel"]');
       if (panel && panel.hidden) select(panel.dataset.panel, { speak: false });
+      if (!media.matches && element && (structure.contains(element) || element.closest("section") !== workspace.closest("section"))) {
+        layout.focus = false;
+        if (structure.contains(element)) layout.hideStructure = false;
+        paintLayout(); saveLayout();
+      }
     }
     function focusTarget(target) { reveal(target); target.focus(); target.scrollIntoView({ block: "nearest" }); }
     function goTo(destination) {
@@ -61,8 +105,9 @@
       panels.clear(); active = null; navigation.hidden = true; preview.open = desktopPreview;
     }
     function syncLayout() {
-      if (!media.matches) { unmount(); return; }
+      if (!media.matches) { unmount(); paintLayout(); return; }
       if (panels.size) return;
+      paintLayout();
       desktopPreview = preview.open;
       const focused = doc.activeElement;
       for (const tab of tabs) {
@@ -79,6 +124,7 @@
       try { preview.open = win.localStorage.getItem(previewKey) === "open"; } catch { preview.open = false; }
       const previous = focused.closest?.('[role="tabpanel"]');
       select(previous?.dataset.panel || "write", { speak: false });
+      if (focused.closest?.('[role="tabpanel"]:not([hidden])')) focused.focus({ preventScroll: true });
     }
     for (const [i, tab] of tabs.entries()) {
       tab.addEventListener("click", () => select(tab.dataset.panel, { focus: true }), options);

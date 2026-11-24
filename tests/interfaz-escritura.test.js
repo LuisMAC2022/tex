@@ -36,6 +36,7 @@ test("la lista de barra diagonal selecciona un tipo y actualiza el formulario", 
 test("las sugerencias de referencias y citas insertan los destinos del documento", opciones, async t => {
   const { pagina: p } = await sesionDePrueba(t);
   await p.selectOption("#block-type", "equation");
+  await p.locator("#label-fields > summary").click();
   await p.fill("#block-label", "ec:uno");
   await p.fill("#block-content", "1");
   await p.click("#add-block");

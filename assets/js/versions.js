@@ -1,4 +1,4 @@
-/** Instantáneas, versiones y formato de intercambio. Sin acceso al navegador. */
+/** Instantáneas, versiones, formato de intercambio y autoguardado local. */
 (function (T) {
   "use strict";
   const origins = ["manual", "exportación", "respaldo"];
@@ -149,4 +149,51 @@
   }
   Object.assign(T,{validDocumentId,documentSnapshot,sameDocument,historyEntry,rememberHistory,travelHistory,diffLines,diffDocuments,
     newestFirst,pruneVersions,mergeVersions,addVersion,migrateSingleDraft,upgradeStoredVersions,validateProject});
+  const autosaveKey = "tex-notes:autosave:v1";
+  T.session = {
+    read(storage) {
+      try {
+        const raw = JSON.parse(storage.getItem(autosaveKey));
+        const draft = T.normalizeDraft(raw);
+        return draft ? { ...raw, ...draft } : null;
+      } catch { return null; }
+    },
+    discard(storage) { storage.removeItem(autosaveKey); },
+    bind(document, form, previous, snapshot) {
+      const win = document.defaultView;
+      const status = document.querySelector("#session-status");
+      let timer, backedUp = false;
+      /* @decision DEC-019 ancla:70c280cd tramo:15
+       * El autoguardado omite sesiones vacías y conserva una copia de la
+       * sesión anterior antes de escribir la primera vez.
+       */
+      function save() {
+        win.clearTimeout(timer);
+        const session = { ...snapshot(), savedAt: new Date().toISOString() };
+        if (!T.sessionHasContent(session)) { status.textContent = ""; return; }
+        try {
+          const storage = win.localStorage;
+          if (!backedUp && T.sessionHasContent(previous())) {
+            storage.setItem("tex-notes:autosave:previous", JSON.stringify(previous()));
+          }
+          storage.setItem(autosaveKey, JSON.stringify(session));
+          backedUp = true;
+          status.textContent = "Sesión guardada en este navegador";
+        } catch {
+          status.textContent = "No se pudo guardar la sesión en este navegador";
+        }
+      }
+      function schedule(event) {
+        if (event?.target.closest(".structure-filters, .symbol-board")) return;
+        status.textContent = "Cambios pendientes de guardar";
+        win.clearTimeout(timer);
+        timer = win.setTimeout(save, 800);
+      }
+      form.addEventListener("input", schedule);
+      form.addEventListener("change", schedule);
+      document.addEventListener("visibilitychange", () => { if (document.hidden) save(); });
+      win.addEventListener("pagehide", save);
+      return { save, schedule };
+    },
+  };
 })(globalThis.TexNotes);

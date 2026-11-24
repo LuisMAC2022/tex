@@ -531,7 +531,7 @@ Solo cargar y vaciar el editor asignan directamente su valor. Véase DEC-016.
 
 `renderBlockPreview` memoriza nodos de estructura por tipo, formato, contenido,
 contexto de profundidad y versión de vista previa; las imágenes quedan fuera.
-El autoguardado usa `tex-notes:autosave:v1`, con una copia anterior en
+El controlador de autoguardado en `versions.js` usa `tex-notes:autosave:v1`, con una copia anterior en
 `tex-notes:autosave:previous`. Los eventos input/change tienen retardo de 800 ms;
 pagehide y visibilitychange guardan de inmediato. Véase DEC-019.
 
@@ -643,3 +643,10 @@ Registra `key`, `version`, `defaults` y `validate` con `registerConfigPart`. Si 
 `menu-config.js` registra la parte portátil `menus`, valida los enlaces y resuelve cada posición sobre las ocho del contexto. Mi botón guarda un id de acción o `ring:<id>`. El controlador de `menu-editor.js` conserva la edición hasta guardar y usa la geometría de `radial.js` para el dibujo estático y el anillo flotante.
 
 `error-report.js` construye y formatea las entradas del informe sin acceder a la página. `local-errors.js` escucha los errores y los rechazos de promesas desde el arranque, guarda las últimas veinte entradas en `tex-notes:errors:v1` y comparte la copia al portapapeles con el resto del editor.
+
+El espacio de trabajo se monta en `mobile-panels.js` según el ancho. La
+preferencia de concentración y el panel de estructura se guardan en
+`tex-notes:workspace:v1`. `structure-view.js` aplica la búsqueda a los
+bloques existentes y guarda la vista y las ramas por identificador estable
+en `tex-notes:structure:v1`. `math-symbols.js` administra los favoritos en
+`tex-notes:symbol-favorites:v1`. Estas preferencias se guardan en el navegador.

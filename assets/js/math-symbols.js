@@ -287,7 +287,8 @@
   }
 
   const RECENT_SYMBOL_GROUP = { id: "recent", label: "Recientes" };
-  const SYMBOL_BOARD_GROUPS = [RECENT_SYMBOL_GROUP, ...MATH_SYMBOL_GROUPS];
+  const FAVORITES = "favorites";
+  const SYMBOL_BOARD_GROUPS = [RECENT_SYMBOL_GROUP, ...MATH_SYMBOL_GROUPS, { id: FAVORITES, label: "Favoritos" }];
 
   function adjacentGroup(groupId, delta) {
     const index = SYMBOL_BOARD_GROUPS.findIndex((group) => group.id === groupId);
@@ -319,6 +320,62 @@
     if (!Array.isArray(ids)) return [];
     return [...new Set(ids.filter((id) => symbolIds.has(id)))].slice(0, 12);
   }
+
+  TexNotes.symbolButton = function (document, symbol) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "symbol-button";
+    button.dataset.command = symbol.command;
+    button.dataset.symbolId = symbol.id;
+    button.tabIndex = -1;
+    button.setAttribute("aria-label", symbolAccessibleName(symbol));
+    // La longitud del glifo elige su tamaño dentro de una casilla fija.
+    button.dataset.glyphLength = String(Math.min([...symbol.symbol].length, 7));
+    const glyph = document.createElement("span");
+    glyph.className = "symbol-glyph";
+    glyph.textContent = symbol.symbol;
+    button.append(glyph);
+    return button;
+  };
+
+  TexNotes.createSymbolFavorites = function (document, refresh) {
+    const control = document.querySelector("#symbol-favorite");
+    const grid = document.querySelector("#symbol-groups");
+    const storageKey = "tex-notes:symbol-favorites:v1";
+    let ids = new Set();
+    let editing = false;
+    try {
+      const saved = JSON.parse(document.defaultView.localStorage.getItem(storageKey));
+      if (Array.isArray(saved)) ids = new Set(saved.filter(id => symbolIds.has(id)));
+    } catch { /* Sesión en memoria. */ }
+    control.addEventListener("click", () => {
+      editing = !editing;
+      control.setAttribute("aria-pressed", String(editing));
+      refresh();
+    });
+    function decorate(button) {
+      if (editing) button.setAttribute("aria-pressed", String(ids.has(button.dataset.symbolId)));
+    }
+    return {
+      category(group, catalog) { return group === FAVORITES ? [...ids].map(id => catalog.get(id)) : null; },
+      decorate,
+      toggle(button) {
+        if (!editing) return false;
+        const id = button.dataset.symbolId;
+        if (ids.has(id)) ids.delete(id);
+        else ids.add(id);
+        try { document.defaultView.localStorage.setItem(storageKey, JSON.stringify([...ids])); }
+        catch { /* Sesión en memoria. */ }
+        decorate(button);
+        if (!ids.has(id) && grid.getAttribute("aria-label") === "Símbolos: Favoritos") {
+          const hadFocus = document.activeElement === button;
+          refresh();
+          if (hadFocus) (grid.querySelector("button") || control).focus();
+        }
+        return true;
+      },
+    };
+  };
 
   Object.assign(TexNotes, {
     MATH_SYMBOL_GROUPS, MATH_SYMBOLS, describeCommand, symbolAccessibleName,

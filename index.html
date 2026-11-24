@@ -2,7 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="description" content="Editor accesible para crear y descargar notas en LaTeX.">
     <title>Notas LaTeX</title>
     <link rel="stylesheet" href="assets/css/styles.css">
@@ -11,9 +11,7 @@
   <body>
     <a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
     <header class="site-header">
-      <p class="eyebrow">Editor estático y local</p>
       <h1>Notas LaTeX</h1>
-      <p>Crea una nota estructurada y copia o descarga su código para pegarlo en Overleaf.</p>
     </header>
 
     <main id="contenido-principal" tabindex="-1">
@@ -33,65 +31,15 @@
       </aside>
       <p id="autosave-banner" hidden><span id="autosave-message"></span> <button id="recover-session" type="button">Recuperar sesión</button> <button id="discard-session" type="button" class="secondary">Descartar</button></p>
       <form id="document-form" novalidate>
-        <section aria-labelledby="datos-heading">
-          <details id="metadata-details" open>
-          <summary><h2 id="datos-heading">Datos del documento</h2></summary>
-          <p>El título es el único dato obligatorio. Las versiones se guardan en este navegador. Puedes trasladar el documento con su archivo de proyecto.</p>
-          <fieldset class="form-grid">
-            <legend>Metadatos</legend>
-            <p class="field field-wide">
-              <label for="note-title">Título de la nota <span aria-hidden="true">*</span></label>
-              <input id="note-title" name="title" type="text" required aria-describedby="title-error" autocomplete="off">
-              <span id="title-error" class="error" aria-live="polite"></span>
-            </p>
-            <p class="field"><label for="author">Autor</label><input id="author" name="author" type="text" autocomplete="name"></p>
-            <p class="field"><label for="course">Curso</label><input id="course" name="course" type="text" value="Cálculo III (1352)"></p>
-            <p class="field"><label for="teacher">Profesor</label><input id="teacher" name="teacher" type="text" value="Guzmán Fuentes Ricardo"></p>
-            <p class="field"><label for="date">Fecha</label><input id="date" name="date" type="date"></p>
-            <p class="field field-wide"><label for="topic">Tema o unidad</label><input id="topic" name="topic" type="text"></p>
-          </fieldset>
-          <details id="document-macros">
-            <summary>Macros del documento</summary>
-            <p>Las macros viajan con el proyecto y se definen en el preámbulo del documento.</p>
-            <ul id="macro-list"></ul>
-            <fieldset id="macro-fields"><legend>Añadir o editar una macro</legend>
-              <p class="field"><label for="macro-name">Nombre</label><input id="macro-name" type="text" autocomplete="off" spellcheck="false" aria-describedby="macro-name-error"><span id="macro-name-error" class="error"></span></p>
-              <p class="field"><label for="macro-params">Número de argumentos</label><input id="macro-params" type="number" min="0" max="9" step="1" value="0" aria-describedby="macro-params-error"><span id="macro-params-error" class="error"></span></p>
-              <p class="field"><label for="macro-body">Definición</label><input id="macro-body" type="text" spellcheck="false" aria-describedby="macro-body-error"><span id="macro-body-error" class="error"></span></p>
-              <div id="macro-preview" aria-label="Vista previa de la macro"></div>
-              <button id="save-macro" type="button">Guardar macro</button> <button id="cancel-macro" type="button" class="secondary">Cancelar macro</button>
-            </fieldset>
-            <button id="use-default-macros" type="button" class="secondary">Usar como mis macros predeterminadas</button>
-          </details>
-          <details id="document-references">
-            <summary>Referencias del documento</summary>
-            <p class="field"><label for="citation-style">Estilo de citas</label>
-              <select id="citation-style"><option value="ieee">IEEE</option><option value="apa">APA 7.ª edición</option></select>
-            </p>
-            <label class="check-field"><input type="checkbox" id="include-uncited"> Incluir también las no citadas</label>
-            <ul id="reference-list"></ul>
-            <fieldset><legend>Añadir o editar una referencia</legend>
-              <p class="field"><label for="ref-key">Clave</label><input id="ref-key" type="text" spellcheck="false" aria-describedby="ref-key-help ref-key-error"><small id="ref-key-help"></small><span class="error" id="ref-key-error"></span></p>
-              <p class="field"><label for="ref-authors">Autores</label><textarea id="ref-authors" rows="3" aria-describedby="ref-authors-help ref-authors-error"></textarea><small id="ref-authors-help">Un autor por línea, en la forma Apellido, Iniciales.</small><span class="error" id="ref-authors-error"></span></p>
-              <p class="field"><label for="ref-year">Año</label><input id="ref-year" type="text" inputmode="numeric" aria-describedby="ref-year-error"><span class="error" id="ref-year-error"></span></p>
-              <p class="field"><label for="ref-title">Título</label><input id="ref-title" type="text" aria-describedby="ref-title-error"><span class="error" id="ref-title-error"></span></p>
-              <p class="field"><label for="ref-edition">Edición</label><input id="ref-edition" type="text" inputmode="numeric" aria-describedby="ref-edition-error"><span class="error" id="ref-edition-error"></span></p>
-              <p class="field"><label for="ref-publisher">Editorial</label><input id="ref-publisher" type="text"></p>
-              <p class="field"><label for="ref-place">Lugar</label><input id="ref-place" type="text"></p>
-              <p class="field"><label for="ref-url">Enlace</label><input id="ref-url" type="text" inputmode="url"></p>
-              <p class="field"><label for="ref-text">Texto libre</label><textarea id="ref-text" rows="3" aria-describedby="ref-text-help"></textarea><small id="ref-text-help">Sustituye la ficha por texto LaTeX literal. En APA se necesitan también los autores y el año.</small></p>
-              <button type="button" id="save-reference">Guardar referencia</button>
-              <button type="button" id="cancel-reference" class="secondary">Cancelar referencia</button>
-            </fieldset>
-            <button type="button" id="add-course-references" class="secondary">Añadir las referencias del curso</button>
-            <button type="button" id="save-course-references" class="secondary">Guardar como referencias del curso</button>
-          </details>
-          </details>
-        </section>
-
         <section aria-labelledby="contenido-heading">
           <h2 id="contenido-heading">Contenido</h2>
-          <p>Completa un bloque y usa «Añadir bloque». El contenido de cualquier bloque llega al documento exactamente como lo escribes: la aplicación no añade caracteres de escape. Un bloque puede contener otros bloques: usa «Añadir dentro» en el bloque que quieras como padre, sin límite de niveles.</p>
+          <div class="workspace-tools">
+            <button id="focus-writing" class="secondary" type="button" aria-pressed="false">Concentración</button>
+            <button id="toggle-structure" class="secondary" type="button" aria-controls="structure-panel" aria-expanded="true">Estructura</button>
+            <button id="review-writing" class="secondary" type="button" aria-controls="math-preview-panel" aria-expanded="false">Revisión</button>
+            <button id="workspace-document" class="secondary" type="button">Documento</button>
+            <button id="workspace-export" class="secondary" type="button">Exportación</button>
+          </div>
           <div class="editor-workspace">
           <fieldset class="block-editor">
             <legend class="block-heading"><span class="block-heading-row"><span id="block-form-heading">Nuevo bloque</span>
@@ -122,19 +70,24 @@
               </select>
             </p>
             <p class="field" id="native-title-field"><label for="block-title">Título del bloque (opcional)</label><input id="block-title" name="blockTitle" type="text"></p>
-            <div class="field" id="label-fields" hidden>
+            <details id="label-fields" hidden>
+              <summary>Etiqueta del bloque</summary>
+              <div class="field">
               <label for="block-label">Etiqueta</label>
               <small id="label-help">Prefijo del bloque <code id="label-prefix"></code>. Puedes dejar la etiqueta vacía.</small>
               <input id="block-label" type="text" spellcheck="false" autocomplete="off" aria-describedby="label-help label-error">
               <span id="label-error" class="error"></span>
               <button type="button" id="propose-label" class="secondary">Proponer desde el título</button>
-            </div>
+              </div>
+            </details>
             <small id="proof-help" hidden>En Demostración, el título opcional sustituye al encabezado Demostración en el PDF.</small>
             <div class="field">
+              <div class="content-heading">
+              <label for="block-content">Contenido</label>
               <details class="field-help"><summary>Ayuda del contenido</summary>
               <small id="block-help">El contenido se copia al documento <strong>tal cual</strong>: comandos como <code>\textbf{...}</code> o <code>\mathbb{R}</code>, llaves y matemáticas entre <code>$…$</code> o <code>$$…$$</code> llegan exactamente como los escribes, y la aplicación no inserta ningún carácter de escape. Por eso puedes pegar aquí LaTeX de otro documento sin revisarlo. A cambio, los caracteres reservados de LaTeX son cosa tuya: para que aparezcan impresos escribe <code>\%</code>, <code>\&amp;</code>, <code>\#</code>, <code>\_</code> o <code>\$</code> —un <code>%</code> suelto comenta el resto de su línea—. Se permiten párrafos separados por una línea vacía y una lista toma un elemento por línea. Solo el título del bloque y los metadatos se escapan por completo, porque la aplicación los coloca dentro de un argumento.</small>
               </details>
-              <label for="block-content">Contenido</label>
+              </div>
               <textarea id="block-content" name="blockContent" rows="6" aria-describedby="block-help block-error"></textarea>
               <span id="block-error" class="error" aria-live="polite"></span>
               <span id="list-tools" role="toolbar" aria-label="Sangría de lista" hidden>
@@ -205,17 +158,11 @@
               <li><button id="paste-block" class="secondary" type="button" hidden>Pegar bloque</button></li>
               <li><button id="cancel-edit" class="secondary" type="button" hidden>Cancelar edición</button></li>
             </menu>
-            <details class="math-preview-panel" open>
-              <summary>Vista previa de las matemáticas</summary>
-              <p>KaTeX orienta sobre los tramos matemáticos, pero no es LaTeX completo ni reproduce la tipografía del PDF final. No revisa la prosa: un <code>%</code> suelto, un <code>_</code> o <code>&amp;</code> fuera de matemáticas, o un <code>\textbf{</code> sin cerrar pueden fallar en Overleaf aunque esta vista no avise.</p>
-              <div id="math-preview"></div>
-              <p id="math-preview-status" class="preview-status" aria-live="polite" aria-atomic="true"></p>
-            </details>
-
+            <p id="session-status" role="status"></p>
             <section class="symbol-board" aria-labelledby="simbolos-heading" aria-describedby="symbol-board-intro">
               <button id="close-symbol-sheet" type="button" class="secondary" hidden>Cerrar</button>
               <p class="symbol-shortcut"><button id="symbol-toggle" class="secondary" type="button" aria-label="Buscar en el tablero de símbolos">Buscar</button> <kbd id="symbol-shortcut-label">Alt+Mayús+S</kbd></p>
-              <details id="symbol-details" open>
+              <details id="symbol-details">
                 <summary><h3 id="simbolos-heading">Símbolos matemáticos</h3></summary>
                 <p id="symbol-board-intro">Cada botón inserta su comando LaTeX en el campo de texto de origen o en «Contenido», en la posición del cursor. Pulsa Escape para volver al campo.</p>
                 <p class="field">
@@ -224,9 +171,10 @@
                   <small id="symbol-search-help">Por ejemplo «para todo», «implica» o «conjunción». También acepta el comando, como «forall».</small>
                 </p>
                 <nav id="symbol-category-picker" class="symbol-categories" aria-label="Categorías de símbolos"></nav>
-                <div class="symbol-caption" aria-hidden="true">
+                <div class="symbol-caption">
                   <p id="symbol-detail" aria-hidden="true">Selecciona un símbolo para ver su nombre y comando.</p>
                   <p id="symbol-results" class="status" role="status"></p>
+                  <button id="symbol-favorite" type="button" class="secondary" aria-pressed="false">Editar favoritos</button>
                 </div>
                 <p id="symbol-empty" hidden>Ningún símbolo coincide con la búsqueda.</p>
                 <menu id="symbol-groups" class="symbol-grid" role="toolbar" aria-orientation="horizontal" aria-label="Símbolos matemáticos" tabindex="-1"></menu>
@@ -246,7 +194,7 @@
             </div>
           </fieldset>
 
-          <div class="structure-panel">
+          <div class="structure-panel" id="structure-panel">
           <h3>Estructura actual</h3>
           <details class="structure-help"><summary>Cómo funciona la estructura</summary><p>Cada bloque indica su nivel y su bloque padre. «Subir» y «Bajar» mueven el bloque solo entre sus hermanos, sin sacarlo de su nivel. Para repetir una estructura hay tres acciones distintas: <strong>«Duplicar»</strong> deja una copia justo después del original; <strong>«Copiar bloque»</strong> lo guarda en una bandeja y luego eliges el destino con «Pegar bloque», las veces que haga falta; <strong>«Copiar texto»</strong> lleva su contenido al portapapeles del sistema para pegarlo donde quieras, dentro o fuera de la aplicación.</p></details>
           <div class="structure-tools">
@@ -254,10 +202,80 @@
           <button type="button" id="undo-structure" class="secondary" disabled>Deshacer cambio</button>
           <button type="button" id="redo-structure" class="secondary" disabled>Rehacer cambio</button>
           </div>
+          <div class="structure-filters">
+            <label for="structure-mode">Vista</label>
+            <select id="structure-mode"><option value="cards">Tarjetas</option><option value="outline">Esquema</option></select>
+            <label for="structure-search">Buscar bloques</label>
+            <input id="structure-search" type="search" autocomplete="off" aria-controls="block-list">
+          </div>
+          <p id="structure-results" role="status" hidden></p>
           <p id="empty-blocks">Todavía no hay bloques.</p>
           <ol id="block-list" class="block-list"></ol>
           </div>
+            <details class="math-preview-panel" id="math-preview-panel">
+              <summary>Vista previa de las matemáticas</summary>
+              <p>KaTeX orienta sobre los tramos matemáticos, pero no es LaTeX completo ni reproduce la tipografía del PDF final. No revisa la prosa: un <code>%</code> suelto, un <code>_</code> o <code>&amp;</code> fuera de matemáticas, o un <code>\textbf{</code> sin cerrar pueden fallar en Overleaf aunque esta vista no avise.</p>
+              <div id="math-preview"></div>
+              <p id="math-preview-status" class="preview-status" aria-live="polite" aria-atomic="true"></p>
+            </details>
+
           </div>
+        </section>
+
+        <section aria-labelledby="datos-heading">
+          <details id="metadata-details" open>
+          <summary><h2 id="datos-heading">Datos del documento</h2></summary>
+          <p>El título es el único dato obligatorio. Las versiones se guardan en este navegador. Puedes trasladar el documento con su archivo de proyecto.</p>
+          <fieldset class="form-grid">
+            <legend>Metadatos</legend>
+            <p class="field field-wide">
+              <label for="note-title">Título de la nota <span aria-hidden="true">*</span></label>
+              <input id="note-title" name="title" type="text" required aria-describedby="title-error" autocomplete="off">
+              <span id="title-error" class="error" aria-live="polite"></span>
+            </p>
+            <p class="field"><label for="author">Autor</label><input id="author" name="author" type="text" autocomplete="name"></p>
+            <p class="field"><label for="course">Curso</label><input id="course" name="course" type="text" value="Cálculo III (1352)"></p>
+            <p class="field"><label for="teacher">Profesor</label><input id="teacher" name="teacher" type="text" value="Guzmán Fuentes Ricardo"></p>
+            <p class="field"><label for="date">Fecha</label><input id="date" name="date" type="date"></p>
+            <p class="field field-wide"><label for="topic">Tema o unidad</label><input id="topic" name="topic" type="text"></p>
+          </fieldset>
+          <details id="document-macros">
+            <summary>Macros del documento</summary>
+            <p>Las macros viajan con el proyecto y se definen en el preámbulo del documento.</p>
+            <ul id="macro-list"></ul>
+            <fieldset id="macro-fields"><legend>Añadir o editar una macro</legend>
+              <p class="field"><label for="macro-name">Nombre</label><input id="macro-name" type="text" autocomplete="off" spellcheck="false" aria-describedby="macro-name-error"><span id="macro-name-error" class="error"></span></p>
+              <p class="field"><label for="macro-params">Número de argumentos</label><input id="macro-params" type="number" min="0" max="9" step="1" value="0" aria-describedby="macro-params-error"><span id="macro-params-error" class="error"></span></p>
+              <p class="field"><label for="macro-body">Definición</label><input id="macro-body" type="text" spellcheck="false" aria-describedby="macro-body-error"><span id="macro-body-error" class="error"></span></p>
+              <div id="macro-preview" aria-label="Vista previa de la macro"></div>
+              <button id="save-macro" type="button">Guardar macro</button> <button id="cancel-macro" type="button" class="secondary">Cancelar macro</button>
+            </fieldset>
+            <button id="use-default-macros" type="button" class="secondary">Usar como mis macros predeterminadas</button>
+          </details>
+          <details id="document-references">
+            <summary>Referencias del documento</summary>
+            <p class="field"><label for="citation-style">Estilo de citas</label>
+              <select id="citation-style"><option value="ieee">IEEE</option><option value="apa">APA 7.ª edición</option></select>
+            </p>
+            <label class="check-field"><input type="checkbox" id="include-uncited"> Incluir también las no citadas</label>
+            <ul id="reference-list"></ul>
+            <fieldset><legend>Añadir o editar una referencia</legend>
+              <p class="field"><label for="ref-key">Clave</label><input id="ref-key" type="text" spellcheck="false" aria-describedby="ref-key-help ref-key-error"><small id="ref-key-help"></small><span class="error" id="ref-key-error"></span></p>
+              <p class="field"><label for="ref-authors">Autores</label><textarea id="ref-authors" rows="3" aria-describedby="ref-authors-help ref-authors-error"></textarea><small id="ref-authors-help">Un autor por línea, en la forma Apellido, Iniciales.</small><span class="error" id="ref-authors-error"></span></p>
+              <p class="field"><label for="ref-year">Año</label><input id="ref-year" type="text" inputmode="numeric" aria-describedby="ref-year-error"><span class="error" id="ref-year-error"></span></p>
+              <p class="field"><label for="ref-title">Título</label><input id="ref-title" type="text" aria-describedby="ref-title-error"><span class="error" id="ref-title-error"></span></p>
+              <p class="field"><label for="ref-edition">Edición</label><input id="ref-edition" type="text" inputmode="numeric" aria-describedby="ref-edition-error"><span class="error" id="ref-edition-error"></span></p>
+              <p class="field"><label for="ref-publisher">Editorial</label><input id="ref-publisher" type="text"></p>
+              <p class="field"><label for="ref-place">Lugar</label><input id="ref-place" type="text"></p>
+              <p class="field"><label for="ref-url">Enlace</label><input id="ref-url" type="text" inputmode="url"></p>
+              <p class="field"><label for="ref-text">Texto libre</label><textarea id="ref-text" rows="3" aria-describedby="ref-text-help"></textarea><small id="ref-text-help">Sustituye la ficha por texto LaTeX literal. En APA se necesitan también los autores y el año.</small></p>
+              <button type="button" id="save-reference">Guardar referencia</button>
+              <button type="button" id="cancel-reference" class="secondary">Cancelar referencia</button>
+            </fieldset>
+            <button type="button" id="add-course-references" class="secondary">Añadir las referencias del curso</button>
+            <button type="button" id="save-course-references" class="secondary">Guardar como referencias del curso</button>
+          </details>
+          </details>
         </section>
 
         <section aria-labelledby="resultado-heading">

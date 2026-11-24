@@ -5,14 +5,63 @@
     const { pathToKey, acceptsChildren } = T;
     const $ = selector => document.querySelector(selector);
     const blockList = $("#block-list");
+    const icons = { text: "¶", equation: "∑", "math-inline": "ƒ", definition: "≔", theorem: "⊢",
+      proposition: "⇒", proof: "∎", example: "◇", note: "✧", itemize: "•",
+      enumerate: "№", bibliography: "▤", image: "▧" };
     const coarse = document.defaultView.matchMedia("(pointer: coarse)");
+    const mode = $("#structure-mode"), search = $("#structure-search"), results = $("#structure-results");
+    const win = document.defaultView, key = "tex-notes:structure:v1";
+    const normalize = value => value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+    let settings = {};
+    try { settings = JSON.parse(win.localStorage.getItem(key)) || {}; } catch { /* Sesión en memoria. */ }
+    mode.value = settings.mode === "outline" ? "outline" : "cards";
+    const collapsed = new Set(Array.isArray(settings.collapsed) ? settings.collapsed : []);
+    const expanded = new Set(Array.isArray(settings.expanded) ? settings.expanded : []);
+    const rows = new Map();
+    function persist() {
+      try { win.localStorage.setItem(key, JSON.stringify({ mode: mode.value, collapsed: [...collapsed], expanded: [...expanded] })); }
+      catch { /* Sesión en memoria. */ }
+    }
+    function syncSelection() {
+      const editing = $("#editing-path").value;
+      for (const { article } of rows.values()) {
+        if (editing && article.dataset.path === editing) article.setAttribute("aria-current", "true");
+        else article.removeAttribute("aria-current");
+      }
+    }
+    const selection = new MutationObserver(syncSelection);
+    selection.observe($("#editing-path"), { attributes: true, attributeFilter: ["value"] });
+
+    function filter() {
+      const words = normalize(search.value.trim()).split(/\s+/).filter(Boolean);
+      const searching = words.length > 0;
+      let matches = 0;
+      for (const { item, article, nested, branch, block, searchable } of [...rows.values()].reverse()) {
+        const matched = !searching || words.every(word => searchable.includes(word));
+        if (matched) matches += 1;
+        item.hidden = !matched && !Array.from(nested?.children || []).some(child => !child.hidden);
+        article.classList.toggle("search-context", searching && !matched);
+        if (nested) {
+          nested.hidden = searching ? false : collapsed.has(block.id);
+          branch.hidden = searching;
+          branch.setAttribute("aria-expanded", String(!nested.hidden));
+          branch.textContent = nested.hidden ? "Desplegar" : "Plegar";
+          branch.setAttribute("aria-label", branch.textContent + " rama " + describeBlock(block, T.keyToPath(article.dataset.path)));
+        }
+      }
+      results.hidden = !searching;
+      results.textContent = matches === 1 ? "1 bloque encontrado" : matches + " bloques encontrados";
+    }
+    search.addEventListener("input", filter);
+    mode.addEventListener("change", () => { blockList.dataset.view = mode.value; persist(); });
+    blockList.dataset.view = mode.value;
     const resize = new ResizeObserver(entries => {
       for (const { target } of entries) updateDisclosure(target);
     });
     function updateDisclosure(preview) {
       const toggle = preview.nextElementSibling;
       if (!toggle?.classList.contains("preview-toggle")) return;
-      toggle.hidden = !coarse.matches || (!preview.classList.contains("expanded") && preview.scrollHeight <= preview.clientHeight + 1);
+      toggle.hidden = !preview.classList.contains("expanded") && preview.scrollHeight <= preview.clientHeight + 1;
     }
     function actionButton(label, action, path, accessibleName, disabled = false) {
       const button = document.createElement("button");
@@ -33,8 +82,13 @@
       const article = document.createElement("article");
       article.dataset.path = pathToKey(path);
       article.dataset.blockId = block.id;
+      const record = { block, item, article, searchable: normalize([T.pathLabel(path), T.blockLabel(block.type), block.type, block.title, block.content].join(" ")) };
+      rows.set(block.id, record);
       const heading = document.createElement("h4");
       heading.textContent = coarse.matches ? T.pathLabel(path) + " · " + T.blockLabel(block.type) + (block.title ? ": " + block.title : "") : describeBlock(block, path);
+      const icon = document.createElement("span");
+      icon.className = "outline-icon"; icon.textContent = icons[block.type]; icon.setAttribute("aria-hidden", "true");
+      heading.prepend(icon);
       // El nivel y el padre se escriben, no solo se sugieren con la sangría.
       const meta = document.createElement("p");
       meta.className = "block-meta";
@@ -47,10 +101,15 @@
       renderBlockPreview(preview, block, { parentPath, structure: true });
       const toggle = document.createElement("button");
       toggle.type = "button"; toggle.className = "preview-toggle"; toggle.textContent = "Ver todo"; toggle.hidden = true;
-      toggle.setAttribute("aria-expanded", "false");
+      preview.classList.toggle("expanded", expanded.has(block.id));
+      toggle.setAttribute("aria-expanded", String(expanded.has(block.id)));
+      if (expanded.has(block.id)) toggle.textContent = "Ver menos";
       toggle.addEventListener("click", () => {
-        const expanded = preview.classList.toggle("expanded");
-        toggle.setAttribute("aria-expanded", String(expanded)); toggle.textContent = expanded ? "Ver menos" : "Ver todo";
+        const open = preview.classList.toggle("expanded");
+        if (open) expanded.add(block.id);
+        else expanded.delete(block.id);
+        toggle.setAttribute("aria-expanded", String(open)); toggle.textContent = open ? "Ver menos" : "Ver todo";
+        persist();
       });
       const actions = document.createElement("menu");
       actions.className = "block-actions";
@@ -82,17 +141,31 @@
       if (coarse.matches) {
         for (const button of actions.children) button.textContent = T.actionById("block." + button.dataset.action).icon;
         const menu = actionButton("⋯", "context", path, "Acciones para " + subject);
-        menu.setAttribute("aria-haspopup", "menu"); actions.append(menu);
+        menu.setAttribute("aria-haspopup", "menu"); actions.append(menu, disclosure);
       } else actions.append(disclosure);
       const head = document.createElement("div"); head.className = "card-heading"; head.append(heading, meta);
       article.append(head, preview, toggle, actions);
-      if (coarse.matches) resize.observe(preview);
+      resize.observe(preview);
       for (const extend of blockItemExtensions) extend(block, path, { article, actions, more, subject });
       item.append(article);
 
       if (block.children.length) {
         const nested = document.createElement("ol");
         nested.className = "block-children";
+        nested.id = "branch-" + path.join("-");
+        const branch = document.createElement("button");
+        branch.type = "button";
+        branch.className = "secondary branch-toggle";
+        branch.setAttribute("aria-controls", nested.id);
+        branch.addEventListener("click", () => {
+          if (collapsed.has(block.id)) collapsed.delete(block.id);
+          else collapsed.add(block.id);
+          filter(); persist();
+        });
+        record.nested = nested;
+        record.branch = branch;
+        head.append(branch);
+        if (path.length >= 3) nested.classList.add("shallow-indent");
         nested.setAttribute("aria-label", `Bloques dentro de ${describeBlock(block, path)}`);
         block.children.forEach((child, index) => nested.append(blockItem(child, [...path, index], block, path, block.children.length)));
         item.append(nested);
@@ -101,12 +174,22 @@
     }
 
     function renderBlocks() {
+      const active = document.activeElement;
+      const id = active.closest?.("article")?.dataset.blockId;
+      const action = active.dataset?.action;
       const blocks = getBlocks();
       resize.disconnect();
       refreshTargets(blocks);
       blockList.replaceChildren();
+      rows.clear();
       $("#empty-blocks").hidden = blocks.length > 0;
       blocks.forEach((block, index) => blockList.append(blockItem(block, [index], null, [], blocks.length)));
+      filter(); syncSelection();
+      const current = rows.get(id)?.article;
+      if (current && action) [...current.querySelectorAll("button[data-action]")].find(button => button.dataset.action === action)?.focus({ preventScroll: true });
+      else if (current && active.matches(".branch-toggle, .preview-toggle, summary")) {
+        current.querySelector(active.matches("summary") ? "summary" : "." + active.classList[active.classList.length - 1])?.focus({ preventScroll: true });
+      }
       syncReferenceKey();
       saveSession();
     }
@@ -115,6 +198,11 @@
     function focusAction(action, path) {
       const button = blockList.querySelector(`button[data-action="${action}"][data-path="${pathToKey(path)}"]`);
       if (!button || button.disabled) return false;
+      if (button.closest("li[hidden]") && search.value) search.value = "";
+      for (let branch = button.closest(".block-children"); branch; branch = branch.parentElement.closest(".block-children")) {
+        collapsed.delete(branch.parentElement.firstElementChild.dataset.blockId);
+      }
+      filter(); persist();
       deps.reveal(button);
       let disclosure = button.closest("details");
       while (disclosure) { disclosure.open = true; disclosure = disclosure.parentElement.closest("details"); }
@@ -136,6 +224,6 @@
     }
 
     coarse.addEventListener("change", renderBlocks);
-    return { dispose() { resize.disconnect(); coarse.removeEventListener("change", renderBlocks); }, refresh: renderBlocks, actionButton, renderBlocks, focusAction, focusAfterRemoval, focusById };
+    return { dispose() { selection.disconnect(); resize.disconnect(); coarse.removeEventListener("change", renderBlocks); }, refresh: renderBlocks, actionButton, renderBlocks, focusAction, focusAfterRemoval, focusById };
   };
 })(globalThis.TexNotes);
