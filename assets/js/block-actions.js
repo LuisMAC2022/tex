@@ -3,7 +3,7 @@
   "use strict";
   T.createBlockActions = function (doc, deps) {
     const $ = selector => doc.querySelector(selector);
-    const { getBlocks, setTray, renderBlocks, announce, convertLegacyBlock, openMenu, loadBlockEditor,
+    const { getBlocks, focusType, setTray, renderBlocks, announce, convertLegacyBlock, openMenu, loadBlockEditor,
       cancelTemplateForStructuralChange, clearBlockFields, setEditorTarget, describeBlock, cancelEditForStructuralChange,
       changeTree, editorTarget, focusById, updateTrayControls, copyToClipboard, focusAfterRemoval } = deps;
     const { blockAtPath, countBlocks, duplicateBlock, cloneBlock, removeBlock, moveBlock } = T;
@@ -16,13 +16,13 @@
       if (action === "context") { openMenu(button, path, keyboard); return; }
       if (action === "edit") {
         loadBlockEditor(block, path);
-        $("#block-type").focus();
+        focusType();
         announce(`Editando ${describeBlock(block, path)}.`);
         return;
       }
       if (action === "child") {
         cancelTemplateForStructuralChange();
-        clearBlockFields(); setEditorTarget({ parent: path }); $("#block-type").focus();
+        clearBlockFields(); setEditorTarget({ parent: path }); focusType();
         announce(`El siguiente bloque se añadirá dentro de ${describeBlock(block, path)}, en el nivel ${path.length + 1}.`);
         return;
       }

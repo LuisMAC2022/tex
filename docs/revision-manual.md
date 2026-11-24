@@ -130,3 +130,7 @@ Con la rama de trabajo en el portátil, ejecuta `python3 -m http.server 8000` de
 ### Barra del pulgar
 
 En Android con Gboard abierto, verifica que se ven las siete teclas, que se puede arrastrar en ambos sentidos con una mano y que los tiradores nativos permiten ajustar una selección. Con TalkBack, recorre el botón de modo en cursor, selección y sugerencias. Comprueba que los cambios se anuncian y el campo mantiene el foco de escritura.
+
+### Selector de tipo y título
+
+En Android, comprueba con TalkBack el nombre completo del tipo, la elección desde el anillo y la apertura del selector nativo con Más…. Verifica que ＋ Pie coloca el foco en el título de la imagen y abre Gboard.

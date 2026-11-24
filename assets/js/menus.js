@@ -4,6 +4,7 @@
   const insert = (id, label, icon, snippet) => ({ id, label, icon, action: { type: "insert", snippet } });
   const command = (id, label, icon, action, ...args) => ({ id, label, icon, action, args });
   const submenu = (id, label, icon, slices) => ({ id, label, icon, action: { type: "submenu", slices } });
+  T.typeMenuSlices = () => T.slicesFor("global").find(s => s.id === "new").children;
   T.symbolCategorySlices = function () {
     const ids = ["recent", "greek-lower", "logic", "sets", "relations", "integrals"];
     const icons = ["◷", "α", "⇒", "∈", "≤", "∫"];

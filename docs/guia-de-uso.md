@@ -546,3 +546,9 @@ En el teléfono, Anterior y Siguiente recorren los huecos de un fragmento y desp
 Puedes arrastrar horizontalmente en el grupo de las tres teclas para avanzar o retroceder un paso por cada 28 px. Cada toque en una flecha hace un paso. Mantener Siguiente activa la selección y la amplía una vez. La misma operación se hace tocando el modo y después Siguiente. Con el teclado, recorre la barra con flechas y activa el botón con Intro.
 
 Toca Símbolos para abrir la hoja y elegir una categoría. También puedes arrastrar desde Símbolos hasta una categoría y levantar el dedo para abrirla. A menos de 360 px se muestran los iconos con sus nombres accesibles.
+
+### Tipo y título en la pantalla táctil
+
+Toca el chip con el tipo actual junto a Nuevo bloque para elegir entre siete tipos. También puedes arrastrar desde el chip hacia una opción y soltar. Más… abre el selector completo. Con teclado, usa Intro en el chip y las flechas e Intro en el anillo. Cambiar el tipo desde el chip conserva el contenido en edición.
+
+Toca ＋ Título para escribir el título opcional, o ＋ Pie en una figura. La acción Título del menú de texto abre el mismo campo. En el escritorio el selector y el campo de título permanecen visibles.

@@ -148,9 +148,9 @@
   /* --- Editor: a qué nodo apunta el formulario --- */
 
   const blockForm = global.TexNotes.createBlockForm(document, {
-    getBlock: path => blockAtPath(blocks, path), describeBlock, describeLocation, updateTrayControls, blockFieldHooks, renderEditorPreview,
+    getBlock: path => blockAtPath(blocks, path), describeBlock, describeLocation, updateTrayControls, blockFieldHooks, renderEditorPreview, cancelTemplateForStructuralChange,
   });
-  const { editorTarget, setEditorTarget, clearBlockFields, resetBlockEditor, selectBlockType } = blockForm;
+  const { editorTarget, setEditorTarget, clearBlockFields, resetBlockEditor, selectBlockType, loadBlockEditor } = blockForm;
 
   /**
    * Una acción sobre la estructura desplaza las rutas del resto del árbol. En
@@ -332,7 +332,7 @@
       if (!next) { blockError(`«${blockLabel(draft.type)}» no admite bloques anidados y este bloque ya tiene. Muévelos o elimínalos antes de cambiar el tipo.`); return; }
       changeTree(next, blockAtPath(next, editing).id); resetBlockEditor(); renderBlocks();
       if (keepFieldFocus) focusBlockContent();
-      else if (!focusById("edit", blockAtPath(next, editing).id)) $("#block-type").focus();
+      else if (!focusById("edit", blockAtPath(next, editing).id)) blockForm.focusType();
       announce(`Bloque ${pathLabel(editing)} actualizado.`);
       return;
     }
@@ -366,20 +366,13 @@
   $("#cancel-edit").addEventListener("click", () => {
     const cancelled = editorTarget().editing.length;
     cancelTemplateForStructuralChange();
-    resetBlockEditor(); $("#block-type").focus();
+    resetBlockEditor(); blockForm.focusType();
     announce(cancelled ? "Edición cancelada." : "El siguiente bloque se añadirá en la raíz.");
   });
 
-  function loadBlockEditor(block, path) {
-    cancelTemplateForStructuralChange();
-    $("#block-type").value = block.type; $("#block-title").value = block.title; $("#block-content").value = block.content;
-    for (const hook of blockFieldHooks) hook.fill?.(block);
-    $("#block-error").textContent = ""; $("#block-content").removeAttribute("aria-invalid");
-    setEditorTarget({ editing: path }); renderEditorPreview();
-  }
   const handleBlockAction = global.TexNotes.createBlockActions(document, {
     getBlocks: () => blocks, setTray: next => { tray = next; }, renderBlocks, announce, convertLegacyBlock,
-    openMenu: (button, path, keyboard) => radial.openAtButton(button, { source: "card", path }, keyboard),
+    focusType: blockForm.focusType, openMenu: (button, path, keyboard) => radial.openAtButton(button, { source: "card", path }, keyboard),
     loadBlockEditor, cancelTemplateForStructuralChange, clearBlockFields, setEditorTarget, describeBlock,
     cancelEditForStructuralChange, changeTree, editorTarget, focusById, updateTrayControls, copyToClipboard, focusAfterRemoval,
   });
@@ -1849,7 +1842,7 @@
     radial, handleBlockAction, editorTarget, getBlock: path => blockAtPath(blocks, path), announce, describeBlock,
     closeAssistMenu: () => closeAssistMenu(), closeSymbolSheet, commitBlock, thumbStep, toggleScope, toggleSymbols,
     shiftListSelection, putSnippet: putRadialSnippet, travelStructure, resetBlockEditor, selectBlockType,
-    focusBlockContent, pickType: () => $("#block-type").focus(), goTo, openSymbolSearch, selectSymbolCategory,
+    focusBlockContent, blockForm, goTo, openSymbolSearch, selectSymbolCategory,
     returnToSymbolOrigin, updateSymbolSearch, focusSymbolAt,
     changeSymbolGroup(delta, index) {
       selectSymbolCategory(adjacentGroup(activeSymbolGroup, delta));

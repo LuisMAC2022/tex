@@ -236,6 +236,12 @@
 - el arrastre desde Menú envuelve la selección en el primer argumento
 - un segundo dedo cancela el anillo antes de aplicar una acción
 
+## `tests/interfaz-tipo.test.js` — 3 pruebas
+
+- el chip de tipo conserva el borrador y sincroniza ayudas, título y vista previa
+- Más tipos usa activación de teclado y ofrece el selector si no hay showPicker
+- el escritorio mantiene el selector y el título y el teléfono ahorra al menos 140 píxeles
+
 ## `tests/interfaz-versiones.test.js` — 3 pruebas
 
 - guardar, comparar y restaurar una versión conserva el respaldo
@@ -395,4 +401,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-280 pruebas con `node:test` más la comprobación estructural.
+283 pruebas con `node:test` más la comprobación estructural.

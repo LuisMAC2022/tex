@@ -256,3 +256,9 @@ Las tarjetas, los controles de escritura, los comandos de los anillos y los ataj
 La navegación ocupa 144 px (tres teclas de 48) frente a unos 207 px a 412 de ancho. Mi botón deshace y el modo central indica cursor, selección o sugerencias. Se probaron también el arrastre horizontal, la pulsación mantenida y la elección de categoría desde Símbolos. Las cuatro nuevas pruebas táctiles fallaron antes del cambio y pasaron después. A 320 px caben los siete objetivos de al menos 44 px.
 
 Anexo A (Pixel 7, antes y después): altura 6094 → 6094 px, Contenido 2056 → 2056, Estructura 2838 → 2838, Generar 4307 → 4307, tarjetas 276/275/275 → 276/275/275. Los siete anchos finales son 67/48/48/48/67/67/67 px. `app.js` pasó de 123 064 a 117 321 bytes, con presupuesto de 117 500. Pasaron las 280 pruebas locales con Chromium. Los tiradores de Gboard, TalkBack y el alcance con una mano requieren un teléfono físico.
+
+## N2 — Tipo de bloque y título
+
+En la pantalla táctil, el chip y el submenú Nuevo bloque comparten los siete tipos y Más…. El título o pie vacío se abre desde el chip. El selector nativo mantiene todas las opciones. Las tres pruebas nuevas fallaron antes del cambio. Verifican el borrador, las ayudas, la vista previa, los controles de escritorio, la activación de teclado para el selector y la alternativa cuando falta showPicker.
+
+El campo Contenido subió de 2056 a 1909 px (147 px). Anexo A: altura 6094 → 5947 px, Estructura 2838 → 2690, Generar 4307 → 4159 y tarjetas 276/275/275 px en ambas mediciones. `app.js` pasó de 117 321 a 115 109 bytes; presupuesto 115 500. Pasaron 283 pruebas locales. El selector del sistema y el anuncio del chip en TalkBack quedan para Android físico.

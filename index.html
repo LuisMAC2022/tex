@@ -80,13 +80,16 @@
           <p>Completa un bloque y usa «Añadir bloque». El contenido de cualquier bloque llega al documento exactamente como lo escribes: la aplicación no añade caracteres de escape. Un bloque puede contener otros bloques: usa «Añadir dentro» en el bloque que quieras como padre, sin límite de niveles.</p>
           <div class="editor-workspace">
           <fieldset class="block-editor">
-            <legend id="block-form-heading">Nuevo bloque</legend>
+            <legend class="block-heading"><span class="block-heading-row"><span id="block-form-heading">Nuevo bloque</span>
+              <button type="button" id="type-chip" data-drag-ring="type" aria-haspopup="menu" aria-label="Tipo de bloque: Texto">¶ Texto ▾</button>
+              <button type="button" id="title-chip" aria-controls="block-title" aria-label="Añadir título">＋ Título</button></span>
+            </legend>
             <input id="editing-path" type="hidden" value="">
             <input id="parent-path" type="hidden" value="">
             <p id="block-target" class="block-target">El bloque se añadirá al final de la raíz del documento.</p>
             <p id="template-progress" hidden><span id="template-progress-text"></span> <button id="skip-template-step" type="button" class="secondary">Omitir paso</button> <button id="cancel-template" type="button" class="secondary">Cancelar plantilla</button></p>
             <p id="tray-summary" class="block-target" hidden></p>
-            <p class="field">
+            <p class="field" id="native-type-field">
               <label for="block-type">Tipo de bloque</label>
               <select id="block-type" name="blockType">
                 <option value="text">Texto</option>
@@ -104,7 +107,7 @@
                 <option value="image">Imagen</option>
               </select>
             </p>
-            <p class="field"><label for="block-title">Título del bloque (opcional)</label><input id="block-title" name="blockTitle" type="text"></p>
+            <p class="field" id="native-title-field"><label for="block-title">Título del bloque (opcional)</label><input id="block-title" name="blockTitle" type="text"></p>
             <div class="field" id="label-fields" hidden>
               <label for="block-label">Etiqueta</label>
               <small id="label-help">Prefijo del bloque <code id="label-prefix"></code>. Puedes dejar la etiqueta vacía.</small>

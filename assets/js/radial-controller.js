@@ -26,6 +26,7 @@
     });
     function articleTarget(node) { return { source: "card", path: keyToPath(node.closest("article").dataset.path) }; }
     function radialTarget(node) {
+      if (node.closest("#type-chip")) return { source: "editor", name: "Tipo de bloque", slices: T.typeMenuSlices() };
       if (node.closest('#thumb-symbols')) return { source: "editor", name: "Categorías de símbolos", slices: T.symbolCategorySlices() };
       if (node.closest("#thumb-menu, #content-menu") || node === blockContent) return { source: "editor" };
       if (node.closest("input,textarea,select,button,a,summary,[contenteditable],dialog,.radial-layer,#assist-list")) return null;
@@ -100,6 +101,9 @@
       const rect = button.getBoundingClientRect();
       openRadial(target, { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }, "tap", keyboard, button === $("#thumb-menu"));
     }
+    const chip = $("#type-chip");
+    listen(chip, "pointerdown", event => event.preventDefault());
+    listen(chip, "click", event => openRadialAtButton(chip, radialTarget(chip), !T.isPointerClick(event)));
     for (const id of ["thumb-menu","content-menu","global-menu"]) {
       const button = $("#" + id);
       listen(button, "pointerdown", e => e.preventDefault());
