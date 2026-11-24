@@ -1368,34 +1368,19 @@
   $("#alias-fields").addEventListener("keydown", (event) => { if (event.key === "Enter" && event.target.tagName !== "TEXTAREA" && !event.isComposing) { event.preventDefault(); saveAlias(); } });
   $("#cancel-alias").addEventListener("click", () => { editingAlias = -1; $("#alias-trigger").value = ""; $("#alias-expansion").value = ""; $("#alias-error").textContent = ""; });
   $("#reset-aliases").addEventListener("click", () => { aliases = T.DEFAULT_ALIASES.map(a => ({ ...a })); editingAlias = -1; persistAliases(); announce("Alias predeterminados restaurados."); });
-  function portableConfig() {
-    return { kind: "notas-latex-config", version: 1, aliases, templates: ownTemplates, prefs, macros: getConfigMacros(),
-      references: T.normalizeReferences(courseReferences) };
-  }
-  function applyPortableConfig(data, applyDefaults = true) {
-    aliases = data.aliases; ownTemplates = data.templates; prefs = { autoPair: data.prefs.autoPair, vibration: data.prefs.vibration !== false }; editingAlias = -1;
-    persistAliases(); writeWritingStorage("tex-notes:prefs:v1", prefs); writeWritingStorage("tex-notes:templates:v1", ownTemplates);
-    $("#radial-vibration").checked = prefs.vibration; $("#auto-pair").checked = prefs.autoPair;
-    pendingPairs = []; setConfigMacros(data.macros, applyDefaults); refreshTemplates();
-    if (data.references !== undefined) storeCourseReferences(data.references);
-  }
-  $("#export-config").addEventListener("click", () => {
-    const data = portableConfig();
-    const url = global.URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
-    const link = document.createElement("a"); link.href = url; link.download = "notas-latex-configuracion.json"; document.body.append(link); link.click(); link.remove();
-    global.setTimeout(() => global.URL.revokeObjectURL(url), 0); announce("Configuración exportada.");
-  });
-  $("#import-config").addEventListener("change", async (event) => {
-    const file = event.target.files[0]; if (!file) return;
-    try {
-      const data = JSON.parse(await file.text()), errors = T.validateConfiguration(data);
-      if (errors.length) { announce(errors.join(" ")); return; }
-      if (!global.confirm("¿Reemplazar con este archivo las preferencias y los catálogos incluidos en la configuración?")) return;
-      applyPortableConfig(data);
-      announce("Configuración importada.");
-    } catch { announce("No se pudo leer la configuración. Comprueba que sea un archivo JSON válido."); }
-    finally { event.target.value = ""; }
-  });
+  const { portableConfig, applyPortableConfig } = T.createPortableConfig(document, {
+    aliases: { read: () => aliases, apply(value) { aliases = value; editingAlias = -1; persistAliases(); } },
+    templates: { read: () => ownTemplates, apply(value) {
+      ownTemplates = value; writeWritingStorage("tex-notes:templates:v1", value); refreshTemplates();
+    } },
+    prefs: { read: () => prefs, apply(value) {
+      prefs = { autoPair: value.autoPair, vibration: value.vibration !== false }; pendingPairs = [];
+      writeWritingStorage("tex-notes:prefs:v1", prefs);
+      $("#radial-vibration").checked = prefs.vibration; $("#auto-pair").checked = prefs.autoPair;
+    } },
+    macros: { read: () => getConfigMacros(), apply: (value, defaults) => setConfigMacros(value, defaults) },
+    references: { read: () => T.normalizeReferences(courseReferences), apply: value => storeCourseReferences(value) },
+  }, announce);
   renderAliases();
   /* --- fin [F] --- */
 
