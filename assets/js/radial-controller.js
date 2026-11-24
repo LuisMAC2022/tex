@@ -59,7 +59,7 @@
         radialView.hide(); clearRadialPress();
         if (!model) return;
         focusWritingOrigin(model.originField);
-        if (radialState.action) applyRadialAction(radialState.action, model.context);
+        if (radialState.action) applyRadialAction(radialState.action, { ...model.target, context: model.context });
         else if (radialState.cancelled) announce("Menú cerrado.");
         return;
       }
@@ -85,12 +85,13 @@
         blockContent.setSelectionRange(blockContent.value.length, blockContent.value.length);
       }
       const kind = blockType(type)?.kind;
-      const context = target.source === "global" ? "global" : kind === "image" ? "image" :
-        kind === "equation" || (target.source === "editor" && (writingMode() === "math" || getScopeMode() === "math")) ? "formula" : "text";
+      // En la ruta histórica de tarjeta el menú corresponde al contenido cargado.
+      const context = T.actionContext({ source: target.source === "card" ? "content" : target.source, blockKind: kind,
+        mathMode: target.source === "editor" && writingMode(), scopeMode: target.source === "editor" && getScopeMode() });
       const field = kind === "image" ? imagePath : blockContent;
       const slices = T.slicesFor(context, type), area = viewport(), origin = { ...point, mode, bar };
       const scrollPositions = radialScrollPositions(press?.node || document.elementFromPoint?.(point.x, point.y));
-      radialModel = { context, origin, scrollPositions, originField: captureSymbolOrigin(field), ...T.radialLayout(slices, origin, area) };
+      radialModel = { target, context, origin, scrollPositions, originField: captureSymbolOrigin(field), ...T.radialLayout(slices, origin, area) };
       radialDispatch({ type: "open", mode, point, keyboard }, keyboard);
       if (press) { try { press.node.setPointerCapture(press.id); } catch { /* puntero ya liberado */ } }
     }
@@ -101,12 +102,12 @@
     for (const id of ["thumb-menu","content-menu","global-menu"]) {
       const button = $("#" + id);
       listen(button, "pointerdown", e => e.preventDefault());
-      listen(button, "click", e => openRadialAtButton(button, { source: id === "global-menu" ? "global" : "editor" }, !T.isPointerClick(e)));
+      listen(button, "click", e => T.runAction(button.dataset.actionId, { button, keyboard: !T.isPointerClick(e) }));
     }
     blockContent.setAttribute("aria-keyshortcuts", SHORTCUTS.filter(s => s.scope === "content-widget").map(s => ariaKeyshortcuts(s)).join(" "));
     listen(blockContent, "keydown", e => {
       if (!matchShortcut(e, "content-widget") || !["idle","waiting"].includes(radialState.phase)) return;
-      e.preventDefault(); openRadialAtButton(blockContent, { source: "editor" }, true);
+      e.preventDefault(); T.runAction(matchShortcut(e, "content-widget").id, { button: blockContent, keyboard: true });
     });
     listen(document, "keydown", e => {
       if (!radialModel) return;

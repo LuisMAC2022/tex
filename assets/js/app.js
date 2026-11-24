@@ -376,7 +376,7 @@
     const templateMessage = commitTemplateStep(result.path);
     announce(`Bloque ${pathLabel(result.path)} añadido ${parent.length ? `dentro de ${describeBlock(blockAtPath(blocks, parent), parent)}` : "en la raíz"}.${templateMessage ? ` ${templateMessage}` : ""}`);
   }
-  $("#add-block").addEventListener("click", () => commitBlock());
+  $("#add-block").addEventListener("click", () => T.runAction("block.commit"));
 
   $("#paste-block").addEventListener("click", () => {
     if (!tray) { updateTrayControls(); announce("La bandeja está vacía: copia un bloque antes de pegar."); return; }
@@ -414,7 +414,7 @@
   });
   blockList.addEventListener("click", event => {
     const button = event.target.closest("button[data-action]");
-    if (button) handleBlockAction(button.dataset.action, keyToPath(button.dataset.path), button, !T.isPointerClick(event));
+    if (button) T.runAction("block." + button.dataset.action, { path: keyToPath(button.dataset.path), button, keyboard: !T.isPointerClick(event) }, { source: "card" });
   });
 
 
@@ -628,8 +628,7 @@
     const index = [...symbolGrid.children].indexOf(event.target.closest("li"));
     if (shortcut?.id === "symbols.previousGroup" || shortcut?.id === "symbols.nextGroup") {
       event.preventDefault();
-      selectSymbolCategory(adjacentGroup(activeSymbolGroup, shortcut.id === "symbols.previousGroup" ? -1 : 1));
-      focusSymbolAt(Math.max(0, Math.min(index, symbolGrid.childElementCount - 1)));
+      T.runAction(shortcut.id, { index });
       return;
     }
 
@@ -639,7 +638,7 @@
       if (index < 0 && shortcut?.id !== "symbols.search") return;
       const columns = Math.max(1, getComputedStyle(symbolGrid).gridTemplateColumns.split(" ").filter(Boolean).length);
       const next = symbolGridTarget({ index, count, columns, key: event.key });
-      if (next === null) symbolSearch.focus();
+      if (next === null) T.runAction("symbols.search");
       else focusSymbolAt(next);
       return;
     }
@@ -657,7 +656,7 @@
     const first = symbolGrid.firstElementChild?.firstElementChild;
     if (matchShortcut(event, "symbol-search-widget")?.id === "symbols.firstResult") {
       event.preventDefault();
-      if (first) focusSymbolAt(0);
+      if (first) T.runAction("symbols.firstResult");
     } else if (event.key === "Enter" && !(event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)) {
       event.preventDefault();
       if (first) insertSymbol(first.dataset.symbolId);
@@ -682,7 +681,7 @@
     const shortcut = matchShortcut(event, "block-editor", listIsMac);
     if (shortcut?.id === "block.commit") {
       event.preventDefault();
-      if (!event.repeat) { closeAssistMenu(); $("#add-block").click(); }
+      if (!event.repeat) T.runAction(shortcut.id);
       return;
     }
     if (event.key === "Enter" && !(event.ctrlKey || event.metaKey || event.altKey || event.shiftKey)) {
@@ -695,20 +694,13 @@
         && matchShortcut(event, "block-editor")?.id === "symbols.toggle") {
       event.preventDefault();
       if (event.repeat) return;
-      closeAssistMenu();
-      if (inBoard) returnToSymbolOrigin();
-      else openSymbolSearch(event.target);
+      T.runAction("symbols.toggle", { field: event.target });
       return;
     }
     if (!inBoard) return;
     if (matchShortcut(event, "symbol-widget")?.id === "symbols.escape") {
       event.preventDefault();
-      if (event.target === symbolSearch && symbolSearch.value) {
-        symbolSearch.value = "";
-        updateSymbolSearch();
-      } else {
-        returnToSymbolOrigin();
-      }
+      T.runAction("symbols.escape", { field: event.target });
     } else if (event.target === symbolSearch) {
       navigateSymbolSearch(event);
     } else if (symbolGrid.contains(event.target)) {
@@ -1086,7 +1078,7 @@
     const button = $(indent ? "#list-indent" : "#list-outdent");
     button.setAttribute("aria-keyshortcuts", listAriaKeyshortcuts(shortcut));
     button.title = shortcutLabel(shortcut, listIsMac);
-    button.addEventListener("click", () => shiftListSelection(indent ? 1 : -1));
+    button.addEventListener("click", () => T.runAction(shortcut.id));
     button.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") return;
       event.preventDefault();
@@ -1108,7 +1100,7 @@
     const shortcut = matchListShortcut(event, "list-editor");
     if (shortcut) {
       event.preventDefault();
-      shiftListSelection(shortcut.id === "list.indent" ? 1 : -1);
+      T.runAction(shortcut.id);
     } else if (event.key === "Enter" && !(event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)) {
       event.preventDefault();
       applyListEdit(continueListLine(listContent));
@@ -1924,7 +1916,7 @@
     blockContent.focus({ preventScroll: true });
     blockContent.setSelectionRange(range.start, range.end, range.direction || "forward");
   }
-  scopeButton.addEventListener("click", () => {
+  function toggleScope() {
     const range = currentScopeRange();
     if (scopeMode) {
       clearScope();
@@ -1937,7 +1929,7 @@
       announce("Selección por alcance. Siguiente amplía, Anterior reduce.");
     }
     focusRange(range);
-  });
+  }
   blockContent.addEventListener("input", clearScope);
   $("#block-type").addEventListener("change", clearScope);
   blockFieldHooks.push({ fill: clearScope, clear: clearScope });
@@ -1973,14 +1965,17 @@
       announce("Cursor en la posición " + (index + 1) + ".");
     }
   }
-  $("#thumb-prev").addEventListener("click", () => thumbStep(-1));
-  $("#thumb-next").addEventListener("click", () => thumbStep(1));
-  $("#thumb-add").addEventListener("click", () => { closeAssistMenu(); closeSymbolSheet(); commitBlock(true); });
-  $("#thumb-symbols").addEventListener("click", event => {
+  function toggleSymbols(keyboard) {
     if (symbolBoard.classList.contains("symbol-sheet")) { returnToSymbolOrigin(); return; }
     blockContent.focus(); showSymbolSheet();
-    if (event.detail === 0) symbolSearch.focus();
+    if (keyboard) symbolSearch.focus();
     announce("Tablero de símbolos abierto.");
+  }
+  thumbBar.addEventListener("click", event => {
+    const button = event.target.closest("[data-action-id]");
+    if (button && button.id !== "thumb-menu") T.runAction(button.dataset.actionId, {
+      keepFieldFocus: true, keyboard: !T.isPointerClick(event), button,
+    }, { source: "editor" });
   });
   syncThumbViewport();
 
@@ -1996,39 +1991,28 @@
       tree: "#global-menu", result: "#generate", versions: "#versions-heading", preferences: "#writing-preferences > summary" })[destination]);
     target.focus(); target.scrollIntoView({ block: "nearest" });
   }
-  const radialCommands = {
-    insertList() {
-      if (blockType($("#block-type").value)?.kind === "list") shiftListSelection(1);
-      else putRadialSnippet("\\begin{itemize}\n\\item #1\n\\end{itemize}#0");
-    },
-    focusTitle() { $("#block-title").focus(); },
-    openSymbols(group) { openSymbolSearch(blockContent); selectSymbolCategory(group); },
-    setImageWidth(width) { imageWidth.value = width; imageWidth.dispatchEvent(new Event("input", { bubbles: true })); },
-    setImageAlign(align) { imageFields.querySelector('input[name="imageAlign"][value="' + align + '"]').click(); },
-    chooseImageFile() { imageFile.click(); },
-    deleteBlock() {
-      const path = editorTarget().editing, block = blockAtPath(blocks, path);
-      if (!block) { announce("Guarda la imagen antes de eliminarla de la estructura."); return; }
-      if (!block.children.length && !confirm("¿Eliminar " + describeBlock(block, path) + "?")) return;
-      blockList.querySelector('[data-action="delete"][data-path="' + pathToKey(path) + '"]')?.click();
-    },
-    selectType(type) { resetBlockEditor(); selectBlockType(type); focusBlockContent(); },
-    focusType() { $("#block-type").focus(); },
-    undo(source) { if (source === "global") travelStructure("undo"); else document.execCommand("undo"); },
-    redo(source) { if (source === "global") travelStructure("redo"); else document.execCommand("redo"); },
-    goTo(destination) { goTo(destination); },
-    openPreferences() { goTo("preferences"); },
-  };
   function applyRadialAction(action, from) {
     if (action.type === "insert") putRadialSnippet(action.snippet);
     if (action.type === "symbol") { symbolOrigin = captureSymbolOrigin(blockContent); insertSymbol(action.symbol); }
-    if (action.type === "command") radialCommands[action.name](...(action.args || []), from);
+    if (action.type === "action") T.runAction(action.id, { ...from, value: action.args?.[0] }, from);
   }
   const radial = T.createRadialController(document, {
     blockContent, imagePath, blockEditor, closeAssistMenu: () => closeAssistMenu(), closeSymbolSheet,
     getBlock: path => blockAtPath(blocks, path), loadBlockEditor, writingMode,
     getScopeMode: () => scopeMode, captureSymbolOrigin, applyRadialAction, announce, vibration: () => prefs.vibration,
   });
+
+  T.registerActionHandlers(T.createActionBindings(document, {
+    radial, handleBlockAction, editorTarget, getBlock: path => blockAtPath(blocks, path), announce, describeBlock,
+    closeAssistMenu: () => closeAssistMenu(), closeSymbolSheet, commitBlock, thumbStep, toggleScope, toggleSymbols,
+    shiftListSelection, putSnippet: putRadialSnippet, travelStructure, resetBlockEditor, selectBlockType,
+    focusBlockContent, pickType: () => $("#block-type").focus(), goTo, openSymbolSearch, selectSymbolCategory,
+    returnToSymbolOrigin, updateSymbolSearch, focusSymbolAt,
+    changeSymbolGroup(delta, index) {
+      selectSymbolCategory(adjacentGroup(activeSymbolGroup, delta));
+      focusSymbolAt(Math.max(0, Math.min(index, symbolGrid.childElementCount - 1)));
+    },
+  }));
 
   function renderShortcutPanel() {
     const isMac = /Mac/.test(global.navigator.userAgentData?.platform || global.navigator.platform || "");
@@ -2158,8 +2142,8 @@
     const before=state(); before.metadata[name]=committedMetadata[name];
     rememberChange(focusId(),before); committedMetadata=metadata();
   });
-  $("#undo-structure").addEventListener("click",()=>travelStructure("undo"));
-  $("#redo-structure").addEventListener("click",()=>travelStructure("redo"));
+  $("#undo-structure").addEventListener("click",()=>T.runAction("structure.undo"));
+  $("#redo-structure").addEventListener("click",()=>T.runAction("structure.redo"));
 
   let knownVersions = [], persistenceRequest = null;
   const storageReady = T.openVersionStore(global);

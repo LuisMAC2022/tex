@@ -153,7 +153,7 @@ el marcador literal; los números de línea cambian.
 | `[H] Macros del documento` | macros | `defaultMacros` | asigna `getCompletionMacros`, `getConfigMacros`, `setConfigMacros` |
 | `Referencias del documento y del curso` | fuentes y citas | `courseReferences` | `blockItemExtensions` |
 | `const thumbBar` (sin marcador) | barra del pulgar, hoja de símbolos, selección por alcance | `scopeMode`, `scopeRange` | `blockFieldHooks` |
-| `createRadialController` | conecta el editor a los gestos y al teclado de `radial-controller.js` | el controlador conserva el anillo y los punteros | `radialCommands` |
+| `createRadialController` | conecta el editor a los gestos y al teclado de `radial-controller.js` | el controlador conserva el anillo y los punteros | `runAction` |
 | `Autoguardado separado` | sesión sin guardar y su recuperación | `pendingSession` | — |
 | `function selectDocument` hasta el final | historial estructural, versiones, proyecto JSON y arranque | `knownVersions` | — |
 
@@ -265,6 +265,10 @@ Dos detalles del recorrido:
 ## 5. Recetas
 
 Cada una termina en `npm test`. Las dos primeras están **ejecutadas**, no deducidas.
+
+### Añadir una acción
+
+Declara su identificador, nombre, icono y contextos en `actions.js`. La disponibilidad depende de los datos que recibe `enabled`. Registra la operación en `createActionBindings`. Los botones usan `data-action-id` y los sectores usan el mismo identificador en `action`. Los atajos conservan su ámbito en `shortcuts.js` y llaman a `runAction`. Comprueba el registro tanto en Node como en Chromium.
 
 ### Añadir un tipo de bloque
 
@@ -457,7 +461,7 @@ rápida y determinista que una de interfaz. Lo que Chromium emulado no reproduce
 
 Las pruebas comparan el archivo de referencia byte a byte. Si está instalado, `pdflatex` compila también los fragmentos radiales en un directorio temporal con `-no-shell-escape`. Overleaf se revisa manualmente.
 
-Los sectores se definen en `assets/js/menus.js`. Se puede añadir un fragmento, referenciar un símbolo por id, crear un submenú o invocar un comando existente editando ese archivo. Para un comando nuevo hay que registrar su función en `radialCommands` de `app.js`. Los rótulos de tipos y símbolos se resuelven desde sus catálogos. La geometría y las transiciones se prueban en `tests/radial.test.js`.
+Los sectores se definen en `assets/js/menus.js`. Se puede añadir un fragmento, referenciar un símbolo por id, crear un submenú o invocar un comando existente editando ese archivo. Para un comando nuevo hay que registrar su función en `runAction` de `app.js`. Los rótulos de tipos y símbolos se resuelven desde sus catálogos. La geometría y las transiciones se prueban en `tests/radial.test.js`.
 
 ---
 

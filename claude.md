@@ -244,3 +244,9 @@ Las pruebas de interfaz pasan de 6 a 25. Los 25 recorridos tardaron 4,4 s en Chr
 **Precisión autorizada.** Probé los 13 tipos en un Pixel 7 emulado. El botón Menú abrió texto con diez tipos, fórmula con dos e imagen con uno. El cuarto contexto se abrió con Menú general en Estructura. La persona autorizó cubrir esas dos rutas en A1.
 
 Quedan fuera de esta medición Android físico, Gboard, TalkBack y el portapapeles del sistema en el teléfono.
+
+## A2 — Registro de acciones y contexto
+
+Las tarjetas, los controles de escritura, los comandos de los anillos y los atajos consultan los identificadores de `actions.js`. La apertura radial y las operaciones de tarjeta tienen controladores propios. La prueba de coherencia contrasta el catálogo con los manejadores que registra la página. Las 25 pruebas de interfaz de A1 siguen pasando con los mismos casos.
+
+`app.js` pasó de 136 995 a 123 064 bytes. Su presupuesto bajó de 137 000 a 123 500 bytes. Chromium verificó los controles en escritorio y Pixel 7 emulado. La prueba manual con teclados físicos de distintas distribuciones queda pendiente. La ejecución de A1 en GitHub Actions también pasó.

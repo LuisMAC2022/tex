@@ -4,6 +4,11 @@
 > Su versión de referencia es la suite; si discrepan, manda la suite.
 > `tests/documentacion.test.js` comprueba que esté al día.
 
+## `tests/actions.test.js` — 2 pruebas
+
+- los identificadores de acciones son únicos y todo control remite a un contexto conocido
+- el contexto de acción distingue tarjeta, documento, imagen, texto y matemáticas
+
 ## `tests/anclas.test.js` — 5 pruebas
 
 - decisiones/ declara un status válido en cada entrada
@@ -192,6 +197,10 @@
 - los avisos de ruta distinguen espacios, mayúsculas y formatos incompatibles
 - avisa si el nombre contiene caracteres reservados de LaTeX
 
+## `tests/interfaz-acciones.test.js` — 1 pruebas
+
+- cada acción del catálogo tiene un manejador en la página
+
 ## `tests/interfaz-editor.test.js` — 3 pruebas
 
 - Añadir bloque y Ctrl+Intro conservan el orden, el LaTeX y el foco de captura
@@ -374,4 +383,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-271 pruebas con `node:test` más la comprobación estructural.
+274 pruebas con `node:test` más la comprobación estructural.

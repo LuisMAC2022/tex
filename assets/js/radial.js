@@ -59,18 +59,22 @@
     const source = T.RADIAL_MENUS.find(m => m.context === context)?.slices || [];
     function resolve(slice) {
       const action = slice.action;
+      if (typeof action === "string") {
+        const command = T.actionById(action);
+        const label = action === "write.list" && T.blockType(blockType)?.kind === "list" ? "Sangrar" : slice.label || command.label;
+        return { ...slice, label, icon: slice.icon || command.icon, action: { type: "action", id: action, args: slice.args } };
+      }
       if (action.type === "symbol") {
         const s = T.MATH_SYMBOLS.find(s => s.id === action.symbol);
         return { ...slice, label: slice.label || s.name, icon: slice.icon || s.symbol };
       }
       if (action.type === "blockTypes") {
         const children = action.ids.map(id => ({ id: "type-" + id, label: T.blockLabel(id), icon: "¶",
-          action: { type: "command", name: "selectType", args: [id] } }));
-        children.push({ id: "type-more", label: "Más…", icon: "…", action: { type: "command", name: "focusType" } });
+          action: { type: "action", id: "block.type", args: [id] } }));
+        children.push({ id: "type-more", label: "Más…", icon: "…", action: { type: "action", id: "block.typePicker" } });
         return { ...slice, children };
       }
       if (action.type === "submenu") return { ...slice, children: action.slices.map(resolve) };
-      if (action.name === "insertList" && T.blockType(blockType)?.kind === "list") return { ...slice, label: "Sangrar" };
       return slice;
     }
     return source.map(resolve);

@@ -50,7 +50,7 @@ test("espera, cancelación, zona muerta, vibración y submenús en los dos modos
 });
 test("el catálogo radial deriva referencias válidas y conserva objetivos de 44 píxeles", () => {
   assert.deepEqual(T.RADIAL_MENUS.map(m => m.context),["formula","text","image","global"]);
-  const ids = new Set(), actions = new Set(["insert","symbol","command","submenu","blockTypes"]);
+  const ids = new Set(), actions = new Set(["insert","symbol","action","submenu","blockTypes"]);
   function walk(items) {
     assert.ok(items.length > 0 && items.length <= 8);
     for (const slice of items) {
@@ -59,7 +59,7 @@ test("el catálogo radial deriva referencias válidas y conserva objetivos de 44
       if (a.type === "insert") assert.ok(T.validSnippetMarkers(a.snippet));
       if (a.type === "symbol") assert.ok(T.MATH_SYMBOLS.some(s => s.id === a.symbol));
       if (a.type === "blockTypes") assert.ok(a.ids.every(id => T.blockType(id)));
-      if (a.type === "command") assert.ok(T.RADIAL_COMMANDS.includes(a.name));
+      if (a.type === "action") assert.ok(T.actionById(a.id));
       if (slice.children) walk(slice.children);
     }
     for (const ring of [T.fitMenu(point,area,items.length),T.fitMenu({x:16,y:679,bar:true},area,items.length),
