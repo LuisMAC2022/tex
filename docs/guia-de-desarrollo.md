@@ -166,7 +166,7 @@ Dos trampas que no se ven al leer una sección suelta:
   que también cierra la sesión `/`. Cualquier cambio en el menú de sugerencias
   tiene que mirar ambas secciones.
 
-Las operaciones de tarjeta y la recuperación del foco viven en `block-actions.js`. La aplicación aporta el árbol actual y las funciones que aplican los cambios.
+El destino del formulario, el vaciado de sus campos y el cambio de tipo viven en `block-form.js`. Las operaciones de tarjeta y la recuperación del foco viven en `block-actions.js`. La aplicación aporta el árbol actual y las funciones que aplican los cambios.
 
 ### Dónde va el código nuevo
 

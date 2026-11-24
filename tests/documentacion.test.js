@@ -96,7 +96,8 @@ test("ningún índice apunta a una sección que ya no existe", () => {
 
 test("cada rótulo que citan las guías sigue existiendo en la interfaz", () => {
   const html = readFileSync(join(RAIZ, "index.html"), "utf8");
-  const app = readFileSync(join(RAIZ, "assets/js/app.js"), "utf8");
+  const app = [...html.matchAll(/<script src="(assets\/js\/[^"]+\.js)"><\/script>/g)]
+    .map(([, ruta]) => readFileSync(join(RAIZ, ruta), "utf8")).join("\n");
 
   // Solo texto que el navegador PINTA como rótulo: nunca la prosa de una ayuda.
   const etiquetas = [
