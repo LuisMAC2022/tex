@@ -16,6 +16,7 @@
     }
     function actionButton(label, action, path, accessibleName, disabled = false) {
       const button = document.createElement("button");
+      button.className = "secondary";
       button.type = "button"; button.textContent = label;
       button.dataset.action = action; button.dataset.path = pathToKey(path);
       button.disabled = disabled;
