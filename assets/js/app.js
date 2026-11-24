@@ -1849,135 +1849,15 @@
   if (!$("#date").value) $("#date").value = global.TexNotes.localDateValue();
   syncMetadataSummary(true);
 
-  const thumbBar = $("#thumb-bar");
   const coarsePointer = global.matchMedia("(pointer: coarse)");
-  const rootStyle = document.documentElement.style;
-  function syncThumbViewport() {
-    const v = global.visualViewport;
-    const inset = v ? Math.max(0, global.innerHeight - v.offsetTop - v.height) : 0;
-    rootStyle.setProperty("--keyboard-inset", inset + "px");
-    rootStyle.setProperty("--thumb-height", thumbBar.offsetHeight + "px");
-    rootStyle.setProperty("--sheet-height", ((v?.height ?? global.innerHeight) * .4) + "px");
-  }
-  function revealThumbField() {
-    syncThumbViewport();
-    if (coarsePointer.matches && document.activeElement === blockContent) blockContent.scrollIntoView({ block: "nearest" });
-  }
-  global.visualViewport?.addEventListener("resize", revealThumbField);
-  global.visualViewport?.addEventListener("scroll", syncThumbViewport);
-  global.addEventListener("resize", syncThumbViewport);
-  if (global.ResizeObserver) new ResizeObserver(syncThumbViewport).observe(thumbBar);
-  blockContent.addEventListener("focus", () => { if (coarsePointer.matches) requestAnimationFrame(revealThumbField); });
-  function showSymbolSheet() {
-    symbolOrigin ??= captureSymbolOrigin(blockContent);
-    symbolBoard.classList.add("symbol-sheet");
-    symbolDetails.open = true;
-    $("#close-symbol-sheet").hidden = false;
-    $("#thumb-symbols").setAttribute("aria-expanded", "true");
-  }
-  function closeSymbolSheet() {
-    symbolBoard.classList.remove("symbol-sheet");
-    $("#close-symbol-sheet").hidden = true;
-    $("#thumb-symbols").setAttribute("aria-expanded", "false");
-  }
-  coarsePointer.addEventListener("change", () => { closeSymbolSheet(); syncThumbViewport(); });
-  $("#close-symbol-sheet").addEventListener("click", returnToSymbolOrigin);
-  symbolBoard.addEventListener("pointerdown", event => {
-    if (symbolBoard.classList.contains("symbol-sheet") && event.target.closest("button")) event.preventDefault();
+  const thumb = T.createThumbBar(document, {
+    blockContent, symbolBoard, symbolDetails, symbolSearch, coarsePointer, announce, returnToSymbolOrigin,
+    ensureSymbolOrigin: () => { symbolOrigin ??= captureSymbolOrigin(blockContent); }, closeAssistMenu: () => closeAssistMenu(),
+    fieldState, getListIndex: () => assistState?.index, selectAssist, getSnippet: () => snippetSession,
+    setSnippet: next => { snippetSession = next; },
   });
-  document.addEventListener("keydown", event => {
-    if (event.key !== "Escape" || !symbolBoard.classList.contains("symbol-sheet")) return;
-    event.preventDefault(); event.stopPropagation(); returnToSymbolOrigin();
-  }, true);
-  thumbBar.addEventListener("pointerdown", event => { if (event.target.closest("button")) event.preventDefault(); });
-  thumbBar.addEventListener("keydown", event => {
-    const buttons = [...thumbBar.querySelectorAll("button:enabled")];
-    const index = buttons.indexOf(event.target);
-    if (index < 0 || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-    event.preventDefault();
-    const next = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1 :
-      (index + buttons.length + (event.key === "ArrowLeft" ? -1 : 1)) % buttons.length;
-    buttons[index].tabIndex = -1;
-    buttons[next].tabIndex = 0;
-    buttons[next].focus();
-  });
-  const scopeButton = $("#thumb-selection");
-  let scopeMode = null, scopeStack = [], scopeRange = null;
-  function clearScope() {
-    scopeMode = null;
-    scopeStack = [];
-    scopeRange = null;
-    scopeButton.setAttribute("aria-pressed", "false");
-  }
-  function currentScopeRange() {
-    return { start: blockContent.selectionStart, end: blockContent.selectionEnd, direction: blockContent.selectionDirection };
-  }
-  function focusRange(range) {
-    blockContent.focus({ preventScroll: true });
-    blockContent.setSelectionRange(range.start, range.end, range.direction || "forward");
-  }
-  function toggleScope() {
-    const range = currentScopeRange();
-    if (scopeMode) {
-      clearScope();
-      announce("Selección por alcance desactivada.");
-    } else {
-      scopeMode = T.scopeModeAt(blockContent.value, range, $("#block-type").value);
-      scopeRange = range;
-      scopeButton.setAttribute("aria-pressed", "true");
-      closeAssistMenu();
-      announce("Selección por alcance. Siguiente amplía, Anterior reduce.");
-    }
-    focusRange(range);
-  }
-  blockContent.addEventListener("input", clearScope);
-  $("#block-type").addEventListener("change", clearScope);
-  blockFieldHooks.push({ fill: clearScope, clear: clearScope });
-  function stepScope(direction) {
-    const actual = currentScopeRange();
-    if (actual.start !== scopeRange?.start || actual.end !== scopeRange?.end) {
-      scopeStack = [];
-      scopeRange = actual;
-      scopeMode = T.scopeModeAt(blockContent.value, actual, $("#block-type").value);
-    }
-    const next = direction > 0 ? T.expandScope(blockContent.value, scopeRange, scopeMode, scopeStack) :
-      T.shrinkScope(scopeRange, scopeStack);
-    scopeRange = next.range;
-    scopeStack = next.stack;
-    focusRange(scopeRange);
-    const selected = blockContent.value.slice(scopeRange.start, scopeRange.end);
-    announce(selected ? (scopeRange.name || "Selección original") + ": " + selected.slice(0, 120) :
-      "Cursor en la posición " + (scopeRange.start + 1) + ".");
-  }
-  function thumbStep(direction) {
-    // Con sugerencias abiertas, la barra las recorre como las flechas del teclado.
-    if (assistState) { selectAssist(assistState.index + direction); return; }
-    if (scopeMode) { stepScope(direction); return; }
-    const current = fieldState();
-    const hole = direction > 0 ? T.nextSnippetHole(current, snippetSession) : T.previousSnippetHole(current, snippetSession);
-    if (hole) {
-      T.applyFieldEdit(blockContent, hole.edit); snippetSession = hole.session;
-      announce(hole.session ? "Hueco " + (hole.session.index + 1) + " de " + hole.session.holes.length : "Fin del fragmento.");
-    } else {
-      snippetSession = null;
-      const index = T.tokenBoundary(current.value, direction > 0 ? current.selectionEnd : current.selectionStart, direction);
-      T.applyFieldEdit(blockContent, { ...current, selectionStart: index, selectionEnd: index });
-      announce("Cursor en la posición " + (index + 1) + ".");
-    }
-  }
-  function toggleSymbols(keyboard) {
-    if (symbolBoard.classList.contains("symbol-sheet")) { returnToSymbolOrigin(); return; }
-    blockContent.focus(); showSymbolSheet();
-    if (keyboard) symbolSearch.focus();
-    announce("Tablero de símbolos abierto.");
-  }
-  thumbBar.addEventListener("click", event => {
-    const button = event.target.closest("[data-action-id]");
-    if (button && button.id !== "thumb-menu") T.runAction(button.dataset.actionId, {
-      keepFieldFocus: true, keyboard: !T.isPointerClick(event), button,
-    }, { source: "editor" });
-  });
-  syncThumbViewport();
+  const { showSymbolSheet, closeSymbolSheet, toggleScope, toggleSymbols, thumbStep } = thumb;
+  blockFieldHooks.push({ fill: thumb.clearScope, clear: thumb.clearScope });
 
   function putRadialSnippet(source) {
     const result = T.applyRadialSnippet(fieldState(), source);
@@ -1999,7 +1879,7 @@
   const radial = T.createRadialController(document, {
     blockContent, imagePath, blockEditor, closeAssistMenu: () => closeAssistMenu(), closeSymbolSheet,
     getBlock: path => blockAtPath(blocks, path), loadBlockEditor, writingMode,
-    getScopeMode: () => scopeMode, captureSymbolOrigin, applyRadialAction, announce, vibration: () => prefs.vibration,
+    getScopeMode: thumb.getScopeMode, captureSymbolOrigin, applyRadialAction, announce, vibration: () => prefs.vibration,
   });
 
   T.registerActionHandlers(T.createActionBindings(document, {

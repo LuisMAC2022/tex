@@ -152,7 +152,7 @@ el marcador literal; los números de línea cambian.
 | `[G] Comandos / y plantillas` | `/` y plantillas por pasos | `slashSession`, `templateSession` | asigna `specialCompletions`, `acceptSpecialCompletion`, `refreshTemplates` y **envuelve** `closeAssistMenu` |
 | `[H] Macros del documento` | macros | `defaultMacros` | asigna `getCompletionMacros`, `getConfigMacros`, `setConfigMacros` |
 | `Referencias del documento y del curso` | fuentes y citas | `courseReferences` | `blockItemExtensions` |
-| `const thumbBar` (sin marcador) | barra del pulgar, hoja de símbolos, selección por alcance | `scopeMode`, `scopeRange` | `blockFieldHooks` |
+| `createThumbBar` | conecta la barra y la hoja de símbolos en `thumb-bar.js` | el controlador conserva el alcance | `blockFieldHooks` |
 | `createRadialController` | conecta el editor a los gestos y al teclado de `radial-controller.js` | el controlador conserva el anillo y los punteros | `runAction` |
 | `Autoguardado separado` | sesión sin guardar y su recuperación | `pendingSession` | — |
 | `function selectDocument` hasta el final | historial estructural, versiones, proyecto JSON y arranque | `knownVersions` | — |
