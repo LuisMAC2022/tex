@@ -147,7 +147,7 @@ el marcador literal; los números de línea cambian.
 | `[B] Imagen` | campos de imagen y etiqueta del bloque | — | los tres ganchos de bloque |
 | `[C] Listas` | sangría y vista de listas | `loadedListBlock` | `blockFieldHooks`, `previewRenderers`, `editorPreviewHooks` |
 | `[D] Comprobación` | avisos previos a Overleaf | `issuesByPath` | `editorPreviewHooks`, `blockItemExtensions`, `beforeGenerateHooks` |
-| `[E] Mover` | diálogo de traslado | `movingPath` | `blockItemExtensions` |
+| `[E] Mover` | conecta el diálogo de traslado en `move-dialog.js` | el controlador conserva el bloque de origen | `changeTree` |
 | `[F] Asistente de escritura` | autocierre, sugerencias de `\`, huecos, alias, configuración portátil | `prefs`, `aliases`, `usage`, `snippetSession`, `assistState` | declara las ranuras que asignan [G] y [H] |
 | `[G] Comandos / y plantillas` | `/` y plantillas por pasos | `slashSession`, `templateSession` | asigna `specialCompletions`, `acceptSpecialCompletion`, `refreshTemplates` y **envuelve** `closeAssistMenu` |
 | `[H] Macros del documento` | macros | `defaultMacros` | asigna `getCompletionMacros`, `getConfigMacros`, `setConfigMacros` |
@@ -166,7 +166,7 @@ Dos trampas que no se ven al leer una sección suelta:
   que también cierra la sesión `/`. Cualquier cambio en el menú de sugerencias
   tiene que mirar ambas secciones.
 
-El formulario y la persistencia de alias se conectan mediante `alias-editor.js`. La lectura y el intercambio del JSON se conectan desde `portable-config.js`. Los destinos de navegación y el resumen de los datos viven en `mobile-panels.js`. La lista anidada y la restauración de foco viven en `structure-view.js`. El destino del formulario, el vaciado de sus campos y el cambio de tipo viven en `block-form.js`. Las operaciones de tarjeta y la recuperación del foco viven en `block-actions.js`. La aplicación aporta el árbol actual y las funciones que aplican los cambios.
+La lista, su posición y el foco de las sugerencias viven en `suggestion-list.js`. El formulario y la persistencia de alias se conectan mediante `alias-editor.js`. La lectura y el intercambio del JSON se conectan desde `portable-config.js`. Los destinos de navegación y el resumen de los datos viven en `mobile-panels.js`. La lista anidada y la restauración de foco viven en `structure-view.js`. El destino del formulario, el vaciado de sus campos y el cambio de tipo viven en `block-form.js`. Las operaciones de tarjeta y la recuperación del foco viven en `block-actions.js`. La aplicación aporta el árbol actual y las funciones que aplican los cambios.
 
 ### Dónde va el código nuevo
 

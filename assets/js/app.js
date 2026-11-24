@@ -1079,51 +1079,8 @@
   /* --- fin [D] --- */
 
   /* --- [E] Mover --- */
-  const { flattenBlocks, moveBlockTo } = global.TexNotes;
-  const moveDialog = $("#move-block-dialog");
-  const moveDestination = $("#move-block-destination");
-  const movePosition = $("#move-block-position");
-  let movingPath = [];
-
-  function openMove(path) {
-    const subject = describeBlock(blockAtPath(blocks, path), path);
-    movingPath = path;
-    const sourceKey = pathToKey(path);
-    const options = [moveDestination.options[0]];
-    for (const { block, path: parentPath } of flattenBlocks(blocks)) {
-      const key = pathToKey(parentPath);
-      if (!acceptsChildren(block.type) || key === sourceKey || key.startsWith(`${sourceKey}.`)) continue;
-      options.push(new Option(describeBlock(block, parentPath), key));
-    }
-    $("#move-block-subject").textContent = `Bloque ${subject}`;
-    moveDestination.replaceChildren(...options);
-    moveDestination.value = pathToKey(path.slice(0, -1));
-    movePosition.value = "end";
-    moveDialog.showModal();
-  }
-
-  $("#move-block-cancel").addEventListener("click", () => moveDialog.close());
-  $("#move-block-form").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const position = movePosition.value === "start" ? 0 : undefined;
-    const movedId = blockAtPath(blocks, movingPath)?.id;
-    const result = moveBlockTo(blocks, movingPath, keyToPath(moveDestination.value), position);
-    moveDialog.close();
-    if (!result) {
-      announce("No se pudo mover el bloque a ese destino.");
-      return;
-    }
-
-    const previous = editorTarget();
-    const cancelled = cancelEditForStructuralChange();
-    changeTree(result.blocks, movedId);
-    renderBlocks();
-    setEditorTarget({});
-    renderEditorPreview();
-    focusById("edit", movedId);
-    const targetReset = previous.parent.length ? " El siguiente bloque se añadirá en la raíz." : "";
-    announce(`Bloque movido de ${pathLabel(movingPath)} a ${pathLabel(result.path)}.${cancelled}${targetReset}`);
-  });
+  const {open: openMove} = global.TexNotes.createMoveDialog(document, {getBlocks: () => blocks, describeBlock,
+    editorTarget, cancelEditForStructuralChange, changeTree, renderBlocks, setEditorTarget, renderEditorPreview, focusById, pathLabel, announce});
   /* --- fin [E] --- */
 
   /* --- [F] Asistente de escritura --- */
@@ -1150,20 +1107,20 @@
   blockFieldHooks.push({ fill() { pendingPairs = []; }, clear() { pendingPairs = []; } });
   blockContent.addEventListener("beforeinput", (event) => {
     if (event.defaultPrevented || T.isApplyingFieldEdit() || event.isComposing || event.inputType !== "insertText" || event.data?.length !== 1) return;
-    if (assistState?.token.kind === "slash") return;
-    if (assistState && !/[A-Za-z]/.test(event.data)) closeAssistMenu();
+    if (suggestions.state?.token.kind === "slash") return;
+    if (suggestions.state && !/[A-Za-z]/.test(event.data)) closeAssistMenu();
     if (!prefs.autoPair) return;
     const current = fieldState();
     const result = T.autoPair(current, event.data, { mode: T.mathContextAt(current.value, current.selectionStart, $("#block-type").value), pending: pendingPairs });
     if (result) { event.preventDefault(); applyAssist(result); openDocumentSuggestions(); }
   });
-  /* @decision DEC-016 ancla:3d5a2b69 tramo:14
+  /* @decision DEC-016 ancla:fb8dc377 tramo:14
    * La captura en el fieldset antecede al manejador de Intro de listas. Solo
    * se consume la tecla cuando existe una edición del asistente aplicable.
    */
   blockEditor.addEventListener("keydown", (event) => {
     if (event.target !== blockContent || event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || !prefs.autoPair) return;
-    if (assistState) { handleWritingKey(event); if (event.defaultPrevented) return; }
+    if (suggestions.state) { handleWritingKey(event); if (event.defaultPrevented) return; }
     const current = fieldState();
     const result = event.key === "Backspace" ? T.deleteEmptyPair(current, pendingPairs)
       : event.key === "Enter" ? T.completeEnvironment(current, $("#block-type").value) : null;
@@ -1192,70 +1149,10 @@
   let specialCompletions = () => null;
   let acceptSpecialCompletion = () => false;
   let snippetSession = null;
-  let assistState = null;
-  const assistList = $("#assist-list");
-  closeAssistMenu = () => {
-    assistState = null; assistList.hidden = true; assistList.replaceChildren();
-    for (const name of ["aria-autocomplete", "aria-controls", "aria-activedescendant"]) blockContent.removeAttribute(name);
-  };
+  const suggestions = T.createSuggestionList(document, {blockContent, announce, acceptAssist, onEmpty: () => closeAssistMenu()});
+  const {open: openAssistMenu, select: selectAssist} = suggestions;
+  closeAssistMenu = suggestions.close;
   function writingMode() { return T.mathContextAt(blockContent.value, blockContent.selectionStart, $("#block-type").value); }
-  function positionAssistMenu() {
-    if (!assistState) return;
-    const rect = blockContent.getBoundingClientRect();
-    const narrow = global.matchMedia("(max-width: 38rem)").matches;
-    const mirror = document.createElement("div"), marker = document.createElement("span");
-    const style = getComputedStyle(blockContent);
-    for (const key of ["font", "lineHeight", "letterSpacing", "padding", "border", "boxSizing", "tabSize", "textIndent"]) mirror.style[key] = style[key];
-    Object.assign(mirror.style, { position: "fixed", visibility: "hidden", whiteSpace: "pre-wrap", overflowWrap: "break-word", width: `${rect.width}px`, left: `${rect.left}px`, top: `${rect.top}px` });
-    mirror.textContent = blockContent.value.slice(0, blockContent.selectionStart);
-    marker.textContent = "\u200b"; mirror.append(marker); document.body.append(mirror);
-    const caret = marker.getBoundingClientRect();
-    mirror.remove();
-    const clamp = (value) => Math.max(rect.top, Math.min(value, rect.bottom));
-    const anchor = { top: clamp(caret.top - blockContent.scrollTop), bottom: clamp(caret.bottom - blockContent.scrollTop) };
-    const x = narrow ? rect.left : caret.left - blockContent.scrollLeft;
-    // La barra del pulgar y el teclado virtual tapan el borde inferior.
-    const view = global.visualViewport, top = (view?.offsetTop ?? 0) + 8;
-    const bottom = (view ? view.offsetTop + view.height : global.innerHeight) - ($("#thumb-bar")?.offsetHeight || 0) - 8;
-    const scrolled = assistList.scrollTop;
-    assistList.style.maxHeight = "";
-    assistList.style.width = `${Math.max(0, Math.min(narrow ? rect.width : 420, global.innerWidth - 16))}px`;
-    const width = assistList.offsetWidth, place = T.placeSuggestions(anchor, assistList.offsetHeight, { top, bottom });
-    assistList.style.maxHeight = `${place.maxHeight}px`;
-    assistList.style.left = `${Math.max(8, Math.min(x, global.innerWidth - width - 8))}px`;
-    assistList.style.top = `${place.top}px`;
-    assistList.scrollTop = scrolled;
-  }
-  function selectAssist(index, speak = true) {
-    if (!assistState) return;
-    assistState.index = (index + assistState.entries.length) % assistState.entries.length;
-    for (const [i, option] of [...assistList.children].entries()) option.setAttribute("aria-selected", String(i === assistState.index));
-    const active = assistList.children[assistState.index];
-    blockContent.setAttribute("aria-activedescendant", active.id);
-    active.scrollIntoView({ block: "nearest" });
-    if (speak) announce(`${assistState.entries[assistState.index].label}. ${assistState.index + 1} de ${assistState.entries.length}.`);
-  }
-  function openAssistMenu(entries, token, mode) {
-    if (!entries.length) { closeAssistMenu(); return; }
-    const opened = !assistState;
-    assistState = { entries, token: { ...token, cursor: blockContent.selectionStart }, mode, index: 0 };
-    assistList.replaceChildren(...entries.map((entry, i) => {
-      const option = document.createElement("li");
-      option.id = `assist-option-${i}`; option.setAttribute("role", "option");
-      const name = document.createElement("strong"), detail = document.createElement("span");
-      name.textContent = entry.label; detail.textContent = entry.detail || entry.trigger;
-      option.append(name, detail);
-      // Aceptar en pointerdown impedía desplazar la lista con el dedo: el primer
-      // toque del gesto elegía la opción. pointerdown solo conserva el foco.
-      option.addEventListener("pointerdown", (event) => event.preventDefault());
-      option.addEventListener("click", () => acceptAssist(i));
-      return option;
-    }));
-    assistList.hidden = false;
-    blockContent.setAttribute("aria-autocomplete", "list"); blockContent.setAttribute("aria-controls", "assist-list");
-    selectAssist(0, false); positionAssistMenu();
-    if (opened) announce(`${entries.length} sugerencias. ${entries[0].label}.`);
-  }
   function updateAssistMenu(event) {
     if (T.isApplyingFieldEdit()) return;
     if (event.isComposing || event.inputType !== "insertText" || event.data?.length !== 1) { closeAssistMenu(); return; }
@@ -1283,9 +1180,9 @@
     applyAssist({ edit: result.edit, pending: [...previousPairs, ...result.pending] });
     snippetSession = result.session;
   }
-  function acceptAssist(index = assistState?.index) {
-    if (!assistState) return;
-    const { entries, token, mode } = assistState, entry = entries[index];
+  function acceptAssist(index = suggestions.state?.index) {
+    if (!suggestions.state) return;
+    const { entries, token, mode } = suggestions.state, entry = entries[index];
     closeAssistMenu();
     if (acceptSpecialCompletion(entry, token)) return;
     insertWritingSnippet(entry.insert, token.start, token.end, mode === "text" && entry.mode === "math");
@@ -1298,16 +1195,16 @@
     insertWritingSnippet(found.alias.expansion, found.start, found.end, mode === "text" && found.alias.mode === "math");
     noteUsage(`alias:${found.alias.trigger}`); return true;
   }
-  /* @decision DEC-015 ancla:369b59aa tramo:28
+  /* @decision DEC-015 ancla:7ca5aab4 tramo:28
    * Tab se consume solo con una sugerencia, hueco, cierre o alias pendiente.
    * Escape cancela sin mover el cursor. El resto conserva la navegación nativa.
    */
   function handleWritingKey(event) {
     if (event.target !== blockContent || event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-    if (assistState && ["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"].includes(event.key)) {
+    if (suggestions.state && ["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"].includes(event.key)) {
       event.preventDefault();
       if (event.key === "Escape") { closeAssistMenu(); event.stopPropagation(); }
-      else if (event.key === "ArrowDown" || event.key === "ArrowUp") selectAssist(assistState.index + (event.key === "ArrowDown" ? 1 : -1));
+      else if (event.key === "ArrowDown" || event.key === "ArrowUp") selectAssist(suggestions.state.index + (event.key === "ArrowDown" ? 1 : -1));
       else acceptAssist();
       return;
     }
@@ -1326,16 +1223,12 @@
   function pruneWritingSessions() {
     if (T.isApplyingFieldEdit()) return;
     snippetSession = T.activeSnippet(fieldState(), snippetSession);
-    if (assistState && (blockContent.selectionStart !== assistState.token.cursor || blockContent.selectionStart !== blockContent.selectionEnd)) closeAssistMenu();
+    if (suggestions.state && (blockContent.selectionStart !== suggestions.state.token.cursor || blockContent.selectionStart !== blockContent.selectionEnd)) closeAssistMenu();
   }
   blockContent.addEventListener("select", pruneWritingSessions);
   blockContent.addEventListener("keyup", pruneWritingSessions);
   blockContent.addEventListener("click", pruneWritingSessions);
   blockContent.addEventListener("blur", closeAssistMenu);
-  blockContent.addEventListener("scroll", positionAssistMenu);
-  global.addEventListener("resize", positionAssistMenu);
-  global.visualViewport?.addEventListener("resize", positionAssistMenu);
-  document.addEventListener("scroll", (event) => { if (event.target !== assistList) positionAssistMenu(); }, true);
   blockFieldHooks.push({ fill() { snippetSession = null; closeAssistMenu(); }, clear() { snippetSession = null; closeAssistMenu(); } });
 
   const menuEditor = T.createMenuEditor(document, { readWritingStorage, writeWritingStorage, announce });
@@ -1659,7 +1552,7 @@
   const thumb = T.createThumbBar(document, {
     blockContent, symbolBoard, symbolDetails, symbolSearch, coarsePointer, announce, returnToSymbolOrigin, vibration: () => prefs.vibration,
     ensureSymbolOrigin: () => { symbolOrigin ??= captureSymbolOrigin(blockContent); }, closeAssistMenu: () => closeAssistMenu(),
-    fieldState, getListIndex: () => assistState?.index, selectAssist, getSnippet: () => snippetSession,
+    fieldState, getListIndex: () => suggestions.state?.index, selectAssist, getSnippet: () => snippetSession,
     setSnippet: next => { snippetSession = next; },
   });
   const { showSymbolSheet, closeSymbolSheet, toggleScope, toggleSymbols, thumbStep } = thumb;
