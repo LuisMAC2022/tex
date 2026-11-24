@@ -15,7 +15,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const RAIZ = fileURLToPath(new URL("..", import.meta.url));
-const PRESUPUESTO_APP = 128_000;
+const PRESUPUESTO_APP = 124_500;
 
 test("app.js no supera su presupuesto de bytes", () => {
   const bytes = statSync(join(RAIZ, "assets/js/app.js")).size;

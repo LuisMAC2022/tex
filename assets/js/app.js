@@ -406,82 +406,17 @@
     $("#block-error").textContent = ""; $("#block-content").removeAttribute("aria-invalid");
     setEditorTarget({ editing: path }); renderEditorPreview();
   }
-  blockList.addEventListener("click", async (event) => {
-    const button = event.target.closest("button[data-action]");
-    if (!button) return;
-    const path = keyToPath(button.dataset.path);
-    const block = blockAtPath(blocks, path);
-    if (!block) { renderBlocks(); $("#add-block").focus(); announce("Ese bloque ya no existe; la lista se actualizó."); return; }
-    const action = button.dataset.action;
-    if (action === "convert-bibliography") { convertLegacyBlock(path); return; }
-
-    if (action === "context") { radial.openAtButton(button, { source: "card", path }, !T.isPointerClick(event)); return; }
-    if (action === "edit") {
-      loadBlockEditor(block, path);
-      $("#block-type").focus();
-      announce(`Editando ${describeBlock(block, path)}.`);
-      return;
-    }
-    if (action === "child") {
-      cancelTemplateForStructuralChange();
-      clearBlockFields(); setEditorTarget({ parent: path }); $("#block-type").focus();
-      announce(`El siguiente bloque se añadirá dentro de ${describeBlock(block, path)}, en el nivel ${path.length + 1}.`);
-      return;
-    }
-    if (action === "duplicate") {
-      const result = duplicateBlock(blocks, path);
-      if (!result) { button.focus(); announce("No se pudo duplicar el bloque."); return; }
-      const nested = countBlocks(block.children);
-      // La copia se inserta entre hermanos y desplaza las rutas siguientes: una
-      // edición a medias se cancela, como en cualquier cambio estructural.
-      const cancelled = cancelEditForStructuralChange();
-      changeTree(result.blocks, block.id); renderBlocks(); setEditorTarget(editorTarget());
-      if (!focusById("edit", result.id)) $("#add-block").focus();
-      announce(`${describeBlock(block, path)} duplicado como ${describeBlock(block, result.path)}${nested ? `, con sus ${nested} ${nested === 1 ? "bloque anidado" : "bloques anidados"}` : ""}. El original no cambia.${cancelled}`);
-      return;
-    }
-    if (action === "copy") {
-      tray = { block: cloneBlock(block) };
-      if (!tray.block) { tray = null; button.focus(); announce("No se pudo copiar ese bloque."); return; }
-      updateTrayControls();
-      button.focus();
-      announce(`${describeBlock(block, path)} copiado a la bandeja. Elige dónde pegarlo con «Pegar bloque»; el original se queda donde está.`);
-      return;
-    }
-    if (action === "copy-text") {
-      const text = block.content || "";
-      if (!text.trim()) { button.focus(); announce("Ese bloque no tiene texto que copiar."); return; }
-      try {
-        await copyToClipboard(text);
-        button.focus(); announce(`Texto de ${describeBlock(block, path)} copiado al portapapeles. Pégalo donde quieras con Ctrl+V.`);
-      } catch {
-        button.focus(); announce("No se pudo copiar el texto; ábrelo con «Editar» y cópialo desde el campo de contenido.");
-      }
-      return;
-    }
-    if (action === "delete") {
-      const nested = countBlocks(block.children);
-      if (nested && !confirm(`¿Eliminar ${describeBlock(block, path)} y sus ${nested} ${nested === 1 ? "bloque anidado" : "bloques anidados"}?`)) {
-        button.focus(); announce("No se eliminó el bloque."); return;
-      }
-      const next = removeBlock(blocks, path);
-      if (!next) { announce("No se pudo eliminar el bloque."); return; }
-      const label = describeBlock(block, path);
-      const cancelled = cancelEditForStructuralChange();
-      changeTree(next, block.id); renderBlocks(); setEditorTarget(editorTarget()); focusAfterRemoval(path);
-      announce(`Eliminado ${label}${nested ? ` con sus ${nested} bloques anidados` : ""}.${cancelled}`);
-      return;
-    }
-
-    const result = moveBlock(blocks, path, action === "up" ? -1 : 1);
-    if (!result) { button.focus(); announce("El bloque ya está en el extremo de sus hermanos."); return; }
-    const cancelled = cancelEditForStructuralChange();
-    changeTree(result.blocks, block.id); renderBlocks(); setEditorTarget(editorTarget());
-    // Si el botón usado quedó deshabilitado en el extremo, el foco pasa al
-    // movimiento contrario y, si tampoco existe, a la edición del mismo bloque.
-    if (!focusById(action, block.id) && !focusById(action === "up" ? "down" : "up", block.id)) focusById("edit", block.id);
-    announce(`${describeBlock(block, result.path)} movido a la posición ${result.path[result.path.length - 1] + 1} de su nivel.${cancelled}`);
+  const handleBlockAction = global.TexNotes.createBlockActions(document, {
+    getBlocks: () => blocks, setTray: next => { tray = next; }, renderBlocks, announce, convertLegacyBlock,
+    openMenu: (button, path, keyboard) => radial.openAtButton(button, { source: "card", path }, keyboard),
+    loadBlockEditor, cancelTemplateForStructuralChange, clearBlockFields, setEditorTarget, describeBlock,
+    cancelEditForStructuralChange, changeTree, editorTarget, focusById, updateTrayControls, copyToClipboard, focusAfterRemoval,
   });
+  blockList.addEventListener("click", event => {
+    const button = event.target.closest("button[data-action]");
+    if (button) handleBlockAction(button.dataset.action, keyToPath(button.dataset.path), button, !T.isPointerClick(event));
+  });
+
 
   function generateOutput() {
     const title = $("#note-title");
