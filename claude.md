@@ -444,3 +444,29 @@ Con Revisión cerrada, las cinco anchuras mantienen sus columnas. Frente a la au
 Se compararon las propiedades de `getComputedStyle` de 133 elementos por ventana, incluidos cabecera, secciones, controles, listas, tablero de símbolos y navegación. La reorganización dio cero diferencias tanto a 1366 × 768 como en Pixel 7 emulado a 412 × 839. Con la densidad aplicada, el teléfono siguió sin diferencias. En escritorio cambiaron los mínimos, los bordes y las dimensiones calculadas a partir de ellos.
 
 Se regeneró el inventario y pasó la comprobación de JavaScript. Las pruebas de interfaz se ejecutaron localmente. Cuatro pruebas de compilación LaTeX fallaron en este entorno porque falta el formato pdflatex.fmt. La prueba estructural independiente pasó. La emulación no verifica un teléfono físico.
+
+## Paquete A — marco de escritura del portátil
+
+Desde 64 rem con puntero fino, la barra fija reúne el título de la nota, el estado de la sesión, los tres modos de escritura y los accesos a Documento y Exportación. El título de la barra refleja el campo editable de Datos. El destino del bloque y el aviso de recuperación se sitúan después del campo Contenido para que el aviso de una sesión pendiente no empuje el campo hacia abajo. Datos, Resultado, Versiones y Preferencias siguen debajo del marco. El aviso de error se sitúa abajo a la izquierda para compartir la ventana con el anuncio de la aplicación.
+
+Mediciones en Chromium con una ventana de 1366 × 768, la nota «Derivadas parciales» y 25 párrafos. La referencia es el cierre del Paquete G (`d15afb8`). Las coordenadas y alturas están en píxeles CSS.
+
+| Medida | Antes | Después |
+| --- | ---: | ---: |
+| Altura de la cabecera | 67 | 48 |
+| Altura de la sección de edición con 25 párrafos | 4282 | 720 |
+| Altura total de la página con Revisión cerrada | 6835 | 3158 |
+| Borde superior de `#block-content` en la ventana al cargar | 536,09 | 149 |
+| Borde superior de `#block-content` en la ventana después del bloque 25 | 358,09 | 149 |
+| Bordes superior e inferior de `#app-status` en la ventana después del bloque 25 | 6489,31 / 6545,31 | 704 / 760 |
+| Bordes izquierdo y derecho de `#app-status` después del bloque 25 | 16 / 1350 | 1104,39 / 1358 |
+| Desplazamiento de la estructura con 300 px de rueda sobre ella | 0 | 300 |
+| Desplazamiento de la página con la misma rueda | 300 | 0 |
+| Cambio de la coordenada superior del editor con la misma rueda | −300 | 0 |
+| Tamaño de `assets/js/app.js` en bytes | 95 193 | 95 193 |
+
+Al recargar con la sesión pendiente, Contenido empieza a 149 px. Se recuperaron los 25 bloques y la barra mostró «Derivadas parciales» y «Sesión recuperada». Se verificaron con Chromium el orden de Tab desde el enlace de salto, el foco y el contorno en el contenido principal, los destinos de Documento y Exportación, la posición de la barra al bajar y la ausencia de superposición entre avisos. El anuncio se oculta a los cuatro segundos y conserva su texto y `aria-live="polite"`. Se compararon coordenadas, visibilidad y ubicación en el DOM de siete elementos en emulación de puntero grueso a 412 y 1366 px.
+
+Pasaron `TEX_UI_TESTS=required npm test` con 319 pruebas y ninguna omitida, la comprobación estructural, `npm run check:js` y `npm run inventario`. Se completaron las cuatro compilaciones de la suite con pdfLaTeX al preparar su formato, el paquete de español y las fuentes en el entorno de pruebas. Las pruebas de interfaz existentes conservan sus aserciones y se amplió la prueba de portátil. El inventario regenerado coincide con el anterior porque la prueba conserva su nombre.
+
+Quedan pendientes las comprobaciones en dispositivos físicos, con lectores de pantalla y con Firefox y Safari.
