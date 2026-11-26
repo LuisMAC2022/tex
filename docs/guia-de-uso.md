@@ -589,6 +589,11 @@ amplias, alterna el panel «Estructura» y abre «Revisión» para ver las fórm
 del bloque con KaTeX. En ventanas estrechas, las pestañas se adaptan al ancho
 aunque se use un ratón.
 
+Desde 64 rem con puntero fino, la barra superior fija reúne el título, el
+estado de la sesión y los controles del espacio de trabajo. El editor y la
+estructura se desplazan por separado. Los avisos de las acciones aparecen abajo
+a la derecha durante unos cuatro segundos.
+
 En «Estructura actual», el selector «Vista» alterna entre «Esquema» y «Tarjetas».
 «Buscar bloques» filtra por tipo, título y contenido. Cada resultado conserva
 la ruta de sus antecesores. Usa los controles de plegado de las ramas para
