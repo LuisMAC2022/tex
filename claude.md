@@ -412,3 +412,35 @@ Se autorizó añadir los nuevos scripts a la lista ordenada del guardián de INV
 Al contrastar el criterio 1 con el modelo apareció un caso de pérdida de datos. Una sesión cuyo único contenido es el texto del editor satisface `sessionHasContent` en `assets/js/block-tree.js`. Las versiones creadas con `addVersion` pasan por `documentSnapshot` en `assets/js/versions.js`, que excluye el editor. Restaurar ese respaldo produciría un documento vacío. El criterio 2 cubre el editor visible al importar, que puede contener texto distinto del editor de la sesión pendiente. ¿Debe restaurarse el texto pendiente en su editor original o debe recuperarse como un bloque nuevo? La elección cambia el contenido de la versión restaurada.
 
 R2 está detenido en esa decisión. F1, F2, F3 y F4 quedan pendientes. El tamaño de `app.js` sigue en 95 193 bytes.
+
+## Paquete G — referencia y densidad del portátil
+
+Se agruparon los tokens, la disposición y los componentes de la hoja de estilos. Desde 64 rem con puntero fino, el mínimo de los controles pasa de 44 a 36 px, los botones secundarios tienen borde de 1 px y la clase disponible `.tertiary` subraya el texto al pasar el puntero o recibir el foco. El HTML conserva sus clases. `assets/js/app.js` mide 95 193 bytes antes y después.
+
+Mediciones locales en Chromium con «Derivadas parciales» y 25 bloques de texto. Coordenadas en píxeles CSS, desde el origen del documento salvo indicación. Las medidas iniciales son la referencia para A–F.
+
+| A 1366 × 768 | Antes | Después |
+| --- | ---: | ---: |
+| Altura de página con Revisión cerrada | 6963 | 6835 |
+| Borde superior de #block-content | 545,09 | 536,09 |
+| Borde superior de #add-block | 810,84 | 801,84 |
+| Borde superior de #math-preview-panel al abrir Revisión | 4338,59 | 4278,59 |
+| scrollY al abrir Revisión | 3990 | 3926 |
+| #app-status tras añadir el último bloque, arriba en el documento | 6795,31 | 6667,31 |
+| #app-status, arriba en la ventana | 6608,31 | 6489,31 |
+| #app-status, izquierda | 16 | 16 |
+| Altura de la primera tarjeta | 139,83 | 137,83 |
+
+| Ancho de ventana | Izquierda de #structure-panel antes / después | Ancho de .block-editor antes / después |
+| ---: | ---: | ---: |
+| 1280 | 746,25 / 746,25 | 673,25 / 673,25 |
+| 1366 | 796,25 / 796,25 | 723,25 / 723,25 |
+| 1440 | 49 / 49 | 938,25 / 938,25 |
+| 1536 | 49 / 49 | 1006,58 / 1006,58 |
+| 1920 | 113 / 113 | 1188,83 / 1188,83 |
+
+Con Revisión cerrada, las cinco anchuras mantienen sus columnas. Frente a la auditoría del 26 de noviembre con 25 bloques, la altura inicial y el desplazamiento inicial difieren en 2 px. La referencia de cinco bloques corresponde a otra muestra.
+
+Se compararon las propiedades de `getComputedStyle` de 133 elementos por ventana, incluidos cabecera, secciones, controles, listas, tablero de símbolos y navegación. La reorganización dio cero diferencias tanto a 1366 × 768 como en Pixel 7 emulado a 412 × 839. Con la densidad aplicada, el teléfono siguió sin diferencias. En escritorio cambiaron los mínimos, los bordes y las dimensiones calculadas a partir de ellos.
+
+Se regeneró el inventario y pasó la comprobación de JavaScript. Las pruebas de interfaz se ejecutaron localmente. Cuatro pruebas de compilación LaTeX fallaron en este entorno porque falta el formato pdflatex.fmt. La prueba estructural independiente pasó. La emulación no verifica un teléfono físico.
