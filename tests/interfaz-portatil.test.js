@@ -324,3 +324,54 @@ test("Ver todo aparece con el recorte de dos líneas y Esquema conserva la edici
     await contexto.close();
   }
 });
+
+test("las vistas generan el documento y conservan la edición, Deshacer y el desplazamiento", { skip: omitir }, async () => {
+  const { pagina, contexto, errores } = await abrir();
+  try {
+    const tab = nombre => pagina.getByRole("tab", { name: nombre, exact: true });
+    await tab("Escribir").focus();
+    await pagina.keyboard.press("ArrowRight");
+    await pagina.keyboard.press("Enter");
+    assert.equal(await tab("Documento").getAttribute("aria-selected"), "true");
+    assert.equal(await pagina.evaluate(() => document.activeElement.id), "note-title");
+    await pagina.fill("#note-title", "Prueba de vistas");
+    await pagina.locator("#workspace-panel-document").evaluate(panel => { panel.scrollTop = 200; });
+    const desplazamiento = () => pagina.locator("#workspace-panel-document").evaluate(panel => panel.scrollTop);
+    const posicion = await desplazamiento();
+    assert.ok(posicion > 0);
+
+    await tab("Escribir").click();
+    const campo = pagina.locator("#block-content");
+    await campo.fill("Párrafo guardado");
+    await pagina.click("#add-block");
+    await pagina.locator("#block-list article h4").click();
+    await campo.press("End");
+    await pagina.keyboard.type("!");
+
+    await tab("Exportar").click();
+    const salida = pagina.locator("#latex-output");
+    assert.match(await salida.inputValue(), /Párrafo guardado/);
+    assert.match(await salida.inputValue(), /\\begin\{document\}/);
+    assert.ok(await pagina.getByRole("button", { name: "Regenerar" }).isVisible());
+    assert.equal(await campo.isVisible(), false);
+    const alto = (await salida.boundingBox()).height;
+    await pagina.setViewportSize({ width: 1366, height: 868 });
+    assert.ok(Math.abs((await salida.boundingBox()).height - alto - 100) < 1);
+    await pagina.setViewportSize({ width: 1366, height: 768 });
+    const exportacion = pagina.locator("#workspace-panel-export");
+    await exportacion.evaluate(panel => { panel.scrollTop = 120; });
+    await tab("Documento").click();
+    assert.equal(await desplazamiento(), posicion);
+    await tab("Exportar").click();
+    assert.equal(await exportacion.evaluate(panel => panel.scrollTop), 120);
+    await tab("Escribir").click();
+    assert.ok(await pagina.locator("#cancel-edit").isVisible());
+    assert.equal(await campo.inputValue(), "Párrafo guardado!");
+    await campo.press("Control+z");
+    assert.equal(await campo.inputValue(), "Párrafo guardado");
+    assert.ok(await pagina.evaluate(() => document.scrollingElement.scrollHeight <= innerHeight));
+    assert.deepEqual(errores, []);
+  } finally {
+    await contexto.close();
+  }
+});

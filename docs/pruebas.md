@@ -284,7 +284,7 @@
 - Ir a, el editor de una tarjeta y los avisos revelan y enfocan su destino
 - los cuatro paneles caben en dos pantallas con cinco bloques de una línea
 
-## `tests/interfaz-portatil.test.js` — 7 pruebas
+## `tests/interfaz-portatil.test.js` — 8 pruebas
 
 - medidas de referencia del portátil con veinticinco párrafos
 - la estructura queda a la izquierda y el editor conserva su ancho máximo
@@ -293,6 +293,7 @@
 - Contenido y Añadir bloque caben a 1366 × 768 sin desplazar el editor
 - las tarjetas compactas permiten editar con ratón y teclado sin desplazar la página
 - Ver todo aparece con el recorte de dos líneas y Esquema conserva la edición
+- las vistas generan el documento y conservan la edición, Deshacer y el desplazamiento
 
 ## `tests/interfaz-tarjetas.test.js` — 3 pruebas
 
@@ -479,4 +480,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-325 pruebas con `node:test` más la comprobación estructural.
+326 pruebas con `node:test` más la comprobación estructural.
