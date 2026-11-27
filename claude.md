@@ -656,7 +656,7 @@ Regenerar queda a 192,91 px en Exportar. La altura de Código LaTeX responde
 al espacio libre. Aumentar en 100 px la altura de la ventana amplió el campo
 en 100 px. `assets/js/app.js` mide **95 193 bytes** antes y después.
 
-### Verificación y duda pendiente
+### Verificación
 
 A 1366 × 768 pasó la prueba nueva de generación al entrar, recuperación del
 desplazamiento de Documento y Exportar, edición activa, Ctrl+Z y ausencia
@@ -666,14 +666,13 @@ contenedor de nueve elementos de edición, navegación y salida. Pasaron
 `npm run check:js`, `npm run inventario`, la comprobación estructural y las
 cuatro compilaciones con pdfLaTeX.
 
-**La suite obligatoria sigue roja**. Con `TEX_UI_TESTS=required npm test`
-pasaron 313 de 326 pruebas, fallaron 13 y se omitieron cero. Los recorridos de
-escritorio anteriores intentan actuar sobre controles de una vista inactiva.
-Por ejemplo, la prueba de medidas rellena el título desde Escribir y la de
-generación busca «Generar documento» desde el editor. Se conservaron
-íntegras las pruebas anteriores. Queda por decidir si se autorizan los
-pasos de navegación y el nuevo rótulo en esos recorridos, conservando sus
-aserciones funcionales.
+Con autorización para adaptar la navegación, se actualizaron los recorridos
+de las 13 pruebas de escritorio que antes accedían directamente a controles
+de la página larga. Ahora abren la pestaña correspondiente y usan Regenerar
+cuando comprueban la generación manual. Tras importar o restaurar un proyecto,
+vuelven a Exportar para leer el aviso de Versiones. Se conservaron las
+aserciones funcionales. Con `TEX_UI_TESTS=required npm test` pasaron las 326
+pruebas sin omisiones, además de la comprobación estructural.
 
 Quedan sin verificar los dispositivos físicos, los lectores de pantalla,
 Firefox y Safari.
