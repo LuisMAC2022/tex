@@ -1,15 +1,24 @@
 (function (T) {
   "use strict";
-  const sections = {
-    write: ['section[aria-labelledby="contenido-heading"]'], tree: [".structure-panel"],
-    document: ['section[aria-labelledby="datos-heading"]', 'section[aria-labelledby="resultado-heading"]'],
-    more: ['section[aria-labelledby="versions-heading"]', 'section[aria-labelledby="writing-heading"]', ".shortcut-panel"],
-  };
+  // Cada sección indica su panel en teléfono y en portátil. Las secciones
+  // anidadas sin destino propio en portátil viajan con su contenedor.
+  const sections = [
+    ['section[aria-labelledby="contenido-heading"]', "write", "write"],
+    [".structure-panel", "tree"],
+    ['section[aria-labelledby="datos-heading"]', "document", "document"],
+    ['section[aria-labelledby="resultado-heading"]', "document", "export"],
+    ['section[aria-labelledby="versions-heading"]', "more", "export"],
+    ['section[aria-labelledby="writing-heading"]', "more", "document"],
+    [".shortcut-panel", "more"],
+  ];
   T.createPanels = function (doc, deps) {
     const $ = selector => doc.querySelector(selector), win = doc.defaultView;
     const media = win.matchMedia("(max-width: 47.99rem)");
     const events = new AbortController(), options = { signal: events.signal };
-    const navigation = $("#mobile-navigation"), tabs = Array.from(navigation.querySelectorAll('[role="tab"]'));
+    const navigation = $("#mobile-navigation"), mobileTabs = Array.from(navigation.querySelectorAll('[role="tab"]'));
+    const resultHelp = $("#resultado-heading + p"), originalHelp = resultHelp.textContent;
+    const desktopTabs = ["write", "document", "export"].map(key => $("#workspace-" + key));
+    let tabs = [], mode = null;
     const panels = new Map(), positions = new Map(), original = [];
     const preview = $(".math-preview-panel"), previewKey = "tex-notes:mobile-preview:v1";
     let active = null, desktopPreview = preview.open;
@@ -73,11 +82,12 @@
     }, options);
     preview.addEventListener("toggle", paintLayout, options);
     $("#workspace-document").addEventListener("click", () => {
+      if (desktop.matches) return;
       const details = $("#metadata-details");
       details.open = true;
       focusTarget($("#note-title"));
     }, options);
-    $("#workspace-export").addEventListener("click", () => goTo("result"), options);
+    $("#workspace-export").addEventListener("click", () => { if (!desktop.matches) goTo("result"); }, options);
 
     function syncMetadataSummary(reset = false) {
       const data = deps.metadata(), parts = [data.title, data.course, data.date].map(value => value.trim()).filter(Boolean);
@@ -85,9 +95,9 @@
       if (reset || !data.title.trim()) $("#metadata-details").open = !data.title.trim();
     }
     function select(key, { speak = true, focus = false } = {}) {
-      if (!media.matches || !panels.has(key)) return;
+      if (!panels.has(key)) return;
       if (active !== key) {
-        if (active) {
+        if (active && mode === "mobile") {
           positions.set(active, win.scrollY);
           if (active === "document" && $("#note-title").value.trim()) $("#metadata-details").open = false;
           if (active === "write") deps.closeWriting();
@@ -98,11 +108,32 @@
           const selected = tab.dataset.panel === key;
           tab.setAttribute("aria-selected", String(selected)); tab.tabIndex = selected ? 0 : -1;
         }
-        $("#panel-menu").hidden = key === "write";
-        win.scrollTo({ top: positions.get(key) || 0, behavior: "instant" });
+        if (mode === "mobile") {
+          $("#panel-menu").hidden = key === "write";
+          win.scrollTo({ top: positions.get(key) || 0, behavior: "instant" });
+        } else {
+          doc.body.dataset.workspaceView = key;
+          if (key === "export") {
+            $("#generate").click();
+            if ($("#note-title").getAttribute("aria-invalid") === "true") {
+              $("#latex-output").value = "";
+              speak = false; // Conservar el aviso del generador sobre el título.
+            }
+          }
+        }
       }
       const tab = tabs.find(t => t.dataset.panel === key);
-      if (focus) tab.focus({ preventScroll: true });
+      if (focus) {
+        let target = tab;
+        if (mode === "desktop") {
+          target = panels.get(key);
+          if (key === "document") {
+            $("#metadata-details").open = true;
+            target = $("#note-title");
+          }
+        }
+        target.focus({ preventScroll: true });
+      }
       if (speak) {
         const count = $("#block-list").querySelectorAll("article").length;
         deps.announce("Panel " + tab.textContent + (key === "tree" ? ", " + count + (count === 1 ? " bloque." : " bloques.") : "."));
@@ -124,40 +155,84 @@
         tree: "#global-menu", result: "#generate", versions: "#versions-heading", preferences: "#writing-preferences > summary" }[destination];
       if (selector) focusTarget($(selector));
     }
+    $("#generate").addEventListener("click", event => {
+      if (mode === "desktop" && event.isTrusted && !$("#note-title").value.trim()) {
+        select("document", { speak: false });
+      }
+    }, options);
     function unmount() {
       if (!panels.size) return;
       for (const { node, marker } of original.splice(0).reverse()) marker.replaceWith(node);
       for (const panel of panels.values()) panel.remove();
-      panels.clear(); active = null; navigation.hidden = true; preview.open = desktopPreview;
+      panels.clear(); active = null; navigation.hidden = true;
+      if (mode === "mobile") preview.open = desktopPreview;
+      if (mode === "desktop") {
+        delete doc.body.dataset.workspaceView;
+        $("#workspace-write").hidden = true;
+        $("#workspace-export").textContent = "Exportación";
+        $("#generate").textContent = "Generar documento";
+        resultHelp.textContent = originalHelp;
+        for (const tab of desktopTabs) {
+          for (const name of ["role", "aria-selected", "aria-controls", "tabindex", "data-panel"]) tab.removeAttribute(name);
+        }
+      }
+      mode = null;
     }
     function syncLayout() {
-      if (!media.matches) { unmount(); paintLayout(); return; }
-      if (panels.size) return;
+      const next = desktop.matches ? "desktop" : media.matches ? "mobile" : null;
+      if (mode === next && mode) return;
+      const focused = doc.activeElement;
+      unmount();
+      mode = next;
+      if (!mode) { paintLayout(); return; }
+      tabs = mode === "mobile" ? mobileTabs : desktopTabs;
+      if (mode === "desktop") {
+        $("#workspace-write").hidden = false;
+        $("#workspace-export").textContent = "Exportar";
+        $("#generate").textContent = "Regenerar";
+        resultHelp.textContent = "El código se genera al abrir esta vista si el documento tiene título.";
+        for (const tab of tabs) {
+          tab.dataset.panel = tab.id.slice("workspace-".length);
+          tab.setAttribute("role", "tab");
+          tab.setAttribute("aria-controls", "workspace-panel-" + tab.dataset.panel);
+        }
+      }
       paintLayout();
       desktopPreview = preview.open;
-      const focused = doc.activeElement;
       for (const tab of tabs) {
         const key = tab.dataset.panel, panel = doc.createElement("div");
         panel.id = tab.getAttribute("aria-controls"); panel.dataset.panel = key;
         panel.setAttribute("role", "tabpanel"); panel.setAttribute("aria-labelledby", tab.id); panel.tabIndex = -1;
         $("#document-form").append(panel); panels.set(key, panel);
-        for (const selector of sections[key]) {
+        for (const [selector, mobileKey, desktopKey] of sections) {
+          if ((mode === "mobile" ? mobileKey : desktopKey) !== key) continue;
           const node = $(selector), marker = doc.createComment("posición de " + selector);
           node.before(marker); original.push({ node, marker }); panel.append(node);
         }
       }
-      navigation.hidden = false;
-      try { preview.open = win.localStorage.getItem(previewKey) === "open"; } catch { preview.open = false; }
+      if (mode === "desktop") {
+        const more = doc.createElement("h2");
+        more.textContent = "Más";
+        $("#writing-heading").closest("section").before(more);
+        const footer = $("footer"), marker = doc.createComment("posición del pie");
+        footer.before(marker); original.push({ node: footer, marker }); panels.get("export").append(footer);
+      } else {
+        navigation.hidden = false;
+        try { preview.open = win.localStorage.getItem(previewKey) === "open"; } catch { preview.open = false; }
+      }
       const previous = focused.closest?.('[role="tabpanel"]');
       select(previous?.dataset.panel || "write", { speak: false });
       if (focused.closest?.('[role="tabpanel"]:not([hidden])')) focused.focus({ preventScroll: true });
     }
-    for (const [i, tab] of tabs.entries()) {
+    for (const group of [mobileTabs, desktopTabs]) for (const [i, tab] of group.entries()) {
       tab.addEventListener("click", () => select(tab.dataset.panel, { focus: true }), options);
       tab.addEventListener("keydown", event => {
+        if (tabs !== group || !mode) return;
         const next = { Home: 0, End: tabs.length - 1, ArrowLeft: (i + tabs.length - 1) % tabs.length, ArrowRight: (i + 1) % tabs.length }[event.key];
         if (next === undefined) return;
-        event.preventDefault(); select(tabs[next].dataset.panel, { focus: true });
+        event.preventDefault();
+        if (mode === "desktop") tabs[next].focus();
+        else select(tabs[next].dataset.panel, { focus: true });
       }, options);
     }
     $(".skip-link").addEventListener("click", event => {
@@ -177,6 +252,7 @@
     }, options);
     preview.addEventListener("toggle", savePreview, options);
     win.addEventListener("pagehide", savePreview, options);
+    desktop.addEventListener("change", syncLayout, options);
     media.addEventListener("change", syncLayout, options);
     inlinePreview.addEventListener("change", syncPreviewPlacement, options);
     syncLayout();

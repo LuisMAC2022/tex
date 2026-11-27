@@ -10,7 +10,7 @@
   const status = $("#app-status");
   const noteTitle = $("#note-title");
   const modeButtons = [$("#focus-writing"), $("#toggle-structure"), $("#review-writing")];
-  const navigationButtons = [$("#workspace-document"), $("#workspace-export")];
+  const navigationButtons = [$("#workspace-write"), $("#workspace-document"), $("#workspace-export")];
   const buttons = [...modeButtons, ...navigationButtons];
   const toolsPosition = doc.createComment("posición de los controles de escritura");
   const sessionPosition = doc.createComment("posición del estado de la sesión");
@@ -24,6 +24,7 @@
   modes.className = "workspace-modes";
   modes.setAttribute("role", "group");
   modes.setAttribute("aria-label", "Modos de escritura");
+  navigation.setAttribute("role", "tablist");
   navigation.className = "workspace-navigation";
   navigation.setAttribute("aria-label", "Navegación del documento");
   let timer;

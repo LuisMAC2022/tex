@@ -733,3 +733,41 @@ body.writing-focus #workspace-export { display: none; }
     align-self: stretch;
   }
 }
+
+@media (min-width: 64rem) and (pointer: fine) {
+  body[data-workspace-view] [role="tabpanel"] {
+    block-size: calc(100dvh - var(--workspace-bar-height));
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  body[data-workspace-view] .workspace-navigation [aria-selected="true"] {
+    text-decoration: underline;
+    text-underline-offset: .25em;
+    font-weight: 700;
+  }
+  body[data-workspace-view]:not([data-workspace-view="write"]) .workspace-modes {
+    visibility: hidden;
+  }
+  body.writing-focus[data-workspace-view] .workspace-navigation button { display: inline-block; }
+  #workspace-panel-write > section { margin: 0; }
+  #workspace-panel-export > section:first-child {
+    min-block-size: 100%;
+    margin-block: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+  }
+  #workspace-panel-export .output-field {
+    flex: 1;
+    inline-size: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  #workspace-panel-export #latex-output {
+    flex: 1 0 8rem;
+    block-size: 0;
+    min-block-size: 8rem;
+    max-block-size: none;
+    resize: none;
+  }
+}

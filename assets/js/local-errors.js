@@ -49,7 +49,7 @@
       const text=T.formatErrors(entries);
       try { await copy(text); status.textContent="Informe copiado."; $("#error-notice-status").textContent="Informe copiado."; }
       catch {
-        const tab=$("#tab-more"); if(tab?.getClientRects().length) tab.click();
+        const tab=doc.body.dataset.workspaceView ? $("#workspace-document") : $("#tab-more"); if(tab?.getClientRects().length) tab.click();
         report.open=true; area.focus(); area.select(); status.textContent="Selecciona Copiar para copiar el informe.";
       }
     }

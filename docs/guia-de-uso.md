@@ -581,8 +581,12 @@ El primer error de la sesión muestra **Copiar informe**. También puedes abrir 
 
 ## Espacio de trabajo
 
-Empieza a escribir en «Contenido». En escritorio, «Documento» lleva al título
-de la nota y «Exportación» lleva a «Generar documento» y a la comprobación previa.
+Empieza a escribir en «Contenido». En el portátil, **Escribir** reúne el editor y la estructura. **Documento**
+lleva al título de la nota. Bajo **Más** están las preferencias, el informe de
+errores y los atajos. **Exportar** genera el código con los datos y bloques
+guardados. Allí puedes copiarlo, descargarlo, pulsar **Regenerar** o bajar a
+**Versiones**. Cada vista conserva su desplazamiento y puedes volver a la
+edición en curso. Con el foco en una pestaña, las flechas recorren las pestañas. Pulsa Intro para abrir la vista.
 Abre «Etiqueta del bloque» para editar una etiqueta o proponerla desde el título.
 «Concentración» amplía el editor y oculta controles secundarios. En pantallas
 amplias, alterna el panel «Estructura» y abre «Revisión» para ver las fórmulas
