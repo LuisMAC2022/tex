@@ -48,7 +48,7 @@
             </legend>
             <input id="editing-path" type="hidden" value="">
             <input id="parent-path" type="hidden" value="">
-            <p id="block-target" class="block-target">El bloque se añadirá al final de la raíz del documento.</p>
+            <p class="block-target"><span id="block-target">El bloque se añadirá al final de la raíz del documento.</span></p>
             <p id="template-progress" hidden><span id="template-progress-text"></span> <button id="skip-template-step" type="button" class="secondary">Omitir paso</button> <button id="cancel-template" type="button" class="secondary">Cancelar plantilla</button></p>
             <p id="tray-summary" class="block-target" hidden></p>
             <p class="field" id="native-type-field">
@@ -154,7 +154,7 @@
             </fieldset>
             <menu class="button-row">
               <li><button id="content-menu" data-action-id="radial.menu" class="secondary" type="button" aria-haspopup="menu">Menú de contenido</button></li>
-              <li><button id="add-block" type="button">Añadir bloque</button></li>
+              <li><button id="add-block" type="button"><span id="add-block-label">Añadir bloque</span><kbd id="add-block-key" aria-hidden="true" hidden></kbd></button></li>
               <li><button id="paste-block" class="secondary" type="button" hidden>Pegar bloque</button></li>
               <li><button id="cancel-edit" class="secondary" type="button" hidden>Cancelar edición</button></li>
             </menu>
@@ -462,5 +462,6 @@
   <script src="assets/js/move-dialog.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/desktop-frame.js"></script>
+    <script src="assets/js/desktop-editor.js"></script>
   </body>
 </html>

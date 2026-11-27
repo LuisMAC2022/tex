@@ -50,7 +50,7 @@
       if (editingBlock) {
         $("#block-form-heading").textContent = `Editar bloque ${pathLabel(editing)}`;
         $("#block-target").textContent = `Editas ${describeBlock(editingBlock, editing)}. Sus bloques anidados se conservan.`;
-        $("#add-block").textContent = "Guardar cambios";
+        $("#add-block-label").textContent = "Guardar cambios";
         $("#cancel-edit").textContent = "Cancelar edición";
         $("#cancel-edit").hidden = false;
         updateTrayControls();
@@ -58,7 +58,7 @@
       }
       $("#block-form-heading").textContent = "Nuevo bloque";
       $("#block-target").textContent = `El bloque se añadirá ${describeLocation(parentPath)}.`;
-      $("#add-block").textContent = "Añadir bloque";
+      $("#add-block-label").textContent = "Añadir bloque";
       $("#cancel-edit").textContent = "Añadir en la raíz";
       $("#cancel-edit").hidden = !parentPath.length;
       updateTrayControls();

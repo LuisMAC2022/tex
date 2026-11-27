@@ -594,6 +594,14 @@ estado de la sesión y los controles del espacio de trabajo. El editor y la
 estructura se desplazan por separado. Los avisos de las acciones aparecen abajo
 a la derecha durante unos cuatro segundos.
 
+En ese espacio de trabajo, el destino aparece junto a «Nuevo bloque». «Tipo de
+bloque» y «Título del bloque (opcional)» comparten una fila. Al elegir una lista,
+abre «Ayuda de la lista» junto a «Contenido» para consultar la sangría y el
+ejemplo. La fila de acciones se queda visible al desplazarte por el editor y
+muestra el atajo junto a «Añadir bloque» o «Guardar cambios». Debajo está
+«Símbolos matemáticos». En «Concentración», «Contenido» ocupa al menos el 60 %
+de la altura de la ventana.
+
 En «Estructura actual», el selector «Vista» alterna entre «Esquema» y «Tarjetas».
 «Buscar bloques» filtra por tipo, título y contenido. Cada resultado conserva
 la ruta de sus antecesores. Usa los controles de plegado de las ramas para

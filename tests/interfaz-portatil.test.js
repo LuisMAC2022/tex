@@ -171,3 +171,58 @@ test("Revisión pasa al editor por debajo de 80 rem y conserva su estado al redi
     await contexto.close();
   }
 });
+
+test("Contenido y Añadir bloque caben a 1366 × 768 sin desplazar el editor", { skip: omitir }, async () => {
+  const { pagina, contexto, errores, cdp } = await abrir();
+  try {
+    await pagina.evaluate(() => document.fonts.ready);
+    const medir = () => pagina.evaluate(() => {
+      const boton = document.querySelector("#add-block");
+      const accion = boton.getBoundingClientRect();
+      const columna = boton.closest(".block-editor");
+      const limite = columna.getBoundingClientRect();
+      const campo = document.querySelector("#block-content").getBoundingClientRect();
+      return {
+        visible: accion.width > 0 && accion.height > 0 && accion.left >= 0 && accion.right <= innerWidth
+          && accion.top >= Math.max(limite.top, document.querySelector(".site-header").getBoundingClientRect().bottom)
+          && accion.bottom <= Math.min(limite.bottom, innerHeight),
+        campoArriba: campo.top,
+        campoAlto: campo.height,
+        altoVentana: innerHeight,
+        desplazamiento: [scrollY, columna.scrollTop],
+      };
+    });
+    const inicio = await medir();
+    assert.deepEqual(inicio.desplazamiento, [0, 0]);
+    assert.ok(inicio.visible, "Añadir bloque se ve entero al cargar");
+    assert.ok(inicio.campoArriba <= 140, `Contenido empieza en ${inicio.campoArriba} px`);
+    assert.equal(await pagina.locator("#add-block-key").innerText(), await pagina.locator("#commit-key-label").textContent());
+
+    await pagina.click("#focus-writing");
+    const concentracion = await medir();
+    assert.ok(concentracion.campoAlto >= 0.6 * concentracion.altoVentana, "Contenido ocupa al menos el 60 % de la ventana");
+    assert.ok(concentracion.visible, "Añadir bloque se ve entero en Concentración");
+
+    await pagina.click("#focus-writing");
+    await pagina.selectOption("#block-type", { label: "Lista con viñetas" });
+    const ayuda = pagina.locator(".content-heading details", { hasText: "Ayuda de la lista" });
+    await ayuda.locator("summary").waitFor();
+    assert.ok(await ayuda.locator("#list-help").count(), "La ayuda de lista se conserva en el DOM");
+    assert.equal(await ayuda.getAttribute("open"), null);
+    assert.match(await pagina.locator("#block-content").getAttribute("aria-describedby"), /\blist-help\b/);
+    const sesion = await cdp();
+    const { root } = await sesion.send("DOM.getDocument");
+    const { nodeId } = await sesion.send("DOM.querySelector", { nodeId: root.nodeId, selector: "#block-content" });
+    const { nodes: [campoAccesible] } = await sesion.send("Accessibility.getPartialAXTree", { nodeId, fetchRelatives: false });
+    assert.match(campoAccesible.description?.value ?? "", /Escribe un elemento por línea/);
+    assert.deepEqual((await medir()).desplazamiento, [0, 0]);
+    assert.ok((await medir()).visible, "Añadir bloque se ve entero después de elegir Lista con viñetas");
+
+    await pagina.click("#focus-writing");
+    await ayuda.locator("summary").click();
+    assert.ok((await medir()).visible, "La fila de acciones sigue visible con la ayuda abierta");
+    assert.deepEqual(errores, []);
+  } finally {
+    await contexto.close();
+  }
+});

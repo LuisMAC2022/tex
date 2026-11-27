@@ -5,7 +5,6 @@
   const header = $(".site-header");
   const tools = $(".workspace-tools");
   const sessionStatus = $("#session-status");
-  const blockTarget = $("#block-target");
   const recovery = $("#autosave-banner");
   const contentField = $("#block-content").closest(".field");
   const status = $("#app-status");
@@ -15,7 +14,6 @@
   const buttons = [...modeButtons, ...navigationButtons];
   const toolsPosition = doc.createComment("posición de los controles de escritura");
   const sessionPosition = doc.createComment("posición del estado de la sesión");
-  const targetPosition = doc.createComment("posición del destino del bloque");
   const recoveryPosition = doc.createComment("posición del aviso de recuperación");
   const identity = doc.createElement("div");
   const title = doc.createElement("strong");
@@ -50,9 +48,8 @@
     if (desktop.matches) {
       tools.before(toolsPosition);
       sessionStatus.before(sessionPosition);
-      blockTarget.before(targetPosition);
       recovery.before(recoveryPosition);
-      contentField.after(blockTarget, recovery);
+      contentField.after(recovery);
       identity.append(sessionStatus);
       modes.append(...modeButtons);
       navigation.append(...navigationButtons);
@@ -72,7 +69,6 @@
       tools.replaceChildren(...buttons);
       toolsPosition.replaceWith(tools);
       sessionPosition.replaceWith(sessionStatus);
-      targetPosition.replaceWith(blockTarget);
       recoveryPosition.replaceWith(recovery);
     }
     if (buttons.includes(focused) || recovery.contains(focused)) focused.focus({ preventScroll: true });
