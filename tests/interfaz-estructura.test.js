@@ -45,8 +45,50 @@ test("duplicar, subir y bajar conservan la identidad visible y el foco de la acc
   assert.equal(await p.locator(":focus").getAttribute("data-path"), "1");
   await accion(p, 1, /^Bajar/);
   assert.match(await tarjeta(p, 2).innerText(), /Dos/);
-  assert.match(await activo(p), /^Subir Texto,/);
+  assert.match(await activo(p), /^Bajar Texto,/);
   assert.equal(await p.locator(":focus").getAttribute("data-path"), "2");
+  assert.equal(await p.locator("#structure-move-status").innerText(), "Sin cambios de numeración");
+});
+
+test("anidar y sacar anuncian la numeración y mantienen el foco en el botón de la nueva ruta", opciones, async t => {
+  const { pagina: p } = await sesionDePrueba(t);
+  for (const title of ["Clase", "Pre-Clase", "Repaso"]) {
+    if (!(await p.locator("#block-title").isVisible())) await p.click("#title-chip");
+    await p.fill("#block-title", title);
+    await añadir(p, "Prosa");
+  }
+  const focused = p.locator(":focus");
+  const status = p.locator("#structure-move-status");
+  const live = p.locator("#app-status");
+  await accion(p, 1, /^Anidar/);
+  assert.equal(await focused.getAttribute("data-path"), "0.0");
+  assert.equal(await focused.getAttribute("data-action"), "indent");
+  assert.ok(await focused.isDisabled());
+  assert.match(await focused.getAttribute("title"), /bloque anterior/);
+  const nested = "Pre-Clase: 2 → 1.1. Otro bloque cambia de número.";
+  assert.equal(await status.innerText(), nested);
+  assert.equal(await live.textContent(), nested);
+
+  await p.keyboard.press("Alt+Shift+ArrowRight");
+  assert.equal(await live.textContent(), "No hay un bloque anterior donde anidar.");
+  assert.equal(await focused.getAttribute("data-path"), "0.0");
+
+  await p.keyboard.press("Alt+Shift+ArrowLeft");
+  assert.equal(await focused.getAttribute("data-path"), "1");
+  assert.equal(await focused.getAttribute("data-action"), "outdent");
+  assert.ok(await focused.isDisabled());
+  assert.match(await focused.getAttribute("title"), /raíz/);
+  assert.match(await status.innerText(), /^Pre-Clase: 1\.1 → 2\./);
+
+  await p.keyboard.press("Alt+Shift+ArrowRight");
+  assert.equal(await focused.getAttribute("data-path"), "0.0");
+  assert.equal(await live.textContent(), nested);
+  await p.keyboard.press("Alt+Shift+ArrowLeft");
+
+  await accion(p, 1, /^Subir/);
+  assert.equal(await focused.getAttribute("data-path"), "0");
+  assert.equal(await focused.getAttribute("data-action"), "up");
+  assert.match(await live.textContent(), /^Pre-Clase: 2 → 1\./);
 });
 
 test("copiar y pegar usan la bandeja y el foco pasa a la copia", opciones, async t => {

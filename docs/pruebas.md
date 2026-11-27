@@ -23,7 +23,7 @@
 - app.js no supera su presupuesto de bytes
 - cada script propio se carga en index.html y lo revisa check:js
 
-## `tests/block-tree.test.js` — 42 pruebas
+## `tests/block-tree.test.js` — 46 pruebas
 
 - la ausencia de children equivale a una lista vacía y el estado plano sigue siendo válido
 - solo los tipos declarados como contenedores admiten hijos
@@ -55,6 +55,10 @@
 - copiar entrega un bloque suelto e independiente, y cada pegado es otro más
 - copiar sanea lo que entra y rechaza lo que no es un bloque
 - guardar y restaurar después de duplicar mantiene ambas ramas
+- anidar coloca la rama al final de los hijos del hermano anterior y conserva su identidad
+- sacar coloca toda la rama inmediatamente después del padre en la raíz o entre otros hijos
+- anidar y sacar permiten texto sin título dentro de un entorno
+- anidar y sacar explican por qué un movimiento es inválido sin modificar el árbol
 - mover a otro padre rechaza rutas inexistentes, ciclos y destinos sin hijos
 - mover una rama ajusta la ruta profunda de un destino desplazado y conserva sus hijos
 - al mover entre ramas solo se ajusta el índice de un hermano del origen
@@ -245,10 +249,11 @@
 - el modo de concentración y los paneles estrechos conservan borrador y selección
 - una integral doble marcada como favorita se inserta desde la hoja táctil
 
-## `tests/interfaz-estructura.test.js` — 4 pruebas
+## `tests/interfaz-estructura.test.js` — 5 pruebas
 
 - editar y añadir dentro sitúan el foco en el tipo y conservan el nivel de los hijos
 - duplicar, subir y bajar conservan la identidad visible y el foco de la acción
+- anidar y sacar anuncian la numeración y mantienen el foco en el botón de la nueva ruta
 - copiar y pegar usan la bandeja y el foco pasa a la copia
 - eliminar un padre pide confirmación, mueve el foco y permite deshacer y rehacer
 
@@ -373,7 +378,7 @@
 - un anillo independiente conserva enlaces, huecos y submenús en el archivo portátil
 - un enlace a las acciones de tarjeta conserva el sector de mover deshabilitado en el editor
 
-## `tests/outline.test.js` — 14 pruebas
+## `tests/outline.test.js` — 19 pruebas
 
 - el tema numera los encabezados hermanos como subsecciones
 - las ramas se numeran en profundidad y reinician los contadores inferiores
@@ -389,6 +394,11 @@
 - las etiquetas de teorema incluyen su contador y el título opcional
 - los bloques sin encabezado muestran el tipo y su título si existe
 - la etiqueta de un encabezado fuera de lugar avisa qué entorno lo contiene
+- el resumen sigue los ids al anidar y cuenta los demás bloques renumerados
+- el resumen usa el plural cuando varios otros bloques cambian de número
+- el resumen indica cuándo un encabezado queda como párrafo sin número
+- el resumen detecta cambios de nivel entre dos encabezados sin número y usa la clave si no hay id
+- el resumen informa cuando un movimiento no cambia la numeración
 
 ## `tests/pdflatex.test.js` — 5 pruebas
 
@@ -499,4 +509,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-342 pruebas con `node:test` más la comprobación estructural.
+352 pruebas con `node:test` más la comprobación estructural.

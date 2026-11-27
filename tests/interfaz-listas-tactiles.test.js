@@ -56,4 +56,8 @@ test("Mover bloque permite recorrer destinos con el dedo y trasladar al elegido"
   await list.locator("option").last().tap(); await p.locator("#move-block-form button[type=submit]").click();
   const edit=p.locator("#block-list article").last().locator('[data-action="edit"]');
   assert.match(await edit.getAttribute("aria-label"),/nivel 2/);
+  const focused = p.locator(":focus");
+  assert.equal(await focused.getAttribute("data-action"), "move");
+  assert.equal(await focused.getAttribute("data-path"), await edit.getAttribute("data-path"));
+  assert.equal(await p.locator("#structure-move-status").innerText(), "Sin cambios de numeración");
 });

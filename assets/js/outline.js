@@ -47,11 +47,12 @@
         if (!blockIsEmitted(block)) return;
         const path = [...parent, index];
         const type = T.blockType(block.type) || T.blockType("text");
+        const identity = block.id ? { id: block.id } : {};
+        const title = String(block.title ?? "").trim();
         let childDepth = depth;
         if (type.kind === "text") {
-          const title = String(block.title ?? "").trim();
           if (title) {
-            const entry = heading("heading", path, depth, title);
+            const entry = { ...heading("heading", path, depth, title), ...identity };
             if (containerType) {
               entry.misplaced = true;
               entry.containerType = containerType;
@@ -63,9 +64,9 @@
           const { environment, heading } = type;
           const number = (environments.get(environment) || 0) + 1;
           environments.set(environment, number);
-          entries.push({ kind: "theorem", path, key: T.pathToKey(path), environment, heading, number });
+          entries.push({ kind: "theorem", path, key: T.pathToKey(path), environment, heading, number, ...identity, ...(title ? { title } : {}) });
         } else {
-          entries.push({ kind: "other", path, key: T.pathToKey(path), type: type.id });
+          entries.push({ kind: "other", path, key: T.pathToKey(path), type: type.id, ...identity });
         }
         visit(block.children, path, childDepth, type.kind !== "text" && type.container ? type.id : containerType);
       });
@@ -77,5 +78,37 @@
     return entries;
   }
 
-  Object.assign(T, { blockIsEmitted, outlineEntries, outlineLabel });
+  function diffOutline(beforeEntries, afterEntries) {
+    const identity = entry => entry.id ?? entry.key;
+    const previous = new Map(beforeEntries.map(entry => [identity(entry), entry]));
+    const changes = [];
+    for (const entry of afterEntries) {
+      const id = identity(entry);
+      const old = id == null ? undefined : previous.get(id);
+      if (!old || (old.number === entry.number && old.level === entry.level)) continue;
+      changes.push({
+        id, title: entry.title || entry.heading || "Bloque",
+        before: { number: old.number ?? null, level: old.level ?? null },
+        after: { number: entry.number ?? null, level: entry.level ?? null },
+      });
+    }
+    if (!changes.length) return { changes, summary: "Sin cambios de numeración" };
+
+    const first = changes.find(change => change.after.number === null && change.after.level !== null) || changes[0];
+    const { title, before, after } = first;
+    const label = value => value.number ?? HEADING_LABELS[Math.max(3, value.level)].toLowerCase() + " sin número";
+    let summary;
+    if (after.number === null && after.level !== null) {
+      summary = `${title} quedará como ${label(after)}.`;
+    } else {
+      summary = `${title}: ${label(before)} → ${label(after)}.`;
+    }
+    const others = changes.filter(change => change !== first);
+    const what = others.every(change => change.before.number !== change.after.number) ? "de número" : "de nivel o de número";
+    if (others.length === 1) summary += ` Otro bloque cambia ${what}.`;
+    else if (others.length > 1) summary += ` Otros ${others.length} bloques cambian ${what}.`;
+    return { changes, summary };
+  }
+
+  Object.assign(T, { blockIsEmitted, outlineEntries, outlineLabel, diffOutline });
 })(globalThis.TexNotes || (globalThis.TexNotes = {}));

@@ -4,7 +4,7 @@
     const $ = selector => document.querySelector(selector), events = new AbortController(), options = {signal:events.signal};
     const { blockAtPath, pathToKey, keyToPath, acceptsChildren } = T;
     const { getBlocks, describeBlock, editorTarget, cancelEditForStructuralChange, changeTree, renderBlocks,
-      setEditorTarget, renderEditorPreview, focusById, announce } = deps;
+      setEditorTarget, renderEditorPreview, focusById, moveAnnouncements } = deps;
     const { flattenBlocks, moveBlockTo } = T;
     const moveDialog = $("#move-block-dialog");
     const moveDestination = $("#move-block-destination");
@@ -34,12 +34,13 @@
     $("#move-block-form").addEventListener("submit", (event) => {
       event.preventDefault();
       const position = movePosition.value === "start" ? 0 : undefined;
-      const moved = blockAtPath(getBlocks(), movingPath);
+      const blocks = getBlocks();
+      const moved = blockAtPath(blocks, movingPath);
       const movedId = moved?.id;
-      const result = moveBlockTo(getBlocks(), movingPath, keyToPath(moveDestination.value), position);
+      const result = moveBlockTo(blocks, movingPath, keyToPath(moveDestination.value), position);
       moveDialog.close();
       if (!result) {
-        announce("No se pudo mover el bloque a ese destino.");
+        moveAnnouncements.error("No se pudo mover el bloque a ese destino.");
         return;
       }
 
@@ -50,9 +51,10 @@
       renderBlocks();
       setEditorTarget({});
       renderEditorPreview();
-      focusById("edit", movedId);
+      focusById("move", movedId);
       const targetReset = previous.parent.length ? " El siguiente bloque se añadirá en la raíz." : "";
-      announce(`Bloque movido de ${source} a ${describeBlock(moved, result.path)}.${cancelled}${targetReset}`);
+      moveAnnouncements.moved(blocks, result.blocks, result.path,
+        `Bloque movido de ${source} a ${describeBlock(moved, result.path)}.${cancelled}${targetReset}`);
     }, options);
     return {open:openMove, dispose() { events.abort(); if (moveDialog.open) moveDialog.close(); }};
   };

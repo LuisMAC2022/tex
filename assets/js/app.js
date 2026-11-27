@@ -2,8 +2,7 @@
   "use strict";
   const {
     METADATA_KEYS, blockLabel, acceptsChildren, generateLatex, downloadTex,
-    DRAFT_VERSION, blockAtPath, cloneBlock, cloneBlocks, countBlocks, duplicateBlock, insertBlock, keyToPath,
-    moveBlock, normalizeDraft, pathToKey, removeBlock, updateBlock,
+    DRAFT_VERSION, blockAtPath, cloneBlock, cloneBlocks, countBlocks, insertBlock, normalizeDraft, pathToKey, updateBlock,
     MATH_SYMBOLS, MATH_SYMBOL_GROUPS, filterMathSymbols, symbolAccessibleName, symbolsByGroup, insertIntoField,
     analyzeContent, normalizeLineBreaks, blockType, SHORTCUTS, shortcutLabel,
   } = global.TexNotes;
@@ -160,10 +159,11 @@
 
   /* --- Lista anidada --- */
 
+  const getTopic = () => form.elements.topic.value;
   const structure = global.TexNotes.createStructureView(document, {
     reveal: node => panels.reveal(node), getBlocks: () => blocks, getTarget: label => blockTargets.get(label),
     refreshTargets: tree => { blockTargets = new Map(global.TexNotes.referenceTargets({ blocks: tree }).map(target => [target.label, target])); },
-    getTopic: () => form.elements.topic.value, renderBlockPreview, blockItemExtensions, syncReferenceKey, saveSession,
+    getTopic, renderBlockPreview, blockItemExtensions, syncReferenceKey, saveSession,
   });
   const { actionButton, describeBlock, renderBlocks, focusAction, focusAfterRemoval, focusById } = structure;
 
@@ -259,16 +259,14 @@
     announce(cancelled ? "Edición cancelada." : "El siguiente bloque se añadirá en la raíz.");
   });
 
+  const moveAnnouncements = global.TexNotes.createMoveAnnouncements(document, getTopic, announce);
   const handleBlockAction = global.TexNotes.createBlockActions(document, {
     getBlocks: () => blocks, setTray: next => { tray = next; }, renderBlocks, announce, convertLegacyBlock,
     focusType: blockForm.focusType, openMenu: (button, path, keyboard) => radial.openAtButton(button, { source: "card", path }, keyboard),
     loadBlockEditor, cancelTemplateForStructuralChange, clearBlockFields, setEditorTarget, describeBlock,
-    cancelEditForStructuralChange, changeTree, editorTarget, focusById, updateTrayControls, copyToClipboard, focusAfterRemoval,
+    cancelEditForStructuralChange, changeTree, editorTarget, focusById, focusAction, updateTrayControls, copyToClipboard, focusAfterRemoval, moveAnnouncements,
   });
-  blockList.addEventListener("click", event => {
-    const button = event.target.closest("button[data-action]");
-    if (button) T.runAction("block." + button.dataset.action, { path: keyToPath(button.dataset.path), button, keyboard: !T.isPointerClick(event) }, { source: "card" });
-  });
+  global.TexNotes.bindBlockControls(blockList);
 
 
   function generateOutput() {
@@ -1039,7 +1037,7 @@
 
   /* --- [E] Mover --- */
   const {open: openMove} = global.TexNotes.createMoveDialog(document, {getBlocks: () => blocks, describeBlock,
-    editorTarget, cancelEditForStructuralChange, changeTree, renderBlocks, setEditorTarget, renderEditorPreview, focusById, announce});
+    editorTarget, cancelEditForStructuralChange, changeTree, renderBlocks, setEditorTarget, renderEditorPreview, focusById, moveAnnouncements});
   /* --- fin [E] --- */
 
   /* --- [F] Asistente de escritura --- */

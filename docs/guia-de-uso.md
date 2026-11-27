@@ -218,10 +218,18 @@ Las acciones y los anuncios usan las mismas etiquetas de la lista.
   conserva.
 - «Subir» y «Bajar» lo mueven **solo entre sus iguales**, sin sacarlo de donde
   está. En los extremos el botón aparece apagado.
+- «Anidar» coloca el bloque como último hijo del hermano anterior. «Sacar» lo
+  coloca inmediatamente después de su padre, al mismo nivel que este. Los dos
+  conservan todos sus hijos. Con el foco en los controles de un bloque, pulsa
+  `Alt+Shift+→` para anidar o `Alt+Shift+←` para sacar. Si un movimiento no se
+  puede hacer, el botón queda deshabilitado y su texto de ayuda explica el motivo.
+- Después de mover un bloque, el resumen encima de la lista indica los cambios
+  de número o nivel. Con «Subir», «Bajar», «Anidar» y «Sacar», el foco sigue en
+  el mismo botón del bloque movido.
 - «Mover a…» traslada el bloque con todos sus hijos. En «Destino», elige
   «Raíz del documento» o un bloque que admita hijos. En «Posición», elige
   «Al principio» o «Al final» y confirma con «Mover bloque». El foco vuelve a
-  «Editar» del bloque movido y se anuncian sus etiquetas anterior y nueva. Si
+  «Mover a…» del bloque movido y se anuncian sus etiquetas anterior y nueva. Si
   había una edición en curso, se cancela. El siguiente bloque se añadirá en
   la raíz. Puedes cerrar el diálogo con «Cancelar» o `Escape` para volver al
   botón que lo abrió.

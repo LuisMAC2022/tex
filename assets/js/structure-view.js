@@ -87,6 +87,18 @@
       return button;
     }
 
+    function movementButton(label, action, path, subject, reason, shortcut) {
+      const button = actionButton(label, action, path, label + " " + subject);
+      if (shortcut) button.setAttribute("aria-keyshortcuts", shortcut);
+      if (reason) {
+        // El foco puede volver aquí después de mover el bloque a un extremo.
+        button.setAttribute("aria-disabled", "true");
+        button.tabIndex = -1;
+        button.title = reason;
+      }
+      return button;
+    }
+
     function blockItem(block, path, parent, parentPath, siblings) {
       const position = path[path.length - 1];
       const where = parent ? `dentro de ${describeBlock(parent, parentPath)}` : "en la raíz";
@@ -151,8 +163,10 @@
         actionButton("Copiar bloque", "copy", path, `Copiar ${subject} a la bandeja, para pegarlo donde elijas`),
         actionButton("Copiar texto", "copy-text", path, `Copiar al portapapeles el texto de ${subject}`),
         actionButton("Eliminar", "delete", path, `Eliminar ${subject}`),
-        actionButton("Subir", "up", path, `Subir ${subject}, entre sus hermanos`, position === 0),
-        actionButton("Bajar", "down", path, `Bajar ${subject}, entre sus hermanos`, position === siblings - 1),
+        movementButton("Subir", "up", path, subject, position === 0 && "El bloque ya es el primero de sus hermanos."),
+        movementButton("Bajar", "down", path, subject, position === siblings - 1 && "El bloque ya es el último de sus hermanos."),
+        movementButton("Anidar", "indent", path, subject, T.blockNestingError(getBlocks(), path, "indent"), "Alt+Shift+ArrowRight"),
+        movementButton("Sacar", "outdent", path, subject, T.blockNestingError(getBlocks(), path, "outdent"), "Alt+Shift+ArrowLeft"),
       );
       const move = actionButton("Mover a…", "move", path, "Mover a… · Bloque " + subject);
       move.setAttribute("aria-haspopup", "dialog"); more.append(move);

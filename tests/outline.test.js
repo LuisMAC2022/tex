@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadTexNotes } from "./load-app.mjs";
 
-const { outlineEntries, outlineLabel, blockIsEmitted, blockToLatex } = await loadTexNotes();
+const { outlineEntries, outlineLabel, blockIsEmitted, blockToLatex, diffOutline, indentBlock } = await loadTexNotes();
 const texto = (title, children) => ({ type: "text", title, content: "Prosa", children });
 const esquema = (blocks, topic, options) => structuredClone(outlineEntries({ blocks, metadata: { topic } }, options));
 
@@ -124,5 +124,53 @@ test("la etiqueta de un encabezado fuera de lugar avisa qué entorno lo contiene
   assert.deepEqual(structuredClone(outlineLabel(entries[1], block)), {
     badge: "Sección", text: "1 Interior",
     warning: "Encabezado dentro de Definición: LaTeX lo admite pero rompe la jerarquía",
+  });
+});
+
+const identificado = (title, id, children = []) => ({ ...texto(title, children), id });
+
+test("el resumen sigue los ids al anidar y cuenta los demás bloques renumerados", () => {
+  const blocks = [identificado("Clase", "clase"), identificado("Pre-Clase", "pre"), identificado("Repaso", "repaso")];
+  const result = indentBlock(blocks, [1]);
+  const diff = structuredClone(diffOutline(esquema(blocks, "Tema"), esquema(result.blocks, "Tema")));
+  assert.deepEqual(diff, {
+    changes: [
+      { id: "pre", title: "Pre-Clase", before: { number: "1.2", level: 1 }, after: { number: "1.1.1", level: 2 } },
+      { id: "repaso", title: "Repaso", before: { number: "1.3", level: 1 }, after: { number: "1.2", level: 1 } },
+    ],
+    summary: "Pre-Clase: 1.2 → 1.1.1. Otro bloque cambia de número.",
+  });
+});
+
+test("el resumen usa el plural cuando varios otros bloques cambian de número", () => {
+  const blocks = ["Clase", "Pre-Clase", "C", "D", "E", "F"].map((title, index) => identificado(title, String(index)));
+  const result = indentBlock(blocks, [1]);
+  const diff = diffOutline(esquema(blocks, "Tema"), esquema(result.blocks, "Tema"));
+  assert.equal(diff.summary, "Pre-Clase: 1.2 → 1.1.1. Otros 4 bloques cambian de número.");
+});
+
+test("el resumen indica cuándo un encabezado queda como párrafo sin número", () => {
+  const siblings = [identificado("Padre", "padre"), identificado("Pre-Clase", "pre")];
+  const blocks = [identificado("Sección", "sec", siblings)];
+  const nested = indentBlock(blocks, [0, 1]);
+  const diff = diffOutline(esquema(blocks, "Tema"), esquema(nested.blocks, "Tema"));
+  assert.deepEqual(structuredClone(diff.changes[0].after), { number: null, level: 3 });
+  assert.equal(diff.summary, "Pre-Clase quedará como párrafo sin número.");
+});
+
+test("el resumen detecta cambios de nivel entre dos encabezados sin número y usa la clave si no hay id", () => {
+  const before = [{ key: "0.0.0.0", title: "Pre-Clase", level: 3, number: null }];
+  const after = [{ ...before[0], level: 4 }];
+  assert.deepEqual(structuredClone(diffOutline(before, after)), {
+    changes: [{ id: "0.0.0.0", title: "Pre-Clase", before: { number: null, level: 3 }, after: { number: null, level: 4 } }],
+    summary: "Pre-Clase quedará como subpárrafo sin número.",
+  });
+});
+
+test("el resumen informa cuando un movimiento no cambia la numeración", () => {
+  const blocks = [identificado("A", "a"), { type: "equation", id: "ec", content: "x+1" }];
+  const result = indentBlock(blocks, [1]);
+  assert.deepEqual(structuredClone(diffOutline(esquema(blocks), esquema(result.blocks))), {
+    changes: [], summary: "Sin cambios de numeración",
   });
 });

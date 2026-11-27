@@ -103,7 +103,7 @@ test("cada rótulo que citan las guías sigue existiendo en la interfaz", () => 
   const etiquetas = [
     ...html.matchAll(/>([^<>{}]{2,80})<\/(?:button|label|legend|option|summary|h1|h2|h3)>/g),
     ...app.matchAll(/textContent\s*=\s*"([^"]{2,80})"/g),
-    ...app.matchAll(/actionButton\("([^"]+)"/g),
+    ...app.matchAll(/(?:actionButton|movementButton)\("([^"]+)"/g),
   ].map(([, texto]) => texto.trim());
 
   const guias = documentos(join(RAIZ, "docs"));

@@ -9,8 +9,7 @@
  * resto.
  *
  * Todas las operaciones devuelven un árbol nuevo y nunca modifican el que
- * reciben. Una ruta inválida devuelve null: la persona que llama conserva el
- * estado anterior y lo comunica, en lugar de trabajar sobre un árbol corrupto.
+ * reciben. Una ruta inválida devuelve null o { error } según la operación.
  */
 (function (global) {
   "use strict";
@@ -126,6 +125,7 @@
     for (const index of path) {
       if (!Array.isArray(list) || index >= list.length) return null;
       block = list[index];
+      if (!block) return null;
       list = block.children;
     }
     return block;
@@ -278,6 +278,44 @@
     return { blocks: next, path: [...destinationPath, position] };
   }
 
+  function nestingDestination(blocks, path, action) {
+    const block = blockAtPath(blocks, path);
+    if (!block) return { error: "Ese bloque ya no existe." };
+    const siblingsPath = path.slice(0, -1);
+    let parentPath, index;
+    if (action === "indent") {
+      const position = path.at(-1);
+      if (position === 0) return { error: "No hay un bloque anterior donde anidar." };
+      parentPath = [...siblingsPath, position - 1];
+    } else {
+      if (!siblingsPath.length) return { error: "El bloque ya está en la raíz." };
+      parentPath = siblingsPath.slice(0, -1);
+      index = siblingsPath.at(-1) + 1;
+    }
+    if (parentPath.length) {
+      const parent = blockAtPath(blocks, parentPath);
+      if (!parent) return { error: "El bloque de destino no existe." };
+      const type = TexNotes.blockLabel(parent.type);
+      if (!TexNotes.acceptsChildren(parent.type)) return { error: `${type} no admite bloques dentro.` };
+      if (block.type === "text" && String(block.title ?? "").trim() && parent.type !== "text") {
+        return { error: `Un encabezado no puede ir dentro de ${type}` };
+      }
+    }
+    return { parentPath, index };
+  }
+
+  function blockNestingError(blocks, path, action) {
+    return nestingDestination(blocks, path, action).error;
+  }
+
+  function changeNesting(blocks, path, action) {
+    const destination = nestingDestination(blocks, path, action);
+    return destination.error ? destination : moveBlockTo(blocks, path, destination.parentPath, destination.index);
+  }
+
+  const indentBlock = (blocks, path) => changeNesting(blocks, path, "indent");
+  const outdentBlock = (blocks, path) => changeNesting(blocks, path, "outdent");
+
   /** Cuenta el bloque y toda su descendencia. */
   function countBlocks(list) {
     return (Array.isArray(list) ? list : []).reduce((total, block) => total + 1 + countBlocks(block.children), 0);
@@ -352,6 +390,6 @@
   Object.assign(TexNotes, {
     DRAFT_VERSION, newId, pathOfId, normalizeMacros, localDateValue, sessionHasContent, cloneBlocks, cloneBlock, normalizeBlock, normalizeBlocks, blockAtPath, siblingsAtPath,
     insertBlock, duplicateBlock, copyWithoutLabels, updateBlock, removeBlock, moveBlock, moveBlockTo, countBlocks, flattenBlocks,
-    pathToKey, keyToPath, pathLabel, normalizeDraft, listFormatAfterEdit,
+    indentBlock, outdentBlock, blockNestingError, pathToKey, keyToPath, pathLabel, normalizeDraft, listFormatAfterEdit,
   });
 })(typeof globalThis !== "undefined" ? globalThis : this);

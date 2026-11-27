@@ -38,6 +38,8 @@
     action("block.delete", "Eliminar", "×", card),
     action("block.up", "Subir", "↑", card, { enabled: c => c.position > 0 }),
     action("block.down", "Bajar", "↓", card, { enabled: c => c.position + 1 < c.siblings }),
+    action("block.indent", "Anidar", "→", card, { enabled: c => c.canIndent }),
+    action("block.outdent", "Sacar", "←", card, { enabled: c => c.canOutdent }),
     action("block.convert-bibliography", "Convertir en referencias del documento", "§", card, { enabled: c => c.type === "bibliography" }),
     action("block.move", "Mover…", "↗", card),
     action("block.template", "Guardar como plantilla", "☆", card),
@@ -66,7 +68,8 @@
     if (!block) return {};
     const parent = T.blockAtPath(blocks, path.slice(0, -1));
     return { type: block.type, position: path.at(-1), siblings: parent ? parent.children.length : blocks.length,
-      container: T.acceptsChildren(block.type), hasTray };
+      container: T.acceptsChildren(block.type), hasTray,
+      canIndent: !T.blockNestingError(blocks, path, "indent"), canOutdent: !T.blockNestingError(blocks, path, "outdent") };
   }
   const actionHandlers = Object.create(null);
   function registerActionHandlers(handlers) {

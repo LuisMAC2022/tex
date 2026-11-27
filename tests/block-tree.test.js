@@ -5,7 +5,7 @@ import { loadTexNotes } from "./load-app.mjs";
 
 const {
   DRAFT_VERSION, acceptsChildren, blockAtPath, blockToLatex, cloneBlock, countBlocks, duplicateBlock,
-  flattenBlocks, generateLatex, insertBlock, keyToPath, moveBlock, normalizeBlocks, normalizeDraft,
+  flattenBlocks, generateLatex, indentBlock, insertBlock, keyToPath, moveBlock, normalizeBlocks, normalizeDraft, outdentBlock,
   pathLabel, pathToKey, removeBlock, updateBlock,
 } = await loadTexNotes();
 
@@ -300,6 +300,72 @@ test("guardar y restaurar después de duplicar mantiene ambas ramas", () => {
 /* --- Mover una rama a otro padre --- */
 
 const { moveBlockTo } = await loadTexNotes(["block-types.js", "block-tree.js"]);
+
+test("anidar coloca la rama al final de los hijos del hermano anterior y conserva su identidad", () => {
+  const blocks = normalizeBlocks([
+    node("text", "Padre", [node("text", "Primer hijo")]),
+    { ...node("text", "Mover", [node("definition", "Descendiente")]), title: "Encabezado" },
+    node("text", "Siguiente"),
+  ]);
+  const original = mirror(blocks);
+  const path = [1];
+  const result = indentBlock(blocks, path);
+  assert.deepEqual(mirror(result.path), [0, 1]);
+  assert.deepEqual(mirror(blockAtPath(result.blocks, result.path)), original[1]);
+  assert.deepEqual(shape(result.blocks), ["0:Padre", "0.0:Primer hijo", "0.1:Mover", "0.1.0:Descendiente", "1:Siguiente"]);
+  assert.deepEqual(mirror(blocks), original);
+  assert.deepEqual(path, [1]);
+});
+
+test("sacar coloca toda la rama inmediatamente después del padre en la raíz o entre otros hijos", () => {
+  const branch = { ...node("text", "Mover", [node("theorem", "Hijo")]), title: "Encabezado" };
+  const siblings = [node("text", "Padre", [branch, node("text", "Otro hijo")]), node("text", "Siguiente")];
+  for (const prefix of [[], [0]]) {
+    const blocks = normalizeBlocks(prefix.length ? [node("text", "Abuelo", siblings)] : siblings);
+    const original = mirror(blocks);
+    const path = [...prefix, 0, 0];
+    const result = outdentBlock(blocks, path);
+    assert.deepEqual(mirror(result.path), [...prefix, 1]);
+    assert.deepEqual(mirror(blockAtPath(result.blocks, result.path)), mirror(blockAtPath(blocks, path)));
+    assert.equal(blockAtPath(result.blocks, [...prefix, 0, 0]).content, "Otro hijo");
+    assert.equal(blockAtPath(result.blocks, [...prefix, 2]).content, "Siguiente");
+    assert.deepEqual(mirror(blocks), original);
+    assert.deepEqual(path, [...prefix, 0, 0]);
+  }
+});
+
+test("anidar y sacar permiten texto sin título dentro de un entorno", () => {
+  const blocks = normalizeBlocks([node("definition", "Entorno", [node("text", "Padre")]), { ...node("text", "Mover"), title: " " }]);
+  const nested = indentBlock(blocks, [1]);
+  assert.deepEqual(mirror(nested.path), [0, 1]);
+  const deeper = indentBlock(nested.blocks, nested.path);
+  assert.deepEqual(mirror(deeper.path), [0, 0, 0]);
+  assert.deepEqual(mirror(outdentBlock(deeper.blocks, deeper.path)), mirror(nested));
+});
+
+test("anidar y sacar explican por qué un movimiento es inválido sin modificar el árbol", () => {
+  const heading = { ...node("text", "Mover"), title: "Encabezado" };
+  const blocks = normalizeBlocks([
+    node("equation", "x=1"), heading,
+    node("definition", "Entorno", [node("text", "Padre", [heading])]), heading,
+  ]);
+  const original = mirror(blocks);
+  const cases = [
+    [indentBlock, [0], "No hay un bloque anterior donde anidar."],
+    [indentBlock, [1], "Ecuación destacada no admite bloques dentro."],
+    [indentBlock, [3], "Un encabezado no puede ir dentro de Definición"],
+    [outdentBlock, [2, 0, 0], "Un encabezado no puede ir dentro de Definición"],
+    [outdentBlock, [1], "El bloque ya está en la raíz."],
+  ];
+  for (const move of [indentBlock, outdentBlock]) {
+    for (const path of [null, [], [9], [2, 3], Array(1)]) cases.push([move, path, "Ese bloque ya no existe."]);
+  }
+  for (const [move, path, error] of cases) assert.deepEqual(mirror(move(blocks, path)), { error });
+  assert.deepEqual(mirror(indentBlock([null, heading], [1])), { error: "El bloque de destino no existe." });
+  const invalidContainer = [node("equation", "x=1", [node("text", "Padre", [heading])])];
+  assert.deepEqual(mirror(outdentBlock(invalidContainer, [0, 0, 0])), { error: "Ecuación destacada no admite bloques dentro." });
+  assert.deepEqual(mirror(blocks), original);
+});
 
 test("mover a otro padre rechaza rutas inexistentes, ciclos y destinos sin hijos", () => {
   const original = [tree()[0], node("equation", "x=1")];
