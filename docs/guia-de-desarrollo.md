@@ -18,7 +18,7 @@
 Para quien vaya a entender o extender esta aplicación. Da por sabido JavaScript;
 no da por sabido nada de este repositorio.
 
-**Antes de tocar nada, lee [`INVARIANTES.md`](../INVARIANTES.md).** Son ocho reglas
+**Antes de tocar nada, lee [`INVARIANTES.md`](../INVARIANTES.md).** Son reglas
 con guardián real: violarlas no rompe el estilo, rompe `npm test`.
 
 ---
@@ -69,18 +69,52 @@ Los scripts se cargan como clásicos **en este orden**. La aplicación usa
 
 | Orden | Archivo | Qué posee | Toca el DOM |
 | --- | --- | --- | --- |
-| 0 | `katex.min.js` | composición matemática local | biblioteca |
-| 1 | `block-types.js` | la tabla de tipos de bloque | no |
-| 2 | `block-tree.js` | el árbol: rutas y operaciones puras | no |
-| 3 | `latex-generator.js` | el estado → la cadena `.tex` | no |
-| 4 | `file-download.js` | nombre de archivo y descarga | sí |
-| 5 | `math-symbols.js` | catálogo de símbolos y su búsqueda | no |
-| 6 | `text-insertion.js` | insertar en la posición del cursor | apenas |
-| 7 | `math-preview.js` | extracción y análisis de tramos | no |
-| 8 | `app.js` | interfaz del editor | sí |
+| 0 | `clipboard.js` | copia de texto para el código, los bloques y los informes | al copiar |
+| 1 | `error-report.js` | registro, retención y formato de errores | no |
+| 2 | `local-errors.js` | aviso, persistencia y consulta de errores | al iniciar el informe |
+| 3 | `katex.min.js` | composición matemática local | biblioteca |
+| 4 | `block-types.js` | la tabla de tipos de bloque | no |
+| 5 | `block-tree.js` | el árbol: rutas y operaciones puras | no |
+| 6 | `latex-generator.js` | el estado → la cadena `.tex` | no |
+| 7 | `file-download.js` | nombre de archivo y descarga | sí |
+| 8 | `math-symbols.js` | catálogo de símbolos, búsqueda y navegación del tablero | no |
+| 9 | `text-insertion.js` | insertar en la posición del cursor | apenas |
+| 10 | `math-preview.js` | extracción y análisis de tramos | no |
+| 11 | `shortcuts.js` | registro de atajos y sus nombres | no |
+| 12 | `actions.js` | catálogo de acciones, contexto y manejadores | no |
+| 13 | `image-options.js` | opciones de imagen y avisos de ruta | no |
+| 14 | `list-outline.js` | análisis, límites, exportación y edición de listas | no |
+| 15 | `cross-references.js` | etiquetas, destinos numerados y comandos emitidos | no |
+| 16 | `references.js` | fuentes, citas y bibliografía IEEE o APA | no |
+| 17 | `content-check.js` | comprobación del contenido | no |
+| 18 | `editing-assist.js` | pares, fragmentos y sesiones de huecos | no |
+| 19 | `completion.js` | sugerencias, uso, alias y colocación de la lista | no |
+| 20 | `templates.js` | plantillas por pasos y comandos / | no |
+| 21 | `macros.js` | validación y adaptación de macros a KaTeX | no |
+| 22 | `config-parts.js` | registro y migración de las partes del archivo portátil | no |
+| 23 | `menus.js` | datos de los menús radiales | no |
+| 24 | `radial.js` | geometría, máquina de estados y vista de los menús radiales | solo su fábrica, al llamarla |
+| 25 | `versions.js` | instantáneas, versiones, diferencias y proyecto JSON | no |
+| 26 | `version-storage.js` | IndexedDB con respaldo en localStorage | almacenamiento |
+| 27 | `selection-scope.js` | selección por alcance en prosa y matemáticas | no |
+| 28 | `menu-config.js` | validación y resolución de los anillos personales | no |
+| 29 | `radial-controller.js` | activación, punteros y teclado del menú radial | al crear el controlador |
+| 30 | `block-actions.js` | ejecución y foco de las acciones de tarjeta | al crear el controlador |
+| 31 | `action-bindings.js` | manejadores que conectan los controles con el registro | al ejecutar una acción |
+| 32 | `thumb-bar.js` | barra del pulgar, alcance y hoja de símbolos | al crear el controlador |
+| 33 | `block-form.js` | tipo, título, destino y edición del bloque | al crear el controlador |
+| 34 | `structure-view.js` | tarjetas, vistas resumidas y foco de la estructura | al crear el controlador |
+| 35 | `mobile-panels.js` | pestañas, destinos, desplazamiento y foco | al crear el controlador |
+| 36 | `portable-config.js` | lectura, importación y exportación de las partes | al crear el controlador |
+| 37 | `alias-editor.js` | alta, edición y persistencia de alias | al crear el controlador |
+| 38 | `menu-editor.js` | editor de anillos, sectores y asignación de Mi botón | al crear el controlador |
+| 39 | `suggestion-sources.js` | registro y prioridad de las fuentes de sugerencias | no |
+| 40 | `suggestion-list.js` | presentación, selección y cierre de sugerencias | al crear el controlador |
+| 41 | `move-dialog.js` | elección de destino y traslado del bloque | al crear el controlador |
+| 42 | `app.js` | cableado de la interfaz | sí |
 
-Las pruebas de Node ejecutan las funciones puras con `node:vm`. La interacción
-de `app.js` se verifica en el navegador ([DEC-007](../decisiones/DEC-007-sin-dom-en-pruebas.md)).
+Las pruebas de Node ejecutan las funciones puras con `node:vm`. La interacción de los controladores y su conexión con `app.js` se prueban en Chromium con Playwright cuando está instalado
+([DEC-029](../decisiones/DEC-029-pruebas-de-interfaz-en-chromium.md)).
 
 > **Nunca los conviertas en módulos ES.** Con `file://` el navegador bloquea por CORS
 > la descarga de un módulo y la interfaz queda inerte. Es INV-004 y
@@ -91,16 +125,75 @@ Qué exporta cada uno, si necesitas buscar una función:
 
 - **`block-tree.js`**: `normalizeBlock`, `normalizeBlocks`, `normalizeDraft`,
   `blockAtPath`, `siblingsAtPath`, `insertBlock`, `duplicateBlock`, `updateBlock`,
-  `removeBlock`, `moveBlock`, `cloneBlock`, `cloneBlocks`, `countBlocks`,
+  `removeBlock`, `moveBlock`, `moveBlockTo`, `cloneBlock`, `cloneBlocks`, `countBlocks`,
   `flattenBlocks`, `pathToKey`, `keyToPath`, `pathLabel`, `DRAFT_VERSION`.
 - **`latex-generator.js`**: `generateLatex`, `blockToLatex`, `contentToLatex`,
   `escapeMetadata`, `buildPreamble`, `buildTheoremDefs`, `buildMetadata`, `buildBody`,
   `normalizeLineBreaks`, `METADATA_KEYS`.
 - **`math-symbols.js`**: `MATH_SYMBOLS`, `MATH_SYMBOL_GROUPS`, `filterMathSymbols`,
   `symbolsByGroup`, `normalizeSearchTerm`, `describeCommand`, `symbolAccessibleName`.
+  `SYMBOL_BOARD_GROUPS` comienza por `RECENT_SYMBOL_GROUP`. `symbolGridTarget` y
+  `adjacentGroup` resuelven la navegación. `recentSymbolIds` filtra el historial que
+  `app.js` lee y escribe en `tex-notes:recent-symbols`.
 - **`text-insertion.js`**: `insertAtSelection` (pura), `insertIntoField`.
 - **`math-preview.js`**: `mathSegments`, `analyzeContent` con un renderizador inyectado.
+- **`image-options.js`**: `normalizeImageOptions`, `imagePathWarnings`. El árbol y el generador consultan las opciones en `TexNotes` al ejecutar sus funciones.
+- **`list-outline.js`**: `parseListOutline` crea el árbol de elementos. `limitListOutline`
+  aplica los límites de entornos y devuelve los datos para la vista previa.
+  `outlineToLatex` aplica los mismos límites al exportar. `shiftLines` y `continueListLine`
+  reciben el texto y la selección en índices UTF-16 y devuelven el nuevo estado del campo.
+- **`content-check.js`**: `checkContent` para una cadena, `checkBlock` para
+  incluir el contexto de sus bloques padre y `checkDocument` para agrupar los
+  avisos por ruta. La sección D de `app.js` los presenta mediante
+  `editorPreviewHooks`, `blockItemExtensions` y `beforeGenerateHooks`.
 - **`file-download.js`**: `sanitizeFilename`, `downloadTex`.
+
+
+### Dentro de `app.js`
+
+`app.js` es un único cierre. Sus secciones no se llaman por un contrato: leen y
+escriben variables del cierre. El mapa siguiente dice dónde está cada parte. Busca
+el marcador literal; los números de línea cambian.
+
+| Marcador | Qué contiene | Estado propio | Puntos de enganche |
+| --- | --- | --- | --- |
+| inicio del archivo | estado del documento, vista previa del editor | `blocks`, `history`, `macros`, `references`, `documentId` | declara los cinco ganchos |
+| `Nombres de cada nodo` y `Editor: a qué nodo apunta` | rótulos de los nodos y destino del formulario | — | — |
+| `Lista anidada` | tarjetas de la estructura | `blockTargets` | `blockItemExtensions`, `previewRenderers` |
+| `Bandeja de copia` | bandeja, portapapeles, validar y confirmar el bloque, generar | `tray` | `blockFieldHooks`, `beforeGenerateHooks` |
+| `[A] Atajos del tablero` | tablero de símbolos | `recentSymbols`, `symbolOrigin` | — |
+| `[B] Imagen` | campos de imagen y etiqueta del bloque | — | los tres ganchos de bloque |
+| `[C] Listas` | sangría y vista de listas | `loadedListBlock` | `blockFieldHooks`, `previewRenderers`, `editorPreviewHooks` |
+| `[D] Comprobación` | avisos previos a Overleaf | `issuesByPath` | `editorPreviewHooks`, `blockItemExtensions`, `beforeGenerateHooks` |
+| `[E] Mover` | conecta el diálogo de traslado en `move-dialog.js` | el controlador conserva el bloque de origen | `changeTree` |
+| `[F] Asistente de escritura` | autocierre, sugerencias de `\`, huecos, alias, configuración portátil | `prefs`, `usage`, `snippetSession` | conecta la lista con su registro de fuentes |
+| `[G] Comandos / y plantillas` | `/` y plantillas por pasos | `slashSession`, `templateSession` | aplica los tipos y plantillas y se suscribe al cierre de la lista |
+| `[H] Macros del documento` | macros | `defaultMacros` | expone `setConfigMacros` para la configuración portátil |
+| `Referencias del documento y del curso` | fuentes y citas | `courseReferences` | `blockItemExtensions` |
+| `createThumbBar` | conecta la barra y la hoja de símbolos en `thumb-bar.js` | el controlador conserva el alcance | `blockFieldHooks` |
+| `createRadialController` | conecta el editor a los gestos y al teclado de `radial-controller.js` | el controlador conserva el anillo y los punteros | `runAction` |
+| `Autoguardado separado` | sesión sin guardar y su recuperación | `pendingSession` | — |
+| `function selectDocument` hasta el final | historial estructural, versiones, proyecto JSON y arranque | `knownVersions` | — |
+
+El registro de `suggestion-sources.js` consulta, por orden, las fuentes de comandos de barra diagonal, referencias y citas, y comandos y entornos LaTeX. Cada token identifica la fuente que acepta su opción. El cierre pertenece a `suggestion-list.js`. La sesión de barra diagonal se suscribe a ese cierre. Las preferencias leen las macros predeterminadas y aplican el cambio mediante una función declarada en [H].
+
+La copia al portapapeles se comparte mediante `clipboard.js`. La lista, su posición y el foco de las sugerencias viven en `suggestion-list.js`. El formulario y la persistencia de alias se conectan mediante `alias-editor.js`. La lectura y el intercambio del JSON se conectan desde `portable-config.js`. Los destinos de navegación y el resumen de los datos viven en `mobile-panels.js`. La lista anidada y la restauración de foco viven en `structure-view.js`. El destino del formulario, el vaciado de sus campos y el cambio de tipo viven en `block-form.js`. Las operaciones de tarjeta y la recuperación del foco viven en `block-actions.js`. La aplicación aporta el árbol actual y las funciones que aplican los cambios.
+
+### Dónde va el código nuevo
+
+`app.js` tiene un presupuesto de bytes que solo baja (INV-012,
+[DEC-030](../decisiones/DEC-030-app-js-solo-cableado.md)). Antes de escribir:
+
+| Si lo nuevo es… | …va en | y se prueba con |
+| --- | --- | --- |
+| una regla: calcular, validar, transformar texto o árbol | un script clásico propio o uno existente con ese dueño | `tests/*.test.js` y `load-app.mjs` |
+| un dato: catálogo, menú, plantilla | el catálogo que ya existe (`menus.js`, `math-symbols.js`, `block-types.js`…) | la prueba de coherencia de ese catálogo |
+| una interacción que lee el DOM y aplica una regla | el mínimo cableado en `app.js`, compensando bytes | `tests/interfaz.test.js` |
+| una interacción con estado propio | un controlador propio, cuando exista su patrón (encargo vigente en `agents.md`) | `tests/interfaz.test.js` |
+
+Un script nuevo exige cuatro listas al día: `index.html`, `tests/check-site.mjs`,
+`check:js` de `package.json` y el cargador de sus pruebas. `tests/arquitectura.test.js`
+comprueba las dos primeras contra `assets/js/`.
 
 ---
 
@@ -127,10 +220,13 @@ Tres reglas del árbol que conviene tener presentes:
 - **`children` ausente equivale a `children: []`.** Un borrador plano de la versión
   anterior sigue siendo válido; `normalizeDraft` lo migra y lo dice.
 
-El borrador se guarda bajo demanda en `localStorage`, con la clave
-`tex-notes:draft:v2` y la forma `{ version: 2, metadata, blocks }`. `normalizeDraft`
+Las versiones se almacenan en IndexedDB, base `tex-notes`, almacén `versions`. La clave histórica de localStorage `tex-notes:draft:v2` se migra una vez, después se retira. `normalizeDraft`
 tolera datos ausentes, corruptos o mal anidados **a cualquier profundidad y nunca
 lanza**: es entrada no confiable, viene del navegador de alguien.
+
+`listFormat` pertenece a los bloques de lista. Al restaurar un borrador anterior
+sin ese campo, se conserva el modo plano. Un cambio de contenido activa el modo
+por sangría, que se guarda en la misma versión del borrador.
 
 ---
 
@@ -168,6 +264,9 @@ Dos detalles del recorrido:
 - Los hijos de un bloque que **abre un entorno** se emiten antes de su `\end{…}`;
   los de un bloque de **texto**, después de su propio contenido. Nunca se concatenan
   dentro de `content`.
+- `blockToLatex(block, context)` propaga el entorno LaTeX abierto para decidir
+  si una imagen puede flotar. Un bloque de texto transmite ese contexto a sus
+  hijos.
 - La generación es **determinista**: el mismo estado da la misma cadena, byte a byte.
   Eso es lo que hace posible `examples/calculo-3.tex` como archivo de referencia
   (INV-008).
@@ -177,6 +276,10 @@ Dos detalles del recorrido:
 ## 5. Recetas
 
 Cada una termina en `npm test`. Las dos primeras están **ejecutadas**, no deducidas.
+
+### Añadir una acción
+
+Declara su identificador, nombre, icono y contextos en `actions.js`. La disponibilidad depende de los datos que recibe `enabled`. Registra la operación en `createActionBindings`. Los botones usan `data-action-id` y los sectores usan el mismo identificador en `action`. Los atajos conservan su ámbito en `shortcuts.js` y llaman a `runAction`. Comprueba el registro tanto en Node como en Chromium.
 
 ### Añadir un tipo de bloque
 
@@ -190,7 +293,7 @@ deducen leyendo el código: aparecieron al hacerlo.
      heading: "Lema", style: "plain", container: true },
    ```
 
-   `kind` es `"text" | "equation" | "theorem" | "list" | "bibliography"`. `container` decide si admite
+   `kind` es `"text" | "equation" | "theorem" | "list" | "bibliography" | "image"`. `container` decide si admite
    hijos, y lo aplican por igual la interfaz y el generador.
 
 2. **Su `<option>` en `index.html`**, en la misma posición que en la tabla. Una prueba
@@ -216,7 +319,11 @@ deducen leyendo el código: aparecieron al hacerlo.
    **El diff del `.tex` es la revisión.** Para el ejemplo de arriba es exactamente una
    línea, `+\newtheorem{lemma}{Lema}`. Si salen más, tu cambio hizo algo que no creías.
 
-Nada más: el preámbulo, la interfaz y la numeración se derivan solos de la tabla.
+Para un `kind` existente, el preámbulo, la interfaz básica y la numeración se
+rigen por la tabla. Un `kind` nuevo puede necesitar generación y controles
+propios. Por ejemplo, `image` registra `blockFieldHooks` para leer, rellenar,
+limpiar y validar sus campos. También registra `previewRenderers` para la
+miniatura y `blockItemExtensions` para el resumen visible en la estructura.
 
 ### Añadir un símbolo al tablero
 
@@ -329,24 +436,43 @@ Cómo se reparten:
 | `invariantes.test.js` | que cada invariante siga teniendo guardián |
 | `anclas.test.js` | que ningún bloque `@decision` haya derivado |
 | `documentacion.test.js` | enlaces, anclas de índice, rótulos y el inventario |
+| `interfaz.test.js` | el cableado de `app.js` en Chromium: foco, gestos, menús; se omite sin Playwright |
 | `check-site.mjs` | lo estructural del HTML; **no** usa `node:test` |
 
 Dos cosas que conviene saber antes de escribir la primera:
 
-**No hay DOM.** `tests/load-app.mjs` ejecuta los scripts del navegador en un contexto
+**Las pruebas puras no tienen DOM.** `tests/load-app.mjs` ejecuta los scripts del navegador en un contexto
 `node:vm`, en el mismo orden que `index.html`, y clona los datos al realm de la prueba.
 Así se prueba exactamente el código que se publica, sin mantener una segunda copia en
 formato módulo — y sin añadir una dependencia, que sería violar INV-006 para poder
 vigilarlo.
 
-**Por eso `app.js` no tiene pruebas automatizadas.** Los botones por bloque, el foco y
-los anuncios se comprueban a mano, con la lista de
-[revisión manual](../README.md#revisión-manual). No es un descuido: es
-[DEC-007](../decisiones/DEC-007-sin-dom-en-pruebas.md), y la contrapartida es que la
-lógica debe vivir fuera de `app.js` siempre que se pueda.
+Los recorridos por área están en `tests/interfaz-editor.test.js`, `tests/interfaz-estructura.test.js`, `tests/interfaz-menus.test.js`, `tests/interfaz-escritura.test.js` y `tests/interfaz-versiones.test.js`. Cada prueba abre un contexto limpio. `mantener` deja el dedo apoyado, `arrastrar` recorre los puntos y lo levanta, `codigo` genera el documento y `foco` devuelve el identificador activo.
 
-**No se compila LaTeX en ninguna prueba.** Se comparan cadenas `.tex`, nunca PDF. La
-compilación es de Overleaf ([DEC-001](../decisiones/DEC-001-overleaf-copia-maestra.md)).
+**La interfaz se prueba en un navegador real, no en un DOM simulado.**
+`tests/interfaz.test.js` usa el arnés `tests/navegador.mjs`, que abre `index.html` por
+`file://` en Chromium, en escritorio o con un teléfono emulado (`abrir("Pixel 7")`), y
+recoge los errores de la página. Playwright **no** está en `package.json` (INV-006): el
+arnés lo usa si está instalado y, si no, las pruebas se omiten con motivo. Para
+ejecutarlas en local:
+
+```sh
+npm install --no-save --no-package-lock playwright@1.63.0
+npx playwright install chromium
+TEX_UI_TESTS=required npm test   # falla, en vez de omitir, si falta Playwright
+```
+
+CI (`.github/workflows/pruebas.yml`) las ejecuta en cada rama y PR con
+`TEX_UI_TESTS=required`. Para deslizar un dedo, `deslizar()` envía eventos táctiles por
+CDP. El porqué está en [DEC-029](../decisiones/DEC-029-pruebas-de-interfaz-en-chromium.md).
+Las reglas siguen fuera de `app.js` siempre que se pueda: una prueba pura es más
+rápida y determinista que una de interfaz. Lo que Chromium emulado no reproduce
+(Android físico, Gboard, TalkBack, NVDA, Overleaf) sigue en la
+[revisión manual](revision-manual.md).
+
+Las pruebas comparan el archivo de referencia byte a byte. Si está instalado, `pdflatex` compila también los fragmentos radiales en un directorio temporal con `-no-shell-escape`. Overleaf se revisa manualmente.
+
+Los sectores se definen en `assets/js/menus.js`. Se puede añadir un fragmento, referenciar un símbolo por id, crear un submenú o invocar un comando existente editando ese archivo. Un comando nuevo declara sus contextos en `actions.js` y conecta su manejador en `action-bindings.js` mediante `registerActionHandlers`. Los rótulos de tipos y símbolos se resuelven desde sus catálogos. La geometría y las transiciones se prueban en `tests/radial.test.js`.
 
 ---
 
@@ -395,3 +521,132 @@ deployment**, elige **GitHub Actions**.
 Todas las rutas del sitio son relativas (INV-007), así que funciona igual en un dominio
 raíz que en una subruta de proyecto. Y como no carga nada remoto (INV-006), funciona
 igual abierto por doble clic y sin red.
+
+## Edición y autoguardado
+
+`diffEdit` calcula el reemplazo mínimo sin dividir pares UTF-16.
+`applyFieldEdit` aplica cualquier edición del contenido y conserva la selección;
+`isApplyingFieldEdit()` permite ignorar los eventos que produce la propia app.
+Solo cargar y vaciar el editor asignan directamente su valor. Véase DEC-016.
+
+`renderBlockPreview` memoriza nodos de estructura por tipo, formato, contenido,
+contexto de profundidad y versión de vista previa; las imágenes quedan fuera.
+El controlador de autoguardado en `versions.js` usa `tex-notes:autosave:v1`, con una copia anterior en
+`tex-notes:autosave:previous`. Los eventos input/change tienen retardo de 800 ms;
+pagehide y visibilitychange guardan de inmediato. Véase DEC-019.
+
+## Contexto y autocierre
+
+`math-preview.js` mantiene la única lista `MATH_ENVIRONMENTS` y expone
+`mathContextAt` e `isEscaped`. `editing-assist.js` contiene `autoPair`,
+`activePairs`, `deleteEmptyPair` y `completeEnvironment`, todas puras.
+Los cierres se guardan por distancia al final y se validan contra el texto.
+`app.js` atiende caracteres en beforeinput y navegación en captura del fieldset.
+La preferencia se guarda en `tex-notes:prefs:v1`; puede funcionar sin almacenamiento.
+
+## Ampliar sugerencias y alias
+
+Añade un alias predeterminado a `DEFAULT_ALIASES` de `completion.js` con
+trigger, expansion y mode; ejecuta `validateAlias` y las pruebas. Evita las
+palabras de `SHORT_WORDS`. Los comandos de texto viven en `TEXT_COMMANDS`; los
+símbolos se derivan del catálogo y los entornos de `MATH_ENVIRONMENTS`.
+`rankCompletions` recibe el instante y el historial para ser determinista. Ordena
+por nivel de coincidencia, uso, longitud del comando y posición en el catálogo.
+`parseSnippet` acepta texto o before/after, y `snippetEdit` devuelve la edición,
+los huecos y los cierres. Su sesión almacena distancias al final, no índices
+que se desplacen al escribir. La navegación condicional se rige por DEC-015.
+
+`validateConfiguration` valida el sobre y todos sus elementos antes de cualquier
+reemplazo. Alias, uso y preferencias tienen claves separadas con sufijo v1.
+La exportación es JSON; no modifica el borrador ni el contenido del documento.
+
+## Tipos con comandos y plantillas
+
+Cada entrada de `BLOCK_TYPES` declara `slash`, un array de comandos sin barra.
+Añadir un comando es editar esa tabla, no el menú. `predefined: true` omite
+entornos como proof de `buildTheoremDefs`; su generación sigue el kind theorem.
+Actualiza las opciones HTML, la prueba del orden, ambas guías, el tramo y el
+ancla de DEC-005. Regenera el ejemplo y comprueba su diff.
+
+Añade una plantilla incluida a `BUILTIN_TEMPLATES` en `templates.js`, con id,
+name, trigger y steps. Cada paso tiene depth y block; empieza en profundidad 0
+y solo puede subir un nivel, con un padre que admita hijos. `validateTemplate`
+comprueba también comandos duplicados. El contenido usa la sintaxis de huecos.
+`templateParent` y `advanceTemplate` resuelven rutas desde los resultados de
+`insertBlock`; omitir un padre omite su descendencia. `templateFromBranch`
+recorre una copia de la rama en preorden y conserva las opciones. La interfaz
+cancela la cola ante cambios estructurales y guarda las propias en
+`tex-notes:templates:v1`. Véanse DEC-018 y DEC-020.
+
+## Macros y versiones del borrador
+
+`normalizeMacros` aplica el saneado estructural del borrador: nombre latino,
+params entero entre 0 y 9 y body cadena. `normalizeDraft` migra v1/v2 con macros
+vacías y conserva las macros de v3. Desde v4 cada bloque tiene un id estable y cada documento su `documentId`. La versión 5 incorporó las etiquetas y la 6 añade el catálogo bibliográfico. Se rechaza un número de versión superior a `DRAFT_VERSION`. Tras incorporar el borrador histórico como versión manual, se retira su clave de localStorage. `macrosToPreamble` vive en el generador, sin depender de la
+interfaz, y emite newcommand con cuerpo literal. Sin macros no añade líneas.
+
+`macros.js` valida nombres de catálogo, lista reservada y entornos, unicidad,
+argumentos, llaves y parámetros. La vista previa recibe un objeto de macros
+nuevo por llamada; las definiciones explícitas consumen incluso argumentos
+no usados en el cuerpo. `setDocumentMacros` incrementa previewVersion y vuelve
+a calcular vistas y avisos. `checkBlock` acepta opciones en el cuarto argumento
+para reconocer macros, y checkDocument las toma del estado. El historial de uso
+identifica sugerencias personales por macro:nombre. Véase DEC-017.
+
+## Interfaz adaptable
+
+`.editor-workspace` organiza editor y estructura a partir de 75 rem. El
+fieldset `.block-editor` limita su altura al viewport antes de aplicar sticky;
+ambas columnas usan mínimos cero. El resumen de metadatos se actualiza sin
+plegar los campos mientras se escriben. Una restauración ajusta su apertura
+según el título y enfoca un control visible.
+
+`blockItemExtensions` recibe article, actions, more y subject. Añade acciones
+secundarias a more. `focusAction` abre los details antecesores antes de enfocar
+y recurre a Editar si falla. `editing-keys` describe teclas de edición sin
+registrar Tab ni Intro sin modificadores en SHORTCUTS.
+
+Al sustituir un token por un fragmento, `pairsAfterReplacement` conserva solo
+los pares exteriores. Los cierres consumidos por la sustitución se descartan,
+incluso si el nuevo texto termina casualmente en el mismo carácter.
+
+El gancho de carga de listas conserva el bloque fuente al cargar un paso de
+plantilla. `listFormatAfterEdit` mantiene flat si el contenido sigue igual y
+activa outline cuando se modifica, como al editar un bloque del árbol.
+
+El título de la nota y el del bloque cuentan como trabajo para autoguardar,
+aunque aún no haya bloques incorporados. Los metadatos precargados de curso,
+profesor y fecha no convierten una sesión vacía en una sesión recuperable.
+
+## Versiones y archivo de proyecto
+
+`versions.js` normaliza proyectos, compara árboles por id, calcula diferencias de líneas acotadas, administra la retención y las dos pilas del historial. El adaptador de interfaz `version-storage.js` ofrece `read()` y `update(transform)`. IndexedDB ejecuta la lectura, los cambios y la poda en una transacción. El respaldo alternativo usa una clave local y limita las automáticas a ocho. [DEC-025](../decisiones/DEC-025-versiones-y-proyecto.md) documenta la relación con el autoguardado y el formato de intercambio.
+
+## Selección por alcance
+
+`selection-scope.js` calcula rangos sobre la cadena UTF-16 original. La prosa usa segmentación española. El analizador matemático conserva comentarios y escapes como unidades, empareja grupos y entornos y reconoce argumentos de fracciones, raíces, índices, relaciones y separadores de matriz. `expandScope` y `shrinkScope` conservan una pila de rangos. Ninguna de estas funciones escribe en el campo.
+
+## Destinos y contadores del documento
+
+`labelPrefix` en `block-types.js` habilita la etiqueta. El formato v5 migra la etiqueta histórica de imagen y conserva la primera ocurrencia en preorden. `blockIsEmitted` y `emissionContext` se comparten entre generador y recorrido de destinos. `cross-references.js` calcula los contadores y analiza los comandos manuales. `checkDocument` combina los diagnósticos con ruta, línea y columna. Las instantáneas y `diffDocuments` incluyen el campo del bloque. [DEC-027](../decisiones/DEC-027-etiquetas-de-bloque.md)
+
+## Catálogo bibliográfico
+
+`references.js` contiene las ocho referencias de `temario.md`, la validación por campo, la asignación de claves y la ordenación de fichas. `citationInfo` recorre los bloques emitidos en preorden y reúne los usos, las claves citadas y las bibliografías manuales. El generador lo comparte para seleccionar `natbib` e imprimir una sola lista al final. `printedReferences` calcula los sufijos por título entre las entradas que se imprimirán.
+
+`normalizeDraft` migra v1–v5 a v6. Cada instantánea contiene una copia de los autores y las opciones. La configuración v2 registra `references` como parte y acepta también el archivo plano v1. `convertBibliography` valida todas las claves antes de retirar el bloque. La interfaz registra la conversión como un solo cambio en el historial. [DEC-028](../decisiones/DEC-028-citas-y-bibliografia.md)
+
+### Registrar una parte de configuración
+
+Registra `key`, `version`, `defaults` y `validate` con `registerConfigPart`. Si cambia la versión de la parte, añade su migración. La aplicación aporta un lector y un aplicador para esa clave. La envoltura v2 guarda cada parte como `{version, value}` dentro de `parts`. El archivo plano v1 se migra antes de validar. Solo se aplican las partes presentes y se informa de las desconocidas.
+
+`menu-config.js` registra la parte portátil `menus`, valida los enlaces y resuelve cada posición sobre las ocho del contexto. Mi botón guarda un id de acción o `ring:<id>`. El controlador de `menu-editor.js` conserva la edición hasta guardar y usa la geometría de `radial.js` para el dibujo estático y el anillo flotante.
+
+`error-report.js` construye y formatea las entradas del informe sin acceder a la página. `local-errors.js` escucha los errores y los rechazos de promesas desde el arranque, guarda las últimas veinte entradas en `tex-notes:errors:v1` y comparte la copia al portapapeles con el resto del editor.
+
+El espacio de trabajo se monta en `mobile-panels.js` según el ancho. La
+preferencia de concentración y el panel de estructura se guardan en
+`tex-notes:workspace:v1`. `structure-view.js` aplica la búsqueda a los
+bloques existentes y guarda la vista y las ramas por identificador estable
+en `tex-notes:structure:v1`. `math-symbols.js` administra los favoritos en
+`tex-notes:symbol-favorites:v1`. Estas preferencias se guardan en el navegador.

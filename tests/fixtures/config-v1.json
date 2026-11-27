@@ -1,0 +1,224 @@
+{
+  "kind": "notas-latex-config",
+  "version": 1,
+  "aliases": [
+    {
+      "trigger": "RR",
+      "expansion": "\\mathbb{R}",
+      "mode": "math"
+    },
+    {
+      "trigger": "NN",
+      "expansion": "\\mathbb{N}",
+      "mode": "math"
+    },
+    {
+      "trigger": "ZZ",
+      "expansion": "\\mathbb{Z}",
+      "mode": "math"
+    },
+    {
+      "trigger": "QQ",
+      "expansion": "\\mathbb{Q}",
+      "mode": "math"
+    },
+    {
+      "trigger": "CC",
+      "expansion": "\\mathbb{C}",
+      "mode": "math"
+    },
+    {
+      "trigger": "imp",
+      "expansion": "\\Rightarrow",
+      "mode": "math"
+    },
+    {
+      "trigger": "sii",
+      "expansion": "\\Leftrightarrow",
+      "mode": "math"
+    },
+    {
+      "trigger": "pt",
+      "expansion": "\\forall",
+      "mode": "math"
+    },
+    {
+      "trigger": "exi",
+      "expansion": "\\exists",
+      "mode": "math"
+    },
+    {
+      "trigger": "fr",
+      "expansion": "\\frac{#1}{#2}#0",
+      "mode": "math"
+    },
+    {
+      "trigger": "pd",
+      "expansion": "\\frac{\\partial #1}{\\partial #2}#0",
+      "mode": "math"
+    },
+    {
+      "trigger": "lim",
+      "expansion": "\\lim_{#1 \\to #2} #0",
+      "mode": "math"
+    },
+    {
+      "trigger": "int",
+      "expansion": "\\int_{#1}^{#2} #3 \\, d#4",
+      "mode": "math"
+    },
+    {
+      "trigger": "iint",
+      "expansion": "\\iint_{#1} #2 \\, dA",
+      "mode": "math"
+    },
+    {
+      "trigger": "sum",
+      "expansion": "\\sum_{#1}^{#2} #0",
+      "mode": "math"
+    },
+    {
+      "trigger": "nab",
+      "expansion": "\\nabla",
+      "mode": "math"
+    },
+    {
+      "trigger": "eps",
+      "expansion": "\\varepsilon",
+      "mode": "math"
+    },
+    {
+      "trigger": "ra",
+      "expansion": "\\to",
+      "mode": "math"
+    },
+    {
+      "trigger": "vec",
+      "expansion": "\\mathbf{#1}#0",
+      "mode": "math"
+    },
+    {
+      "trigger": "abs",
+      "expansion": "\\left| #1 \\right|#0",
+      "mode": "math"
+    },
+    {
+      "trigger": "norm",
+      "expansion": "\\left\\| #1 \\right\\|#0",
+      "mode": "math"
+    }
+  ],
+  "templates": [],
+  "prefs": {
+    "autoPair": true,
+    "vibration": true
+  },
+  "macros": [],
+  "references": [
+    {
+      "key": "leithold1992",
+      "year": "1992",
+      "title": "El cálculo con geometría",
+      "edition": "",
+      "publisher": "Harla",
+      "place": "México",
+      "url": "",
+      "authors": [
+        "Leithold, L."
+      ],
+      "text": ""
+    },
+    {
+      "key": "spivak1993",
+      "year": "1993",
+      "title": "Cálculo infinitesimal",
+      "edition": "",
+      "publisher": "Reverté",
+      "place": "México",
+      "url": "",
+      "authors": [
+        "Spivak, M."
+      ],
+      "text": ""
+    },
+    {
+      "key": "stein1995",
+      "year": "1995",
+      "title": "Cálculo y geometría analítica",
+      "edition": "",
+      "publisher": "McGraw Hill",
+      "place": "México",
+      "url": "",
+      "authors": [
+        "Stein, S."
+      ],
+      "text": ""
+    },
+    {
+      "key": "stewart1994",
+      "year": "1994",
+      "title": "Cálculo",
+      "edition": "",
+      "publisher": "Iberoamérica",
+      "place": "México",
+      "url": "",
+      "authors": [
+        "Stewart, J."
+      ],
+      "text": ""
+    },
+    {
+      "key": "boyce1994",
+      "year": "1994",
+      "title": "Cálculo",
+      "edition": "",
+      "publisher": "CECSA",
+      "place": "México",
+      "url": "",
+      "authors": [
+        "Boyce, D."
+      ],
+      "text": ""
+    },
+    {
+      "key": "larson1995",
+      "year": "1995",
+      "title": "Cálculo y geometría analítica",
+      "edition": "",
+      "publisher": "McGraw Hill",
+      "place": "México",
+      "url": "",
+      "authors": [
+        "Larson",
+        "Hostetler"
+      ],
+      "text": ""
+    },
+    {
+      "key": "swokowski1989",
+      "year": "1989",
+      "title": "Cálculo con geometría analítica",
+      "edition": "",
+      "publisher": "Iberoamérica",
+      "place": "México",
+      "url": "",
+      "authors": [
+        "Swokowski, E."
+      ],
+      "text": ""
+    },
+    {
+      "key": "zill1996",
+      "year": "1996",
+      "title": "Cálculo con geometría analítica",
+      "edition": "",
+      "publisher": "Iberoamérica",
+      "place": "México",
+      "url": "",
+      "authors": [
+        "Zill, D."
+      ],
+      "text": ""
+    }
+  ]
+}

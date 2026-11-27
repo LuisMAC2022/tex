@@ -44,3 +44,58 @@ Contenido entregado tal cual —comandos, llaves y matemática delimitada— con
 
 KaTeX local con MathML, representación bajo el editor y en cada bloque, y avisos que permiten seguir exportando el `.tex`.
 </details>
+
+<details><summary><strong>11. Tablero de símbolos por teclado</strong></summary>
+
+Acceso directo al buscador, navegación entre resultados y categorías, retorno al campo de origen y doce símbolos recientes.
+</details>
+
+<details><summary><strong>12. Imágenes en el documento</strong></summary>
+
+Miniatura local, edición de tamaño y alineación, giro y exportación con `graphicx` en la raíz y en bloques anidados.
+</details>
+
+<details><summary><strong>13. Listas anidadas por sangría</strong></summary>
+
+Viñetas y numeración combinadas en un bloque, atajos, continuación con Intro y vista previa con KaTeX.
+</details>
+
+<details><summary><strong>14. Comprobación previa a Overleaf</strong></summary>
+
+Avisos con línea y columna, recuento por bloque y enlaces al editor al generar el documento.
+</details>
+
+<details><summary><strong>15. Traslado de bloques entre padres</strong></summary>
+
+Diálogo con destinos válidos para mover una rama completa y enfocar su nueva posición.
+</details>
+
+## Hito 16 — Captura sin fricción
+
+Ctrl+Intro, foco continuo, ayuda plegable, acciones antes del tablero, ediciones
+con deshacer nativo, caché de vistas previas y recuperación de sesión en curso.
+
+## Hito 17 — Autocierre y contexto matemático
+
+Contexto de escritura con comentarios y argumentos textuales; pares, exponentes,
+selecciones, salto de cierre, Retroceso y cierre de entornos con preferencia local.
+
+## Hito 18 — Sugerencias, huecos y alias
+
+Menú accesible único junto al cursor, clasificación por comandos y términos en
+español, historial con decaimiento, huecos, alias con Tab y configuración portátil.
+
+## Hito 19 — Comandos /, Demostración y plantillas
+
+Tipos y títulos desde el contenido vacío, proof predefinido, once plantillas de
+Cálculo III por pasos y captura de ramas personales con configuración portátil.
+
+## Hito 20 — Macros del documento
+
+Borrador v3, preámbulo literal con newcommand, validación y vista previa aislada,
+macros predeterminadas y error katex-only en la comprobación previa a Overleaf.
+
+## Hito 21 — Interfaz de captura
+
+Dos columnas desde 75 rem, editor fijo con altura limitada, metadatos plegables,
+tarjetas con acciones secundarias desplegables y ayuda de teclado junto al flujo.

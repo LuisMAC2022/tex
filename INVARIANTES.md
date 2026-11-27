@@ -25,7 +25,8 @@ aquí, no dentro de seis meses.
 ### INV-001 — La exportación es de ida: no existe reimportación desde el `.tex`
 Guardián: `tests/generator.test.js` → "el documento es autocontenido y no lleva sobre de reimportación"
 
-Overleaf es la copia maestra. Por qué: [DEC-001](decisiones/DEC-001-overleaf-copia-maestra.md),
+El `.tex` es un producto derivado: la copia maestra es la aplicación y Overleaf solo
+compila. Por qué: [DEC-021](decisiones/DEC-021-aplicacion-copia-maestra.md),
 [DEC-003](decisiones/DEC-003-sin-reimportacion.md).
 
 ### INV-002 — El contenido de un bloque llega al `.tex` sin un solo escape
@@ -57,7 +58,7 @@ deriva. Por qué: [DEC-005](decisiones/DEC-005-tabla-unica-de-tipos.md).
 ### INV-006 — Ni el sitio ni el proyecto cargan nada remoto
 Guardián: `tests/invariantes.test.js` → "INV-006: ni el sitio ni el proyecto cargan nada remoto"
 
-La aplicación funciona abierta por doble clic y sin red. KaTeX y sus fuentes
+La aplicación y las páginas de `diagnostico/` funcionan abiertas por doble clic y sin red. KaTeX y sus fuentes
 se distribuyen con el sitio. `package.json` sigue sin `dependencies` ni
 `devDependencies`.
 
@@ -72,3 +73,29 @@ Guardián: `tests/generator.test.js` → "el ejemplo genera exactamente el archi
 El mismo estado produce la misma cadena, byte a byte. Cuando el formato cambia
 a propósito, se regenera con `npm run build:example` y el diff del `.tex` es la
 prueba visible de qué cambió.
+
+### INV-009 — El preámbulo carga únicamente los paquetes declarados en la lista blanca
+Guardián: `tests/generator.test.js` → "el preámbulo solo carga paquetes de la lista blanca"
+
+`natbib` se activa al guardar referencias o al escribir un comando propio del paquete. `hyperref` se carga al final de los paquetes cuando hay enlaces.
+
+### INV-010 — Los identificadores de bloque son únicos en todo el árbol
+Guardián: `tests/identificadores.test.js` → "los identificadores de bloque son únicos en todo el árbol"
+
+Las copias reciben identificadores propios y los movimientos conservan los de toda la rama. Véase [DEC-024](decisiones/DEC-024-identidad-de-bloques.md).
+
+### INV-011 — Las etiquetas de bloque son únicas en todo el árbol
+Guardián: `tests/cross-references.test.js` → "las etiquetas de bloque son únicas en todo el árbol"
+
+Se conserva la primera al migrar. Duplicar, pegar y aplicar plantillas vacían las etiquetas de la copia. Mover conserva cada destino. [DEC-027](decisiones/DEC-027-etiquetas-de-bloque.md)
+
+### INV-012 — `app.js` no crece: lo nuevo vive en su propio script
+Guardián: `tests/arquitectura.test.js` → "app.js no supera su presupuesto de bytes"
+
+El presupuesto está en la prueba y solo baja. Al extraer una sección se rebaja en el mismo commit. Subirlo exige una decisión nueva. [DEC-030](decisiones/DEC-030-app-js-solo-cableado.md)
+
+### INV-013 — Los sectores conservan su posición al cambiar de disponibilidad
+Guardián: `tests/actions.test.js` → "el menú del bloque conserva sus ocho posiciones cuando cambian los sectores habilitados"
+Guardián: `tests/menu-config.test.js` → "la resolución mantiene las ocho posiciones e incorpora los sectores predeterminados"
+
+Un sector deshabilitado mantiene su sitio en el anillo. En un menú personal, la persona elige las posiciones y los intercambios. Las estadísticas de uso pertenecen a las sugerencias de escritura. [DEC-032](decisiones/DEC-032-menu-de-la-tarjeta.md)

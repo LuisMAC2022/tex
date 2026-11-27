@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Diagnóstico de escritura en Android</title>
+  <script>
+    if (new URLSearchParams(location.search).has("resize")) {
+      document.querySelector('meta[name="viewport"]').content += ",interactive-widget=resizes-content";
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box }
+    body { font: 1rem/1.5 system-ui,sans-serif; max-width: 45rem; margin: auto; padding: 1rem 1rem 5rem }
+    section { margin-block: 2rem }
+    textarea { width: 100%; min-height: 6rem; font: inherit }
+    button, label, .card, a { display: inline-flex; align-items: center; min-height: 48px; padding: .4rem }
+    button, textarea, .card { border: 1px solid currentColor; border-radius: .4rem }
+    label { display: flex; gap: .5rem }
+    .card { display: block; padding: 1rem; margin-block: .7rem }
+    .protected { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none }
+    footer { position: fixed; inset: auto 0 0; padding: .4rem; background: Canvas; color: CanvasText; border-top: 2px solid; text-align: center }
+    :root { color-scheme: light dark }
+  </style>
+</head>
+<body>
+  <h1>Diagnóstico de escritura en Android</h1>
+  <p>Usa Chrome con Gboard. Escribe solo los ejemplos de la prueba. El registro se queda en esta página y se conserva en esta pestaña al cambiar de variante.</p>
+  <section>
+    <h2>1. Escritura</h2>
+    <label for="writing">Escribe <code>\frac ( { $ ^ á</code></label>
+    <textarea id="writing"></textarea>
+    <p>Acepta una palabra de la barra de sugerencias de Gboard y pulsa Retroceso.</p>
+  </section>
+  <section>
+    <h2>2. Pulsación larga</h2>
+    <p>Mantén el dedo quieto 400 ms y arrástralo antes de soltar. Repite en ambas superficies con los interruptores apagados y encendidos.</p>
+    <label><input id="context" type="checkbox"> Impedir el menú contextual</label>
+    <label><input id="select" type="checkbox"> Desactivar la selección y el menú táctil de la tarjeta</label>
+    <label><input id="move" type="checkbox"> Impedir el desplazamiento después de 400 ms</label>
+    <label for="touch-field">Campo editable</label>
+    <textarea id="touch-field">Una frase para seleccionar.</textarea>
+    <div id="card" class="card">Tarjeta. Mantén pulsada esta palabra y arrastra.</div>
+    <label for="observations">Anota si aparecen tiradores o el menú nativo y si el indicador queda sobre el teclado</label>
+    <textarea id="observations"></textarea>
+  </section>
+  <section>
+    <h2>3. Teclado y ventana</h2>
+    <p>Abre el teclado tocando el campo de escritura y ciérralo con Atrás. Repite en la otra variante.</p>
+    <a href="android.html">Ventana predeterminada</a>
+    <a href="android.html?resize=1">Ventana que cambia de tamaño</a>
+  </section>
+  <section>
+    <h2>4. Capacidades</h2>
+    <button id="capabilities" type="button">Probar vibración y almacenamiento</button>
+    <p id="status" role="status"></p>
+  </section>
+  <button id="copy" type="button">Copiar informe</button>
+  <label for="report">Informe JSON (puedes seleccionarlo y copiarlo)</label>
+  <textarea id="report" readonly></textarea>
+  <footer>Indicador fijo al pie · <output id="viewport"></output></footer>
+  <script>
+    (() => {
+      "use strict";
+      const $ = (id) => document.getElementById(id);
+      const variant = location.search.includes("resize=1") ? "resizes-content" : "predeterminada";
+      const cache = "tex:diagnostico:android";
+      let events = [];
+      try { events = JSON.parse(sessionStorage.getItem(cache) || "[]"); } catch {}
+      const record = (type, data = {}) => {
+        events.push({ ms: Math.round(performance.timeOrigin + performance.now()), variant, type, ...data });
+      };
+      function save() { try { sessionStorage.setItem(cache, JSON.stringify(events)); } catch {} }
+      addEventListener("pagehide", save);
+      for (const type of ["keydown","beforeinput","compositionstart","compositionupdate","compositionend","input"]) {
+        $("writing").addEventListener(type, (e) => record(type, {
+          key: e.key, code: e.code, keyCode: e.keyCode, inputType: e.inputType, data: e.data, isComposing: e.isComposing
+        }));
+      }
+      for (const id of ["context","select","move"]) {
+        $(id).addEventListener("change", () => {
+          $("card").classList.toggle("protected", $("select").checked);
+          record("opciones", { context: $("context").checked, select: $("select").checked, move: $("move").checked });
+        });
+      }
+      for (const id of ["touch-field","card"]) {
+        const surface = $(id);
+        let started = null;
+        for (const type of ["pointerdown","pointermove","pointerup","pointercancel","pointerover","pointerout","gotpointercapture","lostpointercapture",
+                            "touchstart","touchmove","touchend","touchcancel","contextmenu"]) {
+          surface.addEventListener(type, (e) => {
+            if (type === "touchstart") started = performance.now();
+            if ((type === "contextmenu" && $("context").checked) ||
+                (type === "touchmove" && $("move").checked && started !== null && performance.now() - started >= 400)) e.preventDefault();
+            const point = e.changedTouches?.[0] || e;
+            record(type, { surface: id, pointer: e.pointerId, x: point.clientX, y: point.clientY, prevented: e.defaultPrevented });
+            if (type === "touchend" || type === "touchcancel") started = null;
+          }, { passive: type.startsWith("touch") && type !== "touchmove" });
+        }
+      }
+      document.addEventListener("selectionchange", () => {
+        const field = document.activeElement;
+        if (field === $("report")) return;
+        record("selectionchange", { field: field.id, start: field.selectionStart, end: field.selectionEnd, length: String(getSelection()).length });
+      });
+      $("observations").addEventListener("change", () => record("observaciones", { text: $("observations").value }));
+      function viewport() {
+        const v = window.visualViewport;
+        $("viewport").textContent = Math.round(v?.height ?? innerHeight) + " px";
+        record("ventana", { height: v?.height, offsetTop: v?.offsetTop, innerHeight });
+      }
+      window.visualViewport?.addEventListener("resize", viewport);
+      window.visualViewport?.addEventListener("scroll", viewport);
+      addEventListener("resize", viewport);
+      viewport();
+      async function attempt(action) {
+        try { return await action(); } catch (error) { return { error: error.name }; }
+      }
+      $("capabilities").addEventListener("click", async () => {
+        const caps = { vibrate: typeof navigator.vibrate === "function", coarse: matchMedia("(pointer: coarse)").matches,
+          devicePixelRatio, screen: { width: screen.width, height: screen.height } };
+        if (caps.vibrate) caps.vibrationResult = await attempt(() => navigator.vibrate(10));
+        for (const api of ["persisted","persist","estimate"]) caps[api] = await attempt(() => navigator.storage[api]());
+        caps.indexedDB = await attempt(() => new Promise((resolve, reject) => {
+          const req = indexedDB.open("tex-diagnostico");
+          req.onsuccess = () => { req.result.close(); resolve(true); };
+          req.onerror = () => reject(req.error);
+          req.onblocked = () => resolve("bloqueada");
+        }));
+        record("capacidades", caps);
+        $("status").textContent = "Capacidades registradas.";
+      });
+      $("copy").addEventListener("click", async () => {
+        const field = $("report");
+        field.value = JSON.stringify({ browser: navigator.userAgent, events }, null, 2);
+        try { await navigator.clipboard.writeText(field.value); $("status").textContent = "Informe copiado."; }
+        catch { field.focus(); field.select(); $("status").textContent = "Informe seleccionado. Usa Copiar."; }
+      });
+    })();
+  </script>
+</body>
+</html>

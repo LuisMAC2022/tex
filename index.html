@@ -2,7 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="description" content="Editor accesible para crear y descargar notas en LaTeX.">
     <title>Notas LaTeX</title>
     <link rel="stylesheet" href="assets/css/styles.css">
@@ -11,16 +11,222 @@
   <body>
     <a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
     <header class="site-header">
-      <p class="eyebrow">Editor estático y local</p>
       <h1>Notas LaTeX</h1>
-      <p>Crea una nota estructurada y copia o descarga su código para pegarlo en Overleaf.</p>
     </header>
 
     <main id="contenido-principal" tabindex="-1">
+      <nav id="mobile-navigation" aria-label="Navegación de la aplicación" hidden>
+        <div role="tablist" aria-label="Paneles del editor">
+          <button type="button" role="tab" id="tab-write" data-panel="write" aria-controls="panel-write">Escribir</button>
+          <button type="button" role="tab" id="tab-tree" data-panel="tree" aria-controls="panel-tree">Estructura</button>
+          <button type="button" role="tab" id="tab-document" data-panel="document" aria-controls="panel-document">Documento</button>
+          <button type="button" role="tab" id="tab-more" data-panel="more" aria-controls="panel-more">Más</button>
+        </div>
+        <button type="button" id="panel-menu" data-action-id="radial.global" aria-label="Abrir menú general" aria-haspopup="menu" hidden>✥</button>
+      </nav>
+      <aside id="error-notice" aria-label="Aviso de error" hidden>
+        <span id="error-notice-status" role="status">Se registró un error en este navegador.</span>
+        <button type="button" id="error-notice-copy" class="secondary">Copiar informe</button>
+        <button type="button" id="error-notice-close" class="secondary">Cerrar aviso</button>
+      </aside>
+      <p id="autosave-banner" hidden><span id="autosave-message"></span> <button id="recover-session" type="button">Recuperar sesión</button> <button id="discard-session" type="button" class="secondary">Descartar</button></p>
       <form id="document-form" novalidate>
+        <section aria-labelledby="contenido-heading">
+          <h2 id="contenido-heading">Contenido</h2>
+          <div class="workspace-tools">
+            <button id="focus-writing" class="secondary" type="button" aria-pressed="false">Concentración</button>
+            <button id="toggle-structure" class="secondary" type="button" aria-controls="structure-panel" aria-expanded="true">Estructura</button>
+            <button id="review-writing" class="secondary" type="button" aria-controls="math-preview-panel" aria-expanded="false">Revisión</button>
+            <button id="workspace-write" class="secondary" type="button" hidden>Escribir</button>
+            <button id="workspace-document" class="secondary" type="button">Documento</button>
+            <button id="workspace-export" class="secondary" type="button">Exportación</button>
+          </div>
+          <div class="editor-workspace">
+          <fieldset class="block-editor">
+            <legend class="block-heading"><span class="block-heading-row"><span id="block-form-heading">Nuevo bloque</span>
+              <button type="button" id="type-chip" data-drag-ring="type" aria-haspopup="menu" aria-label="Tipo de bloque: Texto">¶ Texto ▾</button>
+              <button type="button" id="title-chip" aria-controls="block-title" aria-label="Añadir título">＋ Título</button></span>
+            </legend>
+            <input id="editing-path" type="hidden" value="">
+            <input id="parent-path" type="hidden" value="">
+            <p class="block-target"><span id="block-target">El bloque se añadirá al final de la raíz del documento.</span></p>
+            <p id="template-progress" hidden><span id="template-progress-text"></span> <button id="skip-template-step" type="button" class="secondary">Omitir paso</button> <button id="cancel-template" type="button" class="secondary">Cancelar plantilla</button></p>
+            <p id="tray-summary" class="block-target" hidden></p>
+            <p class="field" id="native-type-field">
+              <label for="block-type">Tipo de bloque</label>
+              <select id="block-type" name="blockType">
+                <option value="text">Texto</option>
+                <option value="equation">Ecuación destacada</option>
+                <option value="math-inline">Expresión matemática en línea</option>
+                <option value="definition">Definición</option>
+                <option value="theorem">Teorema</option>
+                <option value="proposition">Proposición</option>
+                <option value="proof">Demostración</option>
+                <option value="example">Ejemplo</option>
+                <option value="note">Nota</option>
+                <option value="itemize">Lista con viñetas</option>
+                <option value="enumerate">Lista numerada</option>
+                <option value="bibliography">Bibliografía (IEEE)</option>
+                <option value="image">Imagen</option>
+              </select>
+            </p>
+            <p class="field" id="native-title-field"><label for="block-title">Título del bloque (opcional)</label><input id="block-title" name="blockTitle" type="text"></p>
+            <details id="label-fields" hidden>
+              <summary>Etiqueta del bloque</summary>
+              <div class="field">
+              <label for="block-label">Etiqueta</label>
+              <small id="label-help">Prefijo del bloque <code id="label-prefix"></code>. Puedes dejar la etiqueta vacía.</small>
+              <input id="block-label" type="text" spellcheck="false" autocomplete="off" aria-describedby="label-help label-error">
+              <span id="label-error" class="error"></span>
+              <button type="button" id="propose-label" class="secondary">Proponer desde el título</button>
+              </div>
+            </details>
+            <small id="proof-help" hidden>En Demostración, el título opcional sustituye al encabezado Demostración en el PDF.</small>
+            <div class="field">
+              <div class="content-heading">
+              <label for="block-content">Contenido</label>
+              <details class="field-help"><summary>Ayuda del contenido</summary>
+              <small id="block-help">El contenido se copia al documento <strong>tal cual</strong>: comandos como <code>\textbf{...}</code> o <code>\mathbb{R}</code>, llaves y matemáticas entre <code>$…$</code> o <code>$$…$$</code> llegan exactamente como los escribes, y la aplicación no inserta ningún carácter de escape. Por eso puedes pegar aquí LaTeX de otro documento sin revisarlo. A cambio, los caracteres reservados de LaTeX son cosa tuya: para que aparezcan impresos escribe <code>\%</code>, <code>\&amp;</code>, <code>\#</code>, <code>\_</code> o <code>\$</code> —un <code>%</code> suelto comenta el resto de su línea—. Se permiten párrafos separados por una línea vacía y una lista toma un elemento por línea. Solo el título del bloque y los metadatos se escapan por completo, porque la aplicación los coloca dentro de un argumento.</small>
+              </details>
+              </div>
+              <textarea id="block-content" name="blockContent" rows="6" aria-describedby="block-help block-error"></textarea>
+              <span id="block-error" class="error" aria-live="polite"></span>
+              <span id="list-tools" role="toolbar" aria-label="Sangría de lista" hidden>
+                <button id="list-indent" class="secondary" type="button">Sangrar</button>
+                <button id="list-outdent" class="secondary" type="button" tabindex="-1">Quitar sangría</button>
+              </span>
+              <small id="list-help" hidden>Escribe un elemento por línea y usa dos espacios o un tabulador por nivel. Los marcadores iniciales dan forma a la lista. Escribe <code>{}- </code> para empezar el elemento con un guion literal. Este ejemplo combina viñetas y numeración:
+                <code class="list-example">- Tema
+  1. Caso
+    - Detalle</code>
+              </small>
+              <small id="legacy-list-help" hidden>Esta lista viene de un borrador anterior. Conserva sus prefijos literales hasta que edites su contenido.</small>
+              <small id="list-limit" hidden></small>
+            </div>
+            <p id="editor-content-check" class="editor-content-check" hidden></p>
+            <fieldset id="image-fields" hidden>
+              <legend>Opciones de imagen</legend>
+              <p id="image-caption-help">En una imagen, el título del bloque es el pie de figura.</p>
+              <p class="field">
+                <label for="image-path">Archivo de imagen</label>
+                <input id="image-path" type="text" spellcheck="false" aria-describedby="image-upload-help image-error image-warnings">
+                <small id="image-upload-help">Sube este archivo a Overleaf con el mismo nombre.</small>
+                <span id="image-error" class="error" hidden></span>
+                <small id="image-warnings" class="image-warnings" hidden></small>
+              </p>
+              <p class="field">
+                <label for="image-file">Elegir archivo…</label>
+                <input id="image-file" type="file" accept="image/*,.pdf" aria-describedby="image-upload-help">
+              </p>
+              <p class="field">
+                <label for="image-width">Ancho de la imagen</label>
+                <input id="image-width" type="range" min="10" max="100" step="1" value="80" aria-valuetext="80 %">
+                <span id="image-width-value" aria-hidden="true">80 %</span>
+              </p>
+              <div class="image-controls" role="group" aria-label="Preajustes de ancho de la imagen">
+                <button type="button" class="secondary" data-image-width="40" aria-label="Pequeña, ancho del 40 %">Pequeña</button>
+                <button type="button" class="secondary" data-image-width="60" aria-label="Mediana, ancho del 60 %">Mediana</button>
+                <button type="button" class="secondary" data-image-width="80" aria-label="Grande, ancho del 80 %">Grande</button>
+                <button type="button" class="secondary" data-image-width="100" aria-label="Ancho completo, ancho del 100 %">Ancho completo</button>
+              </div>
+              <p class="field">
+                <label for="image-height">Altura máxima (cm, opcional)</label>
+                <input id="image-height" type="number" min="0.01" step="0.01" inputmode="decimal" aria-describedby="image-height-help">
+                <small id="image-height-help">El ancho y la altura se limitan antes de girar la imagen.</small>
+              </p>
+              <div class="field">
+                <label for="image-angle">Ángulo de giro (grados)</label>
+                <input id="image-angle" type="number" min="-360" max="360" step="0.01" value="0" inputmode="decimal">
+                <button id="image-turn" type="button" class="secondary">Girar 90°</button>
+              </div>
+              <fieldset class="image-alignment">
+                <legend>Alineación de la imagen</legend>
+                <div class="image-controls">
+                  <label><input type="radio" name="imageAlign" value="left"> Izquierda</label>
+                  <label><input type="radio" name="imageAlign" value="center" checked> Centro</label>
+                  <label><input type="radio" name="imageAlign" value="right"> Derecha</label>
+                </div>
+              </fieldset>
+              <p class="field">
+                <label for="image-placement">Posición de la figura</label>
+                <input id="image-placement" type="text" value="htbp" spellcheck="false" aria-describedby="image-placement-help">
+                <small id="image-placement-help">Combina h (aquí), t (arriba), b (abajo) y p (página de figuras).</small>
+              </p>
+            </fieldset>
+            <menu class="button-row">
+              <li><button id="content-menu" data-action-id="radial.menu" class="secondary" type="button" aria-haspopup="menu">Menú de contenido</button></li>
+              <li><button id="add-block" type="button"><span id="add-block-label">Añadir bloque</span><kbd id="add-block-key" aria-hidden="true" hidden></kbd></button></li>
+              <li><button id="paste-block" class="secondary" type="button" hidden>Pegar bloque</button></li>
+              <li><button id="cancel-edit" class="secondary" type="button" hidden>Cancelar edición</button></li>
+            </menu>
+            <p id="session-status" role="status"></p>
+            <section class="symbol-board" aria-labelledby="simbolos-heading" aria-describedby="symbol-board-intro">
+              <button id="close-symbol-sheet" type="button" class="secondary" hidden>Cerrar</button>
+              <p class="symbol-shortcut"><button id="symbol-toggle" class="secondary" type="button" aria-label="Buscar en el tablero de símbolos">Buscar</button> <kbd id="symbol-shortcut-label">Alt+Mayús+S</kbd></p>
+              <details id="symbol-details">
+                <summary><h3 id="simbolos-heading">Símbolos matemáticos</h3></summary>
+                <p id="symbol-board-intro">Cada botón inserta su comando LaTeX en el campo de texto de origen o en «Contenido», en la posición del cursor. Pulsa Escape para volver al campo.</p>
+                <p class="field">
+                  <label for="symbol-search">Buscar símbolo</label>
+                  <input id="symbol-search" name="symbolSearch" type="search" autocomplete="off" aria-describedby="symbol-search-help">
+                  <small id="symbol-search-help">Por ejemplo «para todo», «implica» o «conjunción». También acepta el comando, como «forall».</small>
+                </p>
+                <nav id="symbol-category-picker" class="symbol-categories" aria-label="Categorías de símbolos"></nav>
+                <div class="symbol-caption">
+                  <p id="symbol-detail" aria-hidden="true">Selecciona un símbolo para ver su nombre y comando.</p>
+                  <p id="symbol-results" class="status" role="status"></p>
+                  <button id="symbol-favorite" type="button" class="secondary" aria-pressed="false">Editar favoritos</button>
+                </div>
+                <p id="symbol-empty" hidden>Ningún símbolo coincide con la búsqueda.</p>
+                <menu id="symbol-groups" class="symbol-grid" role="toolbar" aria-orientation="horizontal" aria-label="Símbolos matemáticos" tabindex="-1"></menu>
+              </details>
+            </section>
+
+            <div id="thumb-bar" role="toolbar" aria-label="Acciones de escritura">
+              <button type="button" id="thumb-menu" data-action-id="radial.menu" aria-label="Menú" aria-haspopup="menu"><span aria-hidden="true">✥</span><span class="thumb-label">Menú</span></button>
+              <div class="thumb-navigation" role="group" aria-label="Navegación del contenido">
+                <button type="button" id="thumb-prev" data-action-id="write.previous" aria-label="Anterior" tabindex="-1"><span aria-hidden="true">◀</span></button>
+                <button type="button" id="thumb-selection" data-action-id="write.scope" aria-label="Modo cursor" tabindex="-1" aria-pressed="false" data-mode="cursor"><span aria-hidden="true">⌶</span></button>
+                <button type="button" id="thumb-next" data-action-id="write.next" aria-label="Siguiente" tabindex="-1"><span aria-hidden="true">▶</span></button>
+              </div>
+              <button type="button" id="thumb-symbols" data-action-id="write.symbols" aria-label="Símbolos" tabindex="-1" aria-expanded="false" aria-controls="symbol-details" data-drag-ring="symbols"><span aria-hidden="true">Ω</span><span class="thumb-label">Símbolos</span></button>
+              <button type="button" id="thumb-personal" data-action-id="edit.undo" aria-label="Mi botón" tabindex="-1" title="Deshacer"><span aria-hidden="true">★</span><span class="thumb-label">Mi botón</span></button>
+              <button type="button" id="thumb-add" data-action-id="block.commit" aria-label="Añadir" tabindex="-1"><span aria-hidden="true">＋</span><span class="thumb-label">Añadir</span></button>
+            </div>
+          </fieldset>
+
+          <div class="structure-panel" id="structure-panel">
+          <h3>Estructura actual</h3>
+          <details class="structure-help"><summary>Cómo funciona la estructura</summary><p>Cada bloque indica su nivel y su bloque padre. «Subir» y «Bajar» mueven el bloque solo entre sus hermanos, sin sacarlo de su nivel. Para repetir una estructura hay tres acciones distintas: <strong>«Duplicar»</strong> deja una copia justo después del original; <strong>«Copiar bloque»</strong> lo guarda en una bandeja y luego eliges el destino con «Pegar bloque», las veces que haga falta; <strong>«Copiar texto»</strong> lleva su contenido al portapapeles del sistema para pegarlo donde quieras, dentro o fuera de la aplicación.</p></details>
+          <div class="structure-tools">
+          <button type="button" id="global-menu" data-action-id="radial.global" class="secondary" aria-haspopup="menu">Menú general</button>
+          <button type="button" id="undo-structure" class="secondary" disabled>Deshacer cambio</button>
+          <button type="button" id="redo-structure" class="secondary" disabled>Rehacer cambio</button>
+          </div>
+          <div class="structure-filters">
+            <label for="structure-mode">Vista</label>
+            <select id="structure-mode"><option value="cards">Tarjetas</option><option value="outline">Esquema</option></select>
+            <label for="structure-search">Buscar bloques</label>
+            <input id="structure-search" type="search" autocomplete="off" aria-controls="block-list">
+          </div>
+          <p id="structure-results" role="status" hidden></p>
+          <p id="empty-blocks">Todavía no hay bloques.</p>
+          <ol id="block-list" class="block-list"></ol>
+          </div>
+            <details class="math-preview-panel" id="math-preview-panel">
+              <summary>Vista previa de las matemáticas</summary>
+              <p>KaTeX orienta sobre los tramos matemáticos, pero no es LaTeX completo ni reproduce la tipografía del PDF final. No revisa la prosa: un <code>%</code> suelto, un <code>_</code> o <code>&amp;</code> fuera de matemáticas, o un <code>\textbf{</code> sin cerrar pueden fallar en Overleaf aunque esta vista no avise.</p>
+              <div id="math-preview"></div>
+              <p id="math-preview-status" class="preview-status" aria-live="polite" aria-atomic="true"></p>
+            </details>
+
+          </div>
+        </section>
+
         <section aria-labelledby="datos-heading">
-          <h2 id="datos-heading">Datos del documento</h2>
-          <p>El título es el único dato obligatorio. Los borradores permanecen únicamente en este dispositivo.</p>
+          <details id="metadata-details" open>
+          <summary><h2 id="datos-heading">Datos del documento</h2></summary>
+          <p>El título es el único dato obligatorio. Las versiones se guardan en este navegador. Puedes trasladar el documento con su archivo de proyecto.</p>
           <fieldset class="form-grid">
             <legend>Metadatos</legend>
             <p class="field field-wide">
@@ -31,98 +237,191 @@
             <p class="field"><label for="author">Autor</label><input id="author" name="author" type="text" autocomplete="name"></p>
             <p class="field"><label for="course">Curso</label><input id="course" name="course" type="text" value="Cálculo III (1352)"></p>
             <p class="field"><label for="teacher">Profesor</label><input id="teacher" name="teacher" type="text" value="Guzmán Fuentes Ricardo"></p>
-            <p class="field"><label for="date">Fecha</label><input id="date" name="date" type="date" value="2026-09-13"></p>
+            <p class="field"><label for="date">Fecha</label><input id="date" name="date" type="date"></p>
             <p class="field field-wide"><label for="topic">Tema o unidad</label><input id="topic" name="topic" type="text"></p>
           </fieldset>
-          <menu class="button-row" aria-label="Acciones del borrador">
-            <li><button id="save-draft" type="button">Guardar borrador</button></li>
-            <li><button id="restore-draft" type="button">Restaurar borrador</button></li>
-            <li><button id="delete-draft" class="secondary danger" type="button">Borrar borrador</button></li>
-          </menu>
-        </section>
-
-        <section aria-labelledby="contenido-heading">
-          <h2 id="contenido-heading">Contenido</h2>
-          <p>Completa un bloque y usa «Añadir bloque». El contenido de cualquier bloque llega al documento exactamente como lo escribes: la aplicación no añade caracteres de escape. Un bloque puede contener otros bloques: usa «Añadir dentro» en el bloque que quieras como padre, sin límite de niveles.</p>
-          <fieldset>
-            <legend id="block-form-heading">Nuevo bloque</legend>
-            <input id="editing-path" type="hidden" value="">
-            <input id="parent-path" type="hidden" value="">
-            <p id="block-target" class="block-target">El bloque se añadirá al final de la raíz del documento.</p>
-            <p id="tray-summary" class="block-target" hidden></p>
-            <p class="field">
-              <label for="block-type">Tipo de bloque</label>
-              <select id="block-type" name="blockType">
-                <option value="text">Texto</option>
-                <option value="equation">Ecuación destacada</option>
-                <option value="math-inline">Expresión matemática en línea</option>
-                <option value="definition">Definición</option>
-                <option value="theorem">Teorema</option>
-                <option value="proposition">Proposición</option>
-                <option value="example">Ejemplo</option>
-                <option value="note">Nota</option>
-                <option value="itemize">Lista con viñetas</option>
-                <option value="enumerate">Lista numerada</option>
-                <option value="bibliography">Bibliografía (IEEE)</option>
-              </select>
+          <details id="document-macros">
+            <summary>Macros del documento</summary>
+            <p>Las macros viajan con el proyecto y se definen en el preámbulo del documento.</p>
+            <ul id="macro-list"></ul>
+            <fieldset id="macro-fields"><legend>Añadir o editar una macro</legend>
+              <p class="field"><label for="macro-name">Nombre</label><input id="macro-name" type="text" autocomplete="off" spellcheck="false" aria-describedby="macro-name-error"><span id="macro-name-error" class="error"></span></p>
+              <p class="field"><label for="macro-params">Número de argumentos</label><input id="macro-params" type="number" min="0" max="9" step="1" value="0" aria-describedby="macro-params-error"><span id="macro-params-error" class="error"></span></p>
+              <p class="field"><label for="macro-body">Definición</label><input id="macro-body" type="text" spellcheck="false" aria-describedby="macro-body-error"><span id="macro-body-error" class="error"></span></p>
+              <div id="macro-preview" aria-label="Vista previa de la macro"></div>
+              <button id="save-macro" type="button">Guardar macro</button> <button id="cancel-macro" type="button" class="secondary">Cancelar macro</button>
+            </fieldset>
+            <button id="use-default-macros" type="button" class="secondary">Usar como mis macros predeterminadas</button>
+          </details>
+          <details id="document-references">
+            <summary>Referencias del documento</summary>
+            <p class="field"><label for="citation-style">Estilo de citas</label>
+              <select id="citation-style"><option value="ieee">IEEE</option><option value="apa">APA 7.ª edición</option></select>
             </p>
-            <p class="field"><label for="block-title">Título del bloque (opcional)</label><input id="block-title" name="blockTitle" type="text"></p>
-            <p class="field">
-              <label for="block-content">Contenido</label>
-              <textarea id="block-content" name="blockContent" rows="6" aria-describedby="block-help block-error"></textarea>
-              <small id="block-help">El contenido se copia al documento <strong>tal cual</strong>: comandos como <code>\textbf{...}</code> o <code>\mathbb{R}</code>, llaves y matemáticas entre <code>$…$</code> o <code>$$…$$</code> llegan exactamente como los escribes, y la aplicación no inserta ningún carácter de escape. Por eso puedes pegar aquí LaTeX de otro documento sin revisarlo. A cambio, los caracteres reservados de LaTeX son cosa tuya: para que aparezcan impresos escribe <code>\%</code>, <code>\&amp;</code>, <code>\#</code>, <code>\_</code> o <code>\$</code> —un <code>%</code> suelto comenta el resto de su línea—. Se permiten párrafos separados por una línea vacía y una lista toma un elemento por línea. Solo el título del bloque y los metadatos se escapan por completo, porque la aplicación los coloca dentro de un argumento.</small>
-              <span id="block-error" class="error" aria-live="polite"></span>
-            </p>
-            <details class="math-preview-panel" open>
-              <summary>Vista previa de las matemáticas</summary>
-              <p>KaTeX orienta sobre los tramos matemáticos, pero no es LaTeX completo ni reproduce la tipografía del PDF final. No revisa la prosa: un <code>%</code> suelto, un <code>_</code> o <code>&amp;</code> fuera de matemáticas, o un <code>\textbf{</code> sin cerrar pueden fallar en Overleaf aunque esta vista no avise.</p>
-              <div id="math-preview"></div>
-              <p id="math-preview-status" class="preview-status" aria-live="polite" aria-atomic="true"></p>
-            </details>
-
-            <section class="symbol-board" aria-labelledby="simbolos-heading">
-              <details id="symbol-details" open>
-                <summary><h3 id="simbolos-heading">Símbolos matemáticos</h3></summary>
-                <p id="symbol-board-intro">Cada botón inserta su comando LaTeX en el campo «Contenido», en la posición del cursor. El comando se conserva literalmente en cualquier bloque, dentro y fuera de <code>$…$</code>. Si ya conoces el comando, escríbelo directamente.</p>
-                <p class="field">
-                  <label for="symbol-search">Buscar símbolo por nombre</label>
-                  <input id="symbol-search" name="symbolSearch" type="search" autocomplete="off" aria-describedby="symbol-search-help">
-                  <small id="symbol-search-help">Por ejemplo «para todo», «implica» o «conjunción». También acepta el comando, como «forall».</small>
-                </p>
-                <nav id="symbol-category-picker" class="symbol-categories" aria-label="Categorías de símbolos"></nav>
-                <p id="symbol-detail" aria-hidden="true">Selecciona un símbolo para ver su nombre y comando.</p>
-                <p id="symbol-results" class="status" role="status"></p>
-                <p id="symbol-empty" hidden>Ningún símbolo coincide con la búsqueda.</p>
-                <menu id="symbol-groups" class="symbol-grid" role="toolbar" aria-orientation="horizontal" aria-label="Símbolos matemáticos"></menu>
-              </details>
-            </section>
-            <menu class="button-row">
-              <li><button id="add-block" type="button">Añadir bloque</button></li>
-              <li><button id="paste-block" class="secondary" type="button" hidden>Pegar bloque</button></li>
-              <li><button id="cancel-edit" class="secondary" type="button" hidden>Cancelar edición</button></li>
-            </menu>
-          </fieldset>
-
-          <h3>Estructura actual</h3>
-          <p>Cada bloque indica su nivel y su bloque padre. «Subir» y «Bajar» mueven el bloque solo entre sus hermanos, sin sacarlo de su nivel. Para repetir una estructura hay tres acciones distintas: <strong>«Duplicar»</strong> deja una copia justo después del original; <strong>«Copiar bloque»</strong> lo guarda en una bandeja y luego eliges el destino con «Pegar bloque», las veces que haga falta; <strong>«Copiar texto»</strong> lleva su contenido al portapapeles del sistema para pegarlo donde quieras, dentro o fuera de la aplicación.</p>
-          <p id="empty-blocks">Todavía no hay bloques.</p>
-          <ol id="block-list" class="block-list"></ol>
+            <label class="check-field"><input type="checkbox" id="include-uncited"> Incluir también las no citadas</label>
+            <ul id="reference-list"></ul>
+            <fieldset><legend>Añadir o editar una referencia</legend>
+              <p class="field"><label for="ref-key">Clave</label><input id="ref-key" type="text" spellcheck="false" aria-describedby="ref-key-help ref-key-error"><small id="ref-key-help"></small><span class="error" id="ref-key-error"></span></p>
+              <p class="field"><label for="ref-authors">Autores</label><textarea id="ref-authors" rows="3" aria-describedby="ref-authors-help ref-authors-error"></textarea><small id="ref-authors-help">Un autor por línea, en la forma Apellido, Iniciales.</small><span class="error" id="ref-authors-error"></span></p>
+              <p class="field"><label for="ref-year">Año</label><input id="ref-year" type="text" inputmode="numeric" aria-describedby="ref-year-error"><span class="error" id="ref-year-error"></span></p>
+              <p class="field"><label for="ref-title">Título</label><input id="ref-title" type="text" aria-describedby="ref-title-error"><span class="error" id="ref-title-error"></span></p>
+              <p class="field"><label for="ref-edition">Edición</label><input id="ref-edition" type="text" inputmode="numeric" aria-describedby="ref-edition-error"><span class="error" id="ref-edition-error"></span></p>
+              <p class="field"><label for="ref-publisher">Editorial</label><input id="ref-publisher" type="text"></p>
+              <p class="field"><label for="ref-place">Lugar</label><input id="ref-place" type="text"></p>
+              <p class="field"><label for="ref-url">Enlace</label><input id="ref-url" type="text" inputmode="url"></p>
+              <p class="field"><label for="ref-text">Texto libre</label><textarea id="ref-text" rows="3" aria-describedby="ref-text-help"></textarea><small id="ref-text-help">Sustituye la ficha por texto LaTeX literal. En APA se necesitan también los autores y el año.</small></p>
+              <button type="button" id="save-reference">Guardar referencia</button>
+              <button type="button" id="cancel-reference" class="secondary">Cancelar referencia</button>
+            </fieldset>
+            <button type="button" id="add-course-references" class="secondary">Añadir las referencias del curso</button>
+            <button type="button" id="save-course-references" class="secondary">Guardar como referencias del curso</button>
+          </details>
+          </details>
         </section>
 
         <section aria-labelledby="resultado-heading">
           <h2 id="resultado-heading">Resultado</h2>
           <p>Genera el documento después de modificar sus datos o bloques.</p>
           <button id="generate" type="submit">Generar documento</button>
+          <section id="result-content-check" class="result-content-check" aria-labelledby="content-check-heading" hidden>
+            <h3 id="content-check-heading">Comprobación previa a Overleaf</h3>
+            <p id="content-check-summary"></p>
+            <ul id="content-check-blocks" hidden></ul>
+          </section>
           <p class="field output-field"><label for="latex-output">Código LaTeX</label><textarea id="latex-output" rows="22" readonly spellcheck="false"></textarea></p>
           <menu class="button-row">
-            <li><button id="copy-code" type="button">Copiar código</button></li>
-            <li><button id="download-tex" type="button">Descargar .tex</button></li>
+            <li><button id="copy-code" class="secondary" type="button">Copiar código</button></li>
+            <li><button id="download-tex" class="secondary" type="button">Descargar .tex</button></li>
           </menu>
         </section>
+        <section aria-labelledby="versions-heading">
+          <h2 id="versions-heading" tabindex="-1">Versiones</h2>
+          <p class="field"><label for="version-label">Nombre de la versión (opcional)</label><input id="version-label" type="text"></p>
+          <button id="save-version" type="button">Guardar versión</button>
+          <ul id="version-list"></ul>
+          <pre id="version-diff" hidden tabindex="-1" aria-label="Cambios con el documento actual"></pre>
+          <p id="version-status" role="status"></p>
+          <p id="storage-status"></p>
+          <label class="check-field"><input id="project-config" type="checkbox"> Incluir la configuración portátil</label>
+          <button id="export-project" class="secondary" type="button">Exportar proyecto</button>
+          <p class="field"><label for="import-project">Importar proyecto</label><input id="import-project" type="file" accept="application/json,.json"></p>
+        </section>
+        <section aria-labelledby="writing-heading">
+          <h2 id="writing-heading">Preferencias de escritura</h2>
+          <details id="writing-preferences">
+            <summary>Preferencias de escritura</summary>
+            <label class="check-field"><input id="auto-pair" type="checkbox" checked> Cerrar automáticamente llaves y delimitadores</label>
+            <label class="check-field"><input id="radial-vibration" type="checkbox" checked> Vibración</label>
+            <details id="personal-menus">
+              <summary>Mis menús</summary>
+              <p class="field"><label for="menu-choice">Anillo</label><select id="menu-choice"></select></p>
+              <p class="field"><label for="menu-name">Nombre del anillo</label><input id="menu-name" type="text"></p>
+              <p class="field"><label for="menu-context">Sustituye al menú</label><select id="menu-context"></select></p>
+              <button type="button" id="menu-save">Guardar anillo</button>
+              <div id="menu-diagram" role="group" aria-label="Editar las ocho posiciones"></div>
+              <button type="button" id="menu-reset" class="secondary">Restaurar el menú</button>
+              <p class="field"><label for="menu-button">Asignar Mi botón</label><select id="menu-button"></select></p>
+              <p id="menu-error" role="status"></p>
+            </details>
+            <h3>Mis plantillas</h3><ul id="own-template-list"></ul>
+            <h3>Mis alias</h3>
+            <div class="table-scroll"><table><thead><tr><th>Disparador</th><th>Expansión</th><th>Modo</th><th>Acciones</th></tr></thead><tbody id="alias-list"></tbody></table></div>
+            <fieldset id="alias-fields"><legend>Añadir o editar un alias</legend>
+              <p class="field"><label for="alias-trigger">Disparador</label><input id="alias-trigger" type="text" autocomplete="off" aria-describedby="alias-error"></p>
+              <p class="field"><label for="alias-expansion">Expansión</label><textarea id="alias-expansion" rows="2" spellcheck="false" aria-describedby="alias-error"></textarea></p>
+              <p class="field"><label for="alias-mode">Modo del alias</label><select id="alias-mode"><option value="math">Matemáticas</option><option value="text">Texto</option><option value="any">Cualquier contexto</option></select></p>
+              <p id="alias-error" class="error"></p>
+              <button id="save-alias" type="button">Guardar alias</button> <button id="cancel-alias" type="button" class="secondary">Cancelar alias</button>
+            </fieldset>
+            <button id="reset-aliases" type="button" class="secondary">Restablecer alias predeterminados</button>
+            <p><button id="export-config" class="secondary" type="button">Exportar configuración</button></p>
+            <p class="field"><label for="import-config">Importar configuración</label><input id="import-config" type="file" accept="application/json,.json"></p>
+          </details>
+          <details id="error-report">
+            <summary>Informe de errores</summary>
+            <p id="error-report-status" role="status"></p>
+            <label for="error-report-text">Errores recientes de este navegador</label>
+            <textarea id="error-report-text" rows="6" readonly></textarea>
+            <button id="error-report-copy" class="secondary" type="button">Copiar informe</button>
+            <button id="error-report-clear" type="button" class="secondary">Borrar informe</button>
+          </details>
+          <details class="shortcut-panel">
+            <summary>Atajos de teclado</summary>
+            <ul id="editing-keys">
+              <li><kbd id="commit-key-label">Ctrl+Intro</kbd>: añadir el bloque o guardar sus cambios.</li>
+              <li>En Contenido, Tab acepta el menú, pasa al siguiente hueco, salta un cierre o expande un alias, en ese orden. Sin nada pendiente, sale del campo.</li>
+              <li>Escape cierra el menú o termina la sesión de huecos sin mover el cursor.</li>
+              <li>↑ y ↓ recorren el menú; Intro acepta la opción.</li>
+              <li>Retroceso borra un par automático vacío.</li>
+              <li>En Contenido vacío, / abre comandos de tipo y plantillas: /teo, /ec, /lista o /ejres.</li>
+            </ul>
+            <ul id="keyboard-shortcuts"></ul>
+          </details>
+        </section>
       </form>
+      <dialog id="slice-dialog" aria-labelledby="slice-heading">
+        <h2 id="slice-heading">Editar posición</h2>
+        <div id="slice-tabs" role="tablist" aria-label="Clase de sector"></div>
+        <div id="slice-panel" role="tabpanel">
+          <p class="field" data-kinds="snippet submenu"><label for="slice-label">Rótulo</label><input type="text" id="slice-label"></p>
+          <p class="field" data-kinds="snippet submenu"><label for="slice-icon">Icono</label><input type="text" id="slice-icon"></p>
+          <div data-kinds="snippet">
+            <label for="slice-snippet">Fragmento con huecos #0 a #9</label><textarea id="slice-snippet" rows="3" spellcheck="false"></textarea>
+            <div id="slice-preview" aria-label="Vista previa del fragmento"></div><p id="slice-warning" role="status"></p>
+          </div>
+          <div data-kinds="symbol"><label for="slice-search">Buscar símbolo</label><input type="search" id="slice-search">
+            <label for="slice-symbol">Símbolo del tablero</label><select id="slice-symbol"></select></div>
+          <p class="field" data-kinds="action"><label for="slice-action">Acción del sector</label><select id="slice-action"></select></p>
+          <div data-kinds="submenu"><label for="slice-link">Abrir al elegir este sector</label><select id="slice-link"></select>
+            <div id="slice-children" role="group" aria-label="Posiciones del submenú"></div></div>
+          <p data-kinds="empty">La posición recupera su valor predeterminado o queda vacía.</p>
+        </div>
+        <p id="slice-error" role="status"></p>
+        <button id="slice-save" type="button">Guardar posición</button> <button id="slice-cancel" type="button" class="secondary">Cancelar</button>
+        <div id="slice-tools"><label for="slice-swap">Intercambiar con…</label><select id="slice-swap"></select>
+          <button id="slice-exchange" type="button" class="secondary">Intercambiar</button>
+          <button id="slice-reset" type="button" class="secondary">Restaurar esta posición</button></div>
+      </dialog>
+      <dialog id="move-block-dialog" aria-labelledby="move-block-heading" aria-describedby="move-block-subject">
+        <form id="move-block-form" method="dialog">
+          <h2 id="move-block-heading">Mover bloque</h2>
+          <p id="move-block-subject"></p>
+          <p class="field">
+            <label for="move-block-destination">Destino</label>
+            <select id="move-block-destination" autofocus>
+              <option value="">Raíz del documento</option>
+            </select>
+          </p>
+          <p class="field">
+            <label for="move-block-position">Posición</label>
+            <select id="move-block-position">
+              <option value="start">Al principio</option>
+              <option value="end" selected>Al final</option>
+            </select>
+          </p>
+          <menu class="button-row">
+            <li><button id="move-block-cancel" class="secondary" type="button">Cancelar</button></li>
+            <li><button type="submit">Mover bloque</button></li>
+          </menu>
+        </form>
+      </dialog>
+      <dialog id="save-template-dialog" aria-labelledby="save-template-heading">
+        <form id="save-template-form" method="dialog">
+          <h2 id="save-template-heading">Guardar como plantilla</h2>
+          <p class="field"><label for="template-name">Nombre de la plantilla</label><input id="template-name" type="text" autofocus aria-describedby="template-error"></p>
+          <p class="field"><label for="template-trigger">Comando</label><input id="template-trigger" type="text" aria-describedby="template-error" autocomplete="off"></p>
+          <p id="template-error" class="error"></p>
+          <menu class="button-row"><li><button id="save-template-cancel" type="button" class="secondary">Cancelar</button></li><li><button type="submit">Guardar plantilla</button></li></menu>
+        </form>
+      </dialog>
+      <ul role="listbox" id="assist-list" aria-label="Sugerencias de escritura" hidden></ul>
       <p id="app-status" class="status" aria-live="polite" aria-atomic="true">Editor listo.</p>
     </main>
     <footer><p>La vista previa orienta sobre modo matemático; la validación y compilación del documento se realizan en Overleaf.</p></footer>
+    <script src="assets/js/clipboard.js"></script>
+    <script src="assets/js/error-report.js"></script>
+    <script src="assets/js/local-errors.js"></script>
+    <script>TexNotes.createErrorReport(document, { copy: TexNotes.createClipboard(document) });</script>
     <script src="assets/vendor/katex/katex.min.js"></script>
     <script src="assets/js/block-types.js"></script>
     <script src="assets/js/block-tree.js"></script>
@@ -131,6 +430,40 @@
     <script src="assets/js/math-symbols.js"></script>
     <script src="assets/js/text-insertion.js"></script>
     <script src="assets/js/math-preview.js"></script>
-    <script src="assets/js/app.js"></script>
+    <script src="assets/js/shortcuts.js"></script>
+    <script src="assets/js/actions.js"></script>
+  <script src="assets/js/image-options.js"></script>
+    <script src="assets/js/list-outline.js"></script>
+    <script src="assets/js/cross-references.js"></script>
+    <script src="assets/js/references.js"></script>
+    <script src="assets/js/content-check.js"></script>
+    <script src="assets/js/editing-assist.js"></script>
+    <script src="assets/js/completion.js"></script>
+    <script src="assets/js/templates.js"></script>
+    <script src="assets/js/macros.js"></script>
+    <script src="assets/js/config-parts.js"></script>
+  <script src="assets/js/menus.js"></script>
+    <script src="assets/js/radial.js"></script>
+    <script src="assets/js/versions.js"></script>
+    <script src="assets/js/version-storage.js"></script>
+    <script src="assets/js/selection-scope.js"></script>
+    <script src="assets/js/menu-config.js"></script>
+  <script src="assets/js/radial-controller.js"></script>
+  <script src="assets/js/block-actions.js"></script>
+  <script src="assets/js/action-bindings.js"></script>
+  <script src="assets/js/thumb-bar.js"></script>
+  <script src="assets/js/desktop-cards.js"></script>
+  <script src="assets/js/block-form.js"></script>
+  <script src="assets/js/structure-view.js"></script>
+  <script src="assets/js/mobile-panels.js"></script>
+  <script src="assets/js/portable-config.js"></script>
+  <script src="assets/js/alias-editor.js"></script>
+  <script src="assets/js/menu-editor.js"></script>
+  <script src="assets/js/suggestion-sources.js"></script>
+  <script src="assets/js/suggestion-list.js"></script>
+  <script src="assets/js/move-dialog.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/desktop-frame.js"></script>
+    <script src="assets/js/desktop-editor.js"></script>
   </body>
 </html>

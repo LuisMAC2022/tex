@@ -55,10 +55,9 @@ es siempre el mismo y va en una sola dirección:
 
 Tres consecuencias que conviene saber desde el principio:
 
-- **Overleaf manda.** Si corriges algo allí, la corrección **no vuelve** a esta
-  aplicación. No existe forma de reimportar. Así que decide pronto dónde vas a
-  seguir trabajando: aquí mientras construyes la estructura, y en Overleaf a partir
-  de la primera corrección seria.
+- **La aplicación es la copia maestra.** Corrige aquí los apuntes y vuelve a
+  generar el archivo para compilarlo en Overleaf. Exporta el proyecto JSON
+  para conservar o trasladar una copia editable.
 - **Nada sale de tu navegador.** No hay servidor, no hay cuenta, no se envía nada a
   ninguna parte. Funciona sin internet.
 - **Y por eso mismo, tu trabajo vive solo en este navegador y en este aparato.** Si
@@ -77,8 +76,9 @@ página. No hace falta nada más.
 
 ### Rellenar la cabecera
 
-Arriba, en «Datos del documento», ya vienen escritos el curso, el profesor y una
-fecha. Cámbialos si no son los tuyos.
+Arriba, en «Datos del documento», ya vienen escritos el curso, el profesor y la
+fecha de hoy. Cámbialos si no son los tuyos; al restaurar un borrador vuelve su
+fecha guardada.
 
 **El único campo obligatorio es el título.** Sin título la aplicación no genera el
 documento y te lo dice junto al campo. Autor, curso, profesor y fecha son opcionales.
@@ -102,16 +102,18 @@ El bloque aparece en la lista de abajo con sus botones propios. Repite para el r
 
 ### Generar y llevarlo a Overleaf
 
-1. Pulsa «Generar documento». La vista previa **solo cambia al pulsar este botón**,
-   no mientras escribes: si no ves tu último cambio, es que no lo has pulsado.
+1. Pulsa «Generar documento» para actualizar «Código LaTeX» y el resumen de
+   «Comprobación previa a Overleaf» en «Resultado».
 2. Pulsa «Copiar código». Ya tienes el `.tex` entero en el portapapeles.
    - También puedes pulsar «Descargar .tex» y guardarlo como archivo. El nombre
      sale de tu título.
+   - Copiar y descargar generan el documento otra vez antes de exportarlo, así
+     que siempre llevan tus últimos cambios aunque no hayas vuelto a generar.
 3. En Overleaf: *New Project → Blank Project*. Borra todo lo que traiga el editor,
    pega lo tuyo con `Ctrl+V` y pulsa *Recompile*.
 
-Debería compilar a la primera. El documento es autocontenido: no necesitas añadir
-ningún paquete ni subir ningún archivo extra.
+El ejemplo usa los paquetes incluidos en Overleaf. Para compilar un documento
+con imágenes, sube también los archivos de imagen a las rutas indicadas en el editor.
 
 > Si el botón de copiar no funciona —pasa en algunos navegadores al abrir la página
 > con doble clic—, la aplicación selecciona el texto por ti y te avisa. Copia con
@@ -129,16 +131,34 @@ ningún paquete ni subir ningún archivo extra.
 | «Definición» | Un recuadro `Definición 1`, numerado. |
 | «Teorema» | `Teorema 1`. |
 | «Proposición» | `Proposición 1`. |
+| «Demostración» | Entorno proof; el título opcional sustituye a su encabezado. |
 | «Ejemplo» | `Ejemplo 1`. |
 | «Nota» | `Nota 1`. |
 | «Lista con viñetas» | Una lista de puntos. |
 | «Lista numerada» | Una lista 1, 2, 3. |
 | «Bibliografía (IEEE)» | Referencias numeradas entre corchetes. |
+| «Imagen» | Una imagen con pie de figura opcional. |
 
-Dos cosas que sorprenden la primera vez:
+**En las listas, cada renglón con texto es un elemento.** Escribe en «Contenido» y
+sangra con dos espacios o un tabulador por nivel. El tipo de bloque determina el
+nivel raíz. Cada sublista toma el tipo de la lista que la contiene, salvo que su
+primer elemento empiece por `- ` o `* ` para viñetas, o por `1. ` o `1) ` para
+numeración. Puedes pegar líneas con marcadores. Escribe `{}- ` para imprimir un
+guion al principio de un elemento.
 
-**En las listas, cada renglón es un punto.** Escribe un elemento por línea; no pongas
-guiones ni números delante, la aplicación los añade. Las líneas vacías se ignoran.
+Con el cursor en una línea o con varias líneas seleccionadas, usa «Sangrar»
+(Alt+Mayús+G o ⌥⇧G en Mac) y «Quitar sangría» (Alt+Mayús+Q o ⌥⇧Q en Mac). Intro
+conserva la sangría y el marcador e incrementa los números. En un punto vacío
+con sangría, Intro quita un nivel. Tab recorre los controles.
+
+«Vista previa de las matemáticas» muestra la lista anidada. Si agotas los cuatro
+niveles del mismo tipo o los seis entornos combinados, verás un aviso junto a
+«Contenido» y los elementos más profundos aparecerán en el último nivel disponible.
+Si el bloque entero alcanza el límite, sus elementos aparecerán como párrafos.
+
+Las listas de un borrador anterior conservan sus guiones, números y demás
+prefijos como texto. Al cambiar su «Contenido» se aplican las reglas de sangría y
+marcadores. Cambiar solo el título, copiar o mover el bloque conserva su formato.
 
 **En la bibliografía, escribe una referencia por línea.** Cada línea con texto
 se convierte en un `\bibitem`. Usa un solo bloque por documento para evitar
@@ -147,6 +167,15 @@ claves repetidas.
 **Cada tipo lleva su propia cuenta.** `Teorema 1`, `Teorema 2`… van por un lado y
 `Definición 1`, `Definición 2`… por otro. Los números **no se reinician** en cada
 apartado: siguen corridos hasta el final del documento. Es a propósito.
+
+### Insertar y editar una imagen
+
+1. Selecciona «Imagen». En «Opciones de imagen», escribe la ruta en «Archivo de imagen» o usa «Elegir archivo…» para rellenar el nombre y obtener una miniatura local. Sube el archivo al proyecto de Overleaf en esa misma ruta. El proyecto guarda la ruta y los ajustes de la imagen.
+2. Escribe el pie en «Título del bloque (opcional)». Ajusta «Ancho de la imagen» con el deslizador o elige «Pequeña» (40 %), «Mediana» (60 %), «Grande» (80 %) o «Ancho completo» (100 %). Si indicas «Altura máxima (cm, opcional)», la escala respeta ambos límites y mantiene las proporciones antes de girar.
+3. Pulsa «Girar 90°» o ajusta «Ángulo de giro (grados)». Elige «Izquierda», «Centro» o «Derecha» en «Alineación de la imagen» y completa «Posición de la figura» o «Etiqueta» si las necesitas.
+4. Comprueba la ruta o la miniatura en «Vista previa de la imagen» y usa «Añadir bloque». Para volver a cargar sus ajustes, abre «Editar» en el bloque y confirma con «Guardar cambios».
+
+La ruta vacía impide añadir la imagen. Los avisos por espacios, caracteres reservados de LaTeX, mayúsculas en la extensión o formatos distintos de PNG, JPG, JPEG y PDF permiten guardarla. Al añadir la imagen dentro de un teorema o una lista, aparece en ese sitio y el pie se compone como párrafo. El ancho es un porcentaje del ancho de texto del documento. En una lista con sangría, un porcentaje menor deja más espacio para los márgenes. «Posición de la figura» se aplica a las imágenes flotantes.
 
 ---
 
@@ -175,8 +204,13 @@ depende (`Nivel 2 · dentro de 1 Teorema: Fubini`).
   conserva.
 - «Subir» y «Bajar» lo mueven **solo entre sus iguales**, sin sacarlo de donde
   está. En los extremos el botón aparece apagado.
-  - *Todavía no se puede* mover un bloque de un padre a otro. Hay que volver a
-    crearlo en su sitio —o usar «Copiar bloque», sección siguiente—.
+- «Mover a…» traslada el bloque con todos sus hijos. En «Destino», elige
+  «Raíz del documento» o un bloque que admita hijos. En «Posición», elige
+  «Al principio» o «Al final» y confirma con «Mover bloque». El foco vuelve a
+  «Editar» del bloque movido y se anuncian su ruta anterior y la nueva. Si
+  había una edición en curso, se cancela. El siguiente bloque se añadirá en
+  la raíz. Puedes cerrar el diálogo con «Cancelar» o `Escape` para volver al
+  botón que lo abrió.
 - «Eliminar» pide confirmación y te dice cuántos bloques se van con él.
 
 ---
@@ -190,7 +224,7 @@ Tienen nombres que se parecen y hacen cosas distintas. Merece la pena leerlo una
 | «Duplicar» | Deja una copia **justo debajo**, al mismo nivel, con todo lo que tuviera dentro. De un solo paso: no eliges destino. | “Otro teorema igual que éste, para cambiarle dos cosas.” |
 | «Copiar bloque» | Guarda el bloque en una **bandeja** de la aplicación. No lo mueve ni lo cambia. Luego «Pegar bloque» lo coloca donde diga la frase del formulario. | “Quiero esta lista también dentro de aquel otro teorema.” |
 | «Copiar texto» | Manda el contenido del bloque al **portapapeles del sistema**, para pegarlo con `Ctrl+V` donde sea, incluso fuera de la aplicación. | “Me llevo este párrafo al correo.” |
-| «Copiar código» | Copia **el documento entero** ya generado. Es el de arriba, el que usas para Overleaf. | Siempre que vayas a Overleaf. |
+| «Copiar código» | Genera y copia **el documento entero**, con tus últimos cambios. Es el de arriba, el que usas para Overleaf. | Siempre que vayas a Overleaf. |
 
 Sobre la bandeja:
 
@@ -205,17 +239,23 @@ Sobre la bandeja:
 
 ## 6. Símbolos matemáticos
 
-El panel «Símbolos matemáticos» inserta comandos en el campo «Contenido»,
-**justo donde tengas el cursor**.
+Desde «Contenido» o desde otro campo del bloque, pulsa `Alt+Mayús+S` (`⌥⇧S` en
+macOS). También puedes activar «Buscar» junto a «Símbolos matemáticos». El foco
+va a «Buscar símbolo», que acepta nombres como “para todo” y comandos
+como `forall`. `↓` pasa al primer resultado e `Intro` lo inserta directamente.
 
-- Hay doce categorías: griegas, lógica, conjuntos, relaciones, topología, funciones y
-  límites, derivadas, integrales, operadores, vectores y matrices, y estructura.
-- El buscador acepta **el nombre en castellano** —“para todo”, “implica”,
-  “conjunción”— y también el comando, si ya lo sabes (“forall”).
-- Al elegir un símbolo verás su nombre y su comando antes de insertarlo.
-- Si ya conoces el comando, escríbelo directamente. Es lo mismo.
-- Todo se recorre con el teclado: flechas para moverte por la rejilla, `Inicio` y
-  `Fin` para los extremos.
+- Usa las flechas en la rejilla para recorrer los símbolos, e `Inicio` y `Fin` para
+  ir a los extremos. `Re Pág` y `Av Pág` cambian de categoría. `↑` desde la primera
+  fila vuelve al buscador. Escribir en la rejilla añade texto a la búsqueda.
+- Activa un símbolo con `Intro`, `Espacio` o un clic. Se inserta donde estaba el
+  cursor y vuelve el foco. Si abriste el tablero desde un control como «Tipo de bloque»,
+  el símbolo va a «Contenido» y el foco vuelve al control.
+- Desde la rejilla, `Escape` vuelve al campo con su selección. Desde el buscador,
+  el primer `Escape` borra el texto de la búsqueda. Si ya está vacía, vuelve al
+  campo. `Alt+Mayús+S` o `⌥⇧S` vuelven directamente desde cualquier parte del tablero.
+- **Recientes** es la primera categoría y reúne los últimos doce símbolos distintos
+  que insertaste. El historial se conserva en este navegador fuera del borrador.
+- Consulta «Atajos de teclado» al final del formulario para ver las combinaciones.
 
 Los símbolos funcionan igual dentro y fuera de los bloques de ecuación. Dentro de un
 párrafo normal, rodea la fórmula de `$…$` para que salga bien.
@@ -227,21 +267,30 @@ bloque guardado. En un párrafo, prueba `Sea $x \in \mathbb{R}$.` El aviso
 **No se pudo previsualizar** permite seguir editando y exportando. La compilación
 en Overleaf comprueba el documento completo.
 
+### Comprobación antes de exportar
+
+Debajo de «Contenido» aparecen los avisos de LaTeX después de una pausa al
+escribir. Cada aviso indica la línea y la columna dentro del bloque. La
+estructura muestra el recuento por bloque. En listas y bibliografías, abre y
+cierra cada fórmula dentro de un mismo elemento.
+
+Al pulsar «Generar documento», el resumen «Comprobación previa a Overleaf»
+agrupa los avisos. Usa el enlace **Ir al bloque** para enfocar su botón «Editar».
+Después de guardar cambios en un bloque o de modificar la estructura, vuelve a
+generar para actualizar el resumen; «Copiar código» y «Descargar .tex» también lo
+actualizan. Puedes copiar o descargar el contenido original aunque aparezcan avisos.
+
 ---
 
 ## 7. Guardar el trabajo
 
-**No se guarda solo.** Pulsa «Guardar borrador» cuando quieras conservar lo que
-llevas. Se guarda en este navegador y en este aparato, y así te lo dice el aviso.
+La sesión guarda el bloque en curso para recuperarlo al abrir. En «Versiones», **Guardar versión** conserva un punto al que puedes volver. Puedes darle nombre. Generar, copiar y descargar el código guardan una versión automática si el documento cambió. Al copiar o descargar un resultado anterior, el editor actualiza el código con los cambios confirmados.
 
-- «Restaurar borrador» recupera lo último que guardaste. También entiende borradores
-  de la versión anterior de la aplicación y te avisa cuando convierte uno.
-- «Borrar borrador» pide confirmación y **no toca** lo que tengas en pantalla.
-
-**Guarda un borrador antes de cerrar, y guarda el `.tex` en tu ordenador o en Overleaf
-antes de terminar la sesión.** El borrador del navegador es una comodidad para seguir
-mañana, no un sitio donde archivar. Se pierde si borras datos de navegación, y no
-existe en ningún otro aparato tuyo.
+- **Ver cambios** compara la versión con el documento actual. **Restaurar** guarda antes un respaldo. **Deshacer cambio** permite volver atrás en la sesión.
+- **Renombrar** y **Eliminar** actúan sobre la versión elegida. Las versiones manuales se conservan hasta que las elimines. Se guardan las últimas 30 automáticas de cada documento, u ocho si el navegador solo ofrece el almacenamiento alternativo.
+- **Exportar proyecto** descarga el JSON con los bloques, macros y versiones del documento. Marca **Incluir la configuración portátil** si quieres llevar también alias, plantillas y preferencias. Guarda el archivo en Drive o en un repositorio privado para pasarlo entre teléfono y portátil.
+- **Importar proyecto** guarda primero un respaldo, combina las versiones por id e indica cuáles omitió. En la lista también puedes recuperar el respaldo anterior a una importación.
+- Si tenías un borrador antiguo, la versión **Borrador guardado (migrado)** queda disponible en el primer arranque. El panel indica si el navegador concedió almacenamiento persistente y cuánto espacio está en uso.
 
 ---
 
@@ -281,7 +330,7 @@ todo lo que le siga en ese renglón. Los demás protestan al compilar, que es me
 
 ## 9. Cuando Overleaf da error
 
-Los seis casos que más aparecen, con lo que suele haberlos causado.
+Estos son los casos más habituales y los que señala la comprobación previa.
 
 ### “Falta un trozo de texto en el PDF, pero no hay ningún error”
 
@@ -290,15 +339,23 @@ ponle la barra: `\%`.
 
 Es el único fallo silencioso de todos, y por eso va el primero.
 
-### `Missing $ inserted`
+### Modo matemático
 
-Has usado fuera de una fórmula algo que solo existe dentro: casi siempre un **`_`**
-o un **`^`**.
+Si ves `Missing $ inserted`, comprueba si has usado fuera de una fórmula algo
+que solo existe dentro, como **`_`** o **`^`**.
 
 - Si querías el guion bajo impreso → `\_`.
 - Si era un subíndice → rodéalo de `$…$`: `$x_1$`.
 
-También sale cuando un **`$` se ha quedado sin pareja**: cuenta los de esa línea.
+Comprueba también las parejas de delimitadores, como `$…$`, `$$…$$`,
+`\(…\)` o `\[…\]`.
+
+### Llaves y caracteres reservados
+
+Cada `{` de un grupo necesita su `}`. Para que se impriman como texto, escribe
+`\{` y `\}`. Escribe `\#` para un numeral impreso y `\&` para un signo
+de unión en prosa. Dentro de un `tabular` o un `align`, usa `&` para separar
+las columnas.
 
 ### `Undefined control sequence`
 
@@ -311,11 +368,17 @@ Overleaf no conoce ese comando. Dos motivos:
   aquí no existe. Añade el paquete a mano en Overleaf, arriba del todo, o usa otro
   comando.
 
-### `\begin{...} ended by \end{...}`
+### Entornos desparejados
 
-Un entorno abierto y no cerrado, o cerrado con otro nombre. Pasa al pegar media tabla
+El error `\begin{...} ended by \end{...}` puede aparecer al pegar media tabla
 o medio `align` desde otro documento. Comprueba que cada `\begin{X}` tenga su
 `\end{X}` con el mismo nombre.
+
+### Profundidad de listas y entornos
+
+La comprobación señala el séptimo entorno anidado, contando los entornos que
+abren los bloques y los que escribes con `\begin`. Si Overleaf indica que hay
+demasiados niveles, reduce la anidación.
 
 ### `Missing \begin{document}` o el PDF sale casi vacío
 
@@ -332,5 +395,235 @@ aplicación en un proyecto en blanco, en vez de subir un archivo.
 ### Si nada de esto encaja
 
 Fíjate en el **número de línea** que da Overleaf y mira esa línea en el editor: casi
-siempre el problema está ahí o en la anterior. Y recuerda que a partir de la primera
-corrección seria conviene seguir en Overleaf, no aquí.
+siempre el problema está ahí o en la anterior. Corrige el bloque de origen en la aplicación y vuelve a generar el archivo.
+
+## Captura continua y recuperación
+
+Ctrl+Intro (⌘+Intro en macOS) activa «Añadir bloque» o «Guardar cambios» desde
+cualquier control del editor. Después de añadir, el foco vuelve a «Contenido»;
+en imágenes pasa a «Archivo de imagen». Intro desde el título del bloque
+pasa al contenido. La fila de acciones queda antes de la vista previa. La
+explicación extensa está plegada en «Ayuda del contenido».
+
+Las inserciones del tablero y las ediciones de listas conservan el historial
+nativo de deshacer cuando el navegador admite insertText. La sesión se guarda
+al editar y al ocultar o cerrar la pestaña, incluido el bloque sin incorporar.
+Al volver, «Recuperar sesión» recupera ese trabajo y «Descartar» elimina la
+oferta. «Guardar versión» conserva un punto de restauración independiente.
+
+## Autocierre en Contenido
+
+En «Preferencias de escritura», «Cerrar automáticamente llaves y delimitadores»
+activa el cierre de llaves y fórmulas. Paréntesis y corchetes se completan solo
+en matemáticas. `^` y `_` se escriben tal cual: `x^2 + y^2` queda como lo
+tecleas. Si seleccionas texto en matemáticas, `^` y `_` lo envuelven como
+exponente o subíndice. Para un grupo largo escribe `{`, que se cierra sola.
+Las llaves envuelven la selección; un cierre ya pendiente se salta al teclearlo. Retroceso elimina un par automático vacío.
+Intro tras una apertura de entorno añade su cierre salvo en listas y bibliografía.
+Los comentarios, las teclas muertas y la composición conservan la escritura normal.
+
+## Sugerencias, huecos y alias
+
+Escribe una barra y al menos una letra en «Contenido». El menú propone hasta
+ocho comandos según el texto, sus nombres en español y el uso reciente; a
+igualdad, primero el más sencillo (`\frac` propone la fracción antes que las
+derivadas). ↑ y ↓
+cambian de opción; Intro, Tab o tocar una opción la insertan. Escape cierra el
+menú sin borrar lo escrito. En prosa, aceptar matemáticas añade sus dólares.
+Tras una apertura de entorno también se sugieren nombres.
+
+Los fragmentos tienen huecos: Tab pasa al siguiente y después a la posición
+final. Escape termina la sesión sin mover el cursor. La prioridad de Tab es:
+menú, hueco, cierre pendiente (permitiendo espacios antes), alias y navegación
+nativa. El asistente se limita a Contenido.
+
+En «Mis alias», completa «Disparador», «Expansión» y «Modo del alias»; usa
+«Guardar alias», «Editar alias» o «Borrar alias». «Cancelar alias» abandona la
+edición. Los marcadores #1 a #9 definen huecos y #0 la posición final; sin
+marcadores, cada par de llaves vacío es un hueco. Un signo de número literal
+se escribe escapado. Los alias solo se expanden con Tab: RR da el conjunto de
+reales; fr una fracción; pd una derivada parcial. Las tildes forman parte del
+disparador, por lo que “lím” no activa “lim”.
+
+«Restablecer alias predeterminados» repone la lista incluida. «Exportar configuración» descarga notas-latex-configuracion.json; «Importar configuración»
+valida el archivo completo y pide confirmación antes de aplicar las partes incluidas. Las partes ausentes conservan tus valores actuales.
+El historial de **Recientes** del tablero sigue siendo independiente.
+
+## Comandos de tipo y plantillas
+
+En Contenido vacío escribe / y el comando: /txt o /texto, /ec, /el, /def, /teo,
+/prop, /dem, /ej, /nota, /lista o /vi, /enum o /num, /bib, /img. Puedes buscar
+por nombre sin distinguir acentos. Escribe el título después de un espacio,
+por ejemplo /teo Fubini. Intro o Tab aplica; Escape conserva lo escrito. Al
+seleccionar imagen, el foco pasa a su archivo. «Demostración» usa proof: si
+pones un título, reemplaza el encabezado habitual en el PDF.
+
+El mismo menú ofrece teodem, ejres, limite, parcial, grad, lagrange, fubini,
+polares, esfericas, taylor y preclase. Carga un paso cada vez: escribe en sus
+huecos y confirma con Ctrl+Intro. El aviso de plantilla indica el siguiente
+paso. «Omitir paso» omite el paso y sus descendientes; «Cancelar plantilla»
+conserva lo que haya en el editor. Mover, borrar, duplicar, pegar o restaurar
+cancela la cola y lo anuncia. Teorema y demostración se añaden como hermanos.
+
+«Guardar como plantilla» guarda una rama entera, incluidas opciones de imagen,
+con «Nombre de la plantilla» y «Comando». «Guardar plantilla» confirma.
+En «Mis plantillas», «Renombrar plantilla» cambia nombre y comando, y
+«Borrar plantilla» la retira. La exportación de configuración incluye esta lista.
+
+## Macros del documento
+
+En «Datos del documento», abre «Macros del documento». Escribe el «Nombre» sin
+barra, el «Número de argumentos» (0 a 9) y la «Definición» literal en una sola
+línea. Por ejemplo, R con cero argumentos y definición \mathbb{R}. Para abs,
+un argumento y definición \left|#1\right|. La vista previa muestra una llamada
+de ejemplo y los errores aparecen junto a cada campo. «Guardar macro» la
+incorpora; «Editar macro», «Borrar macro» y «Cancelar macro» permiten gestionarla.
+
+Las macros se guardan con el documento en las versiones del proyecto y las sesiones recuperables.
+Se definen con newcommand en el preámbulo y encabezan las sugerencias al escribir.
+«Usar como mis macros predeterminadas» guarda una copia para documentos nuevos
+sin borrador ni sesión pendiente. La exportación de configuración incluye esas
+macros predeterminadas; importarla no sustituye las de un documento en curso.
+
+## Comandos que solo entiende KaTeX
+
+Un error katex-only indica que la vista previa acepta un comando que el
+preámbulo de LaTeX no define. Por ejemplo, sustituye \R por \mathbb{R}, \infin
+por \infty, \isin por \in o define una macro del documento. Los avisos sobre
+\empty y \th indican que tienen otro significado en LaTeX: usa \emptyset para
+el conjunto vacío. Al borrar una macro se actualizan la vista previa y los avisos.
+
+## Distribución y acciones de los bloques
+
+En pantallas de al menos 75 rem, el editor queda a la izquierda y la estructura
+a la derecha. El editor tiene desplazamiento propio para llegar a sus controles.
+En pantallas menores se usa una sola columna. «Datos del documento» se puede
+plegar; su resumen muestra el título, curso y fecha. Al restaurar un documento
+con título queda plegado y el foco puede volver a su resumen.
+
+Abre «Más acciones» para duplicar, copiar, eliminar, subir, bajar, mover o
+guardar una plantilla.
+Después de mover con sus botones, el desplegable del bloque destino se abre
+para conservar el foco. «Atajos de teclado» incluye la prioridad de Tab,
+Escape, navegación del menú, Retroceso y los comandos /.
+
+## Barra de escritura en el teléfono
+
+Con el teclado abierto, **Anterior** y **Siguiente** recorren los huecos del fragmento o mueven el cursor un comando, escape o grafema. **Símbolos** abre el tablero sobre la barra. Toca un símbolo para insertarlo, o **Cerrar** o Escape para recuperar la selección. **Añadir** guarda el bloque en curso. Las flechas recorren la barra con una sola parada de Tab.
+
+## Menús contextuales
+
+Toca **Menú** para elegir una acción de texto, fórmula o imagen. También puedes abrir **Menú general**, **Menú del bloque** o **Menú de contenido**. En Contenido, Menú o Mayús+F10 enfoca el primer sector. Usa flechas, Inicio, Fin e Intro. Escape vuelve un nivel. Una selección ocupa el primer argumento de un fragmento. **Ir a…** salta a otra sección. En preferencias puedes desactivar la vibración.
+
+## Seleccionar sin arrastrar
+
+Toca **Selección** y pulsa **Siguiente** para ampliar desde el cursor. En prosa puedes pasar de palabra a oración, párrafo y bloque. En una fórmula puedes alcanzar un argumento, un término, un miembro o la fórmula completa. **Anterior** recupera exactamente la selección previa. Abre **Menú** y elige **Fracción** para usarla como numerador. El cursor queda en el denominador. Volver a tocar **Selección** desactiva el modo.
+
+## Etiquetas y referencias cruzadas
+
+En un teorema, proposición, definición, ejemplo, nota, ecuación destacada o imagen, completa «Etiqueta» o pulsa «Proponer desde el título». El prefijo se muestra junto al campo. Identifica un único bloque y sigue siendo válido después de moverlo.
+
+En «Contenido», escribe `\ref{` o `\eqref{` y elige el destino con un toque, Intro o Tab. **Referir** abre la misma lista desde el menú de texto. En prosa se añade el nombre del tipo cuando hace falta. Las ecuaciones se citan con `\eqref`. Si el menú omite el número, comprueba el PDF. En «Resultado», cada error se puede seguir hasta el bloque.
+
+## Citas y bibliografía
+
+1. Abre «Referencias del documento» en «Datos del documento». Puedes empezar una ficha en «Añadir o editar una referencia» o pulsar «Añadir las referencias del curso». El botón omite los libros que ya tengan la misma clave.
+2. Escribe los «Autores», uno por línea, como `Stewart, J.`, y el «Año». Comprueba la «Clave» propuesta y completa «Título». «Edición» admite números a partir de 2. «Editorial», «Lugar» y «Enlace» son opcionales. «Texto libre» sustituye el formato de la ficha por tu propio LaTeX. APA necesita autores y año incluso con texto libre. Pulsa «Guardar referencia» o «Cancelar referencia».
+3. En «Contenido», escribe `\citep{` y elige un libro, o abre **Citar** desde el menú de texto. **Entre paréntesis** inserta `\citep` y **En la frase** inserta `\citet`. Para indicar una página usa `\citep[p.~912]{stewart1994}`. Una coma permite buscar otro libro para la misma cita.
+4. En «Estilo de citas» elige «IEEE» o «APA 7.ª edición». Al generar el documento, la bibliografía aparece al final. Activa «Incluir también las no citadas» para imprimir todas las fichas. En Overleaf, recompila para resolver las citas.
+5. «Editar referencia» permite corregir la ficha. Si el documento ya usa la clave, el campo indica por qué está bloqueado. «Eliminar referencia» indica cuántas citas quedarían rotas y pide confirmación. En «Resultado» se puede abrir el bloque o la ficha que necesita corrección.
+
+En un bloque «Bibliografía (IEEE)», abre «Más acciones» y pulsa «Convertir en referencias del documento». Cada línea conserva su LaTeX y su clave `ref1`, `ref2`… Si una clave ya está ocupada, el aviso la identifica. Se puede deshacer la conversión con «Deshacer cambio».
+
+«Guardar como referencias del curso» sustituye el catálogo que ofrece el botón de añadir. La configuración portátil traslada ese catálogo entre dispositivos. «Guardar versión» y «Exportar proyecto» conservan las referencias y el estilo del documento.
+
+### Barra del pulgar
+
+En el teléfono, Anterior y Siguiente recorren los huecos de un fragmento y después las unidades de LaTeX. El botón central muestra el modo. Toca ⌶ para activar la selección por alcance, ↔ para volver al cursor o ≡ para cerrar las sugerencias. Con la lista abierta, las dos flechas recorren las opciones. Por defecto, Mi botón deshace la última edición de Contenido. Si le asignas una acción, el botón se habilita en los contextos de esa acción.
+
+Puedes arrastrar horizontalmente en el grupo de las tres teclas para avanzar o retroceder un paso por cada 28 px. Cada toque en una flecha hace un paso. Mantener Siguiente activa la selección y la amplía una vez. La misma operación se hace tocando el modo y después Siguiente. Con el teclado, recorre la barra con flechas y activa el botón con Intro.
+
+Toca Símbolos para abrir la hoja y elegir una categoría. También puedes arrastrar desde Símbolos hasta una categoría y levantar el dedo para abrirla. A menos de 360 px se muestran los iconos con sus nombres accesibles.
+
+### Tipo y título en la pantalla táctil
+
+Toca el chip con el tipo actual junto a Nuevo bloque para elegir entre siete tipos. También puedes arrastrar desde el chip hacia una opción y soltar. Más… abre el selector completo. Con teclado, usa Intro en el chip y las flechas e Intro en el anillo. Cambiar el tipo desde el chip conserva el contenido en edición.
+
+Toca ＋ Título para escribir el título opcional, o ＋ Pie en una figura. La acción Título del menú de texto abre el mismo campo. En el escritorio el selector y el campo de título permanecen visibles.
+
+### Acciones de una tarjeta
+
+En el teléfono, ✎ edita, ↳ prepara un hijo en un contenedor y ⋯ abre las acciones de la tarjeta. También puedes mantener pulsada la tarjeta y arrastrar hasta una de las ocho posiciones. Con teclado, enfoca ⋯ y pulsa Intro. Subir está arriba y Bajar abajo. Las acciones deshabilitadas conservan su sitio. Pegar dentro incorpora una copia de la bandeja como hijo del bloque. Ver todo despliega las vistas de más de tres líneas. La ayuda se abre con Cómo funciona la estructura.
+
+### Paneles del teléfono
+
+Usa Escribir para editar, Estructura para ordenar los bloques, Documento para los datos y el código, y Más para las versiones y preferencias. La barra superior permanece visible. Con el foco en sus pestañas, usa las flechas, Inicio o Fin. Cada panel recuerda dónde estabas al desplazarte. En Estructura, Documento y Más, ✥ abre el menú general. Ir a… cambia a la pestaña de destino. El botón Editar de una tarjeta vuelve a Escribir.
+
+La vista matemática empieza plegada en el teléfono. Toca su resumen para abrirla. La aplicación recuerda la elección en ese navegador. Al salir de Documento, los datos se pliegan si ya tienen título.
+
+La configuración portátil v2 acepta también archivos v1. Al importar se comprueba cada parte antes de confirmar. Las partes ausentes conservan los ajustes del dispositivo y la aplicación avisa si omite una parte desconocida.
+
+### Diseñar un menú personal
+
+Abre **Más → Preferencias de escritura → Mis menús**. Elige un contexto como Fórmula para sustituir su anillo, o **Nuevo anillo** para crear uno independiente. Ponle nombre y toca una de las ocho posiciones del dibujo. Con teclado, llega a la posición con Tab e Intro, y recorre las pestañas de la hoja con las flechas.
+
+Puedes insertar un fragmento con huecos, buscar un símbolo, escoger una acción o crear un submenú. En **Submenú** también puedes enlazar otro anillo. El aviso de vista previa permite guardar comandos propios que KaTeX desconoce. Guarda la posición y elige un anillo o acción en **Asignar Mi botón**. Para cambiar el orden, abre la posición y usa **Intercambiar con…**. Con un puntero también puedes arrastrarla sobre su destino. **Restaurar esta posición** recupera el sector original. **Restaurar el menú** devuelve el contexto a su disposición inicial.
+
+Los anillos se incluyen en **Exportar configuración**. Las posiciones se conservan al utilizar un anillo o trasladarlo a otro navegador.
+
+### Recorrer una lista al escribir
+
+Al escribir `/`, `\`, `\ref{` o `\citep{`, desliza el dedo por las opciones. También puedes usar ◀ y ▶, o las flechas del teclado. Tocar una opción o pulsar Intro la acepta. El centro ≡ o Escape cierra la lista y deja el cursor en Contenido. En **Estructura → ⋯ → Mover…**, recorre los destinos con el dedo o las flechas, elige uno y pulsa **Mover bloque**.
+
+### Consultar un fallo en el teléfono
+
+El primer error de la sesión muestra **Copiar informe**. También puedes abrir **Más → Informe de errores** para leer o copiar los veinte errores más recientes de este navegador. Cada entrada indica la fecha, el panel o menú abierto, el mensaje y hasta tres líneas de la pila. **Borrar informe** elimina las entradas de este navegador. El informe solo sale del dispositivo si lo copias y decides compartirlo.
+
+## Espacio de trabajo
+
+Empieza a escribir en «Contenido». En el portátil, **Escribir** reúne el editor y la estructura. **Documento**
+lleva al título de la nota. Bajo **Más** están las preferencias, el informe de
+errores y los atajos. **Exportar** genera el código con los datos y bloques
+guardados. Allí puedes copiarlo, descargarlo, pulsar **Regenerar** o bajar a
+**Versiones**. Cada vista conserva su desplazamiento y puedes volver a la
+edición en curso. Con el foco en una pestaña, las flechas recorren las pestañas. Pulsa Intro para abrir la vista.
+Abre «Etiqueta del bloque» para editar una etiqueta o proponerla desde el título.
+«Concentración» amplía el editor y oculta controles secundarios. En pantallas
+amplias, alterna el panel «Estructura» y abre «Revisión» para ver las fórmulas
+del bloque con KaTeX. En ventanas estrechas, las pestañas se adaptan al ancho
+aunque se use un ratón.
+
+Desde 64 rem con puntero fino, la barra superior fija reúne el título, el
+estado de la sesión y los controles del espacio de trabajo. El editor y la
+estructura se desplazan por separado. Los avisos de las acciones aparecen abajo
+a la derecha durante unos cuatro segundos.
+
+En ese espacio de trabajo, el destino aparece junto a «Nuevo bloque». «Tipo de
+bloque» y «Título del bloque (opcional)» comparten una fila. Al elegir una lista,
+abre «Ayuda de la lista» junto a «Contenido» para consultar la sangría y el
+ejemplo. La fila de acciones se queda visible al desplazarte por el editor y
+muestra el atajo junto a «Añadir bloque» o «Guardar cambios». Debajo está
+«Símbolos matemáticos». En «Concentración», «Contenido» ocupa al menos el 60 %
+de la altura de la ventana.
+
+En «Estructura actual», el selector «Vista» alterna entre «Esquema» y «Tarjetas».
+«Buscar bloques» filtra por tipo, título y contenido. Cada resultado conserva
+la ruta de sus antecesores. Usa los controles de plegado de las ramas para
+ocultar o mostrar sus descendientes. La vista y los estados de las ramas se
+recuerdan en este navegador.
+
+Desde 64 rem con puntero fino, la vista de tarjeta ocupa hasta dos líneas
+de contenido. «Ver todo» aparece a su lado cuando hay más contenido. Haz
+clic en el cuerpo de la tarjeta para editar o llega a «Editar» con Tab. La
+fila con «Editar», «Añadir dentro» y «Más acciones» aparece al pasar el
+puntero o al enfocar un control de la tarjeta. Al editar, guardar o
+cancelar, la estructura desplaza su propia columna para mostrar la tarjeta.
+
+En «Símbolos matemáticos», activa «Editar favoritos» y elige los símbolos que
+quieras guardar. Desactívalo para volver a insertar símbolos y abre **Favoritos**
+para acceder a los seleccionados. **Recientes** muestra las últimas inserciones.
+
+El estado del editor indica cuándo hay cambios pendientes, cuándo la sesión
+se guardó en este navegador y cuándo falló el guardado. «Guardar versión»
+crea una instantánea explícita. El proyecto JSON conserva el documento
+editable y el archivo .tex sirve para compilar.

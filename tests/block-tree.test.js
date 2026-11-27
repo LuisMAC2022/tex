@@ -24,7 +24,7 @@ const shape = (blocks) => [...flattenBlocks(blocks)].map((entry) => `${pathToKey
 
 test("la ausencia de children equivale a una lista vacía y el estado plano sigue siendo válido", () => {
   const blocks = normalizeBlocks([{ type: "text", content: "Uno" }, { type: "note", title: "T", content: "Dos" }]);
-  assert.deepEqual(mirror(blocks), [
+  assert.deepEqual(mirror(blocks).map(({id, ...block}) => block), [
     { type: "text", title: "", content: "Uno", children: [] },
     { type: "note", title: "T", content: "Dos", children: [] },
   ]);
@@ -32,7 +32,7 @@ test("la ausencia de children equivale a una lista vacía y el estado plano sigu
 
 test("solo los tipos declarados como contenedores admiten hijos", () => {
   for (const id of ["text", "definition", "theorem", "proposition", "example", "note", "itemize", "enumerate"]) assert.ok(acceptsChildren(id), id);
-  for (const id of ["equation", "math-inline", "bibliography"]) assert.ok(!acceptsChildren(id), id);
+  for (const id of ["equation", "math-inline", "bibliography", "image"]) assert.ok(!acceptsChildren(id), id);
   // Un tipo desconocido cae en "text", igual que en el generador.
   assert.ok(acceptsChildren("inexistente"));
 });
@@ -106,7 +106,7 @@ test("mover se limita a los hermanos y nunca cambia de nivel", () => {
 
 test("una operación inválida devuelve null y deja el árbol intacto", () => {
   const original = tree();
-  const copia = tree();
+  const copia = mirror(original);
   for (const invalida of [
     () => blockAtPath(original, [9]), () => blockAtPath(original, []), () => blockAtPath(original, [0, "x"]),
     () => insertBlock(original, [9], node("text", "x")), () => insertBlock(original, [], null),
@@ -185,7 +185,7 @@ test("el documento combina matemática mixta y anidación en un mismo bloque", (
 
 test("un borrador plano de la versión 1 se migra sin reescribirlo a mano", () => {
   const draft = normalizeDraft({ version: 1, metadata: { title: "Notas", author: "Ana" }, blocks: [{ type: "text", content: "Uno" }, { type: "note", title: "N", content: "Dos" }] });
-  assert.equal(draft.version, 1, "se informa la versión leída para poder anunciar la migración");
+  assert.equal(draft.migratedFrom, 1, "se informa la versión leída para poder anunciar la migración");
   assert.deepEqual(mirror(draft.metadata), { title: "Notas", author: "Ana" });
   assert.deepEqual(shape(draft.blocks), ["0:Uno", "1:Dos"]);
   assert.deepEqual(mirror(draft.blocks[0].children), []);
@@ -295,4 +295,151 @@ test("guardar y restaurar después de duplicar mantiene ambas ramas", () => {
   assert.equal(draft.version, DRAFT_VERSION, "duplicar no cambia el esquema del borrador");
   assert.deepEqual(shape(draft.blocks), shape(blocks));
   assert.equal(countBlocks(draft.blocks), 7);
+});
+
+/* --- Mover una rama a otro padre --- */
+
+const { moveBlockTo } = await loadTexNotes(["block-types.js", "block-tree.js"]);
+
+test("mover a otro padre rechaza rutas inexistentes, ciclos y destinos sin hijos", () => {
+  const original = [tree()[0], node("equation", "x=1")];
+  const snapshot = mirror(original);
+  for (const source of [[], [9], [0, 8], [-1], [0.5], Array(1), "0", null]) {
+    assert.equal(moveBlockTo(original, source, []), null);
+  }
+  for (const destination of [[8], [0, 5], [0], [0, 0], [0, 0, 0], [1], [-1], Array(1), "", null]) {
+    assert.equal(moveBlockTo(original, [0], destination), null);
+  }
+  assert.deepEqual(mirror(original), snapshot);
+});
+
+test("mover una rama ajusta la ruta profunda de un destino desplazado y conserva sus hijos", () => {
+  const original = [
+    tree()[0], node("text", "Entre medias"),
+    node("text", "Destino", [node("note", "Sección", [node("text", "Interior", [node("text", "Primero")])])]),
+  ];
+  const snapshot = mirror(original);
+  const source = [0];
+  const destination = [2, 0, 0];
+  const result = moveBlockTo(original, source, destination);
+  assert.deepEqual(mirror(result.path), [1, 0, 0, 1]);
+  const moved = blockAtPath(result.blocks, result.path);
+  assert.deepEqual(mirror(moved), snapshot[0]);
+  assert.notEqual(moved.children, original[0].children);
+  assert.equal(blockAtPath(result.blocks, [1, 0, 0, 0]).content, "Primero");
+  assert.deepEqual(mirror(original), snapshot);
+  assert.deepEqual(source, [0]);
+  assert.deepEqual(destination, [2, 0, 0]);
+});
+
+test("al mover entre ramas solo se ajusta el índice de un hermano del origen", () => {
+  const original = [
+    node("text", "Padre", [node("text", "Mover"), node("text", "Hermano", [node("text", "Destino local")])]),
+    node("text", "Otro padre", [node("text", "Primero"), node("text", "Destino externo")]),
+  ];
+  const local = moveBlockTo(original, [0, 0], [0, 1, 0]);
+  assert.deepEqual(mirror(local.path), [0, 0, 0, 0]);
+  assert.equal(blockAtPath(local.blocks, [0, 0, 0]).content, "Destino local");
+  const external = moveBlockTo(original, [0, 0], [1, 1]);
+  assert.deepEqual(mirror(external.path), [1, 1, 0]);
+  assert.equal(blockAtPath(external.blocks, [1, 1]).content, "Destino externo");
+});
+
+test("mover a la raíz elige por ruta entre hermanos idénticos", () => {
+  const original = [node("text", "Padre", [node("text", "Igual"), node("text", "Entre medias"), node("text", "Igual")])];
+  const result = moveBlockTo(original, [0, 2], [], 0);
+  assert.deepEqual(mirror(result.path), [0]);
+  assert.deepEqual(shape(result.blocks), ["0:Igual", "1:Padre", "1.0:Igual", "1.1:Entre medias"]);
+});
+
+test("mover al mismo padre reordena entre hermanos como subir y bajar", () => {
+  const original = [node("text", "Padre", [node("text", "Uno"), node("text", "Dos")])];
+  const first = moveBlockTo(original, [0, 1], [0], 0);
+  const last = moveBlockTo(original, [0, 0], [0]);
+  assert.deepEqual(mirror(first), mirror(moveBlock(original, [0, 1], -1)));
+  assert.deepEqual(mirror(last), mirror(moveBlock(original, [0, 0], 1)));
+  assert.equal(moveBlock(original, [0, 0], -1), null);
+  assert.equal(moveBlock(original, [0, 1], 1), null);
+});
+
+test("mover un bloque a un teorema emite su contenido literal dentro del entorno", () => {
+  const original = [node("text", "Se cumple $x_1 = 0$."), node("theorem", "Sea $x_1$ fijo.")];
+  const result = moveBlockTo(original, [0], [1]);
+  assert.equal(blockToLatex(result.blocks[0]), "\\begin{theorem}\nSea $x_1$ fijo.\n\nSe cumple $x_1 = 0$.\n\\end{theorem}");
+});
+
+test("las opciones de imagen sobreviven a duplicar, copiar, pegar y restaurar la versión 2", () => {
+  const rawImage = { type: "image", content: "figura.png", options: { width: "0.60", height: 3, angle: 90, label: "Gráfica" } };
+  const options = { width: 0.6, height: 3, angle: 90, align: "center", placement: "htbp" };
+  const original = normalizeBlocks([node("theorem", "Padre", [rawImage])]);
+  const duplicated = duplicateBlock(original, [0, 0]);
+  const copied = cloneBlock(blockAtPath(duplicated.blocks, [0, 1]));
+  const pasted = insertBlock(duplicated.blocks, [], copied);
+  const restored = normalizeDraft(JSON.parse(JSON.stringify({ version: 2, metadata: {}, blocks: pasted.blocks })));
+  assert.equal(restored.migratedFrom, 2);
+  assert.equal(blockAtPath(restored.blocks, [0, 0]).label, "fig:grafica");
+  for (const path of [[0, 1], [1]]) assert.equal(blockAtPath(restored.blocks, path).label, undefined);
+  for (const path of [[0, 0], [0, 1], [1]]) assert.deepEqual(mirror(blockAtPath(restored.blocks, path).options), options);
+  assert.notEqual(blockAtPath(duplicated.blocks, [0, 0]).options, blockAtPath(duplicated.blocks, [0, 1]).options);
+  assert.notEqual(blockAtPath(duplicated.blocks, [0, 1]).options, copied.options);
+  assert.notEqual(blockAtPath(pasted.blocks, [1]).options, copied.options);
+});
+
+test("editar normaliza las opciones de imagen y las descarta al cambiar a otro tipo", () => {
+  const image = [{ type: "image", content: "plano.jpg", children: [] }];
+  assert.equal(Object.hasOwn(normalizeBlocks(image)[0], "options"), false);
+  const edited = updateBlock(image, [0], { options: { width: 0.4, angle: -90 } });
+  assert.equal(edited[0].options.width, 0.4);
+  assert.equal(updateBlock(edited, [0], { title: "Plano" })[0].options.angle, -90);
+  assert.equal(Object.hasOwn(updateBlock(edited, [0], { type: "text", options: { width: 0.5 } })[0], "options"), false);
+  assert.equal(Object.hasOwn(normalizeBlocks([{ type: "text", content: "Prosa", options: { width: 0.5 } }])[0], "options"), false);
+  assert.equal(Object.hasOwn(cloneBlock({ type: "text", content: "Prosa", options: { width: 0.5 } }), "options"), false);
+});
+
+test("restaurar listas antiguas de ambas versiones mantiene los prefijos literales y la lista plana", () => {
+  const content = "- Guion literal\r\n  1. Número literal\r\n\t* Asterisco literal";
+  const oldList = { type: "itemize", content };
+  const oldLatex = "\\begin{itemize}\n\\item - Guion literal\n\\item 1. Número literal\n\\item * Asterisco literal\n\\end{itemize}";
+  for (const version of [1, 2]) {
+    const draft = normalizeDraft({ version, metadata: {}, blocks: [oldList] });
+    assert.equal(draft.blocks[0].content, content);
+    assert.equal(blockToLatex(draft.blocks[0]), oldLatex);
+    assert.ok(generateLatex(draft).includes(oldLatex));
+    const unchanged = updateBlock(draft.blocks, [0], { title: "Otro título", content: content.replaceAll("\r\n", "\n") });
+    assert.equal(blockToLatex(unchanged[0]), oldLatex);
+    const changed = updateBlock(unchanged, [0], { content: "- Primer elemento\n  1. Segundo nivel" });
+    assert.equal(blockToLatex(changed[0]), "\\begin{itemize}\n\\item Primer elemento\n  \\begin{enumerate}\n  \\item Segundo nivel\n  \\end{enumerate}\n\\end{itemize}");
+    assert.equal(Object.hasOwn(updateBlock(draft.blocks, [0], { type: "text" })[0], "listFormat"), false);
+  }
+});
+
+test("listas nuevas y antiguas conservan su propio formato al copiar, duplicar, mover, guardar y restaurar", () => {
+  const content = "- Padre\n  1. Hijo";
+  const raw = { type: "itemize", content };
+  const old = normalizeDraft({ version: 2, metadata: {}, blocks: [raw, { type: "text", content: "Destino" }] });
+  const added = insertBlock(old.blocks, [], raw);
+  const duplicated = duplicateBlock(added.blocks, [0]);
+  const pasted = insertBlock(duplicated.blocks, [], cloneBlock(duplicated.blocks[0]));
+  const moved = moveBlockTo(pasted.blocks, [4], [2]);
+  const snapshot = JSON.parse(JSON.stringify({ version: DRAFT_VERSION, metadata: {}, blocks: moved.blocks }));
+  const restored = normalizeDraft(snapshot);
+  assert.equal(restored.version, DRAFT_VERSION);
+  for (const path of [[0], [1], [2, 0]]) {
+    assert.match(blockToLatex(blockAtPath(restored.blocks, path)), /\\item - Padre\n\\item 1\. Hijo/);
+  }
+  const newLatex = "\\begin{itemize}\n\\item Padre\n  \\begin{enumerate}\n  \\item Hijo\n  \\end{enumerate}\n\\end{itemize}";
+  assert.equal(blockToLatex(restored.blocks[3]), newLatex);
+  assert.equal(blockToLatex(raw), newLatex, "un estado directo usa la sintaxis anidada por defecto");
+});
+
+test("una sesión vacía no borra el autoguardado y el bloque en curso cuenta como trabajo", async () => {
+ const {sessionHasContent}=await loadTexNotes();
+ for(const session of [null,{}, {metadata:{title:'',course:'Cálculo III'},blocks:[],editor:{type:'text',title:'',content:''}}, {editor:{content:23,title:{}}}]) assert.equal(sessionHasContent(session),false);
+ for(const session of [{blocks:[{content:'x'}]},{metadata:{title:'Notas de clase'}},{editor:{title:'En curso'}},{editor:{content:'$x'}},{editor:{image:{content:'grafica.png'}}}]) assert.equal(sessionHasContent(session),true);
+});
+test("la fecha inicial es la local del día, con ceros, no la UTC", async () => {
+ const {localDateValue}=await loadTexNotes();
+ assert.equal(localDateValue(new Date(2026, 0, 5, 23, 59)),'2026-01-05');
+ assert.equal(localDateValue(new Date(2026, 10, 23, 0, 0)),'2026-11-23');
+ assert.match(localDateValue(),/^\d{4}-\d{2}-\d{2}$/);
 });

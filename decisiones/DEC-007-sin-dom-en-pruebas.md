@@ -1,6 +1,7 @@
 ---
 type: decision
-status: accepted
+status: superseded
+superseded-by: DEC-029
 date: 2026-09-14
 project: tex
 tags: [pruebas, dependencias, dom]

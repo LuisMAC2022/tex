@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile, access } from "node:fs/promises";
+import { readFile, readdir, access } from "node:fs/promises";
 import { loadTexNotes } from "./load-app.mjs";
 
 const { BLOCK_TYPES, acceptsChildren, blockToLatex } = await loadTexNotes();
@@ -13,12 +13,14 @@ assert.match(html, /<main id="contenido-principal" tabindex="-1">/, "El destino 
 // Restricción file://: scripts clásicos en orden de dependencia, nunca módulos ES.
 assert.doesNotMatch(html, /<script[^>]+type="module"/, "los scripts no deben ser módulos ES");
 const scripts = [...html.matchAll(/<script src="(assets\/[^"]+)"><\/script>/g)].map((match) => match[1]);
-assert.deepEqual(scripts, ["assets/vendor/katex/katex.min.js", "assets/js/block-types.js", "assets/js/block-tree.js", "assets/js/latex-generator.js", "assets/js/file-download.js", "assets/js/math-symbols.js", "assets/js/text-insertion.js", "assets/js/math-preview.js", "assets/js/app.js"], "faltan scripts o el orden de carga es incorrecto");
+assert.deepEqual(scripts, ["assets/js/clipboard.js", "assets/js/error-report.js", "assets/js/local-errors.js", "assets/vendor/katex/katex.min.js", "assets/js/block-types.js", "assets/js/block-tree.js", "assets/js/latex-generator.js", "assets/js/file-download.js", "assets/js/math-symbols.js", "assets/js/text-insertion.js", "assets/js/math-preview.js", "assets/js/shortcuts.js", "assets/js/actions.js", "assets/js/image-options.js", "assets/js/list-outline.js", "assets/js/cross-references.js", "assets/js/references.js", "assets/js/content-check.js", "assets/js/editing-assist.js", "assets/js/completion.js", "assets/js/templates.js", "assets/js/macros.js", "assets/js/config-parts.js", "assets/js/menus.js", "assets/js/radial.js", "assets/js/versions.js", "assets/js/version-storage.js", "assets/js/selection-scope.js", "assets/js/menu-config.js", "assets/js/radial-controller.js", "assets/js/block-actions.js", "assets/js/action-bindings.js", "assets/js/thumb-bar.js", "assets/js/desktop-cards.js", "assets/js/block-form.js", "assets/js/structure-view.js", "assets/js/mobile-panels.js", "assets/js/portable-config.js", "assets/js/alias-editor.js", "assets/js/menu-editor.js", "assets/js/suggestion-sources.js", "assets/js/suggestion-list.js", "assets/js/move-dialog.js", "assets/js/app.js", "assets/js/desktop-frame.js", "assets/js/desktop-editor.js"], "faltan scripts o el orden de carga es incorrecto");
 assert.match(html, /<link rel="stylesheet" href="assets\/vendor\/katex\/katex\.min\.css">/, "Falta la hoja vendorizada de KaTeX");
 assert.match(html, /<input id="course"[^>]+value="Cálculo III \(1352\)">/, "El curso debe aparecer prellenado desde el temario");
 assert.match(html, /<input id="teacher"[^>]+value="Guzmán Fuentes Ricardo">/, "El profesor debe aparecer prellenado desde el temario");
-assert.match(html, /<input id="date"[^>]+type="date"[^>]+value="2026-09-13">/, "La fecha acordada debe aparecer prellenada");
-assert.doesNotMatch(html, /(?:src|href)="\/(?!\/)/, "Las rutas internas no deben partir de la raíz");
+assert.match(html, /<input id="date"[^>]+type="date">/, "La fecha no debe ir fija en el HTML: app.js escribe la de hoy");
+for (const page of [html, ...await Promise.all((await readdir("diagnostico")).filter(name => name.endsWith(".html")).map(name => readFile("diagnostico/" + name, "utf8")))]) {
+  assert.doesNotMatch(page, /(?:src|href)\s*=\s*["']\/(?!\/)|url\(\s*["']?\/(?!\/)/i, "Las rutas internas no deben partir de la raíz");
+}
 const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]));
 assert(ids.has("math-preview") && ids.has("math-preview-status"), "Falta la vista previa matemática o su estado");
 assert.doesNotMatch(html, /id="math-preview"[^>]*aria-live/, "La vista matemática no debe anunciar cada renderizado");
@@ -54,7 +56,7 @@ for (const [id, texto] of [["block-help", help[1]], ["symbol-board-intro", html.
 assert(ids.has("paste-block"), "Falta el botón de pegar el bloque de la bandeja");
 assert(ids.has("tray-summary"), "Falta el resumen visible de la bandeja de copia");
 assert.match(html, /<button id="paste-block"[^>]*\bhidden\b[^>]*>Pegar bloque<\/button>/, "«Pegar bloque» debe existir oculto hasta que haya algo en la bandeja");
-const estructura = html.match(/<h3>Estructura actual<\/h3>\s*<p>([\s\S]*?)<\/p>/);
+const estructura = html.match(/<h3>Estructura actual<\/h3>\s*<details class="structure-help"><summary>Cómo funciona la estructura<\/summary><p>([\s\S]*?)<\/p>/);
 assert(estructura, "Falta la explicación de la estructura actual");
 for (const accion of ["Duplicar", "Copiar bloque", "Copiar texto", "Pegar bloque"]) {
   assert(estructura[1].includes(accion), `La explicación de la estructura debe distinguir «${accion}»`);
@@ -81,7 +83,7 @@ for (const type of BLOCK_TYPES) {
 }
 
 // Tablero de símbolos: plegable, buscable y con un contenedor propio para los grupos.
-assert.match(html, /<details id="symbol-details" open>\s*<summary><h3 id="simbolos-heading">Símbolos matemáticos<\/h3><\/summary>/, "El muelle debe abrir por defecto y tener encabezado");
+assert.match(html, /<details id="symbol-details">\s*<summary><h3 id="simbolos-heading">Símbolos matemáticos<\/h3><\/summary>/, "El tablero debe empezar plegado y tener encabezado");
 assert.match(html, /<input id="symbol-search"[^>]+type="search"[^>]+aria-describedby="symbol-search-help">/, "Falta la búsqueda de símbolos descrita");
 assert.match(html, /<p id="symbol-results" class="status" role="status">/, "Falta la región de resultados de la búsqueda");
 assert(ids.has("symbol-groups"), "Falta el contenedor de grupos de símbolos");
@@ -108,3 +110,15 @@ const faltantes = [...nombres(claro)].filter((token) => !nombres(oscuro).has(tok
 assert.deepEqual(faltantes, [], `El bloque oscuro no redefine: ${faltantes.join(", ")}`);
 
 console.log("HTML estructural, tipos de bloque, anidamiento, copia de bloques, tablero de símbolos y rutas internas: correctos");
+
+const thumb = html.match(/<div id="thumb-bar" role="toolbar" aria-label="Acciones de escritura">([\s\S]*?)<\/fieldset>/);
+assert.ok(thumb, "Falta la barra de acciones de escritura");
+const thumbButtons = [...thumb[1].matchAll(/<button ([^>]+)>/g)].map(m => m[1]);
+assert.deepEqual(thumbButtons.map(b => /id="thumb-([^"]+)"/.exec(b)?.[1]), ["menu", "prev", "selection", "next", "symbols", "personal", "add"]);
+assert.ok(thumbButtons.every(b => b.includes('type="button"') && b.includes('aria-label=')), "Cada acción de la barra tiene nombre y no envía el formulario");
+
+const { actionById } = await loadTexNotes(["shortcuts.js", "actions.js"]);
+for (const [, id] of html.matchAll(/data-action-id="([^"]+)"/g)) assert.ok(actionById(id), "Falta la acción " + id);
+const controller = await readFile("assets/js/radial-controller.js", "utf8");
+assert.match(controller, /listen\(blockContent, "keydown", e => \{\s*if \(!matchShortcut\(e, "content-widget"\)/);
+assert.match(thumb[1], /id="thumb-selection"[^>]*aria-pressed="false"/, "Selección expone su modo inicial");

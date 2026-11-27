@@ -1,0 +1,34 @@
+name: Pruebas
+
+# Toda rama y toda PR pasan la suite completa, interfaz incluida (DEC-029).
+# pages.yml sigue probando main antes de publicar.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pruebas-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  suite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Fuera de package.json: el proyecto no declara dependencias (INV-006).
+      - name: Instalar Playwright y Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: npm test con las pruebas de interfaz obligatorias
+        run: npm test
+        env:
+          TEX_UI_TESTS: required
+      - run: npm run check:js

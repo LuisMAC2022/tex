@@ -1,6 +1,7 @@
 ---
 type: decision
-status: accepted
+status: superseded
+superseded-by: DEC-021
 date: 2026-09-14
 project: tex
 tags: [alcance, latex, overleaf]
