@@ -29,6 +29,7 @@ test("una promesa rechazada se registra en la misma sesión y conserva un único
     assert.equal((await err).message,message); assert.deepEqual(errores.splice(0),[message]);
   }
   await p.locator("#error-notice").waitFor(); assert.equal(await p.locator("#error-notice:visible").count(),1);
+  await p.getByRole("tab", { name: "Documento", exact: true }).click();
   await p.locator("#error-report > summary").click();
   assert.ok((await p.locator("#error-report-text").inputValue()).includes("Segundo rechazo"));
 });

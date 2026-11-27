@@ -5,6 +5,7 @@ import { cerrar, omitir, sesionDePrueba } from "./navegador.mjs";
 after(cerrar);
 test("importar una parte conserva los alias y avisa de una parte desconocida", { skip: omitir }, async t => {
   const { pagina: p } = await sesionDePrueba(t);
+  await p.getByRole("tab", { name: "Documento", exact: true }).click();
   await p.click("#writing-preferences > summary");
   const total = await p.locator("#alias-list tr").count();
   p.once("dialog", dlg => dlg.accept());

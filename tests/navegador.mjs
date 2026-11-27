@@ -78,8 +78,8 @@ export async function arrastrar(sesion, puntos) {
 }
 
 export async function codigo(pagina) {
-  await irAlPanel(pagina, "Documento");
-  await pagina.getByRole("button", { name: "Generar documento" }).click();
+  await pagina.getByRole("tab", { name: "Exportar", exact: true }).click();
+  await pagina.getByRole("button", { name: "Regenerar" }).click();
   return pagina.locator("#latex-output").inputValue();
 }
 

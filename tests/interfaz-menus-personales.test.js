@@ -4,8 +4,8 @@ import { readFile } from "node:fs/promises";
 import { cerrar, omitir, sesionDePrueba, irAlPanel } from "./navegador.mjs";
 after(cerrar);
 
-async function preferencias(p) {
-  await irAlPanel(p, "Más");
+async function preferencias(p, vista = "Más") {
+  await irAlPanel(p, vista);
   await p.locator("#writing-preferences > summary").click();
   await p.locator("#personal-menus > summary").click();
 }
@@ -51,7 +51,7 @@ test("un anillo de fórmula, Mi botón y el intercambio conservan las posiciones
 });
 test("el editor intercambia posiciones sin arrastrar y permite restaurar el menú", {skip:omitir}, async t => {
   const { pagina:p } = await sesionDePrueba(t);
-  await preferencias(p); await p.selectOption("#menu-choice","new");
+  await preferencias(p, "Documento"); await p.selectOption("#menu-choice","new");
   await p.fill("#menu-name","Auxiliar"); await sector(p,2);
   await p.getByRole("tab",{name:"Acción",exact:true}).click();
   await p.selectOption("#slice-action","edit.redo"); await p.click("#slice-save");

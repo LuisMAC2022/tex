@@ -40,8 +40,10 @@ test("las sugerencias de referencias y citas insertan los destinos del documento
   await p.fill("#block-label", "ec:uno");
   await p.fill("#block-content", "1");
   await p.click("#add-block");
+  await p.getByRole("tab", { name: "Documento", exact: true }).click();
   await p.click("#document-references > summary");
   await p.click("#add-course-references");
+  await p.getByRole("tab", { name: "Escribir", exact: true }).click();
   await p.selectOption("#block-type", "text");
   const campo = p.locator("#block-content");
   for (const [comando, destino, esperado] of [["\\ref{", "ec:uno", "\\eqref{ec:uno}"], ["\\citep{", "stewart1994", "\\citep{stewart1994}"]]) {

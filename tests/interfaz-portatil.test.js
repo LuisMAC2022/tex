@@ -10,7 +10,9 @@ test("medidas de referencia del portátil con veinticinco párrafos", { skip: om
     await pagina.evaluate(() => document.fonts.ready);
     const campoInicial = await pagina.locator("#block-content").evaluate(campo => campo.getBoundingClientRect().top);
     assert.ok(campoInicial <= 160, `Contenido empieza en ${campoInicial} px al cargar`);
+    await pagina.getByRole("tab", { name: "Documento", exact: true }).click();
     await pagina.fill("#note-title", "Derivadas parciales");
+    await pagina.getByRole("tab", { name: "Escribir", exact: true }).click();
     await pagina.selectOption("#block-type", "text");
     for (let n = 1; n <= 25; n++) {
       await pagina.fill("#block-content", `Párrafo ${n} con $x^${n}$.`);
@@ -114,7 +116,9 @@ test("la estructura queda a la izquierda y el editor conserva su ancho máximo",
 test("Revisión y Contenido se ven juntos con veinticinco bloques", { skip: omitir }, async () => {
   const { pagina, contexto } = await abrir();
   try {
+    await pagina.getByRole("tab", { name: "Documento", exact: true }).click();
     await pagina.fill("#note-title", "Derivadas parciales");
+    await pagina.getByRole("tab", { name: "Escribir", exact: true }).click();
     await pagina.selectOption("#block-type", "text");
     for (let n = 1; n <= 25; n++) {
       await pagina.fill("#block-content", `Párrafo ${n} con $x^${n}$.`);

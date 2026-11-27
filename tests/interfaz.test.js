@@ -48,10 +48,13 @@ test("la página abre sin errores aunque el navegador bloquee el almacenamiento 
 
 test("añadir un bloque y generar deja su contenido literal en el código LaTeX", opciones, async () => {
   const { pagina, contexto, errores } = await abrir();
+  await pagina.getByRole("tab", { name: "Documento", exact: true }).click();
   await pagina.fill("#note-title", "Nota de prueba");
+  await pagina.getByRole("tab", { name: "Escribir", exact: true }).click();
   await pagina.fill("#block-content", String.raw`Sea $f\colon \mathbb{R}\to\mathbb{R}$ continua.`);
   await pagina.getByRole("button", { name: "Añadir bloque" }).click();
-  await pagina.getByRole("button", { name: "Generar documento" }).click();
+  await pagina.getByRole("tab", { name: "Exportar", exact: true }).click();
+  await pagina.getByRole("button", { name: "Regenerar" }).click();
   const codigo = await pagina.inputValue("#latex-output");
   assert.match(codigo, /\\begin\{document\}/);
   assert.ok(codigo.includes(String.raw`Sea $f\colon \mathbb{R}\to\mathbb{R}$ continua.`));

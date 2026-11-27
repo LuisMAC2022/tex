@@ -7,7 +7,9 @@ const opciones = { skip: omitir };
 
 test("Añadir bloque y Ctrl+Intro conservan el orden, el LaTeX y el foco de captura", opciones, async t => {
   const { pagina } = await sesionDePrueba(t);
+  await pagina.getByRole("tab", { name: "Documento", exact: true }).click();
   await pagina.fill("#note-title", "Notas");
+  await pagina.getByRole("tab", { name: "Escribir", exact: true }).click();
   await pagina.fill("#block-content", "Primer párrafo.");
   await pagina.click("#add-block");
   assert.equal(await foco(pagina), "block-content");
@@ -19,7 +21,9 @@ test("Añadir bloque y Ctrl+Intro conservan el orden, el LaTeX y el foco de capt
 
 test("editar, cancelar y guardar respetan el texto del bloque original", opciones, async t => {
   const { pagina } = await sesionDePrueba(t);
+  await pagina.getByRole("tab", { name: "Documento", exact: true }).click();
   await pagina.fill("#note-title", "Ediciones");
+  await pagina.getByRole("tab", { name: "Escribir", exact: true }).click();
   await pagina.fill("#block-content", "Original");
   await pagina.click("#add-block");
   const editar = pagina.getByRole("button", { name: /^Editar 1 / });
@@ -38,7 +42,9 @@ test("editar, cancelar y guardar respetan el texto del bloque original", opcione
 
 test("los cambios de tipo muestran las ayudas y los campos de figura llegan al documento", opciones, async t => {
   const { pagina } = await sesionDePrueba(t);
+  await pagina.getByRole("tab", { name: "Documento", exact: true }).click();
   await pagina.fill("#note-title", "Figuras");
+  await pagina.getByRole("tab", { name: "Escribir", exact: true }).click();
   await pagina.selectOption("#block-type", "proof");
   assert.ok(await pagina.locator("#proof-help").isVisible());
   await pagina.selectOption("#block-type", "image");
