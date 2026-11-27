@@ -470,3 +470,55 @@ Al recargar con la sesión pendiente, Contenido empieza a 149 px. Se recuperaron
 Pasaron `TEX_UI_TESTS=required npm test` con 319 pruebas y ninguna omitida, la comprobación estructural, `npm run check:js` y `npm run inventario`. Se completaron las cuatro compilaciones de la suite con pdfLaTeX al preparar su formato, el paquete de español y las fuentes en el entorno de pruebas. Las pruebas de interfaz existentes conservan sus aserciones y se amplió la prueba de portátil. El inventario regenerado coincide con el anterior porque la prueba conserva su nombre.
 
 Quedan pendientes las comprobaciones en dispositivos físicos, con lectores de pantalla y con Firefox y Safari.
+
+## Paquete B — orden estable de las columnas del portátil
+
+Desde 64 rem con puntero fino, la estructura queda a la izquierda y el editor
+mide como máximo 46 rem. Con Revisión cerrada, el editor se centra en el
+espacio libre. Por debajo de 80 rem, Revisión se integra debajo de Contenido
+en el desplazamiento del editor. Desde 80 rem, tiene su propia columna cuando
+se abre. El botón de estructura plegada permite usar ambas disposiciones.
+[DEC-033](decisiones/DEC-033-columnas-estables-en-portatil.md) registra la
+retirada del cambio a 88 rem.
+
+Mediciones antes (`1bc9ec6`) y después en Chromium, en píxeles CSS. Para las
+cinco anchuras se usó una ventana de 768 px de alto con Revisión cerrada.
+
+| Ancho de ventana | Izquierda de la estructura antes / después | Ancho del editor antes / después |
+| ---: | ---: | ---: |
+| 1280 | 746,25 / 49 | 673,25 / 736 |
+| 1366 | 796,25 / 49 | 723,25 / 736 |
+| 1440 | 49 / 49 | 938,25 / 736 |
+| 1536 | 49 / 49 | 1006,58 / 736 |
+| 1920 | 113 / 113 | 1188,83 / 736 |
+
+Con 25 párrafos y un borrador de 11 líneas a 1366 × 768, abrir Revisión dio
+estas coordenadas verticales en la ventana.
+
+| Medida | Antes | Después |
+| --- | ---: | ---: |
+| Bordes de `#block-content` | 149–394,75 | 149–394,75 |
+| Borde superior del panel de Revisión | 513,25 | 53 |
+| Bordes de `#math-preview` | 658,25–914,25 | 330–586 |
+| Ancho del editor con Revisión abierta | 723,25 | 612 |
+| Cambio de `scrollY` al abrir Revisión | 0 | 0 |
+| Tamaño de `assets/js/app.js` en bytes | 95 193 | 95 193 |
+
+El marco del Paquete A ya mantenía fijo `scrollY` en esta muestra. La vista
+previa quedaba recortada por el panel en la segunda fila. Ahora el campo y la
+vista caben enteros a la vez. La rueda sobre la estructura sigue desplazando
+su columna 300 px con un cambio de 0 px en el editor y en la página.
+
+Las pruebas existentes se conservaron íntegras. Se añadieron comprobaciones
+del orden y ancho con Revisión abierta y cerrada, la visibilidad simultánea
+con 25 bloques y la transición entre 1279 y 1280 px con la estructura plegada.
+Se comprobó también la vista integrada para imágenes, la recuperación del foco
+al cerrar Revisión y la equivalencia de la cuadrícula y sus cajas con puntero
+grueso emulado a 412, 1280, 1366, 1440 y 1920 px.
+
+En local pasaron `TEX_UI_TESTS=required npm test` con 322 pruebas aprobadas y
+cero omitidas, incluidas las cuatro compilaciones con pdfLaTeX, además de
+`npm run check:js`, `npm run inventario` y `git diff --check`.
+
+Quedan pendientes las comprobaciones en dispositivos físicos, con lectores de
+pantalla y con Firefox y Safari.
