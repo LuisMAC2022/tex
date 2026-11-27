@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { loadTexNotes } from "./load-app.mjs";
-const T=await loadTexNotes(["block-types.js","block-tree.js","latex-generator.js","image-options.js","list-outline.js", "cross-references.js", "references.js","versions.js"]);
+const T=await loadTexNotes(["block-types.js","block-tree.js","outline.js", "latex-generator.js","image-options.js","list-outline.js", "cross-references.js", "references.js","versions.js"]);
 const doc="d00000001", other="d00000002", when="2026-11-22T00:00:00.000Z";
 const block=(id,content,other={})=>({id,type:"text",title:"",content,children:[],...other});
 const state=(title="Uno",blocks=[])=>({version:4,documentId:doc,metadata:{title},blocks,macros:[]});

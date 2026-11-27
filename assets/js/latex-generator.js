@@ -58,11 +58,6 @@
     return type.kind === "text" ? "\n\n" : "\n";
   }
 
-  function blockIsEmitted(block) {
-    return Boolean(block && (contentToLatex(block.content).trim() ||
-      (Array.isArray(block.children) && block.children.some(blockIsEmitted))));
-  }
-
   function emissionContext(block, context) {
     const type = TexNotes.blockType(block.type) || TexNotes.blockType("text");
     const outline = type.kind === "list" ? TexNotes.parseListOutline(contentToLatex(block.content), type.listEnvironment, block.listFormat) : null;
@@ -75,7 +70,7 @@
   const floatingImage = context => !context.parentType || context.parentType === "text";
 
   function blockToLatex(block = {}, context = {}) {
-    if (!blockIsEmitted(block)) return "";
+    if (!TexNotes.blockIsEmitted(block)) return "";
     const { type, outline, childContext } = emissionContext(block, context);
     const { depthContext } = context;
     const content = contentToLatex(block.content);
@@ -216,7 +211,7 @@
   }
 
   Object.assign(TexNotes, {
-    METADATA_KEYS, normalizeLineBreaks, escapeMetadata, contentToLatex, blockIsEmitted, emissionContext, floatingImage, blockToLatex,
+    METADATA_KEYS, normalizeLineBreaks, escapeMetadata, contentToLatex, emissionContext, floatingImage, blockToLatex,
     macrosToPreamble, buildTheoremDefs, buildPreamble, buildMetadata, buildBody, buildDocumentEnd, generateLatex,
   });
 })(typeof globalThis !== "undefined" ? globalThis : this);

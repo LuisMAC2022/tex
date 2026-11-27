@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { loadTexNotes } from "./load-app.mjs";
 
 const { BLOCK_TYPES, mathSegments, analyzeContent } = await loadTexNotes([
-  "block-types.js", "latex-generator.js", "math-preview.js",
+  "block-types.js", "outline.js", "latex-generator.js", "math-preview.js",
 ]);
 const segments = (content, type = "text") => structuredClone(mathSegments(content, type));
 

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadTexNotes } from "./load-app.mjs";
 import { exampleState } from "./example-state.mjs";
-const T = await loadTexNotes(["block-types.js","block-tree.js","latex-generator.js","image-options.js","list-outline.js", "cross-references.js", "references.js","templates.js"]);
+const T = await loadTexNotes(["block-types.js","block-tree.js","outline.js", "latex-generator.js","image-options.js","list-outline.js", "cross-references.js", "references.js","templates.js"]);
 const generator = () => { let i = 0; return prefix => prefix + (++i).toString(36).padStart(8,"0"); };
 const ids = tree => Array.from(T.flattenBlocks(tree), e => e.block.id);
 const node = (content, id, children = []) => ({type:"text",content,id,children});

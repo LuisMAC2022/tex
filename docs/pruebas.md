@@ -372,6 +372,18 @@
 - un anillo independiente conserva enlaces, huecos y submenús en el archivo portátil
 - un enlace a las acciones de tarjeta conserva el sector de mover deshabilitado en el editor
 
+## `tests/outline.test.js` — 9 pruebas
+
+- el tema numera los encabezados hermanos como subsecciones
+- las ramas se numeran en profundidad y reinician los contadores inferiores
+- sin tema los textos de la raíz son secciones
+- el texto sin título deja pasar a sus hijos en el mismo nivel
+- los niveles profundos llegan hasta subparagraph y por defecto pierden el número
+- el esquema y el generador omiten el texto cuyo único contenido es el título
+- un encabezado dentro de una definición conserva su nivel y se marca fuera de lugar
+- cada entorno de teorema lleva un contador continuo e independiente
+- cinco niveles numerados incluyen paragraph y subparagraph
+
 ## `tests/pdflatex.test.js` — 4 pruebas
 
 - pdflatex compila los fragmentos radiales y el enlace en un documento
@@ -480,4 +492,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-326 pruebas con `node:test` más la comprobación estructural.
+335 pruebas con `node:test` más la comprobación estructural.
