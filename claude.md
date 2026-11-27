@@ -607,3 +607,73 @@ interfaz existentes y se añadieron dos en `tests/interfaz-portatil.test.js`.
 
 Quedan pendientes las verificaciones en Firefox y Safari, con lectores
 de pantalla y en dispositivos táctiles físicos.
+
+## Paquete F — tres vistas en el portátil
+
+Desde 64 rem con puntero fino, Escribir reúne el editor y la estructura,
+Documento abre los datos y Exportar genera mediante el mismo botón de envío
+que Regenerar. Se eligió Más dentro de Documento porque las preferencias,
+el informe de errores y los atajos son consultas ocasionales y así la barra
+mantiene tres destinos. La decisión se registró en
+[DEC-034](decisiones/DEC-034-vistas-del-portatil.md).
+
+En la barra, las flechas recorren las pestañas e Intro activa la vista y lleva
+el foco a su inicio. Un clic también la activa. Cada panel conserva su área
+de desplazamiento. El cambio de vista en portátil mantiene los nodos y la
+edición del bloque. La llamada a `deps.closeWriting()` solo se ejecuta al
+salir de Escribir en teléfono.
+
+### Tabla completa del portátil
+
+Píxeles CSS, ventana de 768 px de alto, Chromium sin interfaz, nota
+«Derivadas parciales» con 25 párrafos y una fórmula en línea por párrafo.
+Cada celda indica referencia inicial (antes de G, `247b83f`) → paquete F.
+Las posiciones verticales son relativas al documento salvo indicación.
+La acción de generar se mide en la página original y en Exportar al abrirla.
+
+| Medida / ancho | 1280 | 1366 | 1440 | 1536 | 1920 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Altura de la página al escribir | 6963 → 768 | 6963 → 768 | 8279 → 768 | 8279 → 768 | 6963 → 768 |
+| Estructura, borde izquierdo | 746,25 → 49 | 796,25 → 49 | 49 → 49 | 49 → 49 | 113 → 113 |
+| Ancho del editor | 673,25 → 736 | 723,25 → 736 | 938,25 → 736 | 1006,58 → 736 | 1188,83 → 736 |
+| Contenido, borde superior | 545,09 → 139 | 545,09 → 139 | 545,09 → 139 | 545,09 → 139 | 545,09 → 139 |
+| Añadir bloque, borde superior | 810,84 → 404,75 | 810,84 → 404,75 | 810,84 → 404,75 | 810,84 → 404,75 | 810,84 → 404,75 |
+| Altura de la primera tarjeta | 139,83 → 89,22 | 139,83 → 89,22 | 191,83 → 89,22 | 191,83 → 89,22 | 139,83 → 89,22 |
+| Estado, borde superior en el documento | 6795,31 → 704 | 6795,31 → 704 | 8111,31 → 704 | 8111,31 → 704 | 6795,31 → 704 |
+| Generar / Regenerar, borde superior | 5359,5 → 192,91 | 5359,5 → 192,91 | 6675,5 → 192,91 | 6675,5 → 192,91 | 5359,5 → 192,91 |
+| Altura de Código LaTeX | 352 → 230,02 | 352 → 230,02 | 352 → 230,02 | 352 → 230,02 | 352 → 230,02 |
+| Revisión abierta, borde superior | 4338,59 → 53 | 4338,59 → 53 | 244,09 → 53 | 244,09 → 53 | 244,09 → 53 |
+| scrollY al abrir Revisión | 3990 → 0 | 3990 → 0 | 0 → 0 | 0 → 0 | 0 → 0 |
+| Estado, izquierda en la ventana | 16 → 1018,39 | 16 → 1104,39 | 16 → 1178,39 | 16 → 1274,39 | 80 → 1658,39 |
+| Estado, arriba en la ventana | 6608,31 → 704 | 6608,31 → 704 | 7924,31 → 704 | 7924,31 → 704 | 6608,31 → 704 |
+| Estado, derecha en la ventana | 1264 → 1272 | 1350 → 1358 | 1424 → 1432 | 1520 → 1528 | 1840 → 1912 |
+| Estado, abajo en la ventana | 6664,31 → 760 | 6664,31 → 760 | 7980,31 → 760 | 7980,31 → 760 | 6664,31 → 760 |
+| scrollY tras añadir el bloque 25 | 187 → 0 | 187 → 0 | 187 → 0 | 187 → 0 | 187 → 0 |
+
+Frente al cierre de E (`e06fa49`), en las cinco anchuras la página de
+Escribir pasa de 3158 a 768 px. Generar estaba a 1661,91 px en esta muestra y
+Regenerar queda a 192,91 px en Exportar. La altura de Código LaTeX responde
+al espacio libre. Aumentar en 100 px la altura de la ventana amplió el campo
+en 100 px. `assets/js/app.js` mide **95 193 bytes** antes y después.
+
+### Verificación y duda pendiente
+
+A 1366 × 768 pasó la prueba nueva de generación al entrar, recuperación del
+desplazamiento de Documento y Exportar, edición activa, Ctrl+Z y ausencia
+de desplazamiento del documento y de errores de página. Con puntero grueso
+emulado a 412, 1000 y 1366 px coincidieron con E las cajas, el texto y el
+contenedor de nueve elementos de edición, navegación y salida. Pasaron
+`npm run check:js`, `npm run inventario`, la comprobación estructural y las
+cuatro compilaciones con pdfLaTeX.
+
+**La suite obligatoria sigue roja**. Con `TEX_UI_TESTS=required npm test`
+pasaron 313 de 326 pruebas, fallaron 13 y se omitieron cero. Los recorridos de
+escritorio anteriores intentan actuar sobre controles de una vista inactiva.
+Por ejemplo, la prueba de medidas rellena el título desde Escribir y la de
+generación busca «Generar documento» desde el editor. Se conservaron
+íntegras las pruebas anteriores. Queda por decidir si se autorizan los
+pasos de navegación y el nuevo rótulo en esos recorridos, conservando sus
+aserciones funcionales.
+
+Quedan sin verificar los dispositivos físicos, los lectores de pantalla,
+Firefox y Safari.
