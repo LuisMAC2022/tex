@@ -26,7 +26,7 @@ test("editar, cancelar y guardar respetan el texto del bloque original", opcione
   await pagina.getByRole("tab", { name: "Escribir", exact: true }).click();
   await pagina.fill("#block-content", "Original");
   await pagina.click("#add-block");
-  const editar = pagina.getByRole("button", { name: /^Editar 1 / });
+  const editar = pagina.getByRole("button", { name: /^Editar Texto,/ });
   await editar.click();
   assert.equal(await pagina.inputValue("#block-content"), "Original");
   await pagina.fill("#block-content", "Descartado");

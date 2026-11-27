@@ -15,7 +15,7 @@ test("el esquema localiza y edita un bloque entre cincuenta y recuerda su vista"
   await pagina.selectOption("#structure-mode", "outline");
   await pagina.fill("#structure-search", "calculo doble");
   assert.equal(await pagina.locator("#structure-results").innerText(), "1 bloque encontrado");
-  const editar = pagina.getByRole("button", { name: /^Editar 47 / });
+  const editar = pagina.getByRole("button", { name: /^Editar Texto,/ });
   await editar.click();
   assert.equal(await campo.inputValue(), "Cálculo de una integral doble");
   assert.equal(await pagina.locator("article[aria-current=true]").count(), 1);

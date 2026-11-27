@@ -193,21 +193,35 @@ de un teorema en vez de después de él.
 5. Para volver a escribir al nivel de siempre, pulsa «Añadir en la raíz».
 
 Se puede anidar tantos niveles como quieras. Cada bloque muestra su nivel y de quién
-depende (`Nivel 2 · dentro de 1 Teorema: Fubini`).
+depende, por ejemplo, **Nivel 2 · dentro de Teorema 1 (Fubini)**.
+
+La insignia identifica el tipo de bloque. En los encabezados indica **Sección**,
+**Subsección**, **Subsubsección**, **Párrafo** o **Subpárrafo**. El título lleva el
+mismo número que en el PDF cuando el encabezado está numerado. Por ejemplo, con
+el tema “Unidad 1”, un Texto “A” con un Texto “B” dentro y un Texto “C” en la raíz,
+la lista muestra **Subsección 1.1 A**, **Subsubsección 1.1.1 B** y
+**Subsección 1.2 C**. Los bloques de teorema muestran su tipo, su número y, si
+tienen título, el título entre paréntesis. Los demás muestran su tipo y el título
+si lo tienen.
+
+Si un encabezado queda dentro de un entorno como una definición, aparece el aviso
+**Encabezado dentro de Definición: LaTeX lo admite pero rompe la jerarquía**.
+Las acciones y los anuncios usan las mismas etiquetas de la lista.
 
 «Añadir dentro» está disponible en texto, entornos tipo teorema y listas.
 
 ### Los demás botones de cada bloque
 
 - «Editar» abre el bloque en el formulario de arriba. Mientras editas, **Añadir
-  bloque** pasa a llamarse **Guardar cambios**. Lo que haya dentro del bloque se
+  bloque** pasa a llamarse **Guardar cambios** y el encabezado **Editar bloque**
+  muestra la etiqueta de la lista. Lo que haya dentro del bloque se
   conserva.
 - «Subir» y «Bajar» lo mueven **solo entre sus iguales**, sin sacarlo de donde
   está. En los extremos el botón aparece apagado.
 - «Mover a…» traslada el bloque con todos sus hijos. En «Destino», elige
   «Raíz del documento» o un bloque que admita hijos. En «Posición», elige
   «Al principio» o «Al final» y confirma con «Mover bloque». El foco vuelve a
-  «Editar» del bloque movido y se anuncian su ruta anterior y la nueva. Si
+  «Editar» del bloque movido y se anuncian sus etiquetas anterior y nueva. Si
   había una edición en curso, se cancela. El siguiente bloque se añadirá en
   la raíz. Puedes cerrar el diálogo con «Cancelar» o `Escape` para volver al
   botón que lo abrió.

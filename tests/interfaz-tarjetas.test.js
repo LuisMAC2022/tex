@@ -24,10 +24,12 @@ test("la tarjeta de una línea cabe en 140 px y presenta ocho acciones en posici
   for (const i of [0,4,7]) assert.equal(await items.nth(i).getAttribute("aria-disabled"), "true");
   await items.nth(1).click();
   assert.equal(await tarjetas(p).count(), 2);
-  assert.match(await p.locator(":focus").getAttribute("aria-label"), /^Editar 2 /);
+  assert.match(await p.locator(":focus").getAttribute("aria-label"), /^Editar Texto,/);
+  assert.equal(await p.locator(":focus").getAttribute("data-path"), "1");
   await acciones(tarjetas(p).nth(1)).tap();
   await p.getByRole("menuitem", { name: "Eliminar", exact: true }).tap();
-  assert.match(await p.locator(":focus").getAttribute("aria-label"), /^Editar 1 /);
+  assert.match(await p.locator(":focus").getAttribute("aria-label"), /^Editar Texto,/);
+  assert.equal(await p.locator(":focus").getAttribute("data-path"), "0");
 });
 
 test("Ver todo expande una vista de más de tres líneas y pegar dentro respeta la bandeja", opts, async t => {

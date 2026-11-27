@@ -1,7 +1,7 @@
 (function (T) {
   "use strict";
   T.createStructureView = function (document, deps) {
-    const { getBlocks, getTarget, refreshTargets, describeBlock, renderBlockPreview, blockItemExtensions, syncReferenceKey, saveSession } = deps;
+    const { getBlocks, getTarget, refreshTargets, getTopic, renderBlockPreview, blockItemExtensions, syncReferenceKey, saveSession } = deps;
     const { pathToKey, acceptsChildren } = T;
     const $ = selector => document.querySelector(selector);
     const blockList = $("#block-list");
@@ -20,6 +20,18 @@
     const collapsed = new Set(Array.isArray(settings.collapsed) ? settings.collapsed : []);
     const expanded = new Set(Array.isArray(settings.expanded) ? settings.expanded : []);
     const rows = new Map();
+    let entries = new Map();
+
+    function blockLabelParts(block, path) {
+      const entry = entries.get(pathToKey(path));
+      const { badge, text, warning } = T.outlineLabel(entry, block);
+      // El rótulo de teorema ya empieza por el nombre que muestra la insignia.
+      return { badge, text: entry?.kind === "theorem" ? text.slice(badge.length + 1) : text, warning };
+    }
+    function describeBlock(block, path) {
+      const { badge, text } = blockLabelParts(block ?? T.blockAtPath(getBlocks(), path), path);
+      return text ? badge + " " + text : badge;
+    }
     function persist() {
       try { win.localStorage.setItem(key, JSON.stringify({ mode: mode.value, collapsed: [...collapsed], expanded: [...expanded] })); }
       catch { /* Sesión en memoria. */ }
@@ -38,7 +50,7 @@
       const words = normalize(search.value.trim()).split(/\s+/).filter(Boolean);
       const searching = words.length > 0;
       let matches = 0;
-      for (const { item, article, nested, branch, block, searchable } of [...rows.values()].reverse()) {
+      for (const { item, article, nested, branch, block, label, searchable } of [...rows.values()].reverse()) {
         const matched = !searching || words.every(word => searchable.includes(word));
         if (matched) matches += 1;
         item.hidden = !matched && !Array.from(nested?.children || []).some(child => !child.hidden);
@@ -48,7 +60,7 @@
           branch.hidden = searching;
           branch.setAttribute("aria-expanded", String(!nested.hidden));
           branch.textContent = nested.hidden ? "Desplegar" : "Plegar";
-          branch.setAttribute("aria-label", branch.textContent + " rama " + describeBlock(block, T.keyToPath(article.dataset.path)));
+          branch.setAttribute("aria-label", branch.textContent + " rama " + label);
         }
       }
       results.hidden = !searching;
@@ -78,16 +90,23 @@
     function blockItem(block, path, parent, parentPath, siblings) {
       const position = path[path.length - 1];
       const where = parent ? `dentro de ${describeBlock(parent, parentPath)}` : "en la raíz";
-      const subject = `${describeBlock(block, path)}, nivel ${path.length}, ${where}`;
+      const { badge, text, warning } = blockLabelParts(block, path);
+      const label = text ? badge + " " + text : badge;
+      const subject = `${label}, nivel ${path.length}, ${where}`;
 
       const item = document.createElement("li");
       const article = document.createElement("article");
       article.dataset.path = pathToKey(path);
       article.dataset.blockId = block.id;
-      const record = { block, item, article, searchable: normalize([T.pathLabel(path), T.blockLabel(block.type), block.type, block.title, block.content].join(" ")) };
+      const record = { block, item, article, label, searchable: normalize([label, T.blockLabel(block.type), block.type, block.title, block.content].join(" ")) };
       rows.set(block.id, record);
       const heading = document.createElement("h4");
-      heading.textContent = coarse.matches ? T.pathLabel(path) + " · " + T.blockLabel(block.type) + (block.title ? ": " + block.title : "") : describeBlock(block, path);
+      const marker = document.createElement("span");
+      marker.className = "block-outline-badge";
+      marker.textContent = badge;
+      heading.append(marker);
+      if (text) heading.append(" " + text);
+      heading.setAttribute("aria-label", label);
       const icon = document.createElement("span");
       icon.className = "outline-icon"; icon.textContent = icons[block.type]; icon.setAttribute("aria-hidden", "true");
       heading.prepend(icon);
@@ -95,11 +114,11 @@
       const meta = document.createElement("p");
       meta.className = "block-meta";
       meta.textContent = `Nivel ${path.length} · ${where}`;
-      if (coarse.matches || desktop.matches) meta.textContent = "N" + path.length + " · " + (parent ? T.pathLabel(parentPath) : "raíz");
+      if (coarse.matches || desktop.matches) meta.textContent = "N" + path.length + " · " + (parent ? describeBlock(parent, parentPath) : "raíz");
       const target = getTarget(block.label);
       if (target) meta.textContent += " · " + target.word + (target.number === null ? "" : " " + target.number) + " · " + target.label;
       if (desktop.matches) {
-        heading.title = describeBlock(block, path);
+        heading.title = label;
         meta.title = `Nivel ${path.length} · ${where}` + (target ? " · " + target.label : "");
       }
       const preview = document.createElement("div");
@@ -120,7 +139,7 @@
       });
       const actions = document.createElement("menu");
       actions.className = "block-actions";
-      actions.setAttribute("aria-label", `Acciones para el bloque ${describeBlock(block, path)}`);
+      actions.setAttribute("aria-label", `Acciones para el bloque ${label}`);
       actions.append(actionButton("Editar", "edit", path, `Editar ${subject}`));
       if (acceptsChildren(block.type)) actions.append(actionButton("Añadir dentro", "child", path, `Añadir un bloque dentro de ${subject}`));
       const disclosure = document.createElement("details"), summary = document.createElement("summary"), more = document.createElement("div");
@@ -153,7 +172,14 @@
         menu.setAttribute("aria-haspopup", "menu"); actions.append(menu, disclosure);
       } else actions.append(disclosure);
       const head = document.createElement("div"); head.className = "card-heading"; head.append(heading, meta);
-      article.append(head, preview, toggle, actions);
+      article.append(head);
+      if (warning) {
+        const notice = document.createElement("p");
+        notice.className = "block-outline-warning";
+        notice.textContent = warning;
+        article.append(notice);
+      }
+      article.append(preview, toggle, actions);
       resize.observe(preview);
       for (const extend of blockItemExtensions) extend(block, path, { article, actions, more, subject });
       // En el portátil, Editar precede al plegado y a la vista previa en el orden de Tab.
@@ -177,7 +203,7 @@
         record.branch = branch;
         head.append(branch);
         if (path.length >= 3) nested.classList.add("shallow-indent");
-        nested.setAttribute("aria-label", `Bloques dentro de ${describeBlock(block, path)}`);
+        nested.setAttribute("aria-label", `Bloques dentro de ${label}`);
         block.children.forEach((child, index) => nested.append(blockItem(child, [...path, index], block, path, block.children.length)));
         item.append(nested);
       }
@@ -190,6 +216,8 @@
       const action = active.dataset?.action;
       const blocks = getBlocks();
       resize.disconnect();
+      entries = new Map(T.outlineEntries({ blocks, metadata: { topic: getTopic() } })
+        .map(entry => [entry.key, entry]));
       refreshTargets(blocks);
       blockList.replaceChildren();
       rows.clear();
@@ -244,7 +272,7 @@
         coarse.removeEventListener("change", renderBlocks);
         desktop.removeEventListener("change", renderBlocks);
       },
-      refresh: renderBlocks, actionButton, renderBlocks, focusAction, focusAfterRemoval, focusById,
+      refresh: renderBlocks, actionButton, describeBlock, renderBlocks, focusAction, focusAfterRemoval, focusById,
     };
   };
 })(globalThis.TexNotes);

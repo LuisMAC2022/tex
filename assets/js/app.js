@@ -3,7 +3,7 @@
   const {
     METADATA_KEYS, blockLabel, acceptsChildren, generateLatex, downloadTex,
     DRAFT_VERSION, blockAtPath, cloneBlock, cloneBlocks, countBlocks, duplicateBlock, insertBlock, keyToPath,
-    moveBlock, normalizeDraft, pathLabel, pathToKey, removeBlock, updateBlock,
+    moveBlock, normalizeDraft, pathToKey, removeBlock, updateBlock,
     MATH_SYMBOLS, MATH_SYMBOL_GROUPS, filterMathSymbols, symbolAccessibleName, symbolsByGroup, insertIntoField,
     analyzeContent, normalizeLineBreaks, blockType, SHORTCUTS, shortcutLabel,
   } = global.TexNotes;
@@ -134,12 +134,6 @@
     syncMetadataSummary(true);
   }
 
-  /* --- Nombres de cada nodo, compartidos por la vista y por los anuncios --- */
-
-  function describeBlock(block, path) {
-    const title = (block.title || "").trim();
-    return `${pathLabel(path)} ${blockLabel(block.type)}${title ? `: ${title}` : ""}`;
-  }
   function describeLocation(parentPath) {
     const parent = parentPath.length ? blockAtPath(blocks, parentPath) : null;
     return parent ? `dentro de ${describeBlock(parent, parentPath)}, en el nivel ${parentPath.length + 1}` : "al final de la raíz del documento";
@@ -148,7 +142,7 @@
   /* --- Editor: a qué nodo apunta el formulario --- */
 
   const blockForm = global.TexNotes.createBlockForm(document, {
-    reveal: node => panels.reveal(node), getBlock: path => blockAtPath(blocks, path), describeBlock, describeLocation, updateTrayControls, blockFieldHooks, renderEditorPreview, cancelTemplateForStructuralChange,
+    reveal: node => panels.reveal(node), getBlock: path => blockAtPath(blocks, path), describeBlock: (...args) => structure.describeBlock(...args), describeLocation, updateTrayControls, blockFieldHooks, renderEditorPreview, cancelTemplateForStructuralChange,
   });
   const { editorTarget, setEditorTarget, clearBlockFields, resetBlockEditor, selectBlockType, loadBlockEditor } = blockForm;
 
@@ -169,9 +163,9 @@
   const structure = global.TexNotes.createStructureView(document, {
     reveal: node => panels.reveal(node), getBlocks: () => blocks, getTarget: label => blockTargets.get(label),
     refreshTargets: tree => { blockTargets = new Map(global.TexNotes.referenceTargets({ blocks: tree }).map(target => [target.label, target])); },
-    describeBlock, renderBlockPreview, blockItemExtensions, syncReferenceKey, saveSession,
+    getTopic: () => form.elements.topic.value, renderBlockPreview, blockItemExtensions, syncReferenceKey, saveSession,
   });
-  const { actionButton, renderBlocks, focusAction, focusAfterRemoval, focusById } = structure;
+  const { actionButton, describeBlock, renderBlocks, focusAction, focusAfterRemoval, focusById } = structure;
 
   /* --- Bandeja de copia y portapapeles del sistema --- */
 
@@ -228,7 +222,7 @@
       changeTree(next, blockAtPath(next, editing).id); resetBlockEditor(); renderBlocks();
       if (keepFieldFocus) focusBlockContent();
       else if (!focusById("edit", blockAtPath(next, editing).id)) blockForm.focusType();
-      announce(`Bloque ${pathLabel(editing)} actualizado.`);
+      announce(`Bloque ${describeBlock(null, editing)} actualizado.`);
       return;
     }
     const result = insertBlock(blocks, parent, draft);
@@ -240,7 +234,7 @@
     renderBlocks();
     focusBlockContent();
     const templateMessage = commitTemplateStep(result.path);
-    announce(`Bloque ${pathLabel(result.path)} añadido ${parent.length ? `dentro de ${describeBlock(blockAtPath(blocks, parent), parent)}` : "en la raíz"}.${templateMessage ? ` ${templateMessage}` : ""}`);
+    announce(`Bloque ${describeBlock(null, result.path)} añadido ${parent.length ? `dentro de ${describeBlock(null, parent)}` : "en la raíz"}.${templateMessage ? ` ${templateMessage}` : ""}`);
   }
   $("#add-block").addEventListener("click", () => T.runAction("block.commit"));
 
@@ -254,7 +248,7 @@
     const cancelled = cancelEditForStructuralChange();
     changeTree(result.blocks, result.id); renderBlocks(); setEditorTarget(editorTarget());
     if (!focusById("edit", result.id)) $("#add-block").focus();
-    announce(`${label} pegado como bloque ${pathLabel(result.path)} ${describeLocation(parent)}. Sigue en la bandeja para pegarlo otra vez.${cancelled}`);
+    announce(`${label} pegado como bloque ${describeBlock(null, result.path)} ${describeLocation(parent)}. Sigue en la bandeja para pegarlo otra vez.${cancelled}`);
   }
   $("#paste-block").addEventListener("click", () => pasteBlock());
 
@@ -1003,7 +997,7 @@
       const link = document.createElement("a");
       link.className = "content-check-link";
       link.href = path.length ? `#${editButtonId(path)}` : "#document-references";
-      link.textContent = path.length ? `Ir al bloque ${pathLabel(path)}` : "Ir a referencias del documento";
+      link.textContent = path.length ? `Ir al bloque ${describeBlock(null, path)}` : "Ir a referencias del documento";
       link.addEventListener("click", (event) => {
         event.preventDefault();
         if (generatedBlocks !== blocks) return;
@@ -1024,7 +1018,7 @@
       }
       item.append(link, details);
       if (issues.some(issue => issue.canConvert)) {
-        const convert = actionButton("Convertir en referencias del documento", "convert-bibliography", path, "Convertir la bibliografía del bloque " + pathLabel(path));
+        const convert = actionButton("Convertir en referencias del documento", "convert-bibliography", path, "Convertir la bibliografía del bloque " + describeBlock(null, path));
         convert.addEventListener("click", () => { if (generatedBlocks === blocks) convertLegacyBlock(path); });
         item.append(convert);
       }
@@ -1045,7 +1039,7 @@
 
   /* --- [E] Mover --- */
   const {open: openMove} = global.TexNotes.createMoveDialog(document, {getBlocks: () => blocks, describeBlock,
-    editorTarget, cancelEditForStructuralChange, changeTree, renderBlocks, setEditorTarget, renderEditorPreview, focusById, pathLabel, announce});
+    editorTarget, cancelEditForStructuralChange, changeTree, renderBlocks, setEditorTarget, renderEditorPreview, focusById, announce});
   /* --- fin [E] --- */
 
   /* --- [F] Asistente de escritura --- */
@@ -1580,7 +1574,7 @@
     const paths = { editing: Array.isArray(editor.editingPath) ? editor.editingPath : [], parent: Array.isArray(editor.parentPath) ? editor.parentPath : [] };
     if (paths.parent.length && !acceptsChildren(blockAtPath(blocks, paths.parent)?.type)) paths.parent = [];
     for (const hook of blockFieldHooks) hook.fill?.({ ...(editor.image || {}), label: editor.label, type: $("#block-type").value });
-    setEditorTarget(paths); renderBlocks(); renderEditorPreview(); focusBlockContent();
+    renderBlocks(); setEditorTarget(paths); saveSession(); renderEditorPreview(); focusBlockContent();
     $("#autosave-banner").hidden = true;
     paintVersions(knownVersions); $("#session-status").textContent = "Sesión recuperada"; announce("Sesión recuperada, incluido el bloque a medio escribir.");
   });
@@ -1626,6 +1620,9 @@
     if (knownVersions) paintVersions(knownVersions);
     announce(direction==="undo" ? "Cambio estructural deshecho." : "Cambio estructural rehecho.");
   }
+  form.elements.topic.addEventListener("input", () => {
+    renderBlocks(); setEditorTarget(editorTarget());
+  });
   committedMetadata=metadata();
   $("#metadata-details").addEventListener("change",event=>{
     const name=event.target.name;

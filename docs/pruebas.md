@@ -373,7 +373,7 @@
 - un anillo independiente conserva enlaces, huecos y submenús en el archivo portátil
 - un enlace a las acciones de tarjeta conserva el sector de mover deshabilitado en el editor
 
-## `tests/outline.test.js` — 9 pruebas
+## `tests/outline.test.js` — 14 pruebas
 
 - el tema numera los encabezados hermanos como subsecciones
 - las ramas se numeran en profundidad y reinician los contadores inferiores
@@ -384,6 +384,11 @@
 - un encabezado dentro de una definición conserva su nivel y se marca fuera de lugar
 - cada entorno de teorema lleva un contador continuo e independiente
 - cinco niveles numerados incluyen paragraph y subparagraph
+- las insignias del tema y sus textos muestran la numeración del PDF
+- los encabezados sin número muestran Párrafo o Subpárrafo y solo el título
+- las etiquetas de teorema incluyen su contador y el título opcional
+- los bloques sin encabezado muestran el tipo y su título si existe
+- la etiqueta de un encabezado fuera de lugar avisa qué entorno lo contiene
 
 ## `tests/pdflatex.test.js` — 5 pruebas
 
@@ -494,4 +499,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-337 pruebas con `node:test` más la comprobación estructural.
+342 pruebas con `node:test` más la comprobación estructural.

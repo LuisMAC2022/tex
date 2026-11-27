@@ -4,7 +4,7 @@
     const $ = selector => document.querySelector(selector), events = new AbortController(), options = {signal:events.signal};
     const { blockAtPath, pathToKey, keyToPath, acceptsChildren } = T;
     const { getBlocks, describeBlock, editorTarget, cancelEditForStructuralChange, changeTree, renderBlocks,
-      setEditorTarget, renderEditorPreview, focusById, pathLabel, announce } = deps;
+      setEditorTarget, renderEditorPreview, focusById, announce } = deps;
     const { flattenBlocks, moveBlockTo } = T;
     const moveDialog = $("#move-block-dialog");
     const moveDestination = $("#move-block-destination");
@@ -34,7 +34,8 @@
     $("#move-block-form").addEventListener("submit", (event) => {
       event.preventDefault();
       const position = movePosition.value === "start" ? 0 : undefined;
-      const movedId = blockAtPath(getBlocks(), movingPath)?.id;
+      const moved = blockAtPath(getBlocks(), movingPath);
+      const movedId = moved?.id;
       const result = moveBlockTo(getBlocks(), movingPath, keyToPath(moveDestination.value), position);
       moveDialog.close();
       if (!result) {
@@ -42,6 +43,7 @@
         return;
       }
 
+      const source = describeBlock(moved, movingPath);
       const previous = editorTarget();
       const cancelled = cancelEditForStructuralChange();
       changeTree(result.blocks, movedId);
@@ -50,7 +52,7 @@
       renderEditorPreview();
       focusById("edit", movedId);
       const targetReset = previous.parent.length ? " El siguiente bloque se añadirá en la raíz." : "";
-      announce(`Bloque movido de ${pathLabel(movingPath)} a ${pathLabel(result.path)}.${cancelled}${targetReset}`);
+      announce(`Bloque movido de ${source} a ${describeBlock(moved, result.path)}.${cancelled}${targetReset}`);
     }, options);
     return {open:openMove, dispose() { events.abort(); if (moveDialog.open) moveDialog.close(); }};
   };

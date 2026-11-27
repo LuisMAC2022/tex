@@ -45,9 +45,9 @@ test("Ir a, el editor de una tarjeta y los avisos revelan y enfocan su destino",
   }
   await tab(p, "Documento").tap();
   await p.tap("#generate");
-  await p.getByRole("link", { name: "Ir al bloque 1" }).tap();
+  await p.getByRole("link", { name: "Ir al bloque Texto" }).tap();
   assert.equal(await actual(p), "Estructura");
-  await p.getByRole("button", { name: /^Editar 1 / }).tap();
+  await p.getByRole("button", { name: /^Editar Texto,/ }).tap();
   assert.equal(await actual(p), "Escribir");
   assert.equal(await foco(p), "type-chip");
 });

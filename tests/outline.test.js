@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadTexNotes } from "./load-app.mjs";
 
-const { outlineEntries, blockIsEmitted, blockToLatex } = await loadTexNotes();
+const { outlineEntries, outlineLabel, blockIsEmitted, blockToLatex } = await loadTexNotes();
 const texto = (title, children) => ({ type: "text", title, content: "Prosa", children });
 const esquema = (blocks, topic, options) => structuredClone(outlineEntries({ blocks, metadata: { topic } }, options));
 
@@ -78,4 +78,51 @@ test("cada entorno de teorema lleva un contador continuo e independiente", () =>
 test("cinco niveles numerados incluyen paragraph y subparagraph", () => {
   assert.deepEqual(esquema(ramaProfunda(), "", { numberedLevels: 5 }).slice(3).map(e => e.number),
     ["1.1.1.1", "1.1.1.1.1", "1.1.1.1.2", "1.1.1.1.3"]);
+});
+
+test("las insignias del tema y sus textos muestran la numeración del PDF", () => {
+  const b = texto("B"), a = texto("A", [b]), c = texto("C");
+  const entries = esquema([a, c], "Unidad 1");
+  const labels = entries.map((entry, i) => outlineLabel(entry, [{}, a, b, c][i]));
+  assert.deepEqual(structuredClone(labels), [
+    { badge: "Sección", text: "1 Unidad 1" },
+    { badge: "Subsección", text: "1.1 A" },
+    { badge: "Subsubsección", text: "1.1.1 B" },
+    { badge: "Subsección", text: "1.2 C" },
+  ]);
+});
+
+test("los encabezados sin número muestran Párrafo o Subpárrafo y solo el título", () => {
+  const [root] = ramaProfunda();
+  const entries = esquema([root], "", { numberedLevels: 0 });
+  const levels = [entries[0], entries[3], entries[4]];
+  assert.deepEqual(structuredClone(levels.map(entry => outlineLabel(entry, root))), [
+    { badge: "Párrafo", text: "Padre" },
+    { badge: "Párrafo", text: "Padre" },
+    { badge: "Subpárrafo", text: "Padre" },
+  ]);
+});
+
+test("las etiquetas de teorema incluyen su contador y el título opcional", () => {
+  const blocks = ["", " Fubini "].map(title => ({ type: "theorem", title, content: "Enunciado" }));
+  const labels = esquema(blocks).map((entry, index) => outlineLabel(entry, blocks[index]));
+  assert.deepEqual(structuredClone(labels), [
+    { badge: "Teorema", text: "Teorema 1" },
+    { badge: "Teorema", text: "Teorema 2 (Fubini)" },
+  ]);
+});
+
+test("los bloques sin encabezado muestran el tipo y su título si existe", () => {
+  const image = { type: "image", title: " Figura ", content: "figura.png" };
+  assert.deepEqual(structuredClone(outlineLabel(esquema([image])[0], image)), { badge: "Imagen", text: "Figura" });
+  assert.deepEqual(structuredClone(outlineLabel(undefined, texto(""))), { badge: "Texto", text: "" });
+});
+
+test("la etiqueta de un encabezado fuera de lugar avisa qué entorno lo contiene", () => {
+  const block = texto("Interior");
+  const entries = esquema([{ type: "definition", children: [texto("", [block])] }]);
+  assert.deepEqual(structuredClone(outlineLabel(entries[1], block)), {
+    badge: "Sección", text: "1 Interior",
+    warning: "Encabezado dentro de Definición: LaTeX lo admite pero rompe la jerarquía",
+  });
 });

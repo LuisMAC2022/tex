@@ -37,13 +37,16 @@ test("duplicar, subir y bajar conservan la identidad visible y el foco de la acc
   await añadir(p, "Dos");
   await accion(p, 0, /^Duplicar/);
   assert.equal(await p.locator("#block-list article").count(), 3);
-  assert.match(await activo(p), /^Editar 2 /);
+  assert.match(await activo(p), /^Editar Texto,/);
+  assert.equal(await p.locator(":focus").getAttribute("data-path"), "1");
   await accion(p, 2, /^Subir/);
   assert.match(await tarjeta(p, 1).innerText(), /Dos/);
-  assert.match(await activo(p), /^Subir 2 /);
+  assert.match(await activo(p), /^Subir Texto,/);
+  assert.equal(await p.locator(":focus").getAttribute("data-path"), "1");
   await accion(p, 1, /^Bajar/);
   assert.match(await tarjeta(p, 2).innerText(), /Dos/);
-  assert.match(await activo(p), /^Subir 3 /);
+  assert.match(await activo(p), /^Subir Texto,/);
+  assert.equal(await p.locator(":focus").getAttribute("data-path"), "2");
 });
 
 test("copiar y pegar usan la bandeja y el foco pasa a la copia", opciones, async t => {
@@ -53,7 +56,8 @@ test("copiar y pegar usan la bandeja y el foco pasa a la copia", opciones, async
   assert.match(await activo(p), /a la bandeja/);
   assert.ok(await p.locator("#tray-summary").isVisible());
   await p.click("#paste-block");
-  assert.match(await activo(p), /^Editar 2 /);
+  assert.match(await activo(p), /^Editar Texto,/);
+  assert.equal(await p.locator(":focus").getAttribute("data-path"), "1");
   assert.match(await tarjeta(p, 1).innerText(), /Copiable/);
 });
 
@@ -64,7 +68,8 @@ test("eliminar un padre pide confirmación, mueve el foco y permite deshacer y r
   await añadir(p, "Hijo");
   p.once("dialog", d => d.dismiss());
   await accion(p, 0, /^Eliminar/);
-  assert.match(await activo(p), /^Eliminar 1 /);
+  assert.match(await activo(p), /^Eliminar Texto,/);
+  assert.equal(await p.locator(":focus").getAttribute("data-path"), "0");
   assert.equal(await p.locator("#block-list article").count(), 2);
   p.once("dialog", d => d.accept());
   await accion(p, 0, /^Eliminar/);

@@ -3,7 +3,7 @@
   T.createBlockForm = function (doc, deps) {
     const $ = selector => doc.querySelector(selector);
     const { getBlock, describeBlock, describeLocation, updateTrayControls, blockFieldHooks, renderEditorPreview, cancelTemplateForStructuralChange } = deps;
-    const { keyToPath, pathToKey, pathLabel } = T;
+    const { keyToPath, pathToKey } = T;
     const mobile = doc.defaultView.matchMedia("(pointer: coarse)");
     const desktop = T.desktopCardsMedia(doc);
     const type = $("#block-type"), title = $("#block-title"), typeChip = $("#type-chip"), titleChip = $("#title-chip");
@@ -54,8 +54,9 @@
       $("#editing-path").value = editingBlock ? pathToKey(editing) : "";
       $("#parent-path").value = pathToKey(parentPath);
       if (editingBlock) {
-        $("#block-form-heading").textContent = `Editar bloque ${pathLabel(editing)}`;
-        $("#block-target").textContent = `Editas ${describeBlock(editingBlock, editing)}. Sus bloques anidados se conservan.`;
+        const subject = describeBlock(editingBlock, editing);
+        $("#block-form-heading").textContent = `Editar bloque ${subject}`;
+        $("#block-target").textContent = `Editas ${subject}. Sus bloques anidados se conservan.`;
         $("#add-block-label").textContent = "Guardar cambios";
         $("#cancel-edit").textContent = "Cancelar edición";
         $("#cancel-edit").hidden = false;
