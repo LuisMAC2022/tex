@@ -61,21 +61,22 @@ section { margin-block: var(--space-5); padding: var(--card-padding); border: 1p
 .form-grid { display: grid; gap: 0 var(--space-4); grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .field-wide { grid-column: 1 / -1; }
 .structure-panel, .editor-workspace { min-inline-size: 0; }
-@media (min-width: 75rem) {
+/* Se conserva la disposición anterior para ventanas anchas sin puntero fino. */
+@media (min-width: 75rem) and (not (pointer: fine)) {
   .editor-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(13rem, .72fr); align-items: start; gap: var(--space-5); }
   .block-editor { top: .5rem; margin-block-start: 0; }
   .structure-panel > h3 { margin-block-start: 0; }
   .math-preview-panel { grid-column: 1; }
   .editor-workspace.structure-folded { grid-template-columns: minmax(0, 1fr); }
 }
-@media (min-width: 88rem) {
+@media (min-width: 88rem) and (not (pointer: fine)) {
   .editor-workspace { grid-template-columns: minmax(15rem, .85fr) minmax(0, 2.1fr) minmax(13rem, .85fr); }
   .structure-panel { grid-area: 1 / 1; }
   .block-editor { grid-area: 1 / 2; }
   .math-preview-panel { grid-area: 1 / 3; }
   .structure-folded .block-editor { grid-column: 1; }
   .structure-folded .math-preview-panel { grid-area: 2 / 1; }
-  .editor-workspace:not(.structure-folded):has(.math-preview-panel:not([open])) {
+  .editor-workspace:not(.structure-folded, :has(> .math-preview-panel[open])) {
     grid-template-columns: minmax(15rem, .85fr) minmax(0, 2.1fr);
   }
   .editor-workspace:not(.structure-folded) .math-preview-panel:not([open]) { grid-area: 2 / 2; }
@@ -578,18 +579,20 @@ body.writing-focus #workspace-export { display: none; }
   .editor-workspace {
     display: grid;
     block-size: 100%;
-    grid-template-columns: minmax(0, 1fr) minmax(17rem, .72fr);
-    grid-template-rows: minmax(0, 1fr) auto;
-    grid-template-areas: "editor estructura" "revision estructura";
-    align-items: stretch;
+    grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: "estructura editor";
     column-gap: var(--space-5);
   }
   .editor-workspace.structure-folded {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "editor" "revision";
+    grid-template-areas: "editor";
   }
   .editor-workspace .block-editor {
     grid-area: editor;
+    justify-self: center;
+    inline-size: 100%;
+    max-inline-size: 46rem;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-content: start;
@@ -612,10 +615,7 @@ body.writing-focus #workspace-export { display: none; }
   .block-editor .field-help > summary { min-block-size: 1.5rem; padding-block: 0; }
   .editor-workspace .structure-panel { grid-area: estructura; }
   .structure-panel > h3 { margin-block-start: 0; }
-  .editor-workspace .math-preview-panel {
-    grid-area: revision;
-    max-block-size: 32dvh;
-  }
+  .editor-workspace .math-preview-panel:not([open]) { display: none; }
   .editor-workspace > :is(.structure-panel, .block-editor, .math-preview-panel) {
     min-block-size: 0;
     overflow: auto;
@@ -640,18 +640,17 @@ body.writing-focus #workspace-export { display: none; }
   #error-notice:not([hidden]) { inset-inline: var(--space-2) auto; }
 }
 
-@media (min-width: 88rem) and (pointer: fine) {
-  .editor-workspace:not(.structure-folded) { grid-template-areas: "estructura editor" "estructura revision"; }
-  .editor-workspace:not(.structure-folded):has(.math-preview-panel:not([open])) {
-    grid-template-columns: minmax(15rem, .85fr) minmax(0, 2.1fr);
-  }
-  .editor-workspace:not(.structure-folded):has(.math-preview-panel[open]) {
-    grid-template-columns: minmax(15rem, .85fr) minmax(0, 2.1fr) minmax(13rem, .85fr);
+@media (min-width: 80rem) and (pointer: fine) {
+  body:not(.writing-focus) .editor-workspace:has(> .math-preview-panel[open]) {
+    grid-template-columns: minmax(16rem, 20rem) minmax(0, 46rem) minmax(18rem, 1fr);
     grid-template-areas: "estructura editor revision";
   }
-  .editor-workspace:not(.structure-folded):has(.math-preview-panel[open]) .math-preview-panel {
-    align-self: stretch;
-    max-block-size: none;
+  body:not(.writing-focus) .editor-workspace.structure-folded:has(> .math-preview-panel[open]) {
+    grid-template-columns: minmax(0, 46rem) minmax(18rem, 1fr);
+    grid-template-areas: "editor revision";
   }
-  .editor-workspace:not(.structure-folded) .math-preview-panel:not([open]) { grid-area: revision; }
+  .editor-workspace > .math-preview-panel[open] {
+    grid-area: revision;
+    align-self: stretch;
+  }
 }

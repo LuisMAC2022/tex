@@ -83,3 +83,91 @@ test("medidas de referencia del portátil con veinticinco párrafos", { skip: om
     await contexto.close();
   }
 });
+
+test("la estructura queda a la izquierda y el editor conserva su ancho máximo", { skip: omitir }, async () => {
+  const { pagina, contexto } = await abrir();
+  try {
+    for (const width of [1280, 1366, 1440, 1536, 1920]) {
+      await pagina.setViewportSize({ width, height: 768 });
+      for (const abierta of [false, true]) {
+        const cajas = await pagina.evaluate(() => {
+          const estructura = document.querySelector("#structure-panel").getBoundingClientRect();
+          const editor = document.querySelector(".block-editor").getBoundingClientRect();
+          return {
+            derechaEstructura: estructura.right,
+            izquierdaEditor: editor.left,
+            anchoEditor: editor.width,
+            maximo: 46 * parseFloat(getComputedStyle(document.documentElement).fontSize),
+          };
+        });
+        const estado = `${width} px con Revisión ${abierta ? "abierta" : "cerrada"}`;
+        assert.ok(cajas.derechaEstructura <= cajas.izquierdaEditor, `Estructura a la izquierda a ${estado}`);
+        assert.ok(cajas.anchoEditor <= cajas.maximo, `Editor de hasta 46 rem a ${estado}`);
+        await pagina.click("#review-writing");
+      }
+    }
+  } finally {
+    await contexto.close();
+  }
+});
+
+test("Revisión y Contenido se ven juntos con veinticinco bloques", { skip: omitir }, async () => {
+  const { pagina, contexto } = await abrir();
+  try {
+    await pagina.fill("#note-title", "Derivadas parciales");
+    await pagina.selectOption("#block-type", "text");
+    for (let n = 1; n <= 25; n++) {
+      await pagina.fill("#block-content", `Párrafo ${n} con $x^${n}$.`);
+      await pagina.click("#add-block");
+    }
+    assert.equal(await pagina.locator("#block-list article").count(), 25);
+    await pagina.fill("#block-content", ["Sea $x^2$ el borrador.", ...Array(10).fill("Otra línea del borrador.")].join("\n"));
+    await pagina.evaluate(() => document.fonts.ready);
+    const antes = await pagina.evaluate(() => scrollY);
+    await pagina.click("#review-writing");
+    await pagina.locator("#math-preview .katex").waitFor();
+    const medidas = await pagina.evaluate(() => {
+      const caja = selector => document.querySelector(selector).getBoundingClientRect();
+      const dentro = (elemento, panel) => elemento.width > 0 && elemento.height > 0
+        && elemento.left >= 0 && elemento.right <= innerWidth
+        && elemento.top >= Math.max(caja(".site-header").bottom, panel.top)
+        && elemento.bottom <= Math.min(innerHeight, panel.bottom);
+      return {
+        contenido: dentro(caja("#block-content"), caja(".block-editor")),
+        vista: dentro(caja("#math-preview"), caja("#math-preview-panel")),
+        desplazamiento: scrollY,
+      };
+    });
+    assert.ok(medidas.contenido && medidas.vista, "Contenido y vista previa caben juntos en la ventana");
+    assert.ok(Math.abs(medidas.desplazamiento - antes) <= 200, "Revisión desplaza la página como máximo 200 px");
+  } finally {
+    await contexto.close();
+  }
+});
+
+test("Revisión pasa al editor por debajo de 80 rem y conserva su estado al redimensionar", { skip: omitir }, async () => {
+  const { pagina, contexto } = await abrir();
+  try {
+    await pagina.setViewportSize({ width: 1279, height: 768 });
+    await pagina.click("#review-writing");
+    const integrada = pagina.locator(".block-editor #math-preview-panel[open]");
+    await integrada.waitFor();
+    const contenido = await pagina.locator("#block-content").boundingBox();
+    const revision = await integrada.boundingBox();
+    assert.ok(revision.y >= contenido.y + contenido.height);
+    assert.equal(revision.x, contenido.x);
+    await pagina.click("#toggle-structure");
+    assert.equal(await pagina.locator("#structure-panel").isVisible(), false);
+
+    await pagina.setViewportSize({ width: 1280, height: 768 });
+    const lateral = pagina.locator(".editor-workspace > #math-preview-panel[open]");
+    await lateral.waitFor();
+    const editor = await pagina.locator(".block-editor").boundingBox();
+    assert.ok((await lateral.boundingBox()).x > editor.x + editor.width);
+    await lateral.locator("summary").click();
+    assert.equal(await pagina.evaluate(() => document.activeElement.id), "review-writing");
+    assert.equal(await pagina.locator("#math-preview-panel").isVisible(), false);
+  } finally {
+    await contexto.close();
+  }
+});

@@ -17,6 +17,12 @@
     const concentration = $("#focus-writing"), structure = $(".structure-panel");
     const structureToggle = $("#toggle-structure"), review = $("#review-writing");
     const workspace = $(".editor-workspace");
+    const desktop = win.matchMedia("(min-width: 64rem) and (pointer: fine)");
+    const inlinePreview = win.matchMedia("(min-width: 64rem) and (width < 80rem) and (pointer: fine)");
+    const previewPosition = doc.createComment("posición de la vista previa");
+    const contentField = $("#block-content").closest(".field");
+    const contentError = $("#block-error"), imageFields = $("#image-fields");
+    const contentObserver = new win.MutationObserver(placeInlinePreview);
     const layoutKey = "tex-notes:workspace:v1";
     let layout = {};
     try { layout = JSON.parse(win.localStorage.getItem(layoutKey)) || {}; } catch { /* Sesión en memoria. */ }
@@ -31,6 +37,26 @@
       structureToggle.setAttribute("aria-expanded", String(!structure.hidden));
       workspace.classList.toggle("structure-folded", structure.hidden);
       review.setAttribute("aria-expanded", String(preview.open && !focused));
+    }
+    function placeInlinePreview() {
+      const anchor = contentField.hidden ? imageFields : contentError;
+      if (anchor.nextElementSibling === preview) return;
+      const focused = doc.activeElement;
+      anchor.after(preview);
+      if (preview.contains(focused)) focused.focus({ preventScroll: true });
+    }
+    function restorePreview() {
+      contentObserver.disconnect();
+      if (!previewPosition.isConnected) return;
+      const focused = doc.activeElement;
+      previewPosition.replaceWith(preview);
+      if (preview.contains(focused)) focused.focus({ preventScroll: true });
+    }
+    function syncPreviewPlacement() {
+      if (!inlinePreview.matches) { restorePreview(); return; }
+      preview.before(previewPosition);
+      placeInlinePreview();
+      contentObserver.observe(contentField, { attributes: true, attributeFilter: ["hidden"] });
     }
     concentration.addEventListener("click", () => {
       layout.focus = !layout.focus;
@@ -143,6 +169,7 @@
       if (media.matches) try { win.localStorage.setItem(previewKey, preview.open ? "open" : "closed"); } catch { /* Solo para esta sesión. */ }
     }
     preview.querySelector("summary").addEventListener("click", event => {
+      if (desktop.matches && preview.open) review.focus({ preventScroll: true });
       if (!media.matches) return;
       event.preventDefault();
       preview.open = !preview.open;
@@ -151,10 +178,12 @@
     preview.addEventListener("toggle", savePreview, options);
     win.addEventListener("pagehide", savePreview, options);
     media.addEventListener("change", syncLayout, options);
+    inlinePreview.addEventListener("change", syncPreviewPlacement, options);
     syncLayout();
+    syncPreviewPlacement();
     return { refresh: syncMetadataSummary, goTo, reveal, focusTarget, current: () => active,
       focusMetadata: () => focusTarget($($("#metadata-details").open ? "#note-title" : "#metadata-details > summary")),
-      dispose() { events.abort(); unmount(); },
+      dispose() { events.abort(); restorePreview(); unmount(); },
     };
   };
 })(globalThis.TexNotes);
