@@ -566,3 +566,44 @@ interfaz existentes y se añadió una prueba a `tests/interfaz-portatil.test.js`
 
 Quedan pendientes las verificaciones en dispositivos táctiles físicos, con
 lectores de pantalla y en Firefox y Safari.
+
+## Paquete E — tarjetas compactas de la estructura en el portátil
+
+Desde 64 rem con puntero fino, el encabezado ocupa una fila y la vista previa
+se recorta a dos líneas. «Ver todo» aparece junto a la vista previa cuando
+hay recorte. El clic con ratón en el cuerpo activa «Editar». Tab llega al
+botón «Editar» desde la búsqueda. La fila de acciones conserva su espacio y
+aparece al pasar el puntero o al entrar el foco. La vista Esquema conserva
+las acciones y el plegado. Al editar, guardar o cancelar se mantiene visible
+el mismo bloque mediante el desplazamiento de la columna de estructura.
+
+Mediciones en Chromium 151 a 1366 × 768 con la nota «Derivadas parciales» y
+25 bloques. La muestra incluye texto breve, texto largo, una integral
+destacada y 22 párrafos con fórmulas en línea. La referencia es `84d6a5c`.
+Las alturas están en píxeles CSS.
+
+| Medida | Antes | Después |
+| --- | ---: | ---: |
+| Tarjeta de texto breve | 186,61 | 85,80 |
+| Tarjeta de texto largo | 284,61 | 106,59 |
+| Tarjeta con la integral | 193,22 | 106,59 |
+| Rango de alturas de las 25 tarjetas | 186,61–284,61 | 85,80–106,59 |
+| Altura total de la lista de tarjetas | 5084,66 | 2357,80 |
+| Altura de la primera fila de Esquema | 154 | 61 |
+| Altura total de Esquema | 3919 | 1621 |
+| Tamaño de `assets/js/app.js` en bytes | 95 193 | 95 193 |
+
+En Pixel 7 emulado a 412 × 839, la tarjeta breve midió 109 px y la primera
+fila de Esquema midió 81 px en ambas revisiones. Las alturas de las listas
+completas también coincidieron. En el portátil, el bloque 20 y Contenido
+quedaron dentro de sus columnas y `scrollY` se mantuvo en 0 al editar,
+guardar y cancelar. Se repitió la comprobación simulando que el navegador
+ignora la opción `container` de `scrollIntoView`.
+
+Pasaron `TEX_UI_TESTS=required npm test` con 325 pruebas aprobadas, cero
+omitidas y la comprobación estructural, además de `npm run check:js`,
+`npm run inventario` y `git diff --check`. Se conservaron las pruebas de
+interfaz existentes y se añadieron dos en `tests/interfaz-portatil.test.js`.
+
+Quedan pendientes las verificaciones en Firefox y Safari, con lectores
+de pantalla y en dispositivos táctiles físicos.
