@@ -522,3 +522,47 @@ cero omitidas, incluidas las cuatro compilaciones con pdfLaTeX, además de
 
 Quedan pendientes las comprobaciones en dispositivos físicos, con lectores de
 pantalla y con Firefox y Safari.
+
+## Paquete C — campo de escritura y acción principal
+
+Desde 64 rem con puntero fino, los controles nativos de tipo y título
+comparten una fila de 14 rem y el espacio restante. El destino se muestra
+junto a la leyenda del bloque. La bandeja y el progreso de plantilla
+conservan sus avisos. La ayuda de listas se pliega junto a la de Contenido.
+La fila de acciones queda adherida al borde inferior del área de
+desplazamiento del editor cuando el espacio se agota. El botón principal
+muestra el atajo del panel de teclado y conserva su nombre accesible. El
+tablero de símbolos empieza plegado inmediatamente debajo de las acciones.
+
+Mediciones en Chromium a 1366 × 768, con una sesión vacía y sin desplazamiento
+de la página ni del editor. La referencia es el cierre del Paquete B
+(`6351abf`). Las coordenadas y dimensiones están en píxeles CSS.
+
+| Medida | Antes | Después |
+| --- | ---: | ---: |
+| Borde superior de `#block-content` al cargar | 149 | 139 |
+| Bordes superior e inferior de `#add-block` al cargar | 443,75–495,75 | 404,75–440,75 |
+| Bordes de `#add-block` al elegir Lista con viñetas | 594,42–646,42 | 458,75–494,75 |
+| Altura de `#block-content` en Concentración | 399,36 | 461,80 |
+| Bordes de `#add-block` en Concentración | 597,36–649,36 | 620,80–656,80 |
+| Borde superior del destino del bloque | 402,75 | 55 |
+| Ancho de los campos de tipo y título | 362 / 362 | 224 / 500 |
+| Distancia de la fila de acciones al tablero de símbolos al cargar | 12 | 0 |
+| Tamaño de `assets/js/app.js` en bytes | 95 193 | 95 193 |
+
+Se confirmó en el árbol de accesibilidad de Chromium que la descripción de
+Contenido incluye la ayuda con el desplegable cerrado, también al editar una
+lista heredada. Se comprobó el destino al editar, el atajo junto a Guardar
+cambios, el progreso de una plantilla y la restauración de la ayuda al
+cruzar el umbral de 64 rem. Las cajas, la visibilidad y las referencias de
+descripción de los controles comparados coincidieron con la referencia en
+puntero grueso emulado a 412 y 1366 px, tanto al cargar como al elegir una
+lista.
+
+Pasaron `TEX_UI_TESTS=required npm test` con 323 pruebas aprobadas, cero
+omitidas y la comprobación estructural, además de `npm run check:js`,
+`npm run inventario` y `git diff --check`. Se conservaron las pruebas de
+interfaz existentes y se añadió una prueba a `tests/interfaz-portatil.test.js`.
+
+Quedan pendientes las verificaciones en dispositivos táctiles físicos, con
+lectores de pantalla y en Firefox y Safari.
