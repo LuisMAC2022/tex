@@ -501,8 +501,8 @@ En pantallas menores se usa una sola columna. «Datos del documento» se puede
 plegar; su resumen muestra el título, curso y fecha. Al restaurar un documento
 con título queda plegado y el foco puede volver a su resumen.
 
-Las tarjetas mantienen «Editar» y «Añadir dentro» a la vista. Abre «Más acciones»
-para duplicar, copiar, eliminar, subir, bajar, mover o guardar una plantilla.
+Abre «Más acciones» para duplicar, copiar, eliminar, subir, bajar, mover o
+guardar una plantilla.
 Después de mover con sus botones, el desplegable del bloque destino se abre
 para conservar el foco. «Atajos de teclado» incluye la prioridad de Tab,
 Escape, navegación del menú, Retroceso y los comandos /.
@@ -607,6 +607,13 @@ En «Estructura actual», el selector «Vista» alterna entre «Esquema» y «Ta
 la ruta de sus antecesores. Usa los controles de plegado de las ramas para
 ocultar o mostrar sus descendientes. La vista y los estados de las ramas se
 recuerdan en este navegador.
+
+Desde 64 rem con puntero fino, la vista de tarjeta ocupa hasta dos líneas
+de contenido. «Ver todo» aparece a su lado cuando hay más contenido. Haz
+clic en el cuerpo de la tarjeta para editar o llega a «Editar» con Tab. La
+fila con «Editar», «Añadir dentro» y «Más acciones» aparece al pasar el
+puntero o al enfocar un control de la tarjeta. Al editar, guardar o
+cancelar, la estructura desplaza su propia columna para mostrar la tarjeta.
 
 En «Símbolos matemáticos», activa «Editar favoritos» y elige los símbolos que
 quieras guardar. Desactívalo para volver a insertar símbolos y abre **Favoritos**

@@ -226,3 +226,101 @@ test("Contenido y Añadir bloque caben a 1366 × 768 sin desplazar el editor", {
     await contexto.close();
   }
 });
+
+test("las tarjetas compactas permiten editar con ratón y teclado sin desplazar la página", { skip: omitir }, async () => {
+  const { pagina, contexto, errores } = await abrir();
+  try {
+    await pagina.selectOption("#block-type", "text");
+    for (let n = 1; n <= 25; n++) {
+      await pagina.fill("#block-content", `Párrafo ${n}.`);
+      await pagina.click("#add-block");
+    }
+    const tarjetas = pagina.locator("#block-list article");
+    assert.equal(await tarjetas.count(), 25);
+    const primera = tarjetas.first(), vigesima = tarjetas.nth(19);
+    const altura = (await primera.boundingBox()).height;
+    assert.ok(altura <= 110, `La tarjeta de una línea mide ${altura} px`);
+    const acciones = primera.locator(".block-actions");
+    assert.equal(await acciones.evaluate(fila => getComputedStyle(fila).opacity), "0");
+    await primera.hover();
+    assert.equal(await acciones.evaluate(fila => getComputedStyle(fila).opacity), "1");
+    await pagina.locator("#structure-search").hover();
+
+    await pagina.focus("#structure-search");
+    await pagina.keyboard.press("Tab");
+    assert.equal(await primera.locator('[data-action="edit"]').evaluate(boton => boton === document.activeElement), true);
+    assert.equal(await acciones.evaluate(fila => getComputedStyle(fila).opacity), "1");
+
+    const visible = () => vigesima.evaluate(tarjeta => {
+      const dentro = (elemento, panel) => {
+        const caja = elemento.getBoundingClientRect();
+        const limite = panel.getBoundingClientRect();
+        return caja.width > 0 && caja.height > 0
+          && caja.top >= Math.max(0, limite.top) && caja.bottom <= Math.min(innerHeight, limite.bottom)
+          && caja.left >= 0 && caja.right <= innerWidth;
+      };
+      const campo = document.querySelector("#block-content");
+      return { tarjeta: dentro(tarjeta, tarjeta.closest(".structure-panel")), campo: dentro(campo, campo.closest(".block-editor")), pagina: scrollY };
+    });
+    const desplazamiento = await pagina.evaluate(() => scrollY);
+    await vigesima.evaluate(tarjeta => {
+      const panel = tarjeta.closest(".structure-panel");
+      panel.scrollTop += tarjeta.getBoundingClientRect().top - panel.getBoundingClientRect().bottom + 30;
+    });
+    assert.equal((await visible()).tarjeta, false);
+    await vigesima.locator("h4").click();
+    assert.equal(await pagina.inputValue("#block-content"), "Párrafo 20.");
+    assert.equal(await vigesima.getAttribute("aria-current"), "true");
+    assert.deepEqual(await visible(), { tarjeta: true, campo: true, pagina: desplazamiento });
+
+    await pagina.fill("#block-content", "Párrafo 20 corregido.");
+    await pagina.locator("#structure-panel").evaluate(panel => { panel.scrollTop = 0; });
+    await pagina.click("#add-block");
+    assert.equal(await vigesima.getAttribute("aria-current"), null);
+    assert.match(await vigesima.locator(".block-preview").textContent(), /Párrafo 20 corregido\./);
+    assert.deepEqual(await visible(), { tarjeta: true, campo: true, pagina: desplazamiento });
+
+    await pagina.keyboard.press("Enter");
+    assert.equal(await vigesima.getAttribute("aria-current"), "true");
+    await pagina.locator("#structure-panel").evaluate(panel => { panel.scrollTop = 0; });
+    await pagina.click("#cancel-edit");
+    assert.equal(await vigesima.getAttribute("aria-current"), null);
+    assert.deepEqual(await visible(), { tarjeta: true, campo: true, pagina: desplazamiento });
+    assert.deepEqual(errores, []);
+  } finally {
+    await contexto.close();
+  }
+});
+
+test("Ver todo aparece con el recorte de dos líneas y Esquema conserva la edición", { skip: omitir }, async () => {
+  const { pagina, contexto, errores } = await abrir();
+  try {
+    for (const contenido of ["Una línea.", "Texto que ocupa varias líneas. ".repeat(15).trim()]) {
+      await pagina.fill("#block-content", contenido);
+      await pagina.click("#add-block");
+    }
+    const tarjetas = pagina.locator("#block-list article");
+    assert.equal(await tarjetas.first().locator(".preview-toggle").isVisible(), false);
+    const segunda = tarjetas.nth(1);
+    const vista = segunda.locator(".block-preview");
+    const ver = segunda.locator(".preview-toggle.tertiary");
+    await ver.waitFor();
+    assert.equal(await vista.evaluate(nodo => getComputedStyle(nodo).webkitLineClamp), "2");
+    const altoRecortado = (await vista.boundingBox()).height;
+    await ver.click();
+    assert.equal(await segunda.getAttribute("aria-current"), null);
+    assert.ok((await vista.boundingBox()).height > altoRecortado);
+    await ver.click();
+    assert.equal((await vista.boundingBox()).height, altoRecortado);
+
+    const altoTarjeta = (await segunda.boundingBox()).height;
+    await pagina.selectOption("#structure-mode", "outline");
+    assert.equal(await vista.isVisible(), false);
+    assert.ok((await segunda.boundingBox()).height < altoTarjeta);
+    await segunda.locator("h4").click();
+    assert.equal(await segunda.getAttribute("aria-current"), "true");
+    assert.deepEqual(errores, []);
+  } finally {
+    await contexto.close();
+  }
+});

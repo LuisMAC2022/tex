@@ -5,6 +5,7 @@
     const { getBlock, describeBlock, describeLocation, updateTrayControls, blockFieldHooks, renderEditorPreview, cancelTemplateForStructuralChange } = deps;
     const { keyToPath, pathToKey, pathLabel } = T;
     const mobile = doc.defaultView.matchMedia("(pointer: coarse)");
+    const desktop = T.desktopCardsMedia(doc);
     const type = $("#block-type"), title = $("#block-title"), typeChip = $("#type-chip"), titleChip = $("#title-chip");
     const nativeType = $("#native-type-field"), nativeTitle = $("#native-title-field");
     let titleExpanded = false, nativePicker = false;
@@ -22,7 +23,12 @@
       else { type.removeAttribute("tabindex"); type.removeAttribute("aria-hidden"); }
     }
     function showTitle() { deps.reveal(title); titleExpanded = true; refresh(); title.focus(); }
-    function focusType() { const field = mobile.matches ? typeChip : type; deps.reveal(field); field.focus(); }
+    function focusType() {
+      const field = mobile.matches ? typeChip : type;
+      deps.reveal(field);
+      if (desktop.matches) T.focusWithinDesktopPanel(field, field.closest(".block-editor"));
+      else field.focus();
+    }
     function pickType() {
       if (mobile.matches && typeof type.showPicker === "function") {
         try { type.showPicker(); return; } catch { /* Se ofrece el control nativo visible. */ }

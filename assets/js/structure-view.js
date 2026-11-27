@@ -9,6 +9,8 @@
       proposition: "⇒", proof: "∎", example: "◇", note: "✧", itemize: "•",
       enumerate: "№", bibliography: "▤", image: "▧" };
     const coarse = document.defaultView.matchMedia("(pointer: coarse)");
+    const desktop = T.desktopCardsMedia(document);
+    const disposeDesktopCards = T.createDesktopCards(document, blockList, desktop);
     const mode = $("#structure-mode"), search = $("#structure-search"), results = $("#structure-results");
     const win = document.defaultView, key = "tex-notes:structure:v1";
     const normalize = value => value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
@@ -93,14 +95,19 @@
       const meta = document.createElement("p");
       meta.className = "block-meta";
       meta.textContent = `Nivel ${path.length} · ${where}`;
-      if (coarse.matches) meta.textContent = "N" + path.length + " · " + (parent ? T.pathLabel(parentPath) : "raíz");
+      if (coarse.matches || desktop.matches) meta.textContent = "N" + path.length + " · " + (parent ? T.pathLabel(parentPath) : "raíz");
       const target = getTarget(block.label);
       if (target) meta.textContent += " · " + target.word + (target.number === null ? "" : " " + target.number) + " · " + target.label;
+      if (desktop.matches) {
+        heading.title = describeBlock(block, path);
+        meta.title = `Nivel ${path.length} · ${where}` + (target ? " · " + target.label : "");
+      }
       const preview = document.createElement("div");
       preview.className = "block-preview";
       renderBlockPreview(preview, block, { parentPath, structure: true });
       const toggle = document.createElement("button");
       toggle.type = "button"; toggle.className = "preview-toggle"; toggle.textContent = "Ver todo"; toggle.hidden = true;
+      toggle.classList.toggle("tertiary", desktop.matches);
       preview.classList.toggle("expanded", expanded.has(block.id));
       toggle.setAttribute("aria-expanded", String(expanded.has(block.id)));
       if (expanded.has(block.id)) toggle.textContent = "Ver menos";
@@ -149,6 +156,8 @@
       article.append(head, preview, toggle, actions);
       resize.observe(preview);
       for (const extend of blockItemExtensions) extend(block, path, { article, actions, more, subject });
+      // En el portátil, Editar precede al plegado y a la vista previa en el orden de Tab.
+      if (desktop.matches) article.prepend(actions);
       item.append(article);
 
       if (block.children.length) {
@@ -190,7 +199,8 @@
       const current = rows.get(id)?.article;
       if (current && action) [...current.querySelectorAll("button[data-action]")].find(button => button.dataset.action === action)?.focus({ preventScroll: true });
       else if (current && active.matches(".branch-toggle, .preview-toggle, summary")) {
-        current.querySelector(active.matches("summary") ? "summary" : "." + active.classList[active.classList.length - 1])?.focus({ preventScroll: true });
+        const selector = ["summary", ".branch-toggle", ".preview-toggle"].find(candidate => active.matches(candidate));
+        current.querySelector(selector)?.focus({ preventScroll: true });
       }
       syncReferenceKey();
       saveSession();
@@ -208,7 +218,8 @@
       deps.reveal(button);
       let disclosure = button.closest("details");
       while (disclosure) { disclosure.open = true; disclosure = disclosure.parentElement.closest("details"); }
-      button.focus();
+      if (desktop.matches) T.focusWithinDesktopPanel(button, blockList.closest(".structure-panel"));
+      else button.focus();
       return document.activeElement === button || (action !== "edit" && focusAction("edit", path));
     }
     function focusById(action, id) {
@@ -226,6 +237,14 @@
     }
 
     coarse.addEventListener("change", renderBlocks);
-    return { dispose() { selection.disconnect(); resize.disconnect(); coarse.removeEventListener("change", renderBlocks); }, refresh: renderBlocks, actionButton, renderBlocks, focusAction, focusAfterRemoval, focusById };
+    desktop.addEventListener("change", renderBlocks);
+    return {
+      dispose() {
+        selection.disconnect(); resize.disconnect(); disposeDesktopCards();
+        coarse.removeEventListener("change", renderBlocks);
+        desktop.removeEventListener("change", renderBlocks);
+      },
+      refresh: renderBlocks, actionButton, renderBlocks, focusAction, focusAfterRemoval, focusById,
+    };
   };
 })(globalThis.TexNotes);
