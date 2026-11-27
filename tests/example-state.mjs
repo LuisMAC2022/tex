@@ -1,3 +1,12 @@
+export const nestedSection = {
+  type: "text", title: "Cambio de orden", content: "Describimos el recinto antes de integrar.",
+  children: [
+    { type: "text", title: "Cortes verticales", content: "Fijamos la abscisa y recorremos la altura.",
+      children: [{ type: "text", title: "Extremos del corte", content: "Las curvas inferior y superior dan los límites." }] },
+    { type: "text", title: "Cortes horizontales", content: "Fijamos la ordenada y recorremos la anchura." },
+  ],
+};
+
 /**
  * Estado de referencia compartido por la prueba y por la regeneración del ejemplo.
  *
@@ -22,5 +31,6 @@ export const exampleState = {
     },
     { type: "example", title: "Rectángulo", content: "Para $f(x,y)=x+y$ en $[0,1] \\times [0,2]$, calculamos el valor por iteración con \\textbf{el orden natural}.\n\nEste bloque tiene dos párrafos y llega al .tex tal cual se escribió." },
     { type: "note", title: "", content: "La argumentación escrita cuenta para la calificación: no basta con el símbolo." },
+    nestedSection,
   ],
 };

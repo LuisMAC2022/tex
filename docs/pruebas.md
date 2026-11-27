@@ -155,7 +155,7 @@
 - el informe conserva veinte errores, tres líneas de pila y los más recientes primero
 - acepta rechazos sin pila, un valor ilegible y un almacén antiguo ilegible
 
-## `tests/generator.test.js` — 37 pruebas
+## `tests/generator.test.js` — 38 pruebas
 
 - los metadatos y los títulos escapan todos los caracteres reservados
 - el contenido de un bloque no recibe ningún escape
@@ -194,6 +194,7 @@
 - los hijos de una imagen con ruta vacía se emiten aunque se omita la imagen
 - Demostración usa proof predefinido y su título opcional sin redeclararlo
 - hyperref se carga al final de la lista blanca únicamente con enlaces activos en el contenido
+- los comandos y títulos emitidos coinciden en orden con el esquema
 
 ## `tests/identificadores.test.js` — 3 pruebas
 
@@ -384,12 +385,13 @@
 - cada entorno de teorema lleva un contador continuo e independiente
 - cinco niveles numerados incluyen paragraph y subparagraph
 
-## `tests/pdflatex.test.js` — 4 pruebas
+## `tests/pdflatex.test.js` — 5 pruebas
 
 - pdflatex compila los fragmentos radiales y el enlace en un documento
 - pdflatex confirma los números de cada destino tras dos compilaciones
 - pdflatex confirma las ocho citas del curso y el orden de bibcite en IEEE
 - pdflatex confirma las ocho citas del curso y el orden de bibcite en APA
+- el PDF imprime los números de los encabezados en el orden del esquema
 
 ## `tests/radial.test.js` — 6 pruebas
 
@@ -492,4 +494,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-335 pruebas con `node:test` más la comprobación estructural.
+337 pruebas con `node:test` más la comprobación estructural.

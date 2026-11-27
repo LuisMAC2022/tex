@@ -2,11 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { loadTexNotes } from "./load-app.mjs";
-import { exampleState as example } from "./example-state.mjs";
+import { exampleState as example, nestedSection } from "./example-state.mjs";
 
 const {
   BLOCK_TYPES, blockToLatex, buildPreamble, buildTheoremDefs,
-  contentToLatex, escapeMetadata, generateLatex, normalizeLineBreaks, sanitizeFilename,
+  contentToLatex, escapeMetadata, generateLatex, normalizeLineBreaks, outlineEntries, sanitizeFilename,
 } = await loadTexNotes();
 
 
@@ -213,5 +213,30 @@ test("hyperref se carga al final de la lista blanca únicamente con enlaces acti
   }
   for (const content of ["% \\href{x}{y}", "\\\\url{x}", "\\urlname", "sin enlace"]) {
     assert.ok(!buildPreamble([], [{ content }]).includes("hyperref"));
+  }
+});
+
+test("los comandos y títulos emitidos coinciden en orden con el esquema", () => {
+  const texto = (title, children = []) => ({ type: "text", title, content: "Contenido", children });
+  let profunda = texto("Nivel 7");
+  for (let i = 6; i >= 1; i--) profunda = texto("Nivel " + i, [profunda]);
+  const casos = [
+    [texto("A & B"), texto("Costo {neto} al 5%")],
+    [nestedSection],
+    [profunda],
+    [texto("Raíz", [texto(" ", [texto("Interior")])])],
+    [{ type: "definition", children: [texto("Texto en definición")] }],
+  ];
+  for (const blocks of casos) {
+    for (const topic of ["", "Tema #1"]) {
+      const state = { metadata: { topic }, blocks };
+      const emitidos = Array.from(generateLatex(state).matchAll(
+        /^\\(section|subsection|subsubsection|paragraph|subparagraph)\{(.*)\}$/gm
+      ), ([, command, title]) => [command, title]);
+      const esperados = Array.from(outlineEntries(state))
+        .filter(entry => entry.kind === "heading" || entry.kind === "topic")
+        .map(entry => [entry.command, escapeMetadata(entry.title)]);
+      assert.deepEqual(emitidos, esperados, "los comandos y títulos emitidos coinciden en orden con el esquema");
+    }
   }
 });

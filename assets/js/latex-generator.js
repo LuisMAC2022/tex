@@ -64,12 +64,12 @@
     const depth = context.depthContext;
     const childDepth = outline ? TexNotes.listOutlineDepthContext(outline, depth) :
       type.kind === "theorem" ? TexNotes.listDepthWithEnvironment(depth, type.environment) : depth;
-    return { type, outline, childContext: childDepth === depth ? context : { parentType: type.id, depthContext: childDepth } };
+    return { type, outline, childContext: childDepth === depth ? context : { ...context, parentType: type.id, depthContext: childDepth } };
   }
 
   const floatingImage = context => !context.parentType || context.parentType === "text";
 
-  function blockToLatex(block = {}, context = {}) {
+  function blockToLatex(block = {}, context = {}, path = []) {
     if (!TexNotes.blockIsEmitted(block)) return "";
     const { type, outline, childContext } = emissionContext(block, context);
     const { depthContext } = context;
@@ -77,7 +77,7 @@
     const label = TexNotes.labelOf(block);
     const anchor = label ? `\\label{${label}}` : "";
     const children = (Array.isArray(block.children) ? block.children : [])
-      .map((child) => ({ separator: childSeparator(child), latex: blockToLatex(child, childContext) }))
+      .map((child, index) => ({ separator: childSeparator(child), latex: blockToLatex(child, childContext, [...path, index]) }))
       .filter((child) => child.latex);
     const withChildren = (base) => children.reduce((text, child) => (text ? `${text}${child.separator}${child.latex}` : child.latex), base);
 
@@ -125,8 +125,14 @@
     }
     const body = content.trim();
     if (type.kind === "text") {
-      const heading = escapeMetadata(block.title).trim();
-      return withChildren(heading ? [`\\subsection{${heading}}`, body].filter(Boolean).join("\n") : body);
+      /** @decision DEC-035 ancla:08385163 tramo:4
+       * El documento toma el encabezado de su esquema común. Un bloque suelto
+       * carece de posición en el documento y conserva la subsección histórica.
+       */
+      const entry = context.entries?.get(TexNotes.pathToKey(path));
+      const title = escapeMetadata(context.entries ? entry?.title : block.title).trim();
+      const command = context.entries ? entry?.command : "subsection";
+      return withChildren(title ? [`\\${command}{${title}}`, body].filter(Boolean).join("\n") : body);
     }
     return `\\begin{${type.environment}}${optionalTitle(block.title)}${anchor}\n${withChildren(body)}\n\\end{${type.environment}}`;
   }
@@ -195,10 +201,11 @@
   }
 
   function buildBody(state = {}, info) {
-    const metadata = state.metadata || {};
-    const topic = escapeMetadata(metadata.topic).trim();
-    const blocks = (Array.isArray(state.blocks) ? state.blocks : []).map((block) => blockToLatex(block)).filter(Boolean);
-    return ["\\begin{document}", "\\maketitle", topic ? `\\section{${topic}}` : "", ...blocks,
+    const entries = new Map(TexNotes.outlineEntries(state).map(entry => [entry.key, entry]));
+    const topic = entries.get(null);
+    const blocks = (Array.isArray(state.blocks) ? state.blocks : [])
+      .map((block, index) => blockToLatex(block, { entries }, [index])).filter(Boolean);
+    return ["\\begin{document}", "\\maketitle", topic ? `\\${topic.command}{${escapeMetadata(topic.title)}}` : "", ...blocks,
       TexNotes.bibliographyLatex(state, info)].filter(Boolean).join("\n\n");
   }
 

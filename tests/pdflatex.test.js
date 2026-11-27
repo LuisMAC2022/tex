@@ -6,6 +6,8 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { T, fragmentBlocks } from "./radial-fixtures.mjs";
 
+import { nestedSection } from "./example-state.mjs";
+
 const available = spawnSync("pdflatex", ["--version"], { encoding: "utf8" });
 test("pdflatex compila los fragmentos radiales y el enlace en un documento", { skip: available.error?.code === "ENOENT" && "pdflatex no está instalado" }, async () => {
   const dir = await mkdtemp(join(tmpdir(), "notas-latex-"));
@@ -20,7 +22,7 @@ test("pdflatex compila los fragmentos radiales y el enlace en un documento", { s
 });
 
 const optional = { skip: available.error?.code === "ENOENT" && "pdflatex no está instalado" };
-async function compileTwice(state, files = {}) {
+async function compileTwice(state, files = {}, readResult = dir => readFile(join(dir, "nota.aux"), "utf8")) {
   const dir = await mkdtemp(join(tmpdir(), "notas-referencias-"));
   try {
     for (const [name, bytes] of Object.entries(files)) await writeFile(join(dir, name), bytes);
@@ -33,7 +35,7 @@ async function compileTwice(state, files = {}) {
     }
     const log = await readFile(join(dir, "nota.log"), "utf8");
     assert.doesNotMatch(log, /(?:Reference|Citation) .+ undefined|undefined (?:references|citations)/i);
-    return await readFile(join(dir, "nota.aux"), "utf8");
+    return await readResult(dir);
   } finally { await rm(dir, {recursive: true, force: true}); }
 }
 
@@ -66,3 +68,26 @@ async function checkCourseCitations(style) {
 }
 test("pdflatex confirma las ocho citas del curso y el orden de bibcite en IEEE", optional, () => checkCourseCitations("ieee"));
 test("pdflatex confirma las ocho citas del curso y el orden de bibcite en APA", optional, () => checkCourseCitations("apa"));
+
+const extractor = spawnSync("pdftotext", ["-v"], { encoding: "utf8" });
+test("el PDF imprime los números de los encabezados en el orden del esquema", {
+  skip: optional.skip || (extractor.error?.code === "ENOENT" && "pdftotext no está instalado"),
+}, async () => {
+  const state = { metadata: { title: "Prueba de niveles", topic: "Recintos" }, blocks: [nestedSection] };
+  const texto = await compileTwice(state, {}, dir => {
+    const result = spawnSync("pdftotext", ["-layout", "nota.pdf", "-"], { cwd: dir, encoding: "utf8" });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout;
+  });
+  const headings = Array.from(T.outlineEntries(state))
+    .filter(entry => entry.kind === "topic" || entry.kind === "heading");
+  const impresos = [];
+  for (const line of texto.split(/\r?\n/)) {
+    // El punto final del número depende de babel. Un párrafo puede compartir línea con su texto.
+    const [, number, body] = line.trim().match(/^(?:(\d+(?:\.\d+)*)\.?\s+)?(.*)$/);
+    const heading = headings.find(entry => body === entry.title || body.startsWith(entry.title + " "));
+    if (heading) impresos.push([number ?? null, heading.title]);
+  }
+  assert.deepEqual(impresos, headings.map(entry => [entry.number, entry.title]), texto);
+});

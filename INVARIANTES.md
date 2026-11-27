@@ -99,3 +99,9 @@ Guardián: `tests/actions.test.js` → "el menú del bloque conserva sus ocho po
 Guardián: `tests/menu-config.test.js` → "la resolución mantiene las ocho posiciones e incorpora los sectores predeterminados"
 
 Un sector deshabilitado mantiene su sitio en el anillo. En un menú personal, la persona elige las posiciones y los intercambios. Las estadísticas de uso pertenecen a las sugerencias de escritura. [DEC-032](decisiones/DEC-032-menu-de-la-tarjeta.md)
+
+### INV-014 — El nivel de cada encabezado generado es el que calcula outlineEntries()
+Guardián: `tests/generator.test.js` → "los comandos y títulos emitidos coinciden en orden con el esquema"
+
+La comparación incluye el tema, los textos anidados y los encabezados situados
+dentro de otros entornos. [DEC-035](decisiones/DEC-035-nivel-por-profundidad.md)
