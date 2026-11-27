@@ -141,7 +141,8 @@
    * Deriva las declaraciones amsthm de la tabla de bloques, de modo que el
    * preámbulo no pueda desincronizarse de los tipos disponibles.
    */
-  function buildTheoremDefs() {
+  function buildTheoremDefs(theoremsBySection = false) {
+    const parent = theoremsBySection ? "[section]" : "";
     const declared = TexNotes.BLOCK_TYPES.filter((type) => type.kind === "theorem" && !type.predefined);
     const styles = [...STYLE_ORDER, ...declared.map((type) => type.style)].filter((style, index, all) => all.indexOf(style) === index);
     const lines = [];
@@ -149,7 +150,7 @@
     for (const style of styles) {
       for (const type of declared.filter((entry) => entry.style === style)) {
         if (style !== current) { lines.push(`\\theoremstyle{${style}}`); current = style; }
-        lines.push(`\\newtheorem{${type.environment}}{${type.heading}}`);
+        lines.push(`\\newtheorem{${type.environment}}{${type.heading}}${parent}`);
       }
     }
     return lines.join("\n");
@@ -166,7 +167,8 @@
       return (block.type !== "image" && tokens.some(token => token === "\\href" || token === "\\url")) || hasDocumentLinks(block.children);
     });
   }
-  function buildPreamble(macros = [], blocks = [], references = [], bibliography = {}, info = TexNotes.citationInfo({ blocks, references })) {
+  function buildPreamble(macros = [], blocks = [], references = [], bibliography = {}, info = TexNotes.citationInfo({ blocks, references }), numbering) {
+    const { levels, theoremsBySection } = TexNotes.normalizeNumbering(numbering);
     return [
       "\\documentclass[11pt]{article}",
       "% fontenc genera PDF con caracteres latinos copiables.",
@@ -187,8 +189,9 @@
         bibliography.style === "apa" ? "\\usepackage[round,authoryear]{natbib}" : "\\usepackage[numbers,square,sort&compress]{natbib}"] : []),
       ...(hasDocumentLinks(blocks) ? ["\\usepackage[hidelinks]{hyperref}"] : []),
       ...(macrosToPreamble(macros) ? [macrosToPreamble(macros)] : []),
+      ...(levels === TexNotes.DEFAULT_NUMBERED_LEVELS ? [] : [`\\setcounter{secnumdepth}{${levels}}`]),
       "% Los entornos siguientes se derivan de la tabla de tipos de bloque.",
-      buildTheoremDefs(),
+      buildTheoremDefs(theoremsBySection),
     ].join("\n");
   }
 
@@ -214,7 +217,7 @@
   /** El archivo resultante es autocontenido: no depende de ningún .sty externo. */
   function generateLatex(state = {}) {
     const info = TexNotes.citationInfo(state);
-    return `${buildPreamble(state.macros, state.blocks, state.references, state.bibliography, info)}\n\n${buildMetadata(state.metadata)}\n\n${buildBody(state, info)}\n\n${buildDocumentEnd()}\n`;
+    return `${buildPreamble(state.macros, state.blocks, state.references, state.bibliography, info, state.numbering)}\n\n${buildMetadata(state.metadata)}\n\n${buildBody(state, info)}\n\n${buildDocumentEnd()}\n`;
   }
 
   Object.assign(TexNotes, {

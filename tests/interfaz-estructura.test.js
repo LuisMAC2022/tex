@@ -1,6 +1,6 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
-import { cerrar, omitir, sesionDePrueba, foco } from "./navegador.mjs";
+import { cerrar, omitir, sesionDePrueba, foco, irAlPanel } from "./navegador.mjs";
 
 after(cerrar);
 const opciones = { skip: omitir };
@@ -121,4 +121,38 @@ test("eliminar un padre pide confirmación, mueve el foco y permite deshacer y r
   assert.match(await tarjeta(p, 1).innerText(), /Hijo/);
   await p.click("#redo-structure");
   assert.ok(await p.locator("#empty-blocks").isVisible());
+});
+
+test("Datos renumera tarjetas y Esquema y recupera los ajustes del documento", opciones, async t => {
+  const { pagina: p } = await sesionDePrueba(t);
+  await irAlPanel(p, "Documento");
+  await p.fill("#topic", "Unidad");
+  await irAlPanel(p, "Escribir");
+  if (!(await p.locator("#block-title").isVisible())) await p.click("#title-chip");
+  await p.fill("#block-title", "Método");
+  await añadir(p, "Texto");
+  await p.selectOption("#block-type", "theorem");
+  await añadir(p, "Enunciado");
+
+  const heading = i => tarjeta(p, i).locator("h4").getAttribute("aria-label");
+  assert.equal(await heading(0), "Subsección 1.1 Método");
+  assert.equal(await heading(1), "Teorema 1");
+
+  await irAlPanel(p, "Documento");
+  const metadata = p.locator("#metadata-details");
+  if (await metadata.getAttribute("open") === null) await metadata.locator("summary").first().click();
+  await p.selectOption("#numbering-levels", "1");
+  await p.check("#theorems-by-section");
+  assert.equal(await heading(0), "Subsección Método");
+  assert.equal(await heading(1), "Teorema 1.1");
+
+  await irAlPanel(p, "Escribir");
+  await p.selectOption("#structure-mode", "outline");
+  assert.equal(await heading(0), "Subsección Método");
+  assert.equal(await heading(1), "Teorema 1.1");
+  await p.reload();
+  await p.click("#recover-session");
+  assert.equal(await p.locator("#numbering-levels").inputValue(), "1");
+  assert.equal(await p.locator("#theorems-by-section").isChecked(), true);
+  assert.equal(await heading(1), "Teorema 1.1");
 });

@@ -84,7 +84,7 @@ test("la migración de v5, la configuración antigua y el proyecto conservan la 
   const V=await loadTexNotes(["block-types.js","block-tree.js","image-options.js","references.js","versions.js"]);
   for (const version of [1,2,3,4,5]) {
     const old=V.normalizeDraft({version,metadata:{},blocks:[],references:[book],bibliography:{style:"apa"}});
-    assert.equal(old.version,6); assert.deepEqual(plain(old.references),[]);
+    assert.equal(old.version,V.DRAFT_VERSION); assert.deepEqual(plain(old.references),[]);
     assert.deepEqual(plain(old.bibliography),{style:"ieee",includeUncited:false});
   }
   for(const c of [config,{...config,references:T.COURSE_REFERENCES},{...config,references:[]}]) assert.deepEqual(plain(T.validateConfiguration(c)),[]);
@@ -107,7 +107,7 @@ test("la migración de v5, la configuración antigua y el proyecto conservan la 
   const archived = {...versions[0],state:{version:4,metadata:{},macros:[],blocks:[{type:"image",content:"a.png",options:{label:"mapa"}}]}};
   const [upgraded] = V.upgradeStoredVersions([archived]);
   assert.equal(upgraded.id,archived.id); assert.equal(upgraded.createdAt,archived.createdAt);
-  assert.equal(upgraded.state.version,6); assert.equal(upgraded.state.blocks[0].label,"fig:mapa");
+  assert.equal(upgraded.state.version,V.DRAFT_VERSION); assert.equal(upgraded.state.blocks[0].label,"fig:mapa");
   assert.deepEqual(plain(upgraded.state.references),[]); assert.equal(V.upgradeStoredVersions([upgraded])[0],upgraded);
 });
 

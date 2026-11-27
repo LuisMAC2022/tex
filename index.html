@@ -241,6 +241,19 @@
             <p class="field"><label for="date">Fecha</label><input id="date" name="date" type="date"></p>
             <p class="field field-wide"><label for="topic">Tema o unidad</label><input id="topic" name="topic" type="text"></p>
           </fieldset>
+          <div id="document-numbering">
+            <p class="field">
+              <label for="numbering-levels">Numerar hasta</label>
+              <select id="numbering-levels">
+                <option value="1">Sección</option>
+                <option value="2">Subsección</option>
+                <option value="3" selected>Subsubsección</option>
+                <option value="4">Párrafo</option>
+                <option value="5">Subpárrafo</option>
+              </select>
+            </p>
+            <label class="check-field"><input type="checkbox" id="theorems-by-section"> Reiniciar definiciones y teoremas en cada sección</label>
+          </div>
           <details id="document-macros">
             <summary>Macros del documento</summary>
             <p>Las macros viajan con el proyecto y se definen en el preámbulo del documento.</p>

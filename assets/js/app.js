@@ -124,7 +124,7 @@
   }
   function state() {
     return { documentId, metadata: metadata(), blocks: cloneBlocks(blocks), macros: macros.map(m => ({ ...m })),
-      references: global.TexNotes.normalizeReferences(references), bibliography: { ...bibliography } };
+      references: global.TexNotes.normalizeReferences(references), bibliography: { ...bibliography }, numbering: numberingControls.get() };
   }
   function announce(message) { status.textContent = message; }
   function setMetadata(values = {}) {
@@ -159,11 +159,14 @@
 
   /* --- Lista anidada --- */
 
-  const getTopic = () => form.elements.topic.value;
+  const numberingControls = global.TexNotes.bindNumberingControls(document, rememberChange, () => {
+    renderBlocks(); setEditorTarget(editorTarget());
+  });
+  const outlineSettings = () => ({ metadata: { topic: form.elements.topic.value }, numbering: numberingControls.get() });
   const structure = global.TexNotes.createStructureView(document, {
     reveal: node => panels.reveal(node), getBlocks: () => blocks, getTarget: label => blockTargets.get(label),
-    refreshTargets: tree => { blockTargets = new Map(global.TexNotes.referenceTargets({ blocks: tree }).map(target => [target.label, target])); },
-    getTopic, renderBlockPreview, blockItemExtensions, syncReferenceKey, saveSession,
+    refreshTargets: snapshot => { blockTargets = new Map(global.TexNotes.referenceTargets(snapshot).map(target => [target.label, target])); },
+    outlineSettings, renderBlockPreview, blockItemExtensions, syncReferenceKey, saveSession,
   });
   const { actionButton, describeBlock, renderBlocks, focusAction, focusAfterRemoval, focusById } = structure;
 
@@ -259,7 +262,7 @@
     announce(cancelled ? "Edición cancelada." : "El siguiente bloque se añadirá en la raíz.");
   });
 
-  const moveAnnouncements = global.TexNotes.createMoveAnnouncements(document, getTopic, announce);
+  const moveAnnouncements = global.TexNotes.createMoveAnnouncements(document, outlineSettings, announce);
   const handleBlockAction = global.TexNotes.createBlockActions(document, {
     getBlocks: () => blocks, setTray: next => { tray = next; }, renderBlocks, announce, convertLegacyBlock,
     focusType: blockForm.focusType, openMenu: (button, path, keyboard) => radial.openAtButton(button, { source: "card", path }, keyboard),
@@ -1563,7 +1566,7 @@
     if (!draft) { announce("No hay una sesión válida para recuperar."); return; }
     cancelTemplateForStructuralChange();
     rememberChange();
-    setDocumentMacros(draft.macros, false); loadReferences(draft);
+    setDocumentMacros(draft.macros, false); loadReferences(draft); numberingControls.load(draft.numbering);
     selectDocument(draft.documentId); setMetadata(draft.metadata); blocks = draft.blocks;
     const editor = pendingSession.editor || {};
     $("#block-type").value = blockType(editor.type) ? editor.type : "text";
@@ -1602,7 +1605,7 @@
     if (!data) { announce("La versión guardada es incompatible."); return; }
     form.inert=false;
     cancelTemplateForStructuralChange(); clearMacroForm();
-    selectDocument(id); setDocumentMacros(data.macros,false); loadReferences(data); setMetadata(data.metadata); blocks=data.blocks;
+    selectDocument(id); setDocumentMacros(data.macros,false); loadReferences(data); numberingControls.load(data.numbering); setMetadata(data.metadata); blocks=data.blocks;
     resetBlockEditor(); renderBlocks(); renderEditorPreview(); output.value=""; generatedSnapshot=null;
     $("#version-diff").hidden=true;
     if (!focusById("edit",targetId)) focusBlockContent();
@@ -1690,27 +1693,6 @@
       versionStatus("Versión guardada."); void reportStorage(store,true);
     });
   });
-  function describeDiff(diff) {
-    const lines=[];
-    for (const [key,label] of [["added","Añadido"],["removed","Eliminado"],["moved","Movido"],["modified","Modificado"]]) {
-      for (const item of diff[key]) {
-        lines.push(label+" · "+(item.title || blockLabel(item.type))+" ("+item.id+")");
-        if (item.from) lines.push("  "+(item.from.parent||"Raíz")+" · "+(item.from.position+1)+" → "+(item.to.parent||"Raíz")+" · "+(item.to.position+1));
-        if (item.fields) lines.push("  "+item.fields.map(k=>({title:"título",type:"tipo",content:"contenido",options:"opciones",listFormat:"formato de lista",label:"etiqueta"})[k]).join(", "));
-        if (item.lines?.truncated) lines.push("  Diferencia por líneas omitida por tamaño.");
-        for (const line of item.lines?.changes||[]) lines.push("  "+(line.kind==="added"?"+ ":"− ")+line.line+" "+line.text);
-      }
-    }
-    for (const change of diff.references) {
-      const action = {added:"añadida",removed:"eliminada",modified:"modificada"}[change.kind];
-      lines.push("Referencia " + action + " · " + change.key);
-      if (change.kind === "modified") lines.push("  " + JSON.stringify(change.before) + " → " + JSON.stringify(change.after));
-    }
-    for (const [key,label] of [["metadata","Metadato"],["macros","Macro"],["bibliography","Bibliografía"]]) for (const change of diff[key]) {
-      lines.push(label+" "+change.key+": "+JSON.stringify(change.before??null)+" → "+JSON.stringify(change.after??null));
-    }
-    return lines.join("\n") || "Sin cambios respecto a esta versión.";
-  }
   $("#version-list").addEventListener("click",event=>{
     const button=event.target.closest("button[data-version-id]"); if (!button) return;
     const id=button.dataset.versionId, op=button.dataset.operation;
@@ -1722,7 +1704,7 @@
       const get=all=>{const row=all.find(v=>v.id===id); if(!row) throw Error("La versión ya no existe."); return row;};
       if (op==="diff") {
         const row=get(await store.read()), panel=$("#version-diff");
-        panel.textContent=describeDiff(T.diffDocuments(row.state,state())); panel.hidden=false; panel.focus(); return;
+        panel.textContent=T.describeDiff(T.diffDocuments(row.state,state())); panel.hidden=false; panel.focus(); return;
       }
       const snapshot=state(), currentFocus=focusId();
       let restored;

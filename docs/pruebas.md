@@ -23,7 +23,7 @@
 - app.js no supera su presupuesto de bytes
 - cada script propio se carga en index.html y lo revisa check:js
 
-## `tests/block-tree.test.js` — 46 pruebas
+## `tests/block-tree.test.js` — 47 pruebas
 
 - la ausencia de children equivale a una lista vacía y el estado plano sigue siendo válido
 - solo los tipos declarados como contenedores admiten hijos
@@ -71,6 +71,7 @@
 - listas nuevas y antiguas conservan su propio formato al copiar, duplicar, mover, guardar y restaurar
 - una sesión vacía no borra el autoguardado y el bloque en curso cuenta como trabajo
 - la fecha inicial es la local del día, con ceros, no la UTC
+- la migración del borrador completa las opciones de numeración
 
 ## `tests/completion.test.js` — 12 pruebas
 
@@ -159,7 +160,7 @@
 - el informe conserva veinte errores, tres líneas de pila y los más recientes primero
 - acepta rechazos sin pila, un valor ilegible y un almacén antiguo ilegible
 
-## `tests/generator.test.js` — 38 pruebas
+## `tests/generator.test.js` — 39 pruebas
 
 - los metadatos y los títulos escapan todos los caracteres reservados
 - el contenido de un bloque no recibe ningún escape
@@ -199,6 +200,7 @@
 - Demostración usa proof predefinido y su título opcional sin redeclararlo
 - hyperref se carga al final de la lista blanca únicamente con enlaces activos en el contenido
 - los comandos y títulos emitidos coinciden en orden con el esquema
+- el preámbulo emite la profundidad y el contador padre solo cuando se configuran
 
 ## `tests/identificadores.test.js` — 3 pruebas
 
@@ -249,13 +251,14 @@
 - el modo de concentración y los paneles estrechos conservan borrador y selección
 - una integral doble marcada como favorita se inserta desde la hoja táctil
 
-## `tests/interfaz-estructura.test.js` — 5 pruebas
+## `tests/interfaz-estructura.test.js` — 6 pruebas
 
 - editar y añadir dentro sitúan el foco en el tipo y conservan el nivel de los hijos
 - duplicar, subir y bajar conservan la identidad visible y el foco de la acción
 - anidar y sacar anuncian la numeración y mantienen el foco en el botón de la nueva ruta
 - copiar y pegar usan la bandeja y el foco pasa a la copia
 - eliminar un padre pide confirmación, mueve el foco y permite deshacer y rehacer
+- Datos renumera tarjetas y Esquema y recupera los ajustes del documento
 
 ## `tests/interfaz-informe.test.js` — 2 pruebas
 
@@ -378,7 +381,7 @@
 - un anillo independiente conserva enlaces, huecos y submenús en el archivo portátil
 - un enlace a las acciones de tarjeta conserva el sector de mover deshabilitado en el editor
 
-## `tests/outline.test.js` — 19 pruebas
+## `tests/outline.test.js` — 21 pruebas
 
 - el tema numera los encabezados hermanos como subsecciones
 - las ramas se numeran en profundidad y reinician los contadores inferiores
@@ -389,8 +392,10 @@
 - un encabezado dentro de una definición conserva su nivel y se marca fuera de lugar
 - cada entorno de teorema lleva un contador continuo e independiente
 - cinco niveles numerados incluyen paragraph y subparagraph
+- la profundidad del documento numera del primer al último nivel elegido
+- cada contador de teorema se reinicia solo al comenzar una sección
 - las insignias del tema y sus textos muestran la numeración del PDF
-- los encabezados sin número muestran Párrafo o Subpárrafo y solo el título
+- los encabezados sin número conservan la insignia de su nivel y muestran solo el título
 - las etiquetas de teorema incluyen su contador y el título opcional
 - los bloques sin encabezado muestran el tipo y su título si existe
 - la etiqueta de un encabezado fuera de lugar avisa qué entorno lo contiene
@@ -400,13 +405,14 @@
 - el resumen detecta cambios de nivel entre dos encabezados sin número y usa la clave si no hay id
 - el resumen informa cuando un movimiento no cambia la numeración
 
-## `tests/pdflatex.test.js` — 5 pruebas
+## `tests/pdflatex.test.js` — 6 pruebas
 
 - pdflatex compila los fragmentos radiales y el enlace en un documento
 - pdflatex confirma los números de cada destino tras dos compilaciones
 - pdflatex confirma las ocho citas del curso y el orden de bibcite en IEEE
 - pdflatex confirma las ocho citas del curso y el orden de bibcite en APA
 - el PDF imprime los números de los encabezados en el orden del esquema
+- el PDF coincide con el esquema a cinco niveles y reinicia los teoremas por sección
 
 ## `tests/radial.test.js` — 6 pruebas
 
@@ -494,7 +500,7 @@
 - la lista abierta tiene prioridad sobre el alcance y el cursor
 - el arrastre cuenta pasos completos con signo cada 28 píxeles
 
-## `tests/versions.test.js` — 6 pruebas
+## `tests/versions.test.js` — 7 pruebas
 
 - el historial limita cien pasos, restaura en ambas direcciones y descarta la rama rehecha
 - las diferencias por id abarcan posición, padre, opciones, lista, macros y líneas
@@ -502,6 +508,7 @@
 - las exportaciones se deduplican por contenido y la migración del borrador es idempotente
 - el proyecto valida, informa qué versiones omite y combina por id sin sobrescribir
 - el autoguardado distingue cambios pendientes, guardado correcto y error sin perder la copia previa
+- las opciones de numeración se conservan en versiones, historial y proyectos
 
 ## `tests/check-site.mjs` — comprobación estructural
 
@@ -509,4 +516,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-352 pruebas con `node:test` más la comprobación estructural.
+359 pruebas con `node:test` más la comprobación estructural.

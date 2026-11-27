@@ -43,6 +43,9 @@
 
   function referenceTargets(state) {
     const counters = new Map(), uncertain = new Set(), targets = [];
+    const outline = state.numbering?.theoremsBySection === true
+      ? new Map(T.outlineEntries(state).filter(entry => entry.kind === "theorem").map(entry => [entry.key, entry.number]))
+      : null;
     for (const { block, type, path, context } of emittedBlocks(state)) {
       for (const { name, arg } of documentCommands(block)) {
         if (name === "begin") uncertain.add(counterForEnvironment(arg));
@@ -52,8 +55,9 @@
       const label = T.labelOf(block);
       if (type.kind === "equation" && (!label || !block.content?.trim())) continue;
       if (type.kind === "image" && (!block.content?.trim() || !(label || (T.floatingImage(context) && block.title?.trim())))) continue;
-      const number = (counters.get(type.id) || 0) + 1;
-      counters.set(type.id, number);
+      const count = (counters.get(type.id) || 0) + 1;
+      counters.set(type.id, count);
+      const number = outline?.get(T.pathToKey(path)) ?? count;
       if (label) targets.push({ label, typeId: type.id, word: type.heading, number, path, title: block.title || "" });
     }
     for (const target of targets) if (uncertain.has(target.typeId)) target.number = null;

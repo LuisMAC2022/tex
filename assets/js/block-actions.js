@@ -18,7 +18,7 @@
     });
   };
 
-  T.createMoveAnnouncements = function (doc, getTopic, announce) {
+  T.createMoveAnnouncements = function (doc, outlineSettings, announce) {
     const line = doc.querySelector("#structure-move-status");
     function show(summary, detail = "") {
       line.hidden = false;
@@ -28,9 +28,9 @@
     return {
       error: show,
       moved(beforeBlocks, afterBlocks, path, detail = "") {
-        const metadata = { topic: getTopic() };
-        const before = T.outlineEntries({ blocks: beforeBlocks, metadata });
-        const after = T.outlineEntries({ blocks: afterBlocks, metadata });
+        const settings = outlineSettings();
+        const before = T.outlineEntries({ blocks: beforeBlocks, ...settings });
+        const after = T.outlineEntries({ blocks: afterBlocks, ...settings });
         const index = after.findIndex(entry => entry.key === T.pathToKey(path));
         if (index > 0) after.unshift(...after.splice(index, 1));
         show(T.diffOutline(before, after).summary, detail.trim());

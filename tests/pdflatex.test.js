@@ -70,16 +70,19 @@ test("pdflatex confirma las ocho citas del curso y el orden de bibcite en IEEE",
 test("pdflatex confirma las ocho citas del curso y el orden de bibcite en APA", optional, () => checkCourseCitations("apa"));
 
 const extractor = spawnSync("pdftotext", ["-v"], { encoding: "utf8" });
-test("el PDF imprime los números de los encabezados en el orden del esquema", {
+const optionalPdfText = {
   skip: optional.skip || (extractor.error?.code === "ENOENT" && "pdftotext no está instalado"),
-}, async () => {
+};
+function pdfText(dir) {
+  const result = spawnSync("pdftotext", ["-layout", "nota.pdf", "-"], { cwd: dir, encoding: "utf8" });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stderr);
+  return result.stdout.normalize("NFC");
+}
+
+test("el PDF imprime los números de los encabezados en el orden del esquema", optionalPdfText, async () => {
   const state = { metadata: { title: "Prueba de niveles", topic: "Recintos" }, blocks: [nestedSection] };
-  const texto = await compileTwice(state, {}, dir => {
-    const result = spawnSync("pdftotext", ["-layout", "nota.pdf", "-"], { cwd: dir, encoding: "utf8" });
-    assert.ifError(result.error);
-    assert.equal(result.status, 0, result.stderr);
-    return result.stdout;
-  });
+  const texto = await compileTwice(state, {}, pdfText);
   const headings = Array.from(T.outlineEntries(state))
     .filter(entry => entry.kind === "topic" || entry.kind === "heading");
   const impresos = [];
@@ -90,4 +93,36 @@ test("el PDF imprime los números de los encabezados en el orden del esquema", {
     if (heading) impresos.push([number ?? null, heading.title]);
   }
   assert.deepEqual(impresos, headings.map(entry => [entry.number, entry.title]), texto);
+});
+
+test("el PDF coincide con el esquema a cinco niveles y reinicia los teoremas por sección", optionalPdfText, async () => {
+  const text = (title, children) => ({ type: "text", title, content: "Introducción.", children });
+  const theorem = { type: "theorem", content: "Enunciado.", label: "teo:inicial" };
+  const definition = { type: "definition", content: "Concepto.", label: "def:inicial" };
+  const fiveLevels = text("Primera parte", [definition, theorem,
+    text("Método", [text("Demostraciones", [text("Detalle", [text("Observación")])]), { ...theorem, label: "teo:metodo" }])]);
+  const state = { metadata: { title: "Prueba de numeración" }, numbering: { levels: 5, theoremsBySection: true },
+    blocks: [{ ...theorem, label: "teo:previo" }, fiveLevels, text("Segunda parte", [
+      { ...theorem, label: "teo:final" }, { ...definition, label: "def:final" },
+    ])] };
+  const entries = Array.from(T.outlineEntries(state)).filter(e => e.kind === "heading" || e.kind === "theorem");
+  const expected = entries.map(e => [e.number, e.heading ?? e.title]);
+  const headingTitles = entries.filter(e => e.kind === "heading").map(e => e.title);
+  const theoremNames = [...new Set(entries.filter(e => e.kind === "theorem").map(e => e.heading))];
+  const printed = [];
+  const { texto, aux } = await compileTwice(state, {}, async dir => ({
+    texto: pdfText(dir),
+    aux: await readFile(join(dir, "nota.aux"), "utf8"),
+  }));
+  for (const line of texto.split(/\r?\n/).map(line => line.trim())) {
+    const heading = line.match(/^(\d+(?:\.\d+)*)\.?\s+(.+)$/);
+    const title = heading && headingTitles.find(title => heading[2] === title || heading[2].startsWith(title + " "));
+    if (title) printed.push([heading[1], title]);
+    const theorem = line.match(/^(\S+)\s+(\d+(?:\.\d+)+)\b/);
+    if (theorem && theoremNames.includes(theorem[1])) printed.push([theorem[2], theorem[1]]);
+  }
+  assert.deepEqual(printed, expected, texto);
+  for (const target of T.referenceTargets(state)) {
+    assert.ok(aux.includes("\\newlabel{" + target.label + "}{{" + target.number + "}"), aux);
+  }
 });

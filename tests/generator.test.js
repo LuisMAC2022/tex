@@ -240,3 +240,19 @@ test("los comandos y títulos emitidos coinciden en orden con el esquema", () =>
     }
   }
 });
+
+test("el preámbulo emite la profundidad y el contador padre solo cuando se configuran", () => {
+  const defaults = { levels: 3, theoremsBySection: false };
+  assert.equal(generateLatex({ ...example, numbering: defaults }), generateLatex(example));
+  for (const levels of [1, 2, 3, 4, 5]) {
+    const tex = generateLatex({ ...example, numbering: { ...defaults, levels } });
+    assert.deepEqual(tex.match(/^\\setcounter\{secnumdepth\}.*$/gm) || [],
+      levels === 3 ? [] : ["\\setcounter{secnumdepth}{" + levels + "}"]);
+  }
+  const tex = generateLatex({ ...example, numbering: { ...defaults, theoremsBySection: true } });
+  const declared = BLOCK_TYPES.filter(type => type.kind === "theorem" && !type.predefined);
+  const lines = tex.match(/^\\newtheorem.*$/gm);
+  assert.deepEqual(new Set(lines), new Set(declared.map(type => "\\newtheorem{" + type.environment + "}{" + type.heading + "}[section]")));
+  assert.equal(lines.length, declared.length);
+  assert.doesNotMatch(tex, /\\setcounter\{secnumdepth\}/);
+});
