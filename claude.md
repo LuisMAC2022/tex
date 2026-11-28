@@ -820,9 +820,17 @@ Las tarjetas móviles usan content-visibility con altura intrínseca. Al servir 
 
 app.js: 94736 → 94736 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
 
-### Comparación final M0–M7
+## Cierre · Vista previa y descarga móvil
 
-| Medida | M0 | M7 |
+La acción fija de Documento usa el generador y la descarga existentes. Se verificaron el título obligatorio, el contenido del archivo descargado y la visibilidad del botón antes y después de desplazar la página. Vista previa abre las fórmulas del borrador. Curso y Profesor mantienen sus valores previos.
+
+Verificación final con Playwright 1.63.0: 362 pruebas aprobadas, cero omitidas, incluidas las de interfaz y compilación de PDF. También pasaron check-site y check:js. app.js pasó de 95 022 a 94 736 bytes. Los pasos pendientes en teléfono real están en [revisión manual](docs/revision-manual.md).
+
+### Comparación final
+
+Anchos en orden: 320, 390 y 430 px. Para los símbolos se indican filas completas con alto normal y reducido. Para texto al 200 %, cada par corresponde al ancho indicado y a 195 px. Las latencias son medianas en milisegundos de tres aperturas con CPU 4×.
+
+| Medida | M0 | Tras todos los cambios |
 |---|---|---|
 | anadirTrasFoco | [true,false,false] | [true,true,true] |
 | estadoVisibleTrasAnadir | [false,false,false] | [true,true,true] |
@@ -831,4 +839,4 @@ app.js: 94736 → 94736 bytes. Suite obligatoria ejecutada. Pendientes en dispos
 | simbolosVisibles | [[0,0],[0,0],[1,0]] | [[2,2],[2,2],[2,2]] |
 | estadoAntesDeJs | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] |
 | focoTrasEditar | ["type-chip","type-chip","type-chip"] | ["block-content","block-content","block-content"] |
-| inpEstructura30 | [144,136,136] | [80,88,120] |
+| inpEstructura30 | [144,136,136] | [128,88,144] |

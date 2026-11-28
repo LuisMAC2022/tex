@@ -265,6 +265,11 @@
 - copiar y pegar usan la bandeja y el foco pasa a la copia
 - eliminar un padre pide confirmación, mueve el foco y permite deshacer y rehacer
 
+## `tests/interfaz-exportacion-movil.test.js` — 2 pruebas
+
+- Documento permite generar y descargar desde arriba con los cambios confirmados
+- Vista previa abre el borrador en el portátil
+
 ## `tests/interfaz-foco-movil.test.js` — 1 pruebas
 
 - editar permite guardar y volver a la misma tarjeta, y el menú táctil recibe el foco
@@ -535,4 +540,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-360 pruebas con `node:test` más la comprobación estructural.
+362 pruebas con `node:test` más la comprobación estructural.

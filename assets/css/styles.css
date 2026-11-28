@@ -849,3 +849,20 @@ body.writing-focus #workspace-export { display: none; }
 @media (max-width: 47.99rem) {
   #block-list article { content-visibility: auto; contain-intrinsic-size: auto 7rem; }
 }
+
+@media (max-width: 47.99rem) {
+  body:has(#panel-document:not([hidden])) {
+    --download-inset: calc(var(--keyboard-inset, 0px) + env(safe-area-inset-bottom) + var(--space-2));
+    padding-block-end: calc(var(--download-inset) + var(--download-height) + var(--space-2));
+  }
+  #panel-document #download-tex {
+    position: fixed;
+    inset-inline: var(--space-2);
+    inset-block-end: var(--download-inset);
+    inline-size: calc(100% - 2 * var(--space-2));
+    z-index: var(--layer-tools);
+  }
+  body:has(#panel-document:not([hidden])) #app-status {
+    inset-block-end: calc(var(--download-inset) + var(--download-height) + var(--space-1));
+  }
+}
