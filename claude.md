@@ -751,3 +751,20 @@ La lista mantiene el menú fijo, desplaza horizontalmente los rótulos grandes y
 | inpEstructura30 | [144,208,128] | [216,128,128] |
 
 app.js: 94763 → 94763 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
+
+## M4 · Estado de carga
+
+Las acciones de la barra y el botón del formulario esperan a que termine la inicialización. M0 no midió una mejora de defer y se conservó el orden de los scripts clásicos.
+
+| Medida a 320, 390 y 430 px | Antes | Después |
+|---|---|---|
+| anadirTrasFoco | [true,true,true] | [true,true,true] |
+| estadoVisibleTrasAnadir | [true,true,true] | [true,true,true] |
+| pestanasDentro | [true,true,true] | [true,true,true] |
+| pestanasDentroTexto200 | [[true,true],[true,true],[true,true]] | [[true,true],[true,true],[true,true]] |
+| simbolosVisibles | [[0,0],[0,0],[1,0]] | [[0,0],[0,0],[1,0]] |
+| estadoAntesDeJs | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] |
+| focoTrasEditar | ["type-chip","type-chip","type-chip"] | ["type-chip","type-chip","type-chip"] |
+| inpEstructura30 | [216,128,128] | [304,144,128] |
+
+app.js: 94763 → 94757 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.

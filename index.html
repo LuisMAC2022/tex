@@ -155,7 +155,7 @@
             </fieldset>
             <menu class="button-row">
               <li><button id="content-menu" data-action-id="radial.menu" class="secondary" type="button" aria-haspopup="menu">Menú de contenido</button></li>
-              <li><button id="add-block" type="button"><span id="add-block-label">Añadir bloque</span><kbd id="add-block-key" aria-hidden="true" hidden></kbd></button></li>
+              <li><button id="add-block" disabled type="button"><span id="add-block-label">Añadir bloque</span><kbd id="add-block-key" aria-hidden="true" hidden></kbd></button></li>
               <li><button id="paste-block" class="secondary" type="button" hidden>Pegar bloque</button></li>
               <li><button id="cancel-edit" class="secondary" type="button" hidden>Cancelar edición</button></li>
             </menu>
@@ -183,15 +183,15 @@
             </section>
 
             <div id="thumb-bar" role="toolbar" aria-label="Acciones de escritura">
-              <button type="button" id="thumb-menu" data-action-id="radial.menu" aria-label="Menú" aria-haspopup="menu"><span aria-hidden="true">✥</span><span class="thumb-label">Menú</span></button>
+              <button type="button" inert id="thumb-menu" data-action-id="radial.menu" aria-label="Menú" aria-haspopup="menu"><span aria-hidden="true">✥</span><span class="thumb-label">Menú</span></button>
               <div class="thumb-navigation" role="group" aria-label="Navegación del contenido">
-                <button type="button" id="thumb-prev" data-action-id="write.previous" aria-label="Anterior" tabindex="-1"><span aria-hidden="true">◀</span></button>
-                <button type="button" id="thumb-selection" data-action-id="write.scope" aria-label="Modo cursor" tabindex="-1" aria-pressed="false" data-mode="cursor"><span aria-hidden="true">⌶</span></button>
-                <button type="button" id="thumb-next" data-action-id="write.next" aria-label="Siguiente" tabindex="-1"><span aria-hidden="true">▶</span></button>
+                <button type="button" inert id="thumb-prev" data-action-id="write.previous" aria-label="Anterior" tabindex="-1"><span aria-hidden="true">◀</span></button>
+                <button type="button" inert id="thumb-selection" data-action-id="write.scope" aria-label="Modo cursor" tabindex="-1" aria-pressed="false" data-mode="cursor"><span aria-hidden="true">⌶</span></button>
+                <button type="button" inert id="thumb-next" data-action-id="write.next" aria-label="Siguiente" tabindex="-1"><span aria-hidden="true">▶</span></button>
               </div>
-              <button type="button" id="thumb-symbols" data-action-id="write.symbols" aria-label="Símbolos" tabindex="-1" aria-expanded="false" aria-controls="symbol-details" data-drag-ring="symbols"><span aria-hidden="true">Ω</span><span class="thumb-label">Símbolos</span></button>
-              <button type="button" id="thumb-personal" data-action-id="edit.undo" aria-label="Mi botón" tabindex="-1" title="Deshacer"><span aria-hidden="true">★</span><span class="thumb-label">Mi botón</span></button>
-              <button type="button" id="thumb-add" data-action-id="block.commit" aria-label="Añadir" tabindex="-1"><span aria-hidden="true">＋</span><span class="thumb-label">Añadir</span></button>
+              <button type="button" inert id="thumb-symbols" data-action-id="write.symbols" aria-label="Símbolos" tabindex="-1" aria-expanded="false" aria-controls="symbol-details" data-drag-ring="symbols"><span aria-hidden="true">Ω</span><span class="thumb-label">Símbolos</span></button>
+              <button type="button" inert id="thumb-personal" data-action-id="edit.undo" aria-label="Mi botón" tabindex="-1" title="Deshacer"><span aria-hidden="true">★</span><span class="thumb-label">Mi botón</span></button>
+              <button type="button" inert id="thumb-add" data-action-id="block.commit" aria-label="Añadir" tabindex="-1"><span aria-hidden="true">＋</span><span class="thumb-label">Añadir</span></button>
             </div>
           </fieldset>
 
@@ -416,7 +416,7 @@
         </form>
       </dialog>
       <ul role="listbox" id="assist-list" aria-label="Sugerencias de escritura" hidden></ul>
-      <p id="app-status" class="status" aria-live="polite" aria-atomic="true">Editor listo.</p>
+      <p id="app-status" class="status toast-visible" aria-live="polite" aria-atomic="true">Cargando editor…</p>
     </main>
     <footer><p>La vista previa orienta sobre modo matemático; la validación y compilación del documento se realizan en Overleaf.</p></footer>
     <script src="assets/js/clipboard.js"></script>

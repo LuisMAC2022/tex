@@ -651,3 +651,5 @@ crea una instantánea explícita. El proyecto JSON conserva el documento
 editable y el archivo .tex sirve para compilar.
 
 En el teléfono, la pestaña Estructura muestra el número total de bloques. Al añadir, actualizar o generar, la confirmación aparece unos segundos sobre la barra. Al elegir un tipo en el menú se anuncia su nombre. La recuperación indica si se recuperó también el borrador en curso. Si falla el guardado de sesión, usa «Guardar versión» o exporta el proyecto.
+
+Al abrir la página aparece **Cargando editor…**. Cuando aparece **Editor listo.**, puedes usar la barra del pulgar y «Añadir bloque».

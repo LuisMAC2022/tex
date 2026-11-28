@@ -77,4 +77,5 @@
   statusObserver.observe(status, { childList: true, characterData: true, subtree: true });
   desktop.addEventListener("change", syncFrame);
   syncFrame();
+  if (!desktop.matches) showStatus();
 })(document, window);

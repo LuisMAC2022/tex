@@ -229,6 +229,10 @@
 - arrastrar navega por unidades y mantener Siguiente amplía una vez
 - arrastrar desde Símbolos elige la categoría que abre la hoja
 
+## `tests/interfaz-carga-movil.test.js` — 1 pruebas
+
+- el editor anuncia la carga y habilita las acciones al terminar
+
 ## `tests/interfaz-configuracion.test.js` — 1 pruebas
 
 - importar una parte conserva los alias y avisa de una parte desconocida
@@ -522,4 +526,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-356 pruebas con `node:test` más la comprobación estructural.
+357 pruebas con `node:test` más la comprobación estructural.

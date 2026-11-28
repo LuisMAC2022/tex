@@ -163,7 +163,7 @@
   const structure = global.TexNotes.createStructureView(document, {
     reveal: node => panels.reveal(node), getBlocks: () => blocks, getTarget: label => blockTargets.get(label),
     refreshTargets: tree => { blockTargets = new Map(global.TexNotes.referenceTargets({ blocks: tree }).map(target => [target.label, target])); },
-    getTopic, renderBlockPreview, blockItemExtensions, syncReferenceKey, saveSession,
+    getTopic, renderBlockPreview, blockItemExtensions, syncReferenceKey, saveSession: () => saveSession(),
   });
   const { actionButton, describeBlock, renderBlocks, focusAction, focusAfterRemoval, focusById } = structure;
 
@@ -1544,14 +1544,13 @@
   /* --- Autoguardado separado del borrador explícito --- */
   const { session: autosave, sessionHasContent: hasSessionContent } = T;
   let pendingSession = autosave.read(global);
-  const { save: sessionSave, schedule: scheduleSessionSave } = autosave.bind(document, form, () => pendingSession, () => ({
+  const { save: saveSession, schedule: scheduleSessionSave } = autosave.bind(document, form, () => pendingSession, () => ({
     version: DRAFT_VERSION, ...state(), editor: {
       type: $("#block-type").value, title: $("#block-title").value, content: blockContent.value,
       label: blockLabelField.value, editingPath: editorTarget().editing, parentPath: editorTarget().parent,
       image: blockFieldHooks.find(hook => hook.appliesTo?.("image"))?.read("image"),
     },
   }), announce);
-  function saveSession() { sessionSave(); }
   if (hasSessionContent(pendingSession) && normalizeDraft(pendingSession)) {
     $("#autosave-banner").hidden = false;
     $("#autosave-message").textContent = autosave.recoveryNotice(pendingSession);
@@ -1789,4 +1788,5 @@
   renderBlocks();
   setEditorTarget({});
   renderEditorPreview();
+  thumb.ready();
 })(typeof globalThis !== "undefined" ? globalThis : this);

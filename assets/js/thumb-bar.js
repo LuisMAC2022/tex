@@ -197,7 +197,12 @@
     });
     syncThumbViewport();
 
-    return { refresh: syncThumbViewport, showSymbolSheet, closeSymbolSheet, clearScope, toggleScope, toggleSymbols, thumbStep,
+    function ready() {
+      for (const button of thumbBar.querySelectorAll("button")) button.inert = false;
+      $("#add-block").disabled = false;
+      announce("Editor listo.");
+    }
+    return { ready, refresh: syncThumbViewport, showSymbolSheet, closeSymbolSheet, clearScope, toggleScope, toggleSymbols, thumbStep,
       getScopeMode: () => scopeMode,
       dispose() { stopGesture(); listObserver.disconnect(); listeners.abort(); resize?.disconnect(); },
     };
