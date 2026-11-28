@@ -676,3 +676,19 @@ pruebas sin omisiones, además de la comprobación estructural.
 
 Quedan sin verificar los dispositivos físicos, los lectores de pantalla,
 Firefox y Safari.
+
+## M0–M7 · Duda previa sobre dos expectativas de interfaz móvil
+
+Revisé main en eb2fc96, cuatro commits después de la base indicada. En
+tests/interfaz-paneles.test.js, el recorrido «Ir a, el editor de una tarjeta
+y los avisos revelan y enfocan su destino» añade un bloque y luego busca
+la pestaña por el nombre accesible exacto «Estructura». También compara
+su texto con «Estructura». M2 pide mostrar «Estructura · 1» e incluir ese
+texto en el nombre accesible. El mismo recorrido toca «Editar Texto» y
+exige foco en type-chip. M6 exige block-content para ese mismo gesto.
+
+¿Se autoriza adaptar en M2 las referencias al rótulo de la pestaña y en M6
+la expectativa de foco tras editar en el teléfono, manteniendo las
+comprobaciones de navegación, activación, foco y escritorio? Se detuvo el
+trabajo según la regla 0.4 antes de M0. No se modificaron pruebas ni interfaz.
+Sin medición ni ejecución de la suite en esta revisión. app.js: 95 022 bytes.
