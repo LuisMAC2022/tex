@@ -110,6 +110,8 @@ El bloque aparece en la lista de abajo con sus botones propios. Repite para el r
 
 ### Generar y llevarlo a Overleaf
 
+En el teléfono, abre «Documento» y toca «Generar y descargar» en el borde inferior. El editor genera el archivo con los bloques confirmados. Si falta el título, el foco va al campo para que lo completes.
+
 1. Pulsa «Generar documento» para actualizar «Código LaTeX» y el resumen de
    «Comprobación previa a Overleaf» en «Resultado».
 2. Pulsa «Copiar código». Ya tienes el `.tex` entero en el portapapeles.
@@ -569,11 +571,11 @@ En un bloque «Bibliografía (IEEE)», abre «Más acciones» y pulsa «Converti
 
 ### Barra del pulgar
 
-En el teléfono, Anterior y Siguiente recorren los huecos de un fragmento y después las unidades de LaTeX. El botón central muestra el modo. Toca ⌶ para activar la selección por alcance, ↔ para volver al cursor o ≡ para cerrar las sugerencias. Con la lista abierta, las dos flechas recorren las opciones. Por defecto, Mi botón deshace la última edición de Contenido. Si le asignas una acción, el botón se habilita en los contextos de esa acción.
+En el teléfono, Anterior y Siguiente recorren los huecos de un fragmento y después las unidades de LaTeX. El botón central muestra el modo. Toca ⌶ para activar la selección por alcance, ↔ para volver al cursor o ≡ para cerrar las sugerencias. Con la lista abierta, las dos flechas recorren las opciones. Por defecto, ★ Deshacer deshace la última edición de Contenido. Si le asignas una acción, el botón se habilita en los contextos de esa acción.
 
 Puedes arrastrar horizontalmente en el grupo de las tres teclas para avanzar o retroceder un paso por cada 28 px. Cada toque en una flecha hace un paso. Mantener Siguiente activa la selección y la amplía una vez. La misma operación se hace tocando el modo y después Siguiente. Con el teclado, recorre la barra con flechas y activa el botón con Intro.
 
-Toca Símbolos para abrir la hoja y elegir una categoría. También puedes arrastrar desde Símbolos hasta una categoría y levantar el dedo para abrirla. A menos de 360 px se muestran los iconos con sus nombres accesibles.
+Toca Símbolos para abrir la hoja. Desliza las categorías para elegir una y toca un símbolo en la rejilla. Buscar abre el campo de búsqueda. También puedes arrastrar desde Símbolos hasta una categoría y levantar el dedo para abrirla. A menos de 360 px, las acciones de menú y símbolos muestran solo el icono. La acción personal y el botón para añadir o guardar conservan sus rótulos.
 
 ### Tipo y título en la pantalla táctil
 
@@ -619,7 +621,7 @@ guardados. Allí puedes copiarlo, descargarlo, pulsar **Regenerar** o bajar a
 edición en curso. Con el foco en una pestaña, las flechas recorren las pestañas. Pulsa Intro para abrir la vista.
 Abre «Etiqueta del bloque» para editar una etiqueta o proponerla desde el título.
 «Concentración» amplía el editor y oculta controles secundarios. En pantallas
-amplias, alterna el panel «Estructura» y abre «Revisión» para ver las fórmulas
+amplias, alterna el panel «Estructura» y abre «Vista previa» para ver las fórmulas
 del bloque con KaTeX. En ventanas estrechas, las pestañas se adaptan al ancho
 aunque se use un ratón.
 
@@ -657,3 +659,9 @@ El estado del editor indica cuándo hay cambios pendientes, cuándo la sesión
 se guardó en este navegador y cuándo falló el guardado. «Guardar versión»
 crea una instantánea explícita. El proyecto JSON conserva el documento
 editable y el archivo .tex sirve para compilar.
+
+En el teléfono, la pestaña Estructura muestra el número total de bloques. Al añadir, actualizar o generar, la confirmación aparece unos segundos sobre la barra. Al elegir un tipo en el menú se anuncia su nombre. La recuperación indica si se recuperó también el borrador en curso. Si falla el guardado de sesión, usa «Guardar versión» o exporta el proyecto.
+
+Al abrir la página aparece **Cargando editor…**. Cuando aparece **Editor listo.**, puedes usar la barra del pulgar y «Añadir bloque».
+
+En el teléfono, ★ muestra la acción o el anillo asignado, inicialmente **Deshacer**. Al editar una tarjeta, el foco llega al contenido o al archivo de imagen. La barra ofrece **Guardar**. Después, usa «Volver a la estructura» para reencontrar la tarjeta. En una estructura vacía, «Escribir» abre el editor. Al abrir un menú radial, el foco entra en el primer sector y Escape lo devuelve al origen.

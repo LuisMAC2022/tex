@@ -182,11 +182,20 @@
       } catch { return null; }
     },
     discard(storage) { storage.removeItem(autosaveKey); },
-    bind(document, form, previous, snapshot) {
+    recoveryNotice(session) {
+      const time = new Date(session.savedAt);
+      const date = Number.isFinite(time.getTime()) ? time.toLocaleString("es-MX") : "fecha desconocida";
+      const count = T.countBlocks(session.blocks);
+      return `Hay una sesión guardada en este navegador del ${date} con ${count} ${count === 1 ? "bloque" : "bloques"}.`;
+    },
+    recovered(editor) {
+      return T.sessionHasContent({ editor }) ? "Sesión recuperada, incluido el bloque a medio escribir." : "Sesión recuperada.";
+    },
+    bind(document, form, previous, snapshot, announce) {
       const win = document.defaultView;
       const status = document.querySelector("#session-status");
       let timer, backedUp = false;
-      /* @decision DEC-019 ancla:70c280cd tramo:15
+      /* @decision DEC-019 ancla:5a616dc7 tramo:15
        * El autoguardado omite sesiones vacías y conserva una copia de la
        * sesión anterior antes de escribir la primera vez.
        */
@@ -204,6 +213,7 @@
           status.textContent = "Sesión guardada en este navegador";
         } catch {
           status.textContent = "No se pudo guardar la sesión en este navegador";
+          announce?.(status.textContent + ". Usa Guardar versión o exporta el proyecto.");
         }
       }
       function schedule(event) {

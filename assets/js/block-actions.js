@@ -58,7 +58,7 @@
       if (action === "context") { openMenu(button, path, keyboard); return; }
       if (action === "edit") {
         loadBlockEditor(block, path);
-        focusType();
+        focusType(true);
         announce(`Editando ${describeBlock(block, path)}.`);
         return;
       }

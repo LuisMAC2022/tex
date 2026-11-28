@@ -83,7 +83,7 @@ section { margin-block: var(--space-5); padding: var(--card-padding); border: 1p
 }
 
 /* Componentes */
-.skip-link { position: absolute; left: 1rem; top: -5rem; z-index: 2; padding: var(--space-3) var(--space-4); color: var(--on-primary); background: var(--primary); }
+.skip-link { position: absolute; left: 1rem; top: -5rem; z-index: calc(var(--layer-navigation) + 1); padding: var(--space-3) var(--space-4); color: var(--on-primary); background: var(--primary); }
 .skip-link:focus { top: 1rem; }
 /* tabindex permite que el enlace de salto lleve el foco al contenido en todos
    los navegadores; este contorno confirma visualmente el cambio de contexto. */
@@ -494,15 +494,19 @@ body.writing-focus #workspace-export { display: none; }
   body { padding-block-start: calc(48px + env(safe-area-inset-top)); }
   .site-header, main { width: min(100% - var(--space-3), var(--page-width)); }
   #mobile-navigation:not([hidden]) {
-    display: flex; position: fixed; inset: 0 0 auto; z-index: var(--layer-navigation);
+    display: flex; position: fixed; inline-size: 100vw; inset: 0 0 auto; z-index: var(--layer-navigation);
     min-block-size: calc(48px + env(safe-area-inset-top));
     padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
     background: var(--surface); border-block-end: 1px solid var(--border);
   }
-  #mobile-navigation [role="tablist"] { flex: 1; display: flex; }
-  #mobile-navigation button { flex: 1; min-width: 44px; padding: var(--space-1); border-radius: 0; background: var(--surface); color: var(--text); }
+  #mobile-navigation [role="tablist"] { flex: 1; min-width: 0; display: flex; overflow-x: auto; }
+  #mobile-navigation button { flex: 1 0 min-content; min-width: 0; padding: .125rem; font-size: .875rem; line-height: 1.15; border-radius: 0; background: var(--surface); color: var(--text); }
+  #mobile-navigation [role="tab"] { max-inline-size: 100%; word-break: normal; }
   #mobile-navigation [aria-selected="true"] { font-weight: 650; box-shadow: inset 0 -4px var(--primary); }
-  #mobile-navigation #panel-menu { flex: 0 0 46px; }
+  @media (max-width: 15rem) {
+    #mobile-navigation [role="tab"] { flex-basis: max-content; overflow-wrap: anywhere; }
+  }
+  #mobile-navigation #panel-menu { flex: 0 0 44px; }
   [role="tabpanel"] > section { padding: var(--space-2); margin-block: var(--space-2); }
   #toggle-structure { display: none; }
   #contenido-heading { font-size: 1.125rem; margin-block-end: var(--space-2); }
@@ -510,7 +514,7 @@ body.writing-focus #workspace-export { display: none; }
 @media (pointer: coarse) {
   #thumb-bar { z-index: var(--layer-tools); }
   body:has(#panel-write:not([hidden])) { padding-block-end: calc(var(--thumb-height, 56px) + var(--keyboard-inset, 0px)); }
-  .block-editor:has(#block-content:focus) #block-content {
+  .block-editor #block-content {
     min-block-size: clamp(7rem, calc((100dvh - var(--keyboard-inset, 0px)) * .35), 22rem);
   }
   .block-editor .symbol-sheet { margin: 0; }
@@ -777,5 +781,88 @@ body.writing-focus #workspace-export { display: none; }
     min-block-size: 8rem;
     max-block-size: none;
     resize: none;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  #app-status {
+    position: fixed;
+    inset-inline-end: var(--space-2);
+    inset-block-end: calc(var(--keyboard-inset, 0px) + var(--thumb-height, 0px) + var(--space-1));
+    z-index: var(--layer-tools);
+    max-inline-size: calc(100% - var(--space-3));
+    margin: 0;
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow);
+    pointer-events: none;
+  }
+  #app-status:not(.toast-visible) { opacity: 0; }
+}
+
+@media (pointer: coarse) {
+  kbd { display: none; }
+  .symbol-board.symbol-sheet {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-content: start;
+    min-block-size: calc(3 * var(--control-size) + .75rem);
+    max-block-size: max(calc(3 * var(--control-size) + .75rem), min(40dvh, calc(var(--sheet-height) - var(--thumb-height) - 6rem)));
+  }
+  .symbol-sheet details[open], .symbol-sheet details[open]::details-content { display: contents; }
+  .symbol-sheet summary { display: none; }
+  .symbol-sheet #symbol-category-picker {
+    grid-area: 1 / 1;
+    margin: 0;
+    padding: 0 .5rem 0 0;
+    mask-image: linear-gradient(to right, black 94%, transparent);
+  }
+  .symbol-sheet > .symbol-shortcut { grid-area: 1 / 2; margin: 0; padding: 0; }
+  .symbol-sheet #close-symbol-sheet { grid-area: 1 / 3; position: static; padding: .25rem; }
+  .symbol-sheet .field, .symbol-sheet .symbol-caption, .symbol-sheet #symbol-empty { grid-column: 1 / -1; }
+  .symbol-sheet:not(.search-open) .field {
+    position: absolute; clip-path: inset(50%); block-size: 1px; inline-size: 1px; overflow: hidden;
+  }
+  .symbol-sheet .field { grid-row: 2; }
+  .symbol-sheet #symbol-groups {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    grid-auto-rows: var(--control-size);
+    block-size: calc(2 * var(--control-size) + var(--space-1));
+    max-block-size: none;
+    margin: .125rem .25rem;
+    padding: 0;
+  }
+  .symbol-sheet .symbol-caption { grid-row: 4; }
+  body:has(.symbol-sheet) #app-status { opacity: 0; }
+}
+
+.block-more-actions [data-action="delete"] { margin-block-end: var(--space-2); }
+@media (pointer: coarse) {
+  #thumb-personal .thumb-label, #thumb-add .thumb-label {
+    display: block;
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
+  }
+}
+#empty-write { display: block; inline-size: fit-content; }
+
+@media (max-width: 47.99rem) {
+  #block-list article { content-visibility: auto; contain-intrinsic-size: auto 7rem; }
+}
+
+@media (max-width: 47.99rem) {
+  body:has(#panel-document:not([hidden])) {
+    --download-inset: calc(var(--keyboard-inset, 0px) + env(safe-area-inset-bottom) + var(--space-2));
+    padding-block-end: calc(var(--download-inset) + var(--download-height) + var(--space-2));
+  }
+  #panel-document #download-tex {
+    position: fixed;
+    inset-inline: var(--space-2);
+    inset-block-end: var(--download-inset);
+    inline-size: calc(100% - 2 * var(--space-2));
+    z-index: var(--layer-tools);
+  }
+  body:has(#panel-document:not([hidden])) #app-status {
+    inset-block-end: calc(var(--download-inset) + var(--download-height) + var(--space-1));
   }
 }

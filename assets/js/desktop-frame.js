@@ -37,7 +37,7 @@
   function showStatus() {
     status.classList.add("toast-visible");
     win.clearTimeout(timer);
-    timer = win.setTimeout(() => status.classList.remove("toast-visible"), 4000);
+    timer = win.setTimeout(() => status.classList.remove("toast-visible"), desktop.matches ? 4000 : 3000);
   }
 
   // El resumen de Datos se actualiza también al abrir, importar o recuperar una nota.
@@ -60,10 +60,9 @@
       showTitle();
       showStatus();
       titleObserver.observe($("#datos-heading"), { childList: true });
-      statusObserver.observe(status, { childList: true, characterData: true, subtree: true });
+
     } else if (toolsPosition.isConnected) {
       titleObserver.disconnect();
-      statusObserver.disconnect();
       win.clearTimeout(timer);
       status.classList.remove("toast-visible");
       for (const button of navigationButtons) button.classList.remove("tertiary");
@@ -75,6 +74,8 @@
     if (buttons.includes(focused) || recovery.contains(focused)) focused.focus({ preventScroll: true });
   }
 
+  statusObserver.observe(status, { childList: true, characterData: true, subtree: true });
   desktop.addEventListener("change", syncFrame);
   syncFrame();
+  if (!desktop.matches) showStatus();
 })(document, window);

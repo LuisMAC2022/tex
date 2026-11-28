@@ -41,7 +41,7 @@
       "image.align": ({ value = "center" }) => Array.from(doc.getElementsByName("imageAlign")).find(n => n.value === value)?.click(),
       "image.file": () => $("#image-file").click(),
       "image.delete": deleteImage,
-      "block.type": ({ value }, origin) => { if (!value) return d.blockForm.pickType(); if (origin.source === "global") d.resetBlockEditor(); d.selectBlockType(value); d.focusBlockContent(); },
+      "block.type": ({ value }, origin) => { if (!value) return d.blockForm.pickType(); if (origin.source === "global") d.resetBlockEditor(); d.selectBlockType(value); d.focusBlockContent(); d.announce("Tipo: " + T.blockLabel(value)); },
       "block.typePicker": d.blockForm.pickType,
       "navigation.go": ({ value = "content" }) => d.goTo(value),
       "navigation.preferences": () => d.goTo("preferences"),

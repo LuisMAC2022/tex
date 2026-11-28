@@ -4,7 +4,7 @@ import { cerrar, foco, omitir, sesionDePrueba } from "./navegador.mjs";
 
 after(cerrar);
 const opt = { skip: omitir };
-const tab = (p, name) => p.getByRole("tab", { name, exact: true });
+const tab = (p, name) => p.getByRole("tab", { name: name === "Estructura" ? /^Estructura · \d+$/ : name, exact: true });
 const actual = p => p.getByRole("tab", { selected: true }).innerText();
 
 test("las cuatro pestañas alternan con flechas, Inicio y Fin y recuerdan la vista matemática", opt, async t => {
@@ -17,7 +17,7 @@ test("las cuatro pestañas alternan con flechas, Inicio y Fin y recuerdan la vis
   await p.reload();
   assert.notEqual(await preview.getAttribute("open"), null);
   await tab(p, "Escribir").press("ArrowRight");
-  assert.equal(await actual(p), "Estructura");
+  assert.equal(await actual(p), "Estructura · 0");
   assert.equal(await p.getByRole("tabpanel").count(), 1);
   assert.equal(await p.locator("#thumb-bar").isVisible(), false);
   await tab(p, "Estructura").press("End");
@@ -40,16 +40,16 @@ test("Ir a, el editor de una tarjeta y los avisos revelan y enfocan su destino",
     await p.tap("#panel-menu");
     await p.getByRole("menuitem", { name: "Ir a…" }).tap();
     await p.getByRole("menuitem", { name, exact: true }).tap();
-    assert.equal(await actual(p), panel);
+    assert.equal(await actual(p), panel === "Estructura" ? "Estructura · 1" : panel);
     assert.ok(await p.locator(selector).evaluate(el => el === document.activeElement));
   }
   await tab(p, "Documento").tap();
   await p.tap("#generate");
   await p.getByRole("link", { name: "Ir al bloque Texto" }).tap();
-  assert.equal(await actual(p), "Estructura");
+  assert.equal(await actual(p), "Estructura · 1");
   await p.getByRole("button", { name: /^Editar Texto,/ }).tap();
   assert.equal(await actual(p), "Escribir");
-  assert.equal(await foco(p), "type-chip");
+  assert.equal(await foco(p), "block-content");
 });
 
 test("los cuatro paneles caben en dos pantallas con cinco bloques de una línea", opt, async t => {

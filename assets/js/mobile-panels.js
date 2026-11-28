@@ -17,6 +17,11 @@
     const events = new AbortController(), options = { signal: events.signal };
     const navigation = $("#mobile-navigation"), mobileTabs = Array.from(navigation.querySelectorAll('[role="tab"]'));
     const resultHelp = $("#resultado-heading + p"), originalHelp = resultHelp.textContent;
+    const download = $("#download-tex");
+    const downloadSize = new win.ResizeObserver(() => {
+      doc.documentElement.style.setProperty("--download-height", download.offsetHeight + "px");
+    });
+    downloadSize.observe(download);
     const desktopTabs = ["write", "document", "export"].map(key => $("#workspace-" + key));
     let tabs = [], mode = null;
     const panels = new Map(), positions = new Map(), original = [];
@@ -110,6 +115,7 @@
         }
         if (mode === "mobile") {
           $("#panel-menu").hidden = key === "write";
+          mobileTabs.find(t => t.dataset.panel === key).scrollIntoView({ inline: "nearest", block: "nearest" });
           win.scrollTo({ top: positions.get(key) || 0, behavior: "instant" });
         } else {
           doc.body.dataset.workspaceView = key;
@@ -136,7 +142,7 @@
       }
       if (speak) {
         const count = $("#block-list").querySelectorAll("article").length;
-        deps.announce("Panel " + tab.textContent + (key === "tree" ? ", " + count + (count === 1 ? " bloque." : " bloques.") : "."));
+        deps.announce(key === "tree" ? "Panel Estructura, " + count + (count === 1 ? " bloque." : " bloques.") : "Panel " + tab.textContent + ".");
       }
     }
     function reveal(element) {
@@ -149,6 +155,10 @@
       }
     }
     function focusTarget(target) { reveal(target); target.focus(); target.scrollIntoView({ block: "nearest" }); }
+    $("#empty-write").addEventListener("click", event => {
+      event.preventDefault();
+      goTo("content");
+    }, options);
     function goTo(destination) {
       if (destination === "preferences") $("#writing-preferences").open = true;
       const selector = { content: deps.imageType($("#block-type").value) ? "#image-path" : "#block-content",
@@ -165,7 +175,10 @@
       for (const { node, marker } of original.splice(0).reverse()) marker.replaceWith(node);
       for (const panel of panels.values()) panel.remove();
       panels.clear(); active = null; navigation.hidden = true;
-      if (mode === "mobile") preview.open = desktopPreview;
+      if (mode === "mobile") {
+        preview.open = desktopPreview;
+        download.textContent = "Descargar .tex";
+      }
       if (mode === "desktop") {
         delete doc.body.dataset.workspaceView;
         $("#workspace-write").hidden = true;
@@ -218,6 +231,7 @@
         footer.before(marker); original.push({ node: footer, marker }); panels.get("export").append(footer);
       } else {
         navigation.hidden = false;
+        download.textContent = "Generar y descargar";
         try { preview.open = win.localStorage.getItem(previewKey) === "open"; } catch { preview.open = false; }
       }
       const previous = focused.closest?.('[role="tabpanel"]');
@@ -259,7 +273,7 @@
     syncPreviewPlacement();
     return { refresh: syncMetadataSummary, goTo, reveal, focusTarget, current: () => active,
       focusMetadata: () => focusTarget($($("#metadata-details").open ? "#note-title" : "#metadata-details > summary")),
-      dispose() { events.abort(); restorePreview(); unmount(); },
+      dispose() { events.abort(); downloadSize.disconnect(); restorePreview(); unmount(); },
     };
   };
 })(globalThis.TexNotes);

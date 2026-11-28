@@ -78,7 +78,7 @@
       radialView.draw(ring, items, name, radialState, model);
       if (before.parent !== parent || event.type === "open" || event.type === "hold") announce(name + ", " + items.length + " opciones.");
       if (radialState.haptic && vibration()) navigator.vibrate?.(10);
-      if (focus) radialView.focus(Math.max(0, highlight));
+      if (focus || event.type === "open" || before.parent !== parent) radialView.focus(Math.max(0, highlight));
     }
     function contextFor(source, kind) {
       return T.actionContext({ source, blockKind: kind,
@@ -209,6 +209,7 @@
         clearRadialPress();
         listeners.abort();
         assignment.disconnect();
+        radialView.hide();
         radialView.layer.remove();
       },
     };

@@ -220,12 +220,20 @@
 
 - cada acción del catálogo tiene un manejador en la página
 
+## `tests/interfaz-avisos-moviles.test.js` — 1 pruebas
+
+- añadir muestra la confirmación encima de la barra y actualiza el contador accesible
+
 ## `tests/interfaz-barra.test.js` — 4 pruebas
 
 - la barra alterna cursor, selección y sugerencias conservando el foco
 - Mi botón deshace el texto y a 320 píxeles los siete objetivos caben
 - arrastrar navega por unidades y mantener Siguiente amplía una vez
 - arrastrar desde Símbolos elige la categoría que abre la hoja
+
+## `tests/interfaz-carga-movil.test.js` — 1 pruebas
+
+- el editor anuncia la carga y habilita las acciones al terminar
 
 ## `tests/interfaz-configuracion.test.js` — 1 pruebas
 
@@ -260,6 +268,15 @@
 - eliminar un padre pide confirmación, mueve el foco y permite deshacer y rehacer
 - Datos renumera tarjetas y Esquema y recupera los ajustes del documento
 
+## `tests/interfaz-exportacion-movil.test.js` — 2 pruebas
+
+- Documento permite generar y descargar desde arriba con los cambios confirmados
+- Vista previa abre el borrador en el portátil
+
+## `tests/interfaz-foco-movil.test.js` — 1 pruebas
+
+- editar permite guardar y volver a la misma tarjeta, y el menú táctil recibe el foco
+
 ## `tests/interfaz-informe.test.js` — 2 pruebas
 
 - un error real ofrece copiar el informe y Más permite consultarlo y borrarlo
@@ -271,6 +288,12 @@
 - la lista de referencias se desplaza con el dedo y se recorre con la barra
 - la lista de citas se desplaza con el dedo y se recorre con la barra
 - Mover bloque permite recorrer destinos con el dedo y trasladar al elegido
+
+## `tests/interfaz-medicion-movil.test.js` — 3 pruebas
+
+- el diagnóstico mide los cinco controles visibles de Estructura
+- la navegación cabe a tamaño normal y permite alcanzar cada destino con texto grande
+- la hoja táctil presenta dos filas completas y conserva la selección al insertar
 
 ## `tests/interfaz-menus-personales.test.js` — 4 pruebas
 
@@ -304,6 +327,10 @@
 - Ver todo aparece con el recorte de dos líneas y Esquema conserva la edición
 - las vistas generan el documento y conservan la edición, Deshacer y el desplazamiento
 
+## `tests/interfaz-recursos-moviles.test.js` — 1 pruebas
+
+- la carga móvil encuentra el icono y precarga las dos fuentes locales de KaTeX
+
 ## `tests/interfaz-tarjetas.test.js` — 3 pruebas
 
 - la tarjeta de una línea cabe en 140 px y presenta ocho acciones en posiciones fijas
@@ -315,6 +342,10 @@
 - el chip de tipo conserva el borrador y sincroniza ayudas, título y vista previa
 - Más tipos usa activación de teclado y ofrece el selector si no hay showPicker
 - el escritorio mantiene el selector y el título y el teléfono ahorra al menos 140 píxeles
+
+## `tests/interfaz-toque-movil.test.js` — 1 pruebas
+
+- el centro de Añadir medido mientras se escribe conserva el destino tras perder el foco
 
 ## `tests/interfaz-versiones.test.js` — 3 pruebas
 
@@ -443,7 +474,7 @@
 - la prosa española y text dentro de matemáticas usan palabras y oraciones
 - reducir recupera exactamente una selección hacia atrás y respeta extremos y grafemas
 
-## `tests/shortcuts.test.js` — 6 pruebas
+## `tests/shortcuts.test.js` — 9 pruebas
 
 - los atajos tienen identificadores y combinaciones por ámbito únicos
 - los atajos respetan AltGr, las teclas de los widgets y las combinaciones del navegador
@@ -451,6 +482,9 @@
 - los atajos internos del tablero se limitan a la búsqueda y la rejilla
 - Ctrl+Intro incorpora bloques y en macOS usa Meta sin confundir AltGr
 - Menú y Mayús+F10 se reservan al campo Contenido
+- la plataforma moderna tiene prioridad sobre la clásica
+- una tecla sin modificar excluye los cuatro modificadores
+- el singular se reserva para una unidad
 
 ## `tests/suggestion-sources.test.js` — 2 pruebas
 
@@ -516,4 +550,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-359 pruebas con `node:test` más la comprobación estructural.
+La suite usa `node:test` e incluye una comprobación estructural.

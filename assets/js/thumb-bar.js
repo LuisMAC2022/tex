@@ -19,11 +19,28 @@
       const inset = v ? Math.max(0, global.innerHeight - v.offsetTop - v.height) : 0;
       rootStyle.setProperty("--keyboard-inset", inset + "px");
       rootStyle.setProperty("--thumb-height", thumbBar.offsetHeight + "px");
-      rootStyle.setProperty("--sheet-height", ((v?.height ?? global.innerHeight) * .4) + "px");
+      rootStyle.setProperty("--sheet-height", (v?.height ?? global.innerHeight) + "px");
     }
     function revealThumbField() {
       syncThumbViewport();
-      if (coarsePointer.matches && document.activeElement === blockContent) blockContent.scrollIntoView({ block: "nearest" });
+      if (!coarsePointer.matches || document.activeElement !== blockContent) return;
+      if (symbolBoard.classList.contains("symbol-sheet")) {
+        const caret = T.fieldCaretRect(blockContent);
+        const bottom = caret.bottom - blockContent.scrollTop;
+        const limit = symbolBoard.getBoundingClientRect().top - 2;
+        const top = $("#mobile-navigation").getBoundingClientRect().bottom + 2;
+        const dy = bottom > limit ? bottom - limit : Math.min(0, caret.top - blockContent.scrollTop - top);
+        if (dy) global.scrollBy({ top: dy, behavior: "instant" });
+        return;
+      }
+      blockContent.scrollIntoView({ block: "nearest" });
+      const row = $("#add-block").closest(".button-row");
+      const bottom = thumbBar.getBoundingClientRect().top;
+      const overflow = row.getBoundingClientRect().bottom - bottom;
+      const top = $("#mobile-navigation").getBoundingClientRect().bottom;
+      if (overflow > 0 && blockContent.getBoundingClientRect().top - overflow >= top) {
+        global.scrollBy({ top: Math.ceil(overflow), behavior: "instant" });
+      }
     }
     listen(global.visualViewport, "resize", revealThumbField);
     listen(global.visualViewport, "scroll", syncThumbViewport);
@@ -37,12 +54,14 @@
       symbolDetails.open = true;
       $("#close-symbol-sheet").hidden = false;
       $("#thumb-symbols").setAttribute("aria-expanded", "true");
+      revealThumbField();
     }
     function closeSymbolSheet() {
-      symbolBoard.classList.remove("symbol-sheet");
+      symbolBoard.classList.remove("symbol-sheet", "search-open");
       $("#close-symbol-sheet").hidden = true;
       $("#thumb-symbols").setAttribute("aria-expanded", "false");
     }
+    listen(symbolSearch, "focus", () => symbolBoard.classList.add("search-open"));
     listen(coarsePointer, "change", () => { closeSymbolSheet(); syncThumbViewport(); });
     listen($("#close-symbol-sheet"), "click", returnToSymbolOrigin);
     listen(symbolBoard, "pointerdown", event => {
@@ -50,6 +69,7 @@
     });
     listen(document, "keydown", event => {
       if (event.key !== "Escape" || !symbolBoard.classList.contains("symbol-sheet")) return;
+      if (event.target === symbolSearch && symbolSearch.value) return;
       event.preventDefault(); event.stopPropagation(); returnToSymbolOrigin();
     }, true);
     listen(thumbBar, "pointerdown", event => { if (event.target.closest("button")) event.preventDefault(); });
@@ -74,7 +94,7 @@
       scopeButton.firstElementChild.textContent = icon;
       scopeButton.setAttribute("aria-label", name);
       scopeButton.setAttribute("aria-pressed", String(mode === "selection"));
-      if (changed && speak) announce(name + ".");
+      if (changed && speak && mode !== "cursor") announce(name + ".");
     }
     const listObserver = new MutationObserver(() => refreshMode());
     listObserver.observe($("#assist-list"), { attributes: true, attributeFilter: ["hidden"] });
@@ -189,7 +209,12 @@
     });
     syncThumbViewport();
 
-    return { refresh: syncThumbViewport, showSymbolSheet, closeSymbolSheet, clearScope, toggleScope, toggleSymbols, thumbStep,
+    function ready() {
+      for (const button of thumbBar.querySelectorAll("button")) button.inert = false;
+      $("#add-block").disabled = false;
+      announce("Editor listo.");
+    }
+    return { ready, refresh: syncThumbViewport, showSymbolSheet, closeSymbolSheet, clearScope, toggleScope, toggleSymbols, thumbStep,
       getScopeMode: () => scopeMode,
       dispose() { stopGesture(); listObserver.disconnect(); listeners.abort(); resize?.disconnect(); },
     };

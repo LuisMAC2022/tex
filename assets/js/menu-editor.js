@@ -47,6 +47,8 @@
       if (ring) { personal.dataset.ring=ring.id; delete personal.dataset.actionId; }
       else { delete personal.dataset.ring; personal.dataset.actionId=menus.button; }
       personal.title=ring?.label || T.actionById(menus.button).label;
+      personal.lastElementChild.textContent = personal.title;
+      personal.setAttribute("aria-label", "★ " + personal.title);
       choose(Array.from(choice.options).some(o=>o.value===id) ? id : choice.options[0].value);
     }
     function persist(value,id) {

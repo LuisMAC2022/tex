@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadTexNotes } from "./load-app.mjs";
 
-const { SHORTCUTS, matchShortcut, shortcutLabel, ariaKeyshortcuts } = await loadTexNotes(["shortcuts.js"]);
+const { isMacPlatform, unmodified, plural, SHORTCUTS, matchShortcut, shortcutLabel, ariaKeyshortcuts } = await loadTexNotes(["shortcuts.js"]);
 
 test("los atajos tienen identificadores y combinaciones por ámbito únicos", () => {
   assert.equal(new Set(SHORTCUTS.map(({ id }) => id)).size, SHORTCUTS.length);
@@ -72,3 +72,7 @@ test("Menú y Mayús+F10 se reservan al campo Contenido", () => {
   assert.equal(matchShortcut({ code: "F10" }, "content-widget"), undefined);
   assert.equal(matchShortcut({ code: "ContextMenu", altKey: true }, "content-widget"), undefined);
 });
+
+test("la plataforma moderna tiene prioridad sobre la clásica", () => assert.deepEqual([{}, { platform: "MacIntel" }, { platform: "MacIntel", userAgentData: { platform: "Linux" } }, { userAgentData: { platform: "MacIntel" } }].map(isMacPlatform), [false, true, false, true]));
+test("una tecla sin modificar excluye los cuatro modificadores", () => assert.deepEqual([{}, ...["altKey", "ctrlKey", "metaKey", "shiftKey"].map(key => ({ [key]: true }))].map(unmodified), [true, false, false, false, false]));
+test("el singular se reserva para una unidad", () => assert.deepEqual([0, 1, 2].map(n => plural(n, "aviso", "avisos")), ["avisos", "aviso", "avisos"]));

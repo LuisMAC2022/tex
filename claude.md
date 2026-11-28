@@ -676,3 +676,187 @@ pruebas sin omisiones, además de la comprobación estructural.
 
 Quedan sin verificar los dispositivos físicos, los lectores de pantalla,
 Firefox y Safari.
+
+## M0–M7 · Duda previa sobre dos expectativas de interfaz móvil
+
+Revisé main en eb2fc96, cuatro commits después de la base indicada. En
+tests/interfaz-paneles.test.js, el recorrido «Ir a, el editor de una tarjeta
+y los avisos revelan y enfocan su destino» añade un bloque y luego busca
+la pestaña por el nombre accesible exacto «Estructura». También compara
+su texto con «Estructura». M2 pide mostrar «Estructura · 1» e incluir ese
+texto en el nombre accesible. El mismo recorrido toca «Editar Texto» y
+exige foco en type-chip. M6 exige block-content para ese mismo gesto.
+
+¿Se autoriza adaptar en M2 las referencias al rótulo de la pestaña y en M6
+la expectativa de foco tras editar en el teléfono, manteniendo las
+comprobaciones de navegación, activación, foco y escritorio? Se detuvo el
+trabajo según la regla 0.4 antes de M0. No se modificaron pruebas ni interfaz.
+Sin medición ni ejecución de la suite en esta revisión. app.js: 95 022 bytes.
+
+## M0 · Línea base móvil
+
+Autorizadas las dos adaptaciones de expectativas de M2 y M6. Medición en main 7045189, Playwright 1.63.0, Chromium 153.0.8010.12, DPR 3. Para cada ancho, tres aperturas de Estructura en el mismo documento con 30 bloques y CPU 4×. La latencia depende del equipo. No se reprodujo el intervalo de 304–376 ms de la auditoría. La interfaz y app.js (95 022 → 95 022 bytes) se conservaron. Quedan pendientes Android con teclado real, TalkBack, iOS y zoom del sistema.
+
+```json
+[{"viewport":[320,568],"anadirTrasFoco":true,"estadoVisibleTrasAnadir":false,"estadoY":783,"pestanasDentro":false,"pestanas":[{"id":"tab-write","right":79,"dentro":true},{"id":"tab-tree","right":159,"dentro":false},{"id":"tab-document","right":238,"dentro":false},{"id":"tab-more","right":317,"dentro":true},{"id":"panel-menu","right":363,"dentro":false}],"pestanasDentroTexto200":{"normal":false,"estrecho195":false},"simbolosVisibles":{"normal":{"botones":0,"filas":0},"reducido":{"botones":0,"filas":0}},"estadoAntesDeJs":{"texto":"Editor listo.","interactiva":true},"focoTrasEditar":"type-chip","inpEstructura30":{"muestras":[176,128,144],"mediana":144}},{"viewport":[390,844],"anadirTrasFoco":false,"estadoVisibleTrasAnadir":false,"estadoY":993,"pestanasDentro":false,"pestanas":[{"id":"tab-write","right":86,"dentro":true},{"id":"tab-tree","right":172,"dentro":false},{"id":"tab-document","right":258,"dentro":false},{"id":"tab-more","right":344,"dentro":true},{"id":"panel-menu","right":390,"dentro":true}],"pestanasDentroTexto200":{"normal":false,"estrecho195":false},"simbolosVisibles":{"normal":{"botones":0,"filas":0},"reducido":{"botones":0,"filas":0}},"estadoAntesDeJs":{"texto":"Editor listo.","interactiva":true},"focoTrasEditar":"type-chip","inpEstructura30":{"muestras":[136,120,168],"mediana":136}},{"viewport":[430,932],"anadirTrasFoco":false,"estadoVisibleTrasAnadir":false,"estadoY":1003,"pestanasDentro":false,"pestanas":[{"id":"tab-write","right":96,"dentro":true},{"id":"tab-tree","right":192,"dentro":true},{"id":"tab-document","right":288,"dentro":false},{"id":"tab-more","right":384,"dentro":true},{"id":"panel-menu","right":430,"dentro":true}],"pestanasDentroTexto200":{"normal":false,"estrecho195":false},"simbolosVisibles":{"normal":{"botones":8,"filas":1},"reducido":{"botones":0,"filas":0}},"estadoAntesDeJs":{"texto":"Editor listo.","interactiva":true},"focoTrasEditar":"type-chip","inpEstructura30":{"muestras":[176,136,104],"mediana":136}}]
+```
+
+## M1 · Toque en Añadir bloque
+
+Reservé el alto de Contenido durante la escritura y dejé el área de acciones a la vista cuando cabe junto al campo. La prueba toca las coordenadas originales antes y después de blur.
+
+| Medida a 320, 390 y 430 px | Antes | Después |
+|---|---|---|
+| anadirTrasFoco | [true,false,false] | [true,true,true] |
+| estadoVisibleTrasAnadir | [false,false,false] | [false,false,false] |
+| pestanasDentro | [false,false,false] | [false,false,false] |
+| pestanasDentroTexto200 | [[false,false],[false,false],[false,false]] | [[false,false],[false,false],[false,false]] |
+| simbolosVisibles | [[0,0],[0,0],[1,0]] | [[0,0],[0,0],[1,0]] |
+| estadoAntesDeJs | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] |
+| focoTrasEditar | ["type-chip","type-chip","type-chip"] | ["type-chip","type-chip","type-chip"] |
+| inpEstructura30 | [144,136,136] | [128,144,136] |
+
+app.js: 95022 → 95022 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
+
+## M2 · Confirmaciones visibles
+
+El aviso móvil permanece tres segundos. Estructura cuenta todos los bloques. Se ajustaron el tipo anunciado, la recuperación y el fallo de guardado. Revisada y bendecida DEC-019.
+
+| Medida a 320, 390 y 430 px | Antes | Después |
+|---|---|---|
+| anadirTrasFoco | [true,true,true] | [true,true,true] |
+| estadoVisibleTrasAnadir | [false,false,false] | [true,true,true] |
+| pestanasDentro | [false,false,false] | [false,false,false] |
+| pestanasDentroTexto200 | [[false,false],[false,false],[false,false]] | [[false,false],[false,false],[false,false]] |
+| simbolosVisibles | [[0,0],[0,0],[1,0]] | [[0,0],[0,0],[1,0]] |
+| estadoAntesDeJs | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] |
+| focoTrasEditar | ["type-chip","type-chip","type-chip"] | ["type-chip","type-chip","type-chip"] |
+| inpEstructura30 | [128,144,136] | [144,208,128] |
+
+app.js: 95022 → 94763 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
+
+## M3 · Pestañas alcanzables
+
+La lista mantiene el menú fijo, desplaza horizontalmente los rótulos grandes y revela la selección. Verificados los toques en Documento y Más y el recorrido con flechas.
+
+| Medida a 320, 390 y 430 px | Antes | Después |
+|---|---|---|
+| anadirTrasFoco | [true,true,true] | [true,true,true] |
+| estadoVisibleTrasAnadir | [true,true,true] | [true,true,true] |
+| pestanasDentro | [false,false,false] | [true,true,true] |
+| pestanasDentroTexto200 | [[false,false],[false,false],[false,false]] | [[true,true],[true,true],[true,true]] |
+| simbolosVisibles | [[0,0],[0,0],[1,0]] | [[0,0],[0,0],[1,0]] |
+| estadoAntesDeJs | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] |
+| focoTrasEditar | ["type-chip","type-chip","type-chip"] | ["type-chip","type-chip","type-chip"] |
+| inpEstructura30 | [144,208,128] | [216,128,128] |
+
+app.js: 94763 → 94763 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
+
+## M4 · Estado de carga
+
+Las acciones de la barra y el botón del formulario esperan a que termine la inicialización. M0 no midió una mejora de defer y se conservó el orden de los scripts clásicos.
+
+| Medida a 320, 390 y 430 px | Antes | Después |
+|---|---|---|
+| anadirTrasFoco | [true,true,true] | [true,true,true] |
+| estadoVisibleTrasAnadir | [true,true,true] | [true,true,true] |
+| pestanasDentro | [true,true,true] | [true,true,true] |
+| pestanasDentroTexto200 | [[true,true],[true,true],[true,true]] | [[true,true],[true,true],[true,true]] |
+| simbolosVisibles | [[0,0],[0,0],[1,0]] | [[0,0],[0,0],[1,0]] |
+| estadoAntesDeJs | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] |
+| focoTrasEditar | ["type-chip","type-chip","type-chip"] | ["type-chip","type-chip","type-chip"] |
+| inpEstructura30 | [216,128,128] | [304,144,128] |
+
+app.js: 94763 → 94757 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
+
+## M5 · Dos filas de símbolos
+
+Las categorías comparten fila con Buscar y Cerrar. La rejilla precede a los favoritos y el buscador se revela al enfocarlo. Se verificaron la línea del cursor, la inserción y el retorno al campo en seis tamaños.
+
+| Medida a 320, 390 y 430 px | Antes | Después |
+|---|---|---|
+| anadirTrasFoco | [true,true,true] | [true,true,true] |
+| estadoVisibleTrasAnadir | [true,true,true] | [true,true,true] |
+| pestanasDentro | [true,true,true] | [true,true,true] |
+| pestanasDentroTexto200 | [[true,true],[true,true],[true,true]] | [[true,true],[true,true],[true,true]] |
+| simbolosVisibles | [[0,0],[0,0],[1,0]] | [[2,2],[2,2],[2,2]] |
+| estadoAntesDeJs | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] |
+| focoTrasEditar | ["type-chip","type-chip","type-chip"] | ["type-chip","type-chip","type-chip"] |
+| inpEstructura30 | [304,144,128] | [144,128,128] |
+
+app.js: 94757 → 94757 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
+
+## M6 · Acciones y foco de edición
+
+El menú táctil enfoca un sector y vuelve al origen al cerrar. Guardar ofrece volver a la tarjeta por su identidad. Se actualizaron las etiquetas de la barra, el aviso de recuperación y la entrada a Escribir desde la estructura vacía.
+
+| Medida a 320, 390 y 430 px | Antes | Después |
+|---|---|---|
+| anadirTrasFoco | [true,true,true] | [true,true,true] |
+| estadoVisibleTrasAnadir | [true,true,true] | [true,true,true] |
+| pestanasDentro | [true,true,true] | [true,true,true] |
+| pestanasDentroTexto200 | [[true,true],[true,true],[true,true]] | [[true,true],[true,true],[true,true]] |
+| simbolosVisibles | [[2,2],[2,2],[2,2]] | [[2,2],[2,2],[2,2]] |
+| estadoAntesDeJs | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] |
+| focoTrasEditar | ["type-chip","type-chip","type-chip"] | ["block-content","block-content","block-content"] |
+| inpEstructura30 | [144,128,128] | [144,144,160] |
+
+app.js: 94757 → 94736 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
+
+## M7 · Estructura con 30 bloques y recursos locales
+
+Las tarjetas móviles usan content-visibility con altura intrínseca. Al servir la página por HTTP(S) se precargan las dos fuentes. Chromium bloquea la precarga con crossorigin en file://, por lo que al abrir por doble clic las fuentes siguen la carga normal del CSS. Se verificaron los recursos y el favicon sin 404.
+
+| Medida a 320, 390 y 430 px | Antes | Después |
+|---|---|---|
+| anadirTrasFoco | [true,true,true] | [true,true,true] |
+| estadoVisibleTrasAnadir | [true,true,true] | [true,true,true] |
+| pestanasDentro | [true,true,true] | [true,true,true] |
+| pestanasDentroTexto200 | [[true,true],[true,true],[true,true]] | [[true,true],[true,true],[true,true]] |
+| simbolosVisibles | [[2,2],[2,2],[2,2]] | [[2,2],[2,2],[2,2]] |
+| estadoAntesDeJs | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] |
+| focoTrasEditar | ["block-content","block-content","block-content"] | ["block-content","block-content","block-content"] |
+| inpEstructura30 | [144,144,160] | [80,88,120] |
+
+app.js: 94736 → 94736 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
+
+## Cierre · Vista previa y descarga móvil
+
+La acción fija de Documento usa el generador y la descarga existentes. Se verificaron el título obligatorio, el contenido del archivo descargado y la visibilidad del botón antes y después de desplazar la página. Vista previa abre las fórmulas del borrador. Curso y Profesor mantienen sus valores previos.
+
+Verificación final con Playwright 1.63.0: 362 pruebas aprobadas, cero omitidas, incluidas las de interfaz y compilación de PDF. También pasaron check-site y check:js. app.js pasó de 95 022 a 94 736 bytes. Los pasos pendientes en teléfono real están en [revisión manual](docs/revision-manual.md).
+
+### Comparación final
+
+Anchos en orden: 320, 390 y 430 px. Para los símbolos se indican filas completas con alto normal y reducido. Para texto al 200 %, cada par corresponde al ancho indicado y a 195 px. Las latencias son medianas en milisegundos de tres aperturas con CPU 4×.
+
+| Medida | M0 | Tras todos los cambios |
+|---|---|---|
+| anadirTrasFoco | [true,false,false] | [true,true,true] |
+| estadoVisibleTrasAnadir | [false,false,false] | [true,true,true] |
+| pestanasDentro | [false,false,false] | [true,true,true] |
+| pestanasDentroTexto200 | [[false,false],[false,false],[false,false]] | [[true,true],[true,true],[true,true]] |
+| simbolosVisibles | [[0,0],[0,0],[1,0]] | [[2,2],[2,2],[2,2]] |
+| estadoAntesDeJs | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] |
+| focoTrasEditar | ["type-chip","type-chip","type-chip"] | ["block-content","block-content","block-content"] |
+| inpEstructura30 | [144,136,136] | [128,88,144] |
+
+## P0-1 · Margen de app.js
+
+En main (149b18b), app.js y el presupuesto de INV-012 medían 94 736 bytes.
+Tras unificar el acceso a TexNotes y las expresiones repetidas, app.js mide
+93 271 bytes. Quedan 1 465 bytes libres para las fases 1 y 2.
+
+Los tres auxiliares tienen pruebas Node en shortcuts.test.js. La búsqueda
+con git grep en todo el repositorio, incluidas las pruebas, encontró solo la
+definición de BLOCK_TYPE_IDS antes de eliminarla. El aviso de localStorage
+lee ahora el límite del almacén.
+
+**Bloqueo de cierre.** Dos ejecuciones de `TEX_UI_TESTS=required npm test` en
+[la rama](https://github.com/LuisMAC2022/tex/actions/runs/46119874755)
+aprobaron 364 de 365 pruebas, con cero omitidas. En ambas falló la comprobación
+de que todas las pestañas caben a 320 px en tests/interfaz-medicion-movil.test.js,
+línea 20. La [suite del commit base](https://github.com/LuisMAC2022/tex/actions/runs/46108508045)
+ya fallaba en la misma línea, al mismo ancho (361 de 362). Se detiene P0-1 aquí:
+corregir la navegación móvil requiere revisar su comportamiento fuera del
+alcance de esta refactorización.

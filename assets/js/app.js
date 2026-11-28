@@ -1,11 +1,6 @@
 (function (global) {
   "use strict";
-  const {
-    METADATA_KEYS, blockLabel, acceptsChildren, generateLatex, downloadTex,
-    DRAFT_VERSION, blockAtPath, cloneBlock, cloneBlocks, countBlocks, insertBlock, normalizeDraft, pathToKey, updateBlock,
-    MATH_SYMBOLS, MATH_SYMBOL_GROUPS, filterMathSymbols, symbolAccessibleName, symbolsByGroup, insertIntoField,
-    analyzeContent, normalizeLineBreaks, blockType, SHORTCUTS, shortcutLabel,
-  } = global.TexNotes;
+  const T = global.TexNotes;
 
   // Estas dos claves identifican los borradores anteriores que se migran a Versiones.
   const STORAGE_KEY = "tex-notes:draft:v2";
@@ -21,16 +16,16 @@
   const beforeGenerateHooks = [];
   const editorPreviewHooks = [];
   const ACTIVE_DOCUMENT_KEY = "tex-notes:active-document";
-  let documentId = global.TexNotes.newId("d");
+  let documentId = T.newId("d");
   try {
     const saved = localStorage.getItem(ACTIVE_DOCUMENT_KEY) || JSON.parse(localStorage.getItem("tex-notes:autosave:v1"))?.documentId;
-    if (global.TexNotes.validDocumentId(saved)) documentId = saved;
+    if (T.validDocumentId(saved)) documentId = saved;
   } catch { /* Es posible editar sin almacenamiento. */ }
   let history = { past: [], future: [] }, committedMetadata, generatedSnapshot = null, lastChangedId = null;
   let blocks = [];
   let blockTargets = new Map();
   let macros = [];
-  let references = [], bibliography = global.TexNotes.normalizeBibliography();
+  let references = [], bibliography = T.normalizeBibliography();
   let previewVersion = 0;
   const structurePreviewCache = new Map();
   /**
@@ -45,8 +40,8 @@
 
   function katexRender(math, displayMode, macroList = macros) {
     try {
-      return { ok: true, html: global.katex.renderToString(global.TexNotes.macroPreviewDefinitions(macroList) + math, {
-        macros: global.TexNotes.katexMacros(macroList),
+      return { ok: true, html: global.katex.renderToString(T.macroPreviewDefinitions(macroList) + math, {
+        macros: T.katexMacros(macroList),
         displayMode, throwOnError: true, strict: false, trust: false, output: "htmlAndMathml",
       }) };
     } catch (error) {
@@ -55,8 +50,8 @@
   }
 
   function fillMathPreview(container, content, blockTypeId, showLiteral = false) {
-    const normalized = normalizeLineBreaks(content || "");
-    const analysis = analyzeContent(normalized, blockTypeId, katexRender);
+    const normalized = T.normalizeLineBreaks(content || "");
+    const analysis = T.analyzeContent(normalized, blockTypeId, katexRender);
     if (!analysis.segments.length) { container.textContent = showLiteral ? normalized : normalized.trim() ? "No hay tramos matemáticos delimitados para previsualizar." : "Escribe contenido para ver aquí sus matemáticas."; return analysis; }
     const fragment = document.createDocumentFragment();
     let cursor = 0;
@@ -81,12 +76,12 @@
   }
 
   function renderBlockPreview(container, block, context) {
-    const cacheable = context.structure && blockType(block.type)?.kind !== "image";
+    const cacheable = context.structure && T.blockType(block.type)?.kind !== "image";
     const depthKey = listDepthForPath(context.parentPath);
     const key = JSON.stringify([block.type, block.listFormat, block.content, depthKey, previewVersion]);
     const cached = cacheable && structurePreviewCache.get(key);
     if (cached) { container.replaceChildren(cached.node.cloneNode(true)); return cached.analysis; }
-    const renderer = previewRenderers.get(blockType(block.type)?.kind);
+    const renderer = previewRenderers.get(T.blockType(block.type)?.kind);
     const content = context.structure ? (block.content || "").trim() : block.content;
     const analysis = renderer ? renderer(container, block, context) : fillMathPreview(container, content, block.type, context.structure);
     if (!renderer && context.structure && !content) container.textContent = "(Bloque vacío)";
@@ -108,7 +103,7 @@
     const failures = analysis.failures.length;
     if (failures !== announcedPreviewFailures) {
       $("#math-preview-status").textContent = failures
-        ? `No se pudo previsualizar ${failures} ${failures === 1 ? "tramo matemático" : "tramos matemáticos"}. Esto no impide generar el documento.`
+        ? `No se pudo previsualizar ${failures} ${T.plural(failures, "tramo matemático", "tramos matemáticos")}. Esto no impide generar el documento.`
         : "";
       announcedPreviewFailures = failures;
     }
@@ -120,28 +115,28 @@
   }
 
   function metadata() {
-    return Object.fromEntries(METADATA_KEYS.map((name) => [name, form.elements[name].value]));
+    return Object.fromEntries(T.METADATA_KEYS.map((name) => [name, form.elements[name].value]));
   }
   function state() {
-    return { documentId, metadata: metadata(), blocks: cloneBlocks(blocks), macros: macros.map(m => ({ ...m })),
-      references: global.TexNotes.normalizeReferences(references), bibliography: { ...bibliography }, numbering: numberingControls.get() };
+    return { documentId, metadata: metadata(), blocks: T.cloneBlocks(blocks), macros: macros.map(m => ({ ...m })),
+      references: T.normalizeReferences(references), bibliography: { ...bibliography }, numbering: numberingControls.get() };
   }
   function announce(message) { status.textContent = message; }
   function setMetadata(values = {}) {
-    for (const name of METADATA_KEYS) form.elements[name].value = typeof values[name] === "string" ? values[name] : "";
+    for (const name of T.METADATA_KEYS) form.elements[name].value = typeof values[name] === "string" ? values[name] : "";
     committedMetadata = metadata();
     syncMetadataSummary(true);
   }
 
   function describeLocation(parentPath) {
-    const parent = parentPath.length ? blockAtPath(blocks, parentPath) : null;
+    const parent = parentPath.length ? T.blockAtPath(blocks, parentPath) : null;
     return parent ? `dentro de ${describeBlock(parent, parentPath)}, en el nivel ${parentPath.length + 1}` : "al final de la raíz del documento";
   }
 
   /* --- Editor: a qué nodo apunta el formulario --- */
 
-  const blockForm = global.TexNotes.createBlockForm(document, {
-    reveal: node => panels.reveal(node), getBlock: path => blockAtPath(blocks, path), describeBlock: (...args) => structure.describeBlock(...args), describeLocation, updateTrayControls, blockFieldHooks, renderEditorPreview, cancelTemplateForStructuralChange,
+  const blockForm = T.createBlockForm(document, {
+    reveal: node => panels.reveal(node), getBlock: path => T.blockAtPath(blocks, path), describeBlock: (...args) => structure.describeBlock(...args), describeLocation, updateTrayControls, blockFieldHooks, renderEditorPreview, cancelTemplateForStructuralChange,
   });
   const { editorTarget, setEditorTarget, clearBlockFields, resetBlockEditor, selectBlockType, loadBlockEditor } = blockForm;
 
@@ -159,14 +154,14 @@
 
   /* --- Lista anidada --- */
 
-  const numberingControls = global.TexNotes.bindNumberingControls(document, rememberChange, () => {
+  const numberingControls = T.bindNumberingControls(document, rememberChange, () => {
     renderBlocks(); setEditorTarget(editorTarget());
   });
   const outlineSettings = () => ({ metadata: { topic: form.elements.topic.value }, numbering: numberingControls.get() });
-  const structure = global.TexNotes.createStructureView(document, {
+  const structure = T.createStructureView(document, {
     reveal: node => panels.reveal(node), getBlocks: () => blocks, getTarget: label => blockTargets.get(label),
-    refreshTargets: snapshot => { blockTargets = new Map(global.TexNotes.referenceTargets(snapshot).map(target => [target.label, target])); },
-    outlineSettings, renderBlockPreview, blockItemExtensions, syncReferenceKey, saveSession,
+    refreshTargets: snapshot => { blockTargets = new Map(T.referenceTargets(snapshot).map(target => [target.label, target])); },
+    outlineSettings, renderBlockPreview, blockItemExtensions, syncReferenceKey, saveSession: () => saveSession(),
   });
   const { actionButton, describeBlock, renderBlocks, focusAction, focusAfterRemoval, focusById } = structure;
 
@@ -175,9 +170,9 @@
   /** Describe lo que hay en la bandeja, con el tamaño de la rama si la tiene. */
   function trayLabel() {
     if (!tray) return "";
-    const nested = countBlocks(tray.block.children);
+    const nested = T.countBlocks(tray.block.children);
     const title = (tray.block.title || "").trim();
-    return `${blockLabel(tray.block.type)}${title ? `: ${title}` : ""}${nested ? ` con ${nested} ${nested === 1 ? "bloque anidado" : "bloques anidados"}` : ""}`;
+    return `${T.blockLabel(tray.block.type)}${title ? `: ${title}` : ""}${nested ? ` con ${nested} ${T.plural(nested, "bloque anidado", "bloques anidados")}` : ""}`;
   }
 
   /**
@@ -196,7 +191,7 @@
     paste.setAttribute("aria-label", `Pegar ${label} ${describeLocation(editorTarget().parent)}`);
   }
 
-  const copyToClipboard = global.TexNotes.createClipboard(document);
+  const copyToClipboard = T.createClipboard(document);
 
   function blockError(message) {
     const field = $("#block-content");
@@ -220,15 +215,14 @@
     if (!validateBlock(draft.type)) return;
     const { editing, parent } = editorTarget();
     if (editing.length) {
-      const next = updateBlock(blocks, editing, draft);
-      if (!next) { blockError(`«${blockLabel(draft.type)}» no admite bloques anidados y este bloque ya tiene. Muévelos o elimínalos antes de cambiar el tipo.`); return; }
-      changeTree(next, blockAtPath(next, editing).id); resetBlockEditor(); renderBlocks();
-      if (keepFieldFocus) focusBlockContent();
-      else if (!focusById("edit", blockAtPath(next, editing).id)) blockForm.focusType();
+      const next = T.updateBlock(blocks, editing, draft);
+      if (!next) { blockError(`«${T.blockLabel(draft.type)}» no admite bloques anidados y este bloque ya tiene. Muévelos o elimínalos antes de cambiar el tipo.`); return; }
+      changeTree(next, T.blockAtPath(next, editing).id); resetBlockEditor(); renderBlocks();
+      structure.finishEdit(T.blockAtPath(next, editing).id, keepFieldFocus, focusBlockContent, blockForm.focusType);
       announce(`Bloque ${describeBlock(null, editing)} actualizado.`);
       return;
     }
-    const result = insertBlock(blocks, parent, draft);
+    const result = T.insertBlock(blocks, parent, draft);
     if (!result) { blockError("No se pudo añadir el bloque en esa posición; la lista se actualizó."); renderBlocks(); return; }
     changeTree(result.blocks, result.id);
     clearBlockFields();
@@ -245,7 +239,7 @@
     if (!tray) { updateTrayControls(); announce("La bandeja está vacía: copia un bloque antes de pegar."); return; }
     // Cada pegado entrega una copia nueva: la bandeja conserva su bloque y dos
     // pegados del mismo origen no comparten objetos.
-    const result = insertBlock(blocks, parent, global.TexNotes.copyWithoutLabels(tray.block));
+    const result = T.insertBlock(blocks, parent, T.copyWithoutLabels(tray.block));
     if (!result) { renderBlocks(); setEditorTarget(editorTarget()); announce("No se pudo pegar el bloque en ese destino; la lista se actualizó."); return; }
     const label = trayLabel();
     const cancelled = cancelEditForStructuralChange();
@@ -262,14 +256,14 @@
     announce(cancelled ? "Edición cancelada." : "El siguiente bloque se añadirá en la raíz.");
   });
 
-  const moveAnnouncements = global.TexNotes.createMoveAnnouncements(document, outlineSettings, announce);
-  const handleBlockAction = global.TexNotes.createBlockActions(document, {
+  const moveAnnouncements = T.createMoveAnnouncements(document, outlineSettings, announce);
+  const handleBlockAction = T.createBlockActions(document, {
     getBlocks: () => blocks, setTray: next => { tray = next; }, renderBlocks, announce, convertLegacyBlock,
     focusType: blockForm.focusType, openMenu: (button, path, keyboard) => radial.openAtButton(button, { source: "card", path }, keyboard),
     loadBlockEditor, cancelTemplateForStructuralChange, clearBlockFields, setEditorTarget, describeBlock,
     cancelEditForStructuralChange, changeTree, editorTarget, focusById, focusAction, updateTrayControls, copyToClipboard, focusAfterRemoval, moveAnnouncements,
   });
-  global.TexNotes.bindBlockControls(blockList);
+  T.bindBlockControls(blockList);
 
 
   function generateOutput() {
@@ -281,7 +275,7 @@
     $("#title-error").textContent = ""; title.removeAttribute("aria-invalid");
     generatedSnapshot = state();
     for (const hook of beforeGenerateHooks) hook(generatedSnapshot);
-    output.value = generateLatex(generatedSnapshot);
+    output.value = T.generateLatex(generatedSnapshot);
     return true;
   }
   function exportSnapshot() {
@@ -293,7 +287,7 @@
   });
   $("#download-tex").addEventListener("click", () => {
     const snapshot = exportSnapshot(); if (!snapshot) return;
-    downloadTex(output.value, snapshot.metadata.title); saveExportVersion(snapshot); announce("Descarga del archivo .tex iniciada.");
+    T.downloadTex(output.value, snapshot.metadata.title); saveExportVersion(snapshot); announce("Descarga del archivo .tex iniciada.");
   });
   $("#copy-code").addEventListener("click", async () => {
     const snapshot = exportSnapshot(); if (!snapshot) return;
@@ -301,14 +295,10 @@
     catch { announce("No se pudo copiar el código; permanece disponible para seleccionarlo manualmente."); }
   });
 
-  function focusBlockContent() { panels.focusTarget($(blockType($("#block-type").value)?.kind === "image" ? "#image-path" : "#block-content")); }
+  function focusBlockContent() { panels.focusTarget($(T.blockType($("#block-type").value)?.kind === "image" ? "#image-path" : "#block-content")); }
 
   /* --- [A] Atajos del tablero --- */
 
-  const {
-    adjacentGroup, ariaKeyshortcuts, matchShortcut, recentSymbolIds,
-    RECENT_SYMBOL_GROUP, SYMBOL_BOARD_GROUPS, symbolGridTarget,
-  } = global.TexNotes;
   const symbolBoard = $(".symbol-board");
   const symbolDetails = $("#symbol-details");
   const symbolSearch = $("#symbol-search");
@@ -318,22 +308,22 @@
   const symbolDetailPlaceholder = symbolDetail.textContent;
   const blockContent = $("#block-content");
   const blockEditor = blockContent.closest("fieldset");
-  const symbolCatalog = new Map(MATH_SYMBOLS.map((symbol) => [symbol.id, symbol]));
+  const symbolCatalog = new Map(T.MATH_SYMBOLS.map((symbol) => [symbol.id, symbol]));
   const recentSymbolStorageKey = "tex-notes:recent-symbols";
-  let activeSymbolGroup = MATH_SYMBOL_GROUPS[0].id;
+  let activeSymbolGroup = T.MATH_SYMBOL_GROUPS[0].id;
   let recentSymbols = [];
   let lastBlockField = blockContent;
   let symbolOrigin;
 
   try {
-    recentSymbols = recentSymbolIds(JSON.parse(global.localStorage.getItem(recentSymbolStorageKey)));
+    recentSymbols = T.recentSymbolIds(JSON.parse(global.localStorage.getItem(recentSymbolStorageKey)));
   } catch {
     // El catálogo sigue disponible si el navegador impide leer el historial.
   }
 
-  const favorites = global.TexNotes.createSymbolFavorites(document, applySymbolFilter);
+  const favorites = T.createSymbolFavorites(document, applySymbolFilter);
   function renderSymbolBoard() {
-    for (const group of SYMBOL_BOARD_GROUPS) {
+    for (const group of T.SYMBOL_BOARD_GROUPS) {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "symbol-category";
@@ -341,26 +331,26 @@
       button.textContent = group.label;
       categoryPicker.append(button);
     }
-    const shortcut = SHORTCUTS.find(({ id }) => id === "symbols.toggle");
-    const isMac = /Mac/.test(global.navigator.userAgentData?.platform || global.navigator.platform || "");
-    $("#symbol-shortcut-label").textContent = shortcutLabel(shortcut, isMac);
+    const shortcut = T.SHORTCUTS.find(({ id }) => id === "symbols.toggle");
+    const isMac = T.isMacPlatform(global.navigator);
+    $("#symbol-shortcut-label").textContent = T.shortcutLabel(shortcut, isMac);
     for (const field of [blockContent, symbolSearch]) {
-      field.setAttribute("aria-keyshortcuts", ariaKeyshortcuts(shortcut));
+      field.setAttribute("aria-keyshortcuts", T.ariaKeyshortcuts(shortcut));
     }
     applySymbolFilter();
   }
 
   function symbolCategoryLabel() {
     if (symbolSearch.value.trim()) return "búsqueda";
-    return SYMBOL_BOARD_GROUPS.find(({ id }) => id === activeSymbolGroup).label;
+    return T.SYMBOL_BOARD_GROUPS.find(({ id }) => id === activeSymbolGroup).label;
   }
 
   function applySymbolFilter() {
     const query = symbolSearch.value.trim();
-    const category = activeSymbolGroup === RECENT_SYMBOL_GROUP.id
+    const category = activeSymbolGroup === T.RECENT_SYMBOL_GROUP.id
       ? recentSymbols.map((id) => symbolCatalog.get(id))
-      : favorites.category(activeSymbolGroup, symbolCatalog) ?? symbolsByGroup(activeSymbolGroup);
-    const visible = query ? filterMathSymbols(query) : category;
+      : favorites.category(activeSymbolGroup, symbolCatalog) ?? T.symbolsByGroup(activeSymbolGroup);
+    const visible = query ? T.filterMathSymbols(query) : category;
     symbolGrid.replaceChildren(...visible.map((symbol, index) => {
       const item = document.createElement("li");
       item.setAttribute("role", "presentation");
@@ -381,12 +371,12 @@
     empty.textContent = query ? "Ningún símbolo coincide con la búsqueda." : "Aún no has insertado símbolos.";
     const results = $("#symbol-results");
     results.hidden = !query || !visible.length;
-    results.textContent = `${visible.length} ${visible.length === 1 ? "resultado" : "resultados"}`;
+    results.textContent = `${visible.length} ${T.plural(visible.length, "resultado", "resultados")}`;
   }
 
   function announceSymbolCount(instructions = "") {
     const count = symbolGrid.childElementCount;
-    announce(`Tablero de símbolos: ${symbolCategoryLabel()}, ${count} ${count === 1 ? "símbolo" : "símbolos"}.${instructions}`);
+    announce(`Tablero de símbolos: ${symbolCategoryLabel()}, ${count} ${T.plural(count, "símbolo", "símbolos")}.${instructions}`);
   }
 
   function updateSymbolSearch() {
@@ -432,19 +422,19 @@
     const destination = selection && !field.readOnly ? field : blockContent;
     if (destination === field) destination.setSelectionRange(...selection);
     closeSymbolSheet();
-    insertIntoField(destination, symbol.insert || symbol.command);
+    T.insertIntoField(destination, symbol.insert || symbol.command);
     symbolOrigin = null;
     if (destination !== field) field.focus();
     if (destination === blockContent) scheduleEditorPreview();
 
     noteUsage(`symbol:${id}`);
-    recentSymbols = recentSymbolIds([id, ...recentSymbols]);
+    recentSymbols = T.recentSymbolIds([id, ...recentSymbols]);
     try {
       global.localStorage.setItem(recentSymbolStorageKey, JSON.stringify(recentSymbols));
     } catch {
       // Los recientes se conservan en memoria mientras la página siga abierta.
     }
-    if (activeSymbolGroup === RECENT_SYMBOL_GROUP.id && !symbolSearch.value.trim()) applySymbolFilter();
+    if (activeSymbolGroup === T.RECENT_SYMBOL_GROUP.id && !symbolSearch.value.trim()) applySymbolFilter();
     announce(`Símbolo insertado: ${symbol.name}.`);
   }
 
@@ -460,7 +450,7 @@
   }
 
   function navigateSymbolGrid(event) {
-    const shortcut = matchShortcut(event, "symbol-grid-widget");
+    const shortcut = T.matchShortcut(event, "symbol-grid-widget");
     const count = symbolGrid.childElementCount;
     const index = [...symbolGrid.children].indexOf(event.target.closest("li"));
     if (shortcut?.id === "symbols.previousGroup" || shortcut?.id === "symbols.nextGroup") {
@@ -469,12 +459,11 @@
       return;
     }
 
-    const unmodified = !(event.altKey || event.ctrlKey || event.metaKey || event.shiftKey);
-    if (unmodified && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) {
+    if (T.unmodified(event) && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) {
       event.preventDefault();
       if (index < 0 && shortcut?.id !== "symbols.search") return;
       const columns = Math.max(1, getComputedStyle(symbolGrid).gridTemplateColumns.split(" ").filter(Boolean).length);
-      const next = symbolGridTarget({ index, count, columns, key: event.key });
+      const next = T.symbolGridTarget({ index, count, columns, key: event.key });
       if (next === null) T.runAction("symbols.search");
       else focusSymbolAt(next);
       return;
@@ -491,10 +480,10 @@
 
   function navigateSymbolSearch(event) {
     const first = symbolGrid.firstElementChild?.firstElementChild;
-    if (matchShortcut(event, "symbol-search-widget")?.id === "symbols.firstResult") {
+    if (T.matchShortcut(event, "symbol-search-widget")?.id === "symbols.firstResult") {
       event.preventDefault();
       if (first) T.runAction("symbols.firstResult");
-    } else if (event.key === "Enter" && !(event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)) {
+    } else if (event.key === "Enter" && T.unmodified(event)) {
       event.preventDefault();
       if (first) insertSymbol(first.dataset.symbolId);
     }
@@ -515,27 +504,27 @@
 
   blockEditor.addEventListener("keydown", (event) => {
     if (event.defaultPrevented || event.isComposing) return;
-    const shortcut = matchShortcut(event, "block-editor", listIsMac);
+    const shortcut = T.matchShortcut(event, "block-editor", listIsMac);
     if (shortcut?.id === "block.commit") {
       event.preventDefault();
       if (!event.repeat) T.runAction(shortcut.id);
       return;
     }
-    if (event.key === "Enter" && !(event.ctrlKey || event.metaKey || event.altKey || event.shiftKey)) {
+    if (event.key === "Enter" && T.unmodified(event)) {
       if (event.target.id === "block-title") { event.preventDefault(); focusBlockContent(); return; }
       if (event.target.matches('#image-fields input[type="text"], #image-fields input[type="number"]')) { event.preventDefault(); return; }
     }
     if (symbolBoard.hidden) return;
     const inBoard = symbolBoard.contains(event.target);
     if ((inBoard || event.target.matches("input, select, textarea"))
-        && matchShortcut(event, "block-editor")?.id === "symbols.toggle") {
+        && T.matchShortcut(event, "block-editor")?.id === "symbols.toggle") {
       event.preventDefault();
       if (event.repeat) return;
       T.runAction("symbols.toggle", { field: event.target });
       return;
     }
     if (!inBoard) return;
-    if (matchShortcut(event, "symbol-widget")?.id === "symbols.escape") {
+    if (T.matchShortcut(event, "symbol-widget")?.id === "symbols.escape") {
       event.preventDefault();
       T.runAction("symbols.escape", { field: event.target });
     } else if (event.target === symbolSearch) {
@@ -581,8 +570,7 @@
   const imageError = $("#image-error");
   const imageWarnings = $("#image-warnings");
   const imagePreviews = new Map();
-  const { normalizeImageOptions, imagePathWarnings } = global.TexNotes;
-  const imageType = (id) => blockType(id)?.kind === "image";
+  const imageType = (id) => T.blockType(id)?.kind === "image";
   const previewTitle = $(".math-preview-panel > summary");
   const previewHelp = $(".math-preview-panel > p");
   const originalPreviewTitle = previewTitle.textContent;
@@ -593,7 +581,7 @@
     else imagePath.removeAttribute("aria-invalid");
     imageError.textContent = message;
     imageError.hidden = !message;
-    imageWarnings.textContent = imagePathWarnings(imagePath.value).join(" ");
+    imageWarnings.textContent = T.imagePathWarnings(imagePath.value).join(" ");
     imageWarnings.hidden = !imageWarnings.textContent;
   }
 
@@ -606,7 +594,7 @@
 
   function syncImageFields() {
     const active = imageType($("#block-type").value);
-    const prefix = blockType($("#block-type").value)?.labelPrefix;
+    const prefix = T.blockType($("#block-type").value)?.labelPrefix;
     $("#label-fields").hidden = !prefix;
     $("#label-prefix").textContent = prefix ? prefix + ":" : "";
     $("#proof-help").hidden = $("#block-type").value !== "proof";
@@ -629,7 +617,7 @@
   }
 
   function fillImageFields(block = {}) {
-    const { width, height, angle, align, placement } = normalizeImageOptions(block.options);
+    const { width, height, angle, align, placement } = T.normalizeImageOptions(block.options);
     imagePath.value = imageType(block.type) ? (block.content || "").trim() : "";
     imageFile.value = "";
     imageWidth.value = Math.round(width * 100);
@@ -647,7 +635,7 @@
       if (!imageType(type)) return;
       return {
         content: imagePath.value.trim(),
-        options: normalizeImageOptions({
+        options: T.normalizeImageOptions({
           width: Number(imageWidth.value) / 100,
           height: imageHeight.value,
           angle: imageAngle.value,
@@ -662,7 +650,7 @@
       const { editing } = editorTarget();
       let message = "";
       if (!imagePath.value.trim()) message = "Escribe la ruta del archivo de imagen.";
-      else if (blockAtPath(blocks, editing)?.children.length) {
+      else if (T.blockAtPath(blocks, editing)?.children.length) {
         message = "«Imagen» no admite bloques anidados y este bloque ya tiene. Muévelos o elimínalos antes de cambiar el tipo.";
       }
       showImagePathFeedback(message);
@@ -675,14 +663,14 @@
   });
 
   function existingLabels() {
-    const editing = blockAtPath(blocks, editorTarget().editing);
+    const editing = T.blockAtPath(blocks, editorTarget().editing);
     return T.flattenBlocks(blocks).flatMap(({ block }) => [
       ...(block !== editing && block.label ? [block.label] : []),
       ...T.documentCommands(block === editing ? blockDraft() : block).filter(c => c.name === "label").map(c => c.arg),
     ]);
   }
   function validateBlockLabel(type) {
-    const prefix = blockType(type)?.labelPrefix, raw = blockLabelField.value.trim();
+    const prefix = T.blockType(type)?.labelPrefix, raw = blockLabelField.value.trim();
     const label = T.normalizeLabel(raw, prefix);
     let message = "";
     if (prefix && raw) {
@@ -696,17 +684,17 @@
     return !message;
   }
   function fillBlockLabel(block = {}) {
-    blockLabelField.value = global.TexNotes.labelOf(block);
+    blockLabelField.value = T.labelOf(block);
     $("#label-fields").open = Boolean(blockLabelField.value);
     $("#label-error").textContent = "";
     blockLabelField.removeAttribute("aria-invalid");
   }
   blockFieldHooks.push({
-    read(type) { return { label: global.TexNotes.normalizeLabel(blockLabelField.value, blockType(type)?.labelPrefix) }; },
+    read(type) { return { label: T.normalizeLabel(blockLabelField.value, T.blockType(type)?.labelPrefix) }; },
     fill: fillBlockLabel, clear: fillBlockLabel,
   });
   $("#propose-label").addEventListener("click", () => {
-    const prefix = blockType($("#block-type").value)?.labelPrefix;
+    const prefix = T.blockType($("#block-type").value)?.labelPrefix;
     blockLabelField.value = T.labelFromTitle($("#block-title").value, prefix, existingLabels());
     validateBlockLabel($("#block-type").value); scheduleSessionSave();
     blockLabelField.focus(); announce("Etiqueta propuesta " + blockLabelField.value);
@@ -714,7 +702,7 @@
 
   blockItemExtensions.push((block, path, { article }) => {
     if (!imageType(block.type)) return;
-    const { width, angle } = normalizeImageOptions(block.options);
+    const { width, angle } = T.normalizeImageOptions(block.options);
     const summary = document.createElement("p");
     summary.className = "image-summary";
     summary.textContent = `${block.content.trim()} · ${Math.round(width * 100)} % · ${angle}°`;
@@ -762,7 +750,7 @@
     renderEditorPreview();
   });
   $("#image-turn").addEventListener("click", () => {
-    const { angle } = normalizeImageOptions({ angle: imageAngle.value });
+    const { angle } = T.normalizeImageOptions({ angle: imageAngle.value });
     imageAngle.value = Number((angle + 90 > 360 ? angle - 270 : angle + 90).toFixed(2));
     announce(`Ángulo de giro: ${imageAngle.value}°.`);
     renderEditorPreview();
@@ -785,24 +773,19 @@
 
   /* --- [C] Listas --- */
 
-  const {
-    ariaKeyshortcuts: listAriaKeyshortcuts, matchShortcut: matchListShortcut,
-    parseListOutline, limitListOutline, listDepthWithEnvironment, listOutlineDepthContext,
-    shiftLines, continueListLine, listFormatAfterEdit,
-  } = global.TexNotes;
   const listContent = $("#block-content");
   const listLimit = $("#list-limit");
-  const listShortcuts = SHORTCUTS.filter(({ scope }) => scope === "list-editor");
-  const listKeyNames = listShortcuts.map(shortcut => listAriaKeyshortcuts(shortcut));
+  const listShortcuts = T.SHORTCUTS.filter(({ scope }) => scope === "list-editor");
+  const listKeyNames = listShortcuts.map(shortcut => T.ariaKeyshortcuts(shortcut));
   let loadedListBlock = null;
 
   blockFieldHooks.push({
-    fill(block) { loadedListBlock = blockType(block.type)?.kind === "list" ? block : null; },
+    fill(block) { loadedListBlock = T.blockType(block.type)?.kind === "list" ? block : null; },
     clear() { loadedListBlock = null; },
     read(type) {
-      if (blockType(type)?.kind !== "list") return {};
-      const original = blockAtPath(blocks, editorTarget().editing) || loadedListBlock;
-      return { listFormat: listFormatAfterEdit(original, listContent.value) };
+      if (T.blockType(type)?.kind !== "list") return {};
+      const original = T.blockAtPath(blocks, editorTarget().editing) || loadedListBlock;
+      return { listFormat: T.listFormatAfterEdit(original, listContent.value) };
     },
   });
 
@@ -812,10 +795,10 @@
     for (const index of parentPath) {
       const ancestor = siblings[index];
       if (!ancestor) break;
-      const type = blockType(ancestor.type);
-      if (type?.kind === "theorem") depth = listDepthWithEnvironment(depth, type.environment);
+      const type = T.blockType(ancestor.type);
+      if (type?.kind === "theorem") depth = T.listDepthWithEnvironment(depth, type.environment);
       if (type?.kind === "list") {
-        depth = listOutlineDepthContext(parseListOutline(ancestor.content, type.listEnvironment, ancestor.listFormat), depth);
+        depth = T.listOutlineDepthContext(T.parseListOutline(ancestor.content, type.listEnvironment, ancestor.listFormat), depth);
       }
       siblings = ancestor.children;
     }
@@ -830,8 +813,8 @@
   }
 
   previewRenderers.set("list", (container, block, { parentPath, structure }) => {
-    const parsed = parseListOutline(block.content, blockType(block.type).listEnvironment, block.listFormat);
-    const { tree, limited } = limitListOutline(parsed, listDepthForPath(parentPath));
+    const parsed = T.parseListOutline(block.content, T.blockType(block.type).listEnvironment, block.listFormat);
+    const { tree, limited } = T.limitListOutline(parsed, listDepthForPath(parentPath));
     const analysis = { segments: [], failures: [] };
     function fillItem(item, content) {
       const formulae = fillMathPreview(item, content, block.type, true);
@@ -883,7 +866,7 @@
   }
 
   editorPreviewHooks.push((block) => {
-    const isList = blockType(block.type)?.kind === "list";
+    const isList = T.blockType(block.type)?.kind === "list";
     const legacy = block.listFormat === "flat";
     $("#list-tools").hidden = !isList;
     $("#list-help").hidden = !isList;
@@ -898,24 +881,24 @@
   });
 
   function applyListEdit(edit, direction) {
-    global.TexNotes.applyFieldEdit(listContent, { ...edit, selectionDirection: direction });
+    T.applyFieldEdit(listContent, { ...edit, selectionDirection: direction });
     scheduleEditorPreview();
   }
 
   function shiftListSelection(delta) {
-    const edit = shiftLines(listContent, delta);
+    const edit = T.shiftLines(listContent, delta);
     const changed = edit.value !== listContent.value;
     applyListEdit(edit, listContent.selectionDirection);
     if (delta > 0) announce("Se añadió sangría.");
     else announce(changed ? "Se quitó sangría." : "No hay sangría que quitar.");
   }
 
-  const listIsMac = /Mac/.test(global.navigator.userAgentData?.platform || global.navigator.platform || "");
+  const listIsMac = T.isMacPlatform(global.navigator);
   for (const shortcut of listShortcuts) {
     const indent = shortcut.id === "list.indent";
     const button = $(indent ? "#list-indent" : "#list-outdent");
-    button.setAttribute("aria-keyshortcuts", listAriaKeyshortcuts(shortcut));
-    button.title = shortcutLabel(shortcut, listIsMac);
+    button.setAttribute("aria-keyshortcuts", T.ariaKeyshortcuts(shortcut));
+    button.title = T.shortcutLabel(shortcut, listIsMac);
     button.addEventListener("click", () => T.runAction(shortcut.id));
     button.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") return;
@@ -925,7 +908,7 @@
   }
 
   $("#list-tools").addEventListener("keydown", (event) => {
-    if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+    if (event.isComposing || !T.unmodified(event) || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
     event.preventDefault();
     const buttons = [...$("#list-tools").querySelectorAll("button")];
     const next = buttons.find((button) => button !== event.target);
@@ -934,21 +917,20 @@
   });
 
   listContent.addEventListener("keydown", (event) => {
-    if (event.defaultPrevented || event.isComposing || blockType($("#block-type").value)?.kind !== "list") return;
-    const shortcut = matchListShortcut(event, "list-editor");
+    if (event.defaultPrevented || event.isComposing || T.blockType($("#block-type").value)?.kind !== "list") return;
+    const shortcut = T.matchShortcut(event, "list-editor");
     if (shortcut) {
       event.preventDefault();
       T.runAction(shortcut.id);
-    } else if (event.key === "Enter" && !(event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)) {
+    } else if (event.key === "Enter" && T.unmodified(event)) {
       event.preventDefault();
-      applyListEdit(continueListLine(listContent));
+      applyListEdit(T.continueListLine(listContent));
     }
   });
 
   /* --- fin [C] --- */
 
   /* --- [D] Comprobación --- */
-  const { checkBlock, checkDocument } = global.TexNotes;
   const editorContentCheck = $("#editor-content-check");
   const resultContentCheck = $("#result-content-check");
   const contentCheckSummary = $("#content-check-summary");
@@ -957,15 +939,15 @@
   let issuesByPath;
   let generatedBlocks = null;
 
-  function issueCount(count) { return `${count} ${count === 1 ? "aviso" : "avisos"}`; }
+  function issueCount(count) { return `${count} ${T.plural(count, "aviso", "avisos")}`; }
   function issueText({ severity, line, column, message }) {
     return `${severity === "error" ? "Error" : "Aviso"} en línea ${line}, columna ${column}. ${message}`;
   }
-  function editButtonId(path) { return `content-check-edit-${pathToKey(path)}`; }
+  function editButtonId(path) { return `content-check-edit-${T.pathToKey(path)}`; }
 
   editorPreviewHooks.push((block, { parentPath }) => {
-    const savedBlock = blockAtPath(blocks, editorTarget().editing);
-    const issues = checkBlock({ ...block, children: savedBlock?.children }, blocks, parentPath, { macros });
+    const savedBlock = T.blockAtPath(blocks, editorTarget().editing);
+    const issues = T.checkBlock({ ...block, children: savedBlock?.children }, blocks, parentPath, { macros });
     editorContentCheck.textContent = issues.map(issueText).join("\n");
     editorContentCheck.hidden = !issues.length;
   });
@@ -974,10 +956,10 @@
     const editButton = actions.querySelector('[data-action="edit"]');
     editButton.id = editButtonId(path);
     if (badgedBlocks !== blocks) {
-      issuesByPath = new Map(checkDocument({ blocks, macros, references, bibliography }).map(({ path: issuePath, issues }) => [pathToKey(issuePath), issues.length]));
+      issuesByPath = new Map(T.checkDocument({ blocks, macros, references, bibliography }).map(({ path: issuePath, issues }) => [T.pathToKey(issuePath), issues.length]));
       badgedBlocks = blocks;
     }
-    const count = issuesByPath.get(pathToKey(path));
+    const count = issuesByPath.get(T.pathToKey(path));
     if (!count) return;
     const badge = document.createElement("p");
     badge.className = "block-warning-count";
@@ -986,9 +968,9 @@
   });
 
   beforeGenerateHooks.push((documentState) => {
-    const checked = checkDocument(documentState);
+    const checked = T.checkDocument(documentState);
     const total = checked.reduce((count, { issues }) => count + issues.length, 0);
-    const found = `Se ${total === 1 ? "encontró" : "encontraron"} ${issueCount(total)}`;
+    const found = `Se ${T.plural(total, "encontró", "encontraron")} ${issueCount(total)}`;
     generatedBlocks = blocks;
     contentCheckSummary.textContent = total ? found + "." : "No se encontraron avisos.";
     contentCheckBlocks.replaceChildren();
@@ -1039,12 +1021,11 @@
   /* --- fin [D] --- */
 
   /* --- [E] Mover --- */
-  const {open: openMove} = global.TexNotes.createMoveDialog(document, {getBlocks: () => blocks, describeBlock,
+  const {open: openMove} = T.createMoveDialog(document, {getBlocks: () => blocks, describeBlock,
     editorTarget, cancelEditForStructuralChange, changeTree, renderBlocks, setEditorTarget, renderEditorPreview, focusById, moveAnnouncements});
   /* --- fin [E] --- */
 
   /* --- [F] Asistente de escritura --- */
-  const T = global.TexNotes;
   let pendingPairs = [];
   let prefs = { autoPair: true, vibration: true };
   try { const saved = JSON.parse(global.localStorage.getItem("tex-notes:prefs:v1")); for (const key of ["autoPair","vibration"]) if (typeof saved?.[key] === "boolean") prefs[key] = saved[key]; } catch { /* valores predeterminados */ }
@@ -1074,12 +1055,12 @@
     const result = T.autoPair(current, event.data, { mode: T.mathContextAt(current.value, current.selectionStart, $("#block-type").value), pending: pendingPairs });
     if (result) { event.preventDefault(); applyAssist(result); openDocumentSuggestions(); }
   });
-  /* @decision DEC-016 ancla:fb8dc377 tramo:14
+  /* @decision DEC-016 ancla:cf1415e8 tramo:14
    * La captura en el fieldset antecede al manejador de Intro de listas. Solo
    * se consume la tecla cuando existe una edición del asistente aplicable.
    */
   blockEditor.addEventListener("keydown", (event) => {
-    if (event.target !== blockContent || event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || !prefs.autoPair) return;
+    if (event.target !== blockContent || event.defaultPrevented || event.isComposing || !T.unmodified(event) || !prefs.autoPair) return;
     if (suggestions.state) { handleWritingKey(event); if (event.defaultPrevented) return; }
     const current = fieldState();
     const result = event.key === "Backspace" ? T.deleteEmptyPair(current, pendingPairs)
@@ -1145,12 +1126,12 @@
     insertWritingSnippet(found.alias.expansion, found.start, found.end, mode === "text" && found.alias.mode === "math");
     noteUsage(`alias:${found.alias.trigger}`); return true;
   }
-  /* @decision DEC-015 ancla:7ca5aab4 tramo:28
+  /* @decision DEC-015 ancla:f3bedcec tramo:28
    * Tab se consume solo con una sugerencia, hueco, cierre o alias pendiente.
    * Escape cancela sin mover el cursor. El resto conserva la navegación nativa.
    */
   function handleWritingKey(event) {
-    if (event.target !== blockContent || event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (event.target !== blockContent || event.defaultPrevented || event.isComposing || !T.unmodified(event)) return;
     if (suggestions.state && ["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"].includes(event.key)) {
       event.preventDefault();
       if (event.key === "Escape") { closeAssistMenu(); event.stopPropagation(); }
@@ -1221,14 +1202,14 @@
     if (entry.title !== undefined) $("#block-title").value = entry.title;
     applyAssist({ value: "", selectionStart: 0, selectionEnd: 0 });
     snippetSession = null; pendingPairs = []; renderEditorPreview(); focusBlockContent();
-    announce(`Tipo: ${blockLabel(entry.typeId)}.${entry.title ? ` Título: ${entry.title}.` : ""}`);
+    announce(`Tipo: ${T.blockLabel(entry.typeId)}.${entry.title ? ` Título: ${entry.title}.` : ""}`);
   }
   function renderTemplateProgress() {
     const progress = $("#template-progress");
     progress.hidden = !templateSession;
     if (!templateSession) return;
     const { template, index } = templateSession, next = template.steps[index + 1];
-    $("#template-progress-text").textContent = `Plantilla «${template.name}»: paso ${index + 1} de ${template.steps.length}${next ? ` · Siguiente: ${blockLabel(next.block.type)}` : " · Último paso"}.`;
+    $("#template-progress-text").textContent = `Plantilla «${template.name}»: paso ${index + 1} de ${template.steps.length}${next ? ` · Siguiente: ${T.blockLabel(next.block.type)}` : " · Último paso"}.`;
   }
   function loadTemplateStep() {
     const block = T.copyWithoutLabels(templateSession.template.steps[templateSession.index].block);
@@ -1264,9 +1245,9 @@
     templateSession = null; renderTemplateProgress(); focusBlockContent(); announce("Plantilla cancelada; el contenido del paso actual se conserva.");
   });
   function saveBlockTemplate(path) {
-    const block = blockAtPath(blocks, path);
-    renamingTemplate = -1; savedTemplateBranch = cloneBlock(block);
-    $("#template-name").value = block.title || blockLabel(block.type); $("#template-trigger").value = ""; $("#template-error").textContent = "";
+    const block = T.blockAtPath(blocks, path);
+    renamingTemplate = -1; savedTemplateBranch = T.cloneBlock(block);
+    $("#template-name").value = block.title || T.blockLabel(block.type); $("#template-trigger").value = ""; $("#template-error").textContent = "";
     templateDialog.showModal();
   }
   function refreshTemplates() {
@@ -1300,7 +1281,7 @@
   for (const macro of T.normalizeMacros(readWritingStorage("tex-notes:macros-default:v1", []))) {
     if (!T.validateMacro(macro, defaultMacros).length) defaultMacros.push(macro);
   }
-  const existingSnapshot = [STORAGE_KEY, LEGACY_STORAGE_KEY, "tex-notes:autosave:v1"].some(key => normalizeDraft(readWritingStorage(key, null)));
+  const existingSnapshot = [STORAGE_KEY, LEGACY_STORAGE_KEY, "tex-notes:autosave:v1"].some(key => T.normalizeDraft(readWritingStorage(key, null)));
   if (!existingSnapshot) macros = defaultMacros.map(m => ({ ...m }));
   function setConfigMacros(next, applyDefaults = true) {
     defaultMacros = next.map(m => ({ ...m })); writeWritingStorage("tex-notes:macros-default:v1", defaultMacros);
@@ -1419,7 +1400,7 @@
       del.setAttribute("aria-label", "Eliminar referencia " + entry.key);
       del.addEventListener("click", () => {
         const n = T.citationInfo({ blocks }).counts.get(entry.key) || 0;
-        if (n && !global.confirm(`¿Eliminar ${entry.key}? Quedarán ${n} ${n === 1 ? "cita rota" : "citas rotas"}.`)) return;
+        if (n && !global.confirm(`¿Eliminar ${entry.key}? Quedarán ${n} ${T.plural(n, "cita rota", "citas rotas")}.`)) return;
         rememberChange(); references = references.filter(r => r.key !== entry.key);
         if (editingReference === entry.key) fillReferenceForm();
         refreshBibliography(); ($("#ref-key").disabled ? $("#ref-authors") : $("#ref-key")).focus();
@@ -1474,7 +1455,7 @@
     const result = T.convertBibliography({ blocks, references }, path);
     if (result.error) { announce(result.error); return; }
     if (!global.confirm("¿Convertir las líneas en referencias del documento y retirar el bloque de bibliografía?")) return;
-    const id = blockAtPath(blocks, path).id, cancelled = cancelEditForStructuralChange();
+    const id = T.blockAtPath(blocks, path).id, cancelled = cancelEditForStructuralChange();
     changeTree(result.blocks, id); references = result.references;
     setEditorTarget({}); refreshBibliography(); focusAfterRemoval(path);
     announce("Bibliografía convertida en referencias del documento." + cancelled);
@@ -1484,7 +1465,7 @@
   const panels = T.createPanels(document, { metadata, imageType, announce, closeWriting() { closeAssistMenu(); closeSymbolSheet(); symbolOrigin = null; } });
   const { refresh: syncMetadataSummary, goTo, focusMetadata } = panels;
   // La fecha inicial es la de hoy; un borrador o una sesión recuperada la sustituyen.
-  if (!$("#date").value) $("#date").value = global.TexNotes.localDateValue();
+  if (!$("#date").value) $("#date").value = T.localDateValue();
   syncMetadataSummary(true);
 
   const coarsePointer = global.matchMedia("(pointer: coarse)");
@@ -1510,31 +1491,31 @@
   }
   const radial = T.createRadialController(document, {
     blockContent, imagePath, blockEditor, closeAssistMenu, closeSymbolSheet,
-    getBlock: path => blockAtPath(blocks, path), loadBlockEditor, writingMode,
+    getBlock: path => T.blockAtPath(blocks, path), loadBlockEditor, writingMode,
     resolveMenu: menuEditor.resolve, cardState: path => T.blockActionState(blocks, path, Boolean(tray)), getScopeMode: thumb.getScopeMode, captureSymbolOrigin, applyRadialAction, announce, vibration: () => prefs.vibration,
   });
 
   T.registerActionHandlers(T.createActionBindings(document, {
-    radial, openMove, saveBlockTemplate, pasteBlock, handleBlockAction, editorTarget, getBlock: path => blockAtPath(blocks, path), announce, describeBlock,
+    radial, openMove, saveBlockTemplate, pasteBlock, handleBlockAction, editorTarget, getBlock: path => T.blockAtPath(blocks, path), announce, describeBlock,
     closeAssistMenu, closeSymbolSheet, commitBlock, thumbStep, toggleScope, toggleSymbols,
     shiftListSelection, putSnippet: putRadialSnippet, travelStructure, resetBlockEditor, selectBlockType,
     focusBlockContent, blockForm, goTo, openSymbolSearch, selectSymbolCategory,
     returnToSymbolOrigin, updateSymbolSearch, focusSymbolAt,
     changeSymbolGroup(delta, index) {
-      selectSymbolCategory(adjacentGroup(activeSymbolGroup, delta));
+      selectSymbolCategory(T.adjacentGroup(activeSymbolGroup, delta));
       focusSymbolAt(Math.max(0, Math.min(index, symbolGrid.childElementCount - 1)));
     },
   }));
 
   function renderShortcutPanel() {
-    const isMac = /Mac/.test(global.navigator.userAgentData?.platform || global.navigator.platform || "");
-    const commitShortcut = SHORTCUTS.find(s => s.id === "block.commit");
-    $("#commit-key-label").textContent = shortcutLabel(commitShortcut, isMac);
-    $("#add-block").setAttribute("aria-keyshortcuts", ariaKeyshortcuts(commitShortcut, isMac));
-    const items = SHORTCUTS.map((shortcut) => {
+    const isMac = T.isMacPlatform(global.navigator);
+    const commitShortcut = T.SHORTCUTS.find(s => s.id === "block.commit");
+    $("#commit-key-label").textContent = T.shortcutLabel(commitShortcut, isMac);
+    $("#add-block").setAttribute("aria-keyshortcuts", T.ariaKeyshortcuts(commitShortcut, isMac));
+    const items = T.SHORTCUTS.map((shortcut) => {
       const item = document.createElement("li");
       const keys = document.createElement("kbd");
-      keys.textContent = shortcutLabel(shortcut, isMac);
+      keys.textContent = T.shortcutLabel(shortcut, isMac);
       item.append(keys, ` · ${shortcut.label}`);
       return item;
     });
@@ -1545,42 +1526,38 @@
   $("#block-type").addEventListener("change", renderEditorPreview);
 
   /* --- Autoguardado separado del borrador explícito --- */
-  const { session: autosave, sessionHasContent: hasSessionContent } = T;
-  let pendingSession = autosave.read(global);
-  const { save: sessionSave, schedule: scheduleSessionSave } = autosave.bind(document, form, () => pendingSession, () => ({
-    version: DRAFT_VERSION, ...state(), editor: {
+  let pendingSession = T.session.read(global);
+  const { save: saveSession, schedule: scheduleSessionSave } = T.session.bind(document, form, () => pendingSession, () => ({
+    version: T.DRAFT_VERSION, ...state(), editor: {
       type: $("#block-type").value, title: $("#block-title").value, content: blockContent.value,
       label: blockLabelField.value, editingPath: editorTarget().editing, parentPath: editorTarget().parent,
       image: blockFieldHooks.find(hook => hook.appliesTo?.("image"))?.read("image"),
     },
-  }));
-  function saveSession() { sessionSave(); }
-  if (hasSessionContent(pendingSession) && normalizeDraft(pendingSession)) {
+  }), announce);
+  if (T.sessionHasContent(pendingSession) && T.normalizeDraft(pendingSession)) {
     $("#autosave-banner").hidden = false;
-    const savedDate = new Date(pendingSession.savedAt);
-    const date = Number.isFinite(savedDate.getTime()) ? savedDate.toLocaleString("es-MX") : "fecha desconocida";
-    $("#autosave-message").textContent = `Hay una sesión guardada en este navegador del ${date} con ${countBlocks(pendingSession.blocks)} bloques.`;
+    $("#autosave-message").textContent = T.session.recoveryNotice(pendingSession);
   }
   $("#recover-session").addEventListener("click", () => {
-    const draft = normalizeDraft(pendingSession);
+    const draft = T.normalizeDraft(pendingSession);
     if (!draft) { announce("No hay una sesión válida para recuperar."); return; }
     cancelTemplateForStructuralChange();
     rememberChange();
     setDocumentMacros(draft.macros, false); loadReferences(draft); numberingControls.load(draft.numbering);
     selectDocument(draft.documentId); setMetadata(draft.metadata); blocks = draft.blocks;
     const editor = pendingSession.editor || {};
-    $("#block-type").value = blockType(editor.type) ? editor.type : "text";
+    $("#block-type").value = T.blockType(editor.type) ? editor.type : "text";
     $("#block-title").value = typeof editor.title === "string" ? editor.title : "";
     blockContent.value = typeof editor.content === "string" ? editor.content : "";
     const paths = { editing: Array.isArray(editor.editingPath) ? editor.editingPath : [], parent: Array.isArray(editor.parentPath) ? editor.parentPath : [] };
-    if (paths.parent.length && !acceptsChildren(blockAtPath(blocks, paths.parent)?.type)) paths.parent = [];
+    if (paths.parent.length && !T.acceptsChildren(T.blockAtPath(blocks, paths.parent)?.type)) paths.parent = [];
     for (const hook of blockFieldHooks) hook.fill?.({ ...(editor.image || {}), label: editor.label, type: $("#block-type").value });
     renderBlocks(); setEditorTarget(paths); saveSession(); renderEditorPreview(); focusBlockContent();
     $("#autosave-banner").hidden = true;
-    paintVersions(knownVersions); $("#session-status").textContent = "Sesión recuperada"; announce("Sesión recuperada, incluido el bloque a medio escribir.");
+    paintVersions(knownVersions); $("#session-status").textContent = "Sesión recuperada"; announce(T.session.recovered(editor));
   });
   $("#discard-session").addEventListener("click", () => {
-    try { autosave.discard(localStorage); } catch { /* la aplicación sigue disponible */ }
+    try { T.session.discard(localStorage); } catch { /* la aplicación sigue disponible */ }
     pendingSession = null; $("#autosave-banner").hidden = true; focusBlockContent(); announce("Sesión anterior descartada.");
   });
 
@@ -1590,7 +1567,7 @@
   }
   function focusId() {
     return document.activeElement.closest?.("article[data-block-id]")?.dataset.blockId ||
-      blockAtPath(blocks,editorTarget().editing)?.id || null;
+      T.blockAtPath(blocks,editorTarget().editing)?.id || null;
   }
   function syncHistoryButtons() {
     $("#undo-structure").disabled = !history.past.length; $("#redo-structure").disabled = !history.future.length;
@@ -1601,7 +1578,7 @@
   }
   function changeTree(next, id) { rememberChange(id); lastChangedId=id; blocks = next; }
   function loadVersionState(data, id, targetId) {
-    data = normalizeDraft({ ...data, documentId: id });
+    data = T.normalizeDraft({ ...data, documentId: id });
     if (!data) { announce("La versión guardada es incompatible."); return; }
     form.inert=false;
     cancelTemplateForStructuralChange(); clearMacroForm();
@@ -1610,8 +1587,8 @@
     $("#version-diff").hidden=true;
     if (!focusById("edit",targetId)) focusBlockContent();
     // Se persiste también la restauración de un estado vacío.
-    if (!hasSessionContent(state())) {
-      try { autosave.discard(localStorage); } catch { /* almacenamiento no disponible */ }
+    if (!T.sessionHasContent(state())) {
+      try { T.session.discard(localStorage); } catch { /* almacenamiento no disponible */ }
     }
   }
   function travelStructure(direction) {
@@ -1627,7 +1604,7 @@
   committedMetadata=metadata();
   $("#metadata-details").addEventListener("change",event=>{
     const name=event.target.name;
-    if (!METADATA_KEYS.includes(name) || committedMetadata[name]===event.target.value) return;
+    if (!T.METADATA_KEYS.includes(name) || committedMetadata[name]===event.target.value) return;
     const before=state(); before.metadata[name]=committedMetadata[name];
     rememberChange(focusId(),before); committedMetadata=metadata();
   });
@@ -1646,8 +1623,14 @@
     try { estimate=(await navigator.storage?.estimate?.()) || {}; } catch {}
     const usage = Number.isFinite(estimate.usage) ? " Uso: " + (estimate.usage/1048576).toFixed(1) + " MiB" +
       (Number.isFinite(estimate.quota) ? " de " + (estimate.quota/1048576).toFixed(1) : "") + "." : "";
-    $("#storage-status").textContent=(store.notice ? store.notice+" " : "")+(store.kind==="localStorage" ? "IndexedDB no disponible. Se usa localStorage (8 versiones automáticas por documento). " : "")+
-      (persistent ? "Almacenamiento persistente concedido." : "Sin almacenamiento persistente confirmado. Exporta el proyecto con regularidad.")+usage;
+    const storageNotice = store.notice ? store.notice + " " : "";
+    const localLimit = store.kind === "localStorage"
+      ? `IndexedDB no disponible. Se usa localStorage (${store.limit} versiones automáticas por documento). `
+      : "";
+    const persistenceStatus = persistent
+      ? "Almacenamiento persistente concedido."
+      : "Sin almacenamiento persistente confirmado. Exporta el proyecto con regularidad.";
+    $("#storage-status").textContent = storageNotice + localLimit + persistenceStatus + usage;
   }
   const optionsFor=(origin,label="")=>({origin,label,createdAt:new Date().toISOString(),id:T.newId("v")+T.newId("")});
   function paintVersions(rows) {
@@ -1763,7 +1746,7 @@
         versionStatus("Borrador guardado (migrado) disponible en Versiones.");
       } else versionStatus("El borrador anterior es ilegible. Se conserva su copia original.");
     } else rows=await store.read();
-    if (rows.some(row => row.state?.version < DRAFT_VERSION)) rows=await store.update(T.upgradeStoredVersions);
+    if (rows.some(row => row.state?.version < T.DRAFT_VERSION)) rows=await store.update(T.upgradeStoredVersions);
     paintVersions(rows); void reportStorage(store);
   });
   selectDocument(documentId);
@@ -1773,4 +1756,5 @@
   renderBlocks();
   setEditorTarget({});
   renderEditorPreview();
+  thumb.ready();
 })(typeof globalThis !== "undefined" ? globalThis : this);
