@@ -319,6 +319,10 @@
 - Ver todo aparece con el recorte de dos líneas y Esquema conserva la edición
 - las vistas generan el documento y conservan la edición, Deshacer y el desplazamiento
 
+## `tests/interfaz-recursos-moviles.test.js` — 1 pruebas
+
+- la carga móvil encuentra el icono y precarga las dos fuentes locales de KaTeX
+
 ## `tests/interfaz-tarjetas.test.js` — 3 pruebas
 
 - la tarjeta de una línea cabe en 140 px y presenta ocho acciones en posiciones fijas
@@ -531,4 +535,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-359 pruebas con `node:test` más la comprobación estructural.
+360 pruebas con `node:test` más la comprobación estructural.

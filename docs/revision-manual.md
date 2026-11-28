@@ -154,3 +154,12 @@ Con Gboard abierto y en composición, escribir una barra, una referencia y una c
 ### A4 · Informe local
 
 En Android real, comprobar un aviso con TalkBack y copiar el informe con el teclado abierto. Comprobar el permiso del portapapeles y la selección manual cuando el navegador lo deniegue. Borrar el informe y volver a abrir la aplicación.
+
+## Recorridos pendientes en teléfono real
+
+- **Zoom al 200 %.** Ajusta el zoom de página de Android al 200 %. Abre Estructura y toca Documento y Más, desplazando la lista de pestañas cuando haga falta.
+- **Toque tras cerrar el teclado.** Escribe un bloque distinto, cierra el teclado con Atrás y toca Añadir bloque. Repite diez veces y comprueba que el contador aumenta exactamente una vez por toque.
+- **Símbolos con teclado.** Con el teclado abierto y el cursor al final de una línea, toca Símbolos. Cuenta las filas completas, comprueba que ves el cursor e inserta un símbolo en esa posición.
+- **TalkBack.** Abre Menú por toque y comprueba que el siguiente deslizamiento cae en un sector. Cierra el menú y comprueba el retorno al origen.
+- **Carga lenta.** Abre la página con red lenta y toca Añadir antes de Editor listo. Comprueba el estado de carga y, tras la inicialización, que un toque añade un solo bloque.
+- **iOS.** Repite escritura, edición y exportación en Safari con el teclado del dispositivo. Anota modelo, versión, tamaño del texto y resultado.

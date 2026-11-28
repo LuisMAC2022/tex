@@ -802,3 +802,33 @@ El menú táctil enfoca un sector y vuelve al origen al cerrar. Guardar ofrece v
 | inpEstructura30 | [144,128,128] | [144,144,160] |
 
 app.js: 94757 → 94736 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
+
+## M7 · Estructura con 30 bloques y recursos locales
+
+Las tarjetas móviles usan content-visibility con altura intrínseca. Al servir la página por HTTP(S) se precargan las dos fuentes. Chromium bloquea la precarga con crossorigin en file://, por lo que al abrir por doble clic las fuentes siguen la carga normal del CSS. Se verificaron los recursos y el favicon sin 404.
+
+| Medida a 320, 390 y 430 px | Antes | Después |
+|---|---|---|
+| anadirTrasFoco | [true,true,true] | [true,true,true] |
+| estadoVisibleTrasAnadir | [true,true,true] | [true,true,true] |
+| pestanasDentro | [true,true,true] | [true,true,true] |
+| pestanasDentroTexto200 | [[true,true],[true,true],[true,true]] | [[true,true],[true,true],[true,true]] |
+| simbolosVisibles | [[2,2],[2,2],[2,2]] | [[2,2],[2,2],[2,2]] |
+| estadoAntesDeJs | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] |
+| focoTrasEditar | ["block-content","block-content","block-content"] | ["block-content","block-content","block-content"] |
+| inpEstructura30 | [144,144,160] | [80,88,120] |
+
+app.js: 94736 → 94736 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
+
+### Comparación final M0–M7
+
+| Medida | M0 | M7 |
+|---|---|---|
+| anadirTrasFoco | [true,false,false] | [true,true,true] |
+| estadoVisibleTrasAnadir | [false,false,false] | [true,true,true] |
+| pestanasDentro | [false,false,false] | [true,true,true] |
+| pestanasDentroTexto200 | [[false,false],[false,false],[false,false]] | [[true,true],[true,true],[true,true]] |
+| simbolosVisibles | [[0,0],[0,0],[1,0]] | [[2,2],[2,2],[2,2]] |
+| estadoAntesDeJs | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] |
+| focoTrasEditar | ["type-chip","type-chip","type-chip"] | ["block-content","block-content","block-content"] |
+| inpEstructura30 | [144,136,136] | [80,88,120] |

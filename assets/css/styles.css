@@ -845,3 +845,7 @@ body.writing-focus #workspace-export { display: none; }
   }
 }
 #empty-write { display: block; inline-size: fit-content; }
+
+@media (max-width: 47.99rem) {
+  #block-list article { content-visibility: auto; contain-intrinsic-size: auto 7rem; }
+}

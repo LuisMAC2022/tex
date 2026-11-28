@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="description" content="Editor accesible para crear y descargar notas en LaTeX.">
     <title>Notas LaTeX</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <template id="font-preloads">
+      <link rel="preload" as="font" type="font/woff2" crossorigin href="assets/vendor/katex/fonts/KaTeX_Main-Regular.woff2">
+      <link rel="preload" as="font" type="font/woff2" crossorigin href="assets/vendor/katex/fonts/KaTeX_Math-Italic.woff2">
+    </template>
+    <script>
+      if (location.protocol === "http:" || location.protocol === "https:") {
+        document.head.append(document.querySelector("#font-preloads").content);
+      }
+    </script>
     <link rel="stylesheet" href="assets/css/styles.css">
     <link rel="stylesheet" href="assets/vendor/katex/katex.min.css">
   </head>
