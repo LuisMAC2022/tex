@@ -102,6 +102,6 @@ export async function sesionDePrueba(t, dispositivo) {
 }
 
 export async function irAlPanel(pagina, nombre) {
-  const tab = pagina.getByRole("tab", { name: nombre, exact: true });
+  const tab = pagina.getByRole("tab", { name: nombre === "Estructura" ? /^Estructura · \d+$/ : nombre, exact: true });
   if (await tab.isVisible()) await tab.click();
 }

@@ -82,7 +82,7 @@
       scopeButton.firstElementChild.textContent = icon;
       scopeButton.setAttribute("aria-label", name);
       scopeButton.setAttribute("aria-pressed", String(mode === "selection"));
-      if (changed && speak) announce(name + ".");
+      if (changed && speak && mode !== "cursor") announce(name + ".");
     }
     const listObserver = new MutationObserver(() => refreshMode());
     listObserver.observe($("#assist-list"), { attributes: true, attributeFilter: ["hidden"] });

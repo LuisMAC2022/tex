@@ -717,3 +717,20 @@ Reservé el alto de Contenido durante la escritura y dejé el área de acciones 
 | inpEstructura30 | [144,136,136] | [128,144,136] |
 
 app.js: 95022 → 95022 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
+
+## M2 · Confirmaciones visibles
+
+El aviso móvil permanece tres segundos. Estructura cuenta todos los bloques. Se ajustaron el tipo anunciado, la recuperación y el fallo de guardado. Revisada y bendecida DEC-019.
+
+| Medida a 320, 390 y 430 px | Antes | Después |
+|---|---|---|
+| anadirTrasFoco | [true,true,true] | [true,true,true] |
+| estadoVisibleTrasAnadir | [false,false,false] | [true,true,true] |
+| pestanasDentro | [false,false,false] | [false,false,false] |
+| pestanasDentroTexto200 | [[false,false],[false,false],[false,false]] | [[false,false],[false,false],[false,false]] |
+| simbolosVisibles | [[0,0],[0,0],[1,0]] | [[0,0],[0,0],[1,0]] |
+| estadoAntesDeJs | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] |
+| focoTrasEditar | ["type-chip","type-chip","type-chip"] | ["type-chip","type-chip","type-chip"] |
+| inpEstructura30 | [128,144,136] | [144,208,128] |
+
+app.js: 95022 → 94763 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.

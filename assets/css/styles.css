@@ -779,3 +779,18 @@ body.writing-focus #workspace-export { display: none; }
     resize: none;
   }
 }
+
+@media (max-width: 47.99rem) {
+  #app-status {
+    position: fixed;
+    inset-inline-end: var(--space-2);
+    inset-block-end: calc(var(--keyboard-inset, 0px) + var(--thumb-height, 0px) + var(--space-1));
+    z-index: var(--layer-tools);
+    max-inline-size: calc(100% - var(--space-3));
+    margin: 0;
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow);
+    pointer-events: none;
+  }
+  #app-status:not(.toast-visible) { opacity: 0; }
+}

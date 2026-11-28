@@ -237,6 +237,7 @@
       rows.clear();
       $("#empty-blocks").hidden = blocks.length > 0;
       blocks.forEach((block, index) => blockList.append(blockItem(block, [index], null, [], blocks.length)));
+      $("#tab-tree").textContent = "Estructura · " + rows.size;
       filter(); syncSelection();
       const current = rows.get(id)?.article;
       if (current && action) [...current.querySelectorAll("button[data-action]")].find(button => button.dataset.action === action)?.focus({ preventScroll: true });

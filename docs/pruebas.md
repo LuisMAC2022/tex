@@ -218,6 +218,10 @@
 
 - cada acción del catálogo tiene un manejador en la página
 
+## `tests/interfaz-avisos-moviles.test.js` — 1 pruebas
+
+- añadir muestra la confirmación encima de la barra y actualiza el contador accesible
+
 ## `tests/interfaz-barra.test.js` — 4 pruebas
 
 - la barra alterna cursor, selección y sugerencias conservando el foco
@@ -517,4 +521,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-354 pruebas con `node:test` más la comprobación estructural.
+355 pruebas con `node:test` más la comprobación estructural.

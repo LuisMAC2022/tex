@@ -1550,13 +1550,11 @@
       label: blockLabelField.value, editingPath: editorTarget().editing, parentPath: editorTarget().parent,
       image: blockFieldHooks.find(hook => hook.appliesTo?.("image"))?.read("image"),
     },
-  }));
+  }), announce);
   function saveSession() { sessionSave(); }
   if (hasSessionContent(pendingSession) && normalizeDraft(pendingSession)) {
     $("#autosave-banner").hidden = false;
-    const savedDate = new Date(pendingSession.savedAt);
-    const date = Number.isFinite(savedDate.getTime()) ? savedDate.toLocaleString("es-MX") : "fecha desconocida";
-    $("#autosave-message").textContent = `Hay una sesión guardada en este navegador del ${date} con ${countBlocks(pendingSession.blocks)} bloques.`;
+    $("#autosave-message").textContent = autosave.recoveryNotice(pendingSession);
   }
   $("#recover-session").addEventListener("click", () => {
     const draft = normalizeDraft(pendingSession);
@@ -1574,7 +1572,7 @@
     for (const hook of blockFieldHooks) hook.fill?.({ ...(editor.image || {}), label: editor.label, type: $("#block-type").value });
     renderBlocks(); setEditorTarget(paths); saveSession(); renderEditorPreview(); focusBlockContent();
     $("#autosave-banner").hidden = true;
-    paintVersions(knownVersions); $("#session-status").textContent = "Sesión recuperada"; announce("Sesión recuperada, incluido el bloque a medio escribir.");
+    paintVersions(knownVersions); $("#session-status").textContent = "Sesión recuperada"; announce(autosave.recovered(editor));
   });
   $("#discard-session").addEventListener("click", () => {
     try { autosave.discard(localStorage); } catch { /* la aplicación sigue disponible */ }

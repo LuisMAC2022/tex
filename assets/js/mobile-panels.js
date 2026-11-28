@@ -136,7 +136,7 @@
       }
       if (speak) {
         const count = $("#block-list").querySelectorAll("article").length;
-        deps.announce("Panel " + tab.textContent + (key === "tree" ? ", " + count + (count === 1 ? " bloque." : " bloques.") : "."));
+        deps.announce(key === "tree" ? "Panel Estructura, " + count + (count === 1 ? " bloque." : " bloques.") : "Panel " + tab.textContent + ".");
       }
     }
     function reveal(element) {
