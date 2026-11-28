@@ -468,7 +468,7 @@
 - la prosa española y text dentro de matemáticas usan palabras y oraciones
 - reducir recupera exactamente una selección hacia atrás y respeta extremos y grafemas
 
-## `tests/shortcuts.test.js` — 6 pruebas
+## `tests/shortcuts.test.js` — 9 pruebas
 
 - los atajos tienen identificadores y combinaciones por ámbito únicos
 - los atajos respetan AltGr, las teclas de los widgets y las combinaciones del navegador
@@ -476,6 +476,9 @@
 - los atajos internos del tablero se limitan a la búsqueda y la rejilla
 - Ctrl+Intro incorpora bloques y en macOS usa Meta sin confundir AltGr
 - Menú y Mayús+F10 se reservan al campo Contenido
+- la plataforma moderna tiene prioridad sobre la clásica
+- una tecla sin modificar excluye los cuatro modificadores
+- el singular se reserva para una unidad
 
 ## `tests/suggestion-sources.test.js` — 2 pruebas
 
@@ -540,4 +543,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-362 pruebas con `node:test` más la comprobación estructural.
+365 pruebas con `node:test` más la comprobación estructural.

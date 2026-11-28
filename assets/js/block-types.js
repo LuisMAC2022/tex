@@ -74,7 +74,6 @@
 
   Object.assign(TexNotes, { normalizeLabel, labelFromTitle, labelOf });
   TexNotes.BLOCK_TYPES = BLOCK_TYPES;
-  TexNotes.BLOCK_TYPE_IDS = BLOCK_TYPES.map((type) => type.id);
   TexNotes.blockType = (id) => BLOCK_TYPES.find((type) => type.id === id) || null;
   TexNotes.blockLabel = (id) => (TexNotes.blockType(id) || { label: "Bloque" }).label;
   /** Un tipo desconocido cae en "text", que sí admite hijos. */
