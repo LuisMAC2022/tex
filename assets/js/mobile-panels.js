@@ -110,6 +110,7 @@
         }
         if (mode === "mobile") {
           $("#panel-menu").hidden = key === "write";
+          mobileTabs.find(t => t.dataset.panel === key).scrollIntoView({ inline: "nearest", block: "nearest" });
           win.scrollTo({ top: positions.get(key) || 0, behavior: "instant" });
         } else {
           doc.body.dataset.workspaceView = key;

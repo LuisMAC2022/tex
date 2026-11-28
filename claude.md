@@ -734,3 +734,20 @@ El aviso móvil permanece tres segundos. Estructura cuenta todos los bloques. Se
 | inpEstructura30 | [128,144,136] | [144,208,128] |
 
 app.js: 95022 → 94763 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
+
+## M3 · Pestañas alcanzables
+
+La lista mantiene el menú fijo, desplaza horizontalmente los rótulos grandes y revela la selección. Verificados los toques en Documento y Más y el recorrido con flechas.
+
+| Medida a 320, 390 y 430 px | Antes | Después |
+|---|---|---|
+| anadirTrasFoco | [true,true,true] | [true,true,true] |
+| estadoVisibleTrasAnadir | [true,true,true] | [true,true,true] |
+| pestanasDentro | [false,false,false] | [true,true,true] |
+| pestanasDentroTexto200 | [[false,false],[false,false],[false,false]] | [[true,true],[true,true],[true,true]] |
+| simbolosVisibles | [[0,0],[0,0],[1,0]] | [[0,0],[0,0],[1,0]] |
+| estadoAntesDeJs | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] |
+| focoTrasEditar | ["type-chip","type-chip","type-chip"] | ["type-chip","type-chip","type-chip"] |
+| inpEstructura30 | [144,208,128] | [216,128,128] |
+
+app.js: 94763 → 94763 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
