@@ -269,6 +269,10 @@
 - la lista de citas se desplaza con el dedo y se recorre con la barra
 - Mover bloque permite recorrer destinos con el dedo y trasladar al elegido
 
+## `tests/interfaz-medicion-movil.test.js` — 1 pruebas
+
+- el diagnóstico mide los cinco controles visibles de Estructura
+
 ## `tests/interfaz-menus-personales.test.js` — 4 pruebas
 
 - un anillo de fórmula, Mi botón y el intercambio conservan las posiciones
@@ -509,4 +513,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-352 pruebas con `node:test` más la comprobación estructural.
+353 pruebas con `node:test` más la comprobación estructural.
