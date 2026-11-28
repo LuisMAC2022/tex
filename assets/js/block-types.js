@@ -30,6 +30,7 @@
    * Numeración: cada entorno declarado con \newtheorem lleva un contador propio,
    * independiente y continuo en todo el documento. "proposition" no comparte
    * contador con "theorem" ni se reinicia por sección.
+   * La continuidad describe la opción predeterminada del documento.
    */
   const BLOCK_TYPES = [
     { id: "text", label: "Texto", kind: "text", container: true, slash: ["txt", "texto"] },

@@ -1,7 +1,26 @@
 (function (T) {
   "use strict";
+  T.bindNumberingControls = function (document, rememberChange, render) {
+    const levels = document.querySelector("#numbering-levels");
+    const bySection = document.querySelector("#theorems-by-section");
+    let numbering = T.normalizeNumbering();
+    document.querySelector("#document-numbering").addEventListener("change", () => {
+      rememberChange();
+      numbering = T.normalizeNumbering({ levels: Number(levels.value), theoremsBySection: bySection.checked });
+      render();
+    });
+    return {
+      get: () => ({ ...numbering }),
+      load(value) {
+        numbering = T.normalizeNumbering(value);
+        levels.value = String(numbering.levels);
+        bySection.checked = numbering.theoremsBySection;
+      },
+    };
+  };
+
   T.createStructureView = function (document, deps) {
-    const { getBlocks, getTarget, refreshTargets, getTopic, renderBlockPreview, blockItemExtensions, syncReferenceKey, saveSession } = deps;
+    const { getBlocks, getTarget, refreshTargets, outlineSettings, renderBlockPreview, blockItemExtensions, syncReferenceKey, saveSession } = deps;
     const { pathToKey, acceptsChildren } = T;
     const $ = selector => document.querySelector(selector);
     const blockList = $("#block-list");
@@ -230,9 +249,10 @@
       const action = active.dataset?.action;
       const blocks = getBlocks();
       resize.disconnect();
-      entries = new Map(T.outlineEntries({ blocks, metadata: { topic: getTopic() } })
+      const state = { blocks, ...outlineSettings() };
+      entries = new Map(T.outlineEntries(state)
         .map(entry => [entry.key, entry]));
-      refreshTargets(blocks);
+      refreshTargets(state);
       blockList.replaceChildren();
       rows.clear();
       $("#empty-blocks").hidden = blocks.length > 0;

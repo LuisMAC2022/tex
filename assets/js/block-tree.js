@@ -16,7 +16,8 @@
   const TexNotes = global.TexNotes || (global.TexNotes = {});
 
   /** Versión del borrador persistido. La 1 era una lista plana sin children. */
-  const DRAFT_VERSION = 6;
+  const DRAFT_VERSION = 7;
+  const DEFAULT_NUMBERED_LEVELS = 3;
   const blockIdPattern = /^b[0-9a-z]{8}$/;
   function newId(prefix = "b") {
     const digits = new Uint8Array(8);
@@ -348,9 +349,8 @@
   const pathLabel = (path) => (isPath(path) ? path.map((index) => index + 1).join(".") : "");
 
   /**
-   * Acepta un borrador plano de la versión 1 y los árboles de las versiones 2 y 3, y
-   * devuelve siempre { version, metadata, blocks, macros } o null. No lanza: un valor
-   * mal formado a cualquier profundidad se descarta al normalizar.
+   * Migra los borradores anteriores al esquema vigente. Devuelve null si el
+   * formato es incompatible o no se puede normalizar.
    */
   function normalizeDraft(raw, generate = newId) {
     try {
@@ -363,8 +363,17 @@
       return { version: DRAFT_VERSION, ...(source < DRAFT_VERSION ? { migratedFrom: source } : {}), documentId, metadata,
         blocks: normalizeBlocks(raw.blocks, "flat", generate), macros: source >= 3 ? normalizeMacros(raw.macros) : [],
         references: TexNotes.normalizeReferences(source >= 6 ? raw.references : []),
-        bibliography: TexNotes.normalizeBibliography(source >= 6 ? raw.bibliography : null) };
+        bibliography: TexNotes.normalizeBibliography(source >= 6 ? raw.bibliography : null),
+        numbering: normalizeNumbering(raw.numbering) };
     } catch { return null; }
+  }
+
+  function normalizeNumbering(raw) {
+    const levels = raw?.levels;
+    return {
+      levels: Number.isInteger(levels) && levels >= 1 && levels <= 5 ? levels : DEFAULT_NUMBERED_LEVELS,
+      theoremsBySection: raw?.theoremsBySection === true,
+    };
   }
 
   function normalizeMacros(raw) {
@@ -384,11 +393,12 @@
     const nonempty = (value) => typeof value === "string" && Boolean(value.trim());
     return Boolean(session && ((Array.isArray(session.blocks) && session.blocks.some((block) => block && typeof block === "object"))
       || session.references?.length || session.bibliography?.style === "apa" || session.bibliography?.includeUncited
+      || (session.numbering && (session.numbering.levels !== DEFAULT_NUMBERED_LEVELS || session.numbering.theoremsBySection))
       || nonempty(session.metadata?.title) || nonempty(session.editor?.content) || nonempty(session.editor?.title) || nonempty(session.editor?.image?.content)));
   }
 
   Object.assign(TexNotes, {
-    DRAFT_VERSION, newId, pathOfId, normalizeMacros, localDateValue, sessionHasContent, cloneBlocks, cloneBlock, normalizeBlock, normalizeBlocks, blockAtPath, siblingsAtPath,
+    DRAFT_VERSION, DEFAULT_NUMBERED_LEVELS, normalizeNumbering, newId, pathOfId, normalizeMacros, localDateValue, sessionHasContent, cloneBlocks, cloneBlock, normalizeBlock, normalizeBlocks, blockAtPath, siblingsAtPath,
     insertBlock, duplicateBlock, copyWithoutLabels, updateBlock, removeBlock, moveBlock, moveBlockTo, countBlocks, flattenBlocks,
     indentBlock, outdentBlock, blockNestingError, pathToKey, keyToPath, pathLabel, normalizeDraft, listFormatAfterEdit,
   });

@@ -4,9 +4,9 @@
   const origins = ["manual", "exportación", "respaldo"];
   const isoDate = s => typeof s === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/.test(s) && Number.isFinite(Date.parse(s));
   const validDocumentId = id => typeof id === "string" && /^d[a-z0-9]{8}$/.test(id);
-  function documentSnapshot({ metadata, blocks, macros, references, bibliography }) {
+  function documentSnapshot({ metadata, blocks, macros, references, bibliography, numbering }) {
     return { version: T.DRAFT_VERSION, metadata: { ...metadata }, blocks: T.cloneBlocks(blocks), macros: T.normalizeMacros(macros),
-      references: T.normalizeReferences(references), bibliography: T.normalizeBibliography(bibliography) };
+      references: T.normalizeReferences(references), bibliography: T.normalizeBibliography(bibliography), numbering: T.normalizeNumbering(numbering) };
   }
   function canonical(value) {
     if (Array.isArray(value)) return value.map(canonical);
@@ -55,6 +55,7 @@
     result.references = changedKeys(refs(a), refs(b)).map(change => ({ ...change,
       kind: change.before === undefined ? "added" : change.after === undefined ? "removed" : "modified" }));
     result.bibliography = changedKeys(T.normalizeBibliography(a.bibliography), T.normalizeBibliography(b.bibliography));
+    result.numbering = changedKeys(T.normalizeNumbering(a.numbering), T.normalizeNumbering(b.numbering));
     const names = list => (list||[]).map(m=>m.name);
     if (!equal(names(a.macros),names(b.macros)) && equal([...names(a.macros)].sort(),[...names(b.macros)].sort())) {
       result.macros.push({key:"orden",before:names(a.macros),after:names(b.macros)});
@@ -71,6 +72,27 @@
         ...(fields.includes("content") ? {lines:diffLines(old.block.content,block.content)} : {})});
     }
     return result;
+  }
+  function describeDiff(diff) {
+    const lines=[];
+    for (const [key,label] of [["added","Añadido"],["removed","Eliminado"],["moved","Movido"],["modified","Modificado"]]) {
+      for (const item of diff[key]) {
+        lines.push(label+" · "+(item.title || T.blockLabel(item.type))+" ("+item.id+")");
+        if (item.from) lines.push("  "+(item.from.parent||"Raíz")+" · "+(item.from.position+1)+" → "+(item.to.parent||"Raíz")+" · "+(item.to.position+1));
+        if (item.fields) lines.push("  "+item.fields.map(k=>({title:"título",type:"tipo",content:"contenido",options:"opciones",listFormat:"formato de lista",label:"etiqueta"})[k]).join(", "));
+        if (item.lines?.truncated) lines.push("  Diferencia por líneas omitida por tamaño.");
+        for (const line of item.lines?.changes||[]) lines.push("  "+(line.kind==="added"?"+ ":"− ")+line.line+" "+line.text);
+      }
+    }
+    for (const change of diff.references) {
+      const action = {added:"añadida",removed:"eliminada",modified:"modificada"}[change.kind];
+      lines.push("Referencia " + action + " · " + change.key);
+      if (change.kind === "modified") lines.push("  " + JSON.stringify(change.before) + " → " + JSON.stringify(change.after));
+    }
+    for (const [key,label] of [["metadata","Metadato"],["macros","Macro"],["bibliography","Bibliografía"],["numbering","Numeración"]]) for (const change of diff[key]) {
+      lines.push(label+" "+change.key+": "+JSON.stringify(change.before??null)+" → "+JSON.stringify(change.after??null));
+    }
+    return lines.join("\n") || "Sin cambios respecto a esta versión.";
   }
   function newestFirst(rows) {
     return [...rows].sort((a,b)=>b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
@@ -147,7 +169,7 @@
         ...(raw.config?{config:raw.config}:{})}};
     } catch { return fail("No se pudo leer el proyecto JSON."); }
   }
-  Object.assign(T,{validDocumentId,documentSnapshot,sameDocument,historyEntry,rememberHistory,travelHistory,diffLines,diffDocuments,
+  Object.assign(T,{validDocumentId,documentSnapshot,sameDocument,historyEntry,rememberHistory,travelHistory,diffLines,diffDocuments,describeDiff,
     newestFirst,pruneVersions,mergeVersions,addVersion,migrateSingleDraft,upgradeStoredVersions,validateProject});
   const autosaveKey = "tex-notes:autosave:v1";
   T.session = {

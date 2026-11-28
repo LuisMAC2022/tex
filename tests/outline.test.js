@@ -80,6 +80,26 @@ test("cinco niveles numerados incluyen paragraph y subparagraph", () => {
     ["1.1.1.1", "1.1.1.1.1", "1.1.1.1.2", "1.1.1.1.3"]);
 });
 
+test("la profundidad del documento numera del primer al último nivel elegido", () => {
+  const numbers = ["1", "1.1", "1.1.1", "1.1.1.1", "1.1.1.1.1", "1.1.1.1.2", "1.1.1.1.3"];
+  for (const levels of [1, 2, 3, 4, 5]) {
+    const entries = outlineEntries({ blocks: ramaProfunda(), numbering: { levels } });
+    assert.deepEqual(Array.from(entries, e => e.number), numbers.map((n, i) => Math.min(i + 1, 5) <= levels ? n : null));
+  }
+});
+
+test("cada contador de teorema se reinicia solo al comenzar una sección", () => {
+  const theorem = { type: "theorem", content: "Enunciado" };
+  const definition = { type: "definition", content: "Concepto" };
+  const proof = { type: "proof", content: "Demostración" };
+  const blocks = [theorem, texto("A", [definition, theorem, texto("Interior", [theorem])]),
+    texto("B", [definition, proof, theorem])];
+  const numbers = metadata => Array.from(outlineEntries({ blocks, metadata, numbering: { levels: 1, theoremsBySection: true } }))
+    .filter(e => e.kind === "theorem").map(e => e.number);
+  assert.deepEqual(numbers({}), ["0.1", "1.1", "1.1", "1.2", "2.1", "2.1"]);
+  assert.deepEqual(numbers({ topic: "Tema" }), ["1.1", "1.1", "1.2", "1.3", "1.2", "1.4"]);
+});
+
 test("las insignias del tema y sus textos muestran la numeración del PDF", () => {
   const b = texto("B"), a = texto("A", [b]), c = texto("C");
   const entries = esquema([a, c], "Unidad 1");
@@ -92,12 +112,12 @@ test("las insignias del tema y sus textos muestran la numeración del PDF", () =
   ]);
 });
 
-test("los encabezados sin número muestran Párrafo o Subpárrafo y solo el título", () => {
+test("los encabezados sin número conservan la insignia de su nivel y muestran solo el título", () => {
   const [root] = ramaProfunda();
   const entries = esquema([root], "", { numberedLevels: 0 });
   const levels = [entries[0], entries[3], entries[4]];
   assert.deepEqual(structuredClone(levels.map(entry => outlineLabel(entry, root))), [
-    { badge: "Párrafo", text: "Padre" },
+    { badge: "Sección", text: "Padre" },
     { badge: "Párrafo", text: "Padre" },
     { badge: "Subpárrafo", text: "Padre" },
   ]);

@@ -80,6 +80,14 @@ Arriba, en «Datos del documento», ya vienen escritos el curso, el profesor y l
 fecha de hoy. Cámbialos si no son los tuyos; al restaurar un borrador vuelve su
 fecha guardada.
 
+En «Numerar hasta», elige el último nivel que llevará número, desde «Sección»
+hasta «Subpárrafo». El valor inicial es «Subsubsección». Activa
+«Reiniciar definiciones y teoremas en cada sección» para que cada tipo de
+enunciado numerado empiece en 1 dentro de la sección y lleve su número delante
+(por ejemplo, **2.1**). El bloque de tema cuenta como sección. La lista de
+bloques y «Esquema» se actualizan al cambiar estas opciones, que se guardan con
+el documento.
+
 **El único campo obligatorio es el título.** Sin título la aplicación no genera el
 documento y te lo dice junto al campo. Autor, curso, profesor y fecha son opcionales.
 

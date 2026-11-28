@@ -8,7 +8,7 @@
   function outlineLabel(entry, block) {
     const title = String(block.title ?? "").trim();
     if (entry?.kind === "heading" || entry?.kind === "topic") {
-      const badge = entry.number ? HEADING_LABELS[entry.level] : HEADING_LABELS[Math.max(3, entry.level)];
+      const badge = HEADING_LABELS[entry.level];
       const text = entry.number ? `${entry.number} ${entry.title}` : entry.title;
       const label = { badge, text };
       if (entry.misplaced) {
@@ -30,11 +30,13 @@
   function outlineEntries(state = {}, options = {}) {
     const entries = [];
     const counters = HEADINGS.map(() => 0);
-    const numberedLevels = options.numberedLevels ?? 3;
+    const { levels, theoremsBySection } = T.normalizeNumbering(state.numbering);
+    const numberedLevels = options.numberedLevels ?? levels;
     const environments = new Map();
 
     function heading(kind, path, depth, title) {
       const level = Math.min(depth, HEADINGS.length - 1);
+      if (level === 0 && theoremsBySection) environments.clear();
       counters[level]++;
       counters.fill(0, level + 1);
       const number = level < numberedLevels ? counters.slice(0, level + 1).join(".") : null;
@@ -60,10 +62,11 @@
             entries.push(entry);
             childDepth++;
           }
-        } else if (type.kind === "theorem") {
+        } else if (type.kind === "theorem" && !type.predefined) {
           const { environment, heading } = type;
-          const number = (environments.get(environment) || 0) + 1;
-          environments.set(environment, number);
+          const count = (environments.get(environment) || 0) + 1;
+          environments.set(environment, count);
+          const number = theoremsBySection ? `${counters[0]}.${count}` : count;
           entries.push({ kind: "theorem", path, key: T.pathToKey(path), environment, heading, number, ...identity, ...(title ? { title } : {}) });
         } else {
           entries.push({ kind: "other", path, key: T.pathToKey(path), type: type.id, ...identity });
@@ -96,7 +99,7 @@
 
     const first = changes.find(change => change.after.number === null && change.after.level !== null) || changes[0];
     const { title, before, after } = first;
-    const label = value => value.number ?? HEADING_LABELS[Math.max(3, value.level)].toLowerCase() + " sin número";
+    const label = value => value.number ?? HEADING_LABELS[value.level].toLowerCase() + " sin número";
     let summary;
     if (after.number === null && after.level !== null) {
       summary = `${title} quedará como ${label(after)}.`;

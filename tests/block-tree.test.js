@@ -509,3 +509,15 @@ test("la fecha inicial es la local del día, con ceros, no la UTC", async () => 
  assert.equal(localDateValue(new Date(2026, 10, 23, 0, 0)),'2026-11-23');
  assert.match(localDateValue(),/^\d{4}-\d{2}-\d{2}$/);
 });
+
+test("la migración del borrador completa las opciones de numeración", () => {
+  const old = normalizeDraft({ version: 6, metadata: { title: "Notas" }, blocks: [] });
+  assert.equal(old.version, 7);
+  assert.equal(old.migratedFrom, 6);
+  assert.deepEqual(structuredClone(old.numbering), { levels: 3, theoremsBySection: false });
+
+  const restored = normalizeDraft({ ...old, numbering: { levels: 5, theoremsBySection: true } });
+  assert.deepEqual(structuredClone(restored.numbering), { levels: 5, theoremsBySection: true });
+  const invalid = normalizeDraft({ ...old, numbering: { levels: 6, theoremsBySection: "true" } });
+  assert.deepEqual(structuredClone(invalid.numbering), { levels: 3, theoremsBySection: false });
+});

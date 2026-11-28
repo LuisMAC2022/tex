@@ -101,3 +101,22 @@ test("el autoguardado distingue cambios pendientes, guardado correcto y error si
   assert.equal(T.session.read(document.defaultView).editor.content, "Ahora");
   assert.equal(JSON.parse(items.get("tex-notes:autosave:previous")).editor.content, "Antes");
 });
+
+test("las opciones de numeración se conservan en versiones, historial y proyectos", () => {
+  const numbering = { levels: 5, theoremsBySection: true };
+  const before = state();
+  const after = { ...before, numbering };
+  assert.equal(T.sameDocument(before, after), false);
+  assert.deepEqual(plain(T.diffDocuments(before, after).numbering), [
+    { key: "levels", before: 3, after: 5 },
+    { key: "theoremsBySection", before: false, after: true },
+  ]);
+  assert.deepEqual(plain(T.historyEntry(after, null).state.numbering), numbering);
+  const [version] = T.addVersion([], after, options("numeración"));
+  const project = { kind: "notas-latex-proyecto", version: 1, documentId: doc,
+    exportedAt: when, current: T.documentSnapshot(after), versions: [version] };
+  const checked = T.validateProject(JSON.stringify(project));
+  assert.equal(checked.error, null);
+  assert.deepEqual(plain(checked.project.current.numbering), numbering);
+  assert.deepEqual(plain(checked.project.versions[0].state.numbering), numbering);
+});
