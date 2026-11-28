@@ -565,7 +565,7 @@ En el teléfono, Anterior y Siguiente recorren los huecos de un fragmento y desp
 
 Puedes arrastrar horizontalmente en el grupo de las tres teclas para avanzar o retroceder un paso por cada 28 px. Cada toque en una flecha hace un paso. Mantener Siguiente activa la selección y la amplía una vez. La misma operación se hace tocando el modo y después Siguiente. Con el teclado, recorre la barra con flechas y activa el botón con Intro.
 
-Toca Símbolos para abrir la hoja y elegir una categoría. También puedes arrastrar desde Símbolos hasta una categoría y levantar el dedo para abrirla. A menos de 360 px se muestran los iconos con sus nombres accesibles.
+Toca Símbolos para abrir la hoja. Desliza las categorías para elegir una y toca un símbolo en la rejilla. Buscar abre el campo de búsqueda. También puedes arrastrar desde Símbolos hasta una categoría y levantar el dedo para abrirla. A menos de 360 px se muestran los iconos con sus nombres accesibles.
 
 ### Tipo y título en la pantalla táctil
 

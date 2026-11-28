@@ -768,3 +768,20 @@ Las acciones de la barra y el botón del formulario esperan a que termine la ini
 | inpEstructura30 | [216,128,128] | [304,144,128] |
 
 app.js: 94763 → 94757 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
+
+## M5 · Dos filas de símbolos
+
+Las categorías comparten fila con Buscar y Cerrar. La rejilla precede a los favoritos y el buscador se revela al enfocarlo. Se verificaron la línea del cursor, la inserción y el retorno al campo en seis tamaños.
+
+| Medida a 320, 390 y 430 px | Antes | Después |
+|---|---|---|
+| anadirTrasFoco | [true,true,true] | [true,true,true] |
+| estadoVisibleTrasAnadir | [true,true,true] | [true,true,true] |
+| pestanasDentro | [true,true,true] | [true,true,true] |
+| pestanasDentroTexto200 | [[true,true],[true,true],[true,true]] | [[true,true],[true,true],[true,true]] |
+| simbolosVisibles | [[0,0],[0,0],[1,0]] | [[2,2],[2,2],[2,2]] |
+| estadoAntesDeJs | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] |
+| focoTrasEditar | ["type-chip","type-chip","type-chip"] | ["type-chip","type-chip","type-chip"] |
+| inpEstructura30 | [304,144,128] | [144,128,128] |
+
+app.js: 94757 → 94757 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.

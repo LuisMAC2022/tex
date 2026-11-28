@@ -277,10 +277,11 @@
 - la lista de citas se desplaza con el dedo y se recorre con la barra
 - Mover bloque permite recorrer destinos con el dedo y trasladar al elegido
 
-## `tests/interfaz-medicion-movil.test.js` — 2 pruebas
+## `tests/interfaz-medicion-movil.test.js` — 3 pruebas
 
 - el diagnóstico mide los cinco controles visibles de Estructura
 - la navegación cabe a tamaño normal y permite alcanzar cada destino con texto grande
+- la hoja táctil presenta dos filas completas y conserva la selección al insertar
 
 ## `tests/interfaz-menus-personales.test.js` — 4 pruebas
 
@@ -526,4 +527,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-357 pruebas con `node:test` más la comprobación estructural.
+358 pruebas con `node:test` más la comprobación estructural.

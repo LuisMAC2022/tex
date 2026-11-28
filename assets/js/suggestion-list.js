@@ -1,5 +1,17 @@
 (function (T) {
   "use strict";
+  T.fieldCaretRect = function (blockContent) {
+    const document = blockContent.ownerDocument, rect = blockContent.getBoundingClientRect();
+    const mirror = document.createElement("div"), marker = document.createElement("span");
+    const style = getComputedStyle(blockContent);
+    for (const key of ["font", "lineHeight", "letterSpacing", "padding", "border", "boxSizing", "tabSize", "textIndent"]) mirror.style[key] = style[key];
+    Object.assign(mirror.style, { position: "fixed", visibility: "hidden", whiteSpace: "pre-wrap", overflowWrap: "break-word", width: `${rect.width}px`, left: `${rect.left}px`, top: `${rect.top}px` });
+    mirror.textContent = blockContent.value.slice(0, blockContent.selectionStart);
+    marker.textContent = "\u200b"; mirror.append(marker); document.body.append(mirror);
+    const caret = marker.getBoundingClientRect();
+    mirror.remove();
+    return caret;
+  };
   T.createSuggestionList = function (document, { blockContent, announce, acceptAssist }) {
     const global = document.defaultView, $ = selector => document.querySelector(selector);
     const events = new AbortController(), options = {signal:events.signal};
@@ -15,14 +27,7 @@
       if (!assistState) return;
       const rect = blockContent.getBoundingClientRect();
       const narrow = global.matchMedia("(max-width: 38rem)").matches;
-      const mirror = document.createElement("div"), marker = document.createElement("span");
-      const style = getComputedStyle(blockContent);
-      for (const key of ["font", "lineHeight", "letterSpacing", "padding", "border", "boxSizing", "tabSize", "textIndent"]) mirror.style[key] = style[key];
-      Object.assign(mirror.style, { position: "fixed", visibility: "hidden", whiteSpace: "pre-wrap", overflowWrap: "break-word", width: `${rect.width}px`, left: `${rect.left}px`, top: `${rect.top}px` });
-      mirror.textContent = blockContent.value.slice(0, blockContent.selectionStart);
-      marker.textContent = "\u200b"; mirror.append(marker); document.body.append(mirror);
-      const caret = marker.getBoundingClientRect();
-      mirror.remove();
+      const caret = T.fieldCaretRect(blockContent);
       const clamp = (value) => Math.max(rect.top, Math.min(value, rect.bottom));
       const anchor = { top: clamp(caret.top - blockContent.scrollTop), bottom: clamp(caret.bottom - blockContent.scrollTop) };
       const x = narrow ? rect.left : caret.left - blockContent.scrollLeft;

@@ -19,7 +19,7 @@ export async function medirNavegacion(pagina, desplazar = false) {
     }), desplazar);
 }
 
-async function simbolos(p) {
+export async function simbolos(p) {
   return p.locator("#symbol-groups button").evaluateAll(botones => {
     const rect = selector => document.querySelector(selector).getBoundingClientRect();
     const techo = Math.max(0, rect(".symbol-sheet").top, rect("#symbol-groups").top);
