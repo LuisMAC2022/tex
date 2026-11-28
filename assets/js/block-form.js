@@ -23,8 +23,9 @@
       else { type.removeAttribute("tabindex"); type.removeAttribute("aria-hidden"); }
     }
     function showTitle() { deps.reveal(title); titleExpanded = true; refresh(); title.focus(); }
-    function focusType() {
-      const field = mobile.matches ? typeChip : type;
+    function focusType(editing = false) {
+      let field = mobile.matches ? typeChip : type;
+      if (mobile.matches && editing) field = $(T.blockType(type.value)?.kind === "image" ? "#image-path" : "#block-content");
       deps.reveal(field);
       if (desktop.matches) T.focusWithinDesktopPanel(field, field.closest(".block-editor"));
       else field.focus();
@@ -53,7 +54,12 @@
       const parentPath = !editingBlock && parent.length && getBlock(parent) ? parent : [];
       $("#editing-path").value = editingBlock ? pathToKey(editing) : "";
       $("#parent-path").value = pathToKey(parentPath);
+      const commit = $("#thumb-add"), label = editingBlock ? "Guardar" : "Añadir";
+      commit.lastElementChild.textContent = label;
+      commit.firstElementChild.textContent = editingBlock ? "✓" : "＋";
+      commit.setAttribute("aria-label", label);
       if (editingBlock) {
+        $("#return-card").hidden = true;
         const subject = describeBlock(editingBlock, editing);
         $("#block-form-heading").textContent = `Editar bloque ${subject}`;
         $("#block-target").textContent = `Editas ${subject}. Sus bloques anidados se conservan.`;

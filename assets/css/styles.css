@@ -835,3 +835,13 @@ body.writing-focus #workspace-export { display: none; }
   .symbol-sheet .symbol-caption { grid-row: 4; }
   body:has(.symbol-sheet) #app-status { opacity: 0; }
 }
+
+.block-more-actions [data-action="delete"] { margin-block-end: var(--space-2); }
+@media (pointer: coarse) {
+  #thumb-personal .thumb-label, #thumb-add .thumb-label {
+    display: block;
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
+  }
+}
+#empty-write { display: block; inline-size: fit-content; }

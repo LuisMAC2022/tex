@@ -49,7 +49,7 @@ test("Ir a, el editor de una tarjeta y los avisos revelan y enfocan su destino",
   assert.equal(await actual(p), "Estructura · 1");
   await p.getByRole("button", { name: /^Editar Texto,/ }).tap();
   assert.equal(await actual(p), "Escribir");
-  assert.equal(await foco(p), "type-chip");
+  assert.equal(await foco(p), "block-content");
 });
 
 test("los cuatro paneles caben en dos pantallas con cinco bloques de una línea", opt, async t => {

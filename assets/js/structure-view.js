@@ -237,6 +237,7 @@
       rows.clear();
       $("#empty-blocks").hidden = blocks.length > 0;
       blocks.forEach((block, index) => blockList.append(blockItem(block, [index], null, [], blocks.length)));
+      if (!rows.has(returnCard.dataset.blockId)) returnCard.hidden = true;
       $("#tab-tree").textContent = "Estructura · " + rows.size;
       filter(); syncSelection();
       const current = rows.get(id)?.article;
@@ -265,6 +266,16 @@
       else button.focus();
       return document.activeElement === button || (action !== "edit" && focusAction("edit", path));
     }
+    const returnCard = $("#return-card");
+    returnCard.addEventListener("click", () => focusById("edit", returnCard.dataset.blockId));
+    function finishEdit(id, keepFieldFocus, focusContent, focusType) {
+      if (coarse.matches) {
+        returnCard.dataset.blockId = id;
+        returnCard.hidden = false;
+        focusContent();
+      } else if (keepFieldFocus) focusContent();
+      else if (!focusById("edit", id)) focusType();
+    }
     function focusById(action, id) {
       const path = T.pathOfId(getBlocks(), id);
       return path !== null && focusAction(action, path);
@@ -287,7 +298,7 @@
         coarse.removeEventListener("change", renderBlocks);
         desktop.removeEventListener("change", renderBlocks);
       },
-      refresh: renderBlocks, actionButton, describeBlock, renderBlocks, focusAction, focusAfterRemoval, focusById,
+      finishEdit, refresh: renderBlocks, actionButton, describeBlock, renderBlocks, focusAction, focusAfterRemoval, focusById,
     };
   };
 })(globalThis.TexNotes);

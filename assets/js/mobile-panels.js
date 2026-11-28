@@ -150,6 +150,10 @@
       }
     }
     function focusTarget(target) { reveal(target); target.focus(); target.scrollIntoView({ block: "nearest" }); }
+    $("#empty-write").addEventListener("click", event => {
+      event.preventDefault();
+      goTo("content");
+    }, options);
     function goTo(destination) {
       if (destination === "preferences") $("#writing-preferences").open = true;
       const selector = { content: deps.imageType($("#block-type").value) ? "#image-path" : "#block-content",

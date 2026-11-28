@@ -653,3 +653,5 @@ editable y el archivo .tex sirve para compilar.
 En el teléfono, la pestaña Estructura muestra el número total de bloques. Al añadir, actualizar o generar, la confirmación aparece unos segundos sobre la barra. Al elegir un tipo en el menú se anuncia su nombre. La recuperación indica si se recuperó también el borrador en curso. Si falla el guardado de sesión, usa «Guardar versión» o exporta el proyecto.
 
 Al abrir la página aparece **Cargando editor…**. Cuando aparece **Editor listo.**, puedes usar la barra del pulgar y «Añadir bloque».
+
+En el teléfono, ★ muestra la acción o el anillo asignado, inicialmente **Deshacer**. Al editar una tarjeta, el foco llega al contenido o al archivo de imagen. La barra ofrece **Guardar**. Después, usa «Volver a la estructura» para reencontrar la tarjeta. En una estructura vacía, «Escribir» abre el editor. Al abrir un menú radial, el foco entra en el primer sector y Escape lo devuelve al origen.

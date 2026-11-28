@@ -785,3 +785,20 @@ Las categorías comparten fila con Buscar y Cerrar. La rejilla precede a los fav
 | inpEstructura30 | [304,144,128] | [144,128,128] |
 
 app.js: 94757 → 94757 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
+
+## M6 · Acciones y foco de edición
+
+El menú táctil enfoca un sector y vuelve al origen al cerrar. Guardar ofrece volver a la tarjeta por su identidad. Se actualizaron las etiquetas de la barra, el aviso de recuperación y la entrada a Escribir desde la estructura vacía.
+
+| Medida a 320, 390 y 430 px | Antes | Después |
+|---|---|---|
+| anadirTrasFoco | [true,true,true] | [true,true,true] |
+| estadoVisibleTrasAnadir | [true,true,true] | [true,true,true] |
+| pestanasDentro | [true,true,true] | [true,true,true] |
+| pestanasDentroTexto200 | [[true,true],[true,true],[true,true]] | [[true,true],[true,true],[true,true]] |
+| simbolosVisibles | [[2,2],[2,2],[2,2]] | [[2,2],[2,2],[2,2]] |
+| estadoAntesDeJs | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] |
+| focoTrasEditar | ["type-chip","type-chip","type-chip"] | ["block-content","block-content","block-content"] |
+| inpEstructura30 | [144,128,128] | [144,144,160] |
+
+app.js: 94757 → 94736 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.

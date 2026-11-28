@@ -29,7 +29,7 @@
         <button type="button" id="error-notice-copy" class="secondary">Copiar informe</button>
         <button type="button" id="error-notice-close" class="secondary">Cerrar aviso</button>
       </aside>
-      <p id="autosave-banner" hidden><span id="autosave-message"></span> <button id="recover-session" type="button">Recuperar sesión</button> <button id="discard-session" type="button" class="secondary">Descartar</button></p>
+      <p id="autosave-banner" hidden><span id="autosave-message" role="status"></span> <button id="recover-session" type="button">Recuperar sesión</button> <button id="discard-session" type="button" class="secondary">Descartar</button></p>
       <form id="document-form" novalidate>
         <section aria-labelledby="contenido-heading">
           <h2 id="contenido-heading">Contenido</h2>
@@ -159,6 +159,7 @@
               <li><button id="paste-block" class="secondary" type="button" hidden>Pegar bloque</button></li>
               <li><button id="cancel-edit" class="secondary" type="button" hidden>Cancelar edición</button></li>
             </menu>
+            <button type="button" class="secondary" id="return-card" hidden>Volver a la estructura</button>
             <p id="session-status" role="status"></p>
             <section class="symbol-board" aria-labelledby="simbolos-heading" aria-describedby="symbol-board-intro">
               <button id="close-symbol-sheet" type="button" class="secondary" hidden>Cerrar</button>
@@ -190,7 +191,7 @@
                 <button type="button" inert id="thumb-next" data-action-id="write.next" aria-label="Siguiente" tabindex="-1"><span aria-hidden="true">▶</span></button>
               </div>
               <button type="button" inert id="thumb-symbols" data-action-id="write.symbols" aria-label="Símbolos" tabindex="-1" aria-expanded="false" aria-controls="symbol-details" data-drag-ring="symbols"><span aria-hidden="true">Ω</span><span class="thumb-label">Símbolos</span></button>
-              <button type="button" inert id="thumb-personal" data-action-id="edit.undo" aria-label="Mi botón" tabindex="-1" title="Deshacer"><span aria-hidden="true">★</span><span class="thumb-label">Mi botón</span></button>
+              <button type="button" inert id="thumb-personal" data-action-id="edit.undo" aria-label="★ Deshacer" tabindex="-1" title="Deshacer"><span aria-hidden="true">★</span><span class="thumb-label">Deshacer</span></button>
               <button type="button" inert id="thumb-add" data-action-id="block.commit" aria-label="Añadir" tabindex="-1"><span aria-hidden="true">＋</span><span class="thumb-label">Añadir</span></button>
             </div>
           </fieldset>
@@ -211,7 +212,7 @@
           </div>
           <p id="structure-results" role="status" hidden></p>
           <p id="structure-move-status" class="status" hidden></p>
-          <p id="empty-blocks">Todavía no hay bloques.</p>
+          <p id="empty-blocks">Todavía no hay bloques. <a href="#block-content" id="empty-write">Escribir</a></p>
           <ol id="block-list" class="block-list"></ol>
           </div>
             <details class="math-preview-panel" id="math-preview-panel">

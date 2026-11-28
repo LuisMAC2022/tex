@@ -177,6 +177,7 @@
     let lastRing, lastItems;
     function draw(ring, items, name, state, model) {
       layer.hidden = false;
+      doc.querySelector("main").inert = true;
       if (ring !== lastRing || items !== lastItems) {
         lastRing = ring; lastItems = items;
         menu.setAttribute("aria-label", name); menu.replaceChildren(); activeArt.replaceChildren(); parentArt.replaceChildren();
@@ -218,7 +219,7 @@
       else handlers.cancel();
     });
     return { layer, draw, focus: i => menu.children[i]?.focus({ preventScroll: true }),
-      hide() { layer.hidden = true; lastRing = lastItems = null; } };
+      hide() { doc.querySelector("main").inert = false; layer.hidden = true; lastRing = lastItems = null; } };
   }
   Object.assign(T, { RADIAL_HOLD: HOLD, RADIAL_SLOP: SLOP, LONG_PRESS_IN_FIELD, angleOf, centerAngle, sectorAt,
     fitMenu, radialLayout, slicesFor, applyRadialSnippet, radialReduce, isPointerClick, drawStaticRing, createRadialView });

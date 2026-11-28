@@ -220,8 +220,7 @@
       const next = updateBlock(blocks, editing, draft);
       if (!next) { blockError(`«${blockLabel(draft.type)}» no admite bloques anidados y este bloque ya tiene. Muévelos o elimínalos antes de cambiar el tipo.`); return; }
       changeTree(next, blockAtPath(next, editing).id); resetBlockEditor(); renderBlocks();
-      if (keepFieldFocus) focusBlockContent();
-      else if (!focusById("edit", blockAtPath(next, editing).id)) blockForm.focusType();
+      structure.finishEdit(blockAtPath(next, editing).id, keepFieldFocus, focusBlockContent, blockForm.focusType);
       announce(`Bloque ${describeBlock(null, editing)} actualizado.`);
       return;
     }
