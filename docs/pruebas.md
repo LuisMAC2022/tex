@@ -317,6 +317,10 @@
 - Más tipos usa activación de teclado y ofrece el selector si no hay showPicker
 - el escritorio mantiene el selector y el título y el teléfono ahorra al menos 140 píxeles
 
+## `tests/interfaz-toque-movil.test.js` — 1 pruebas
+
+- el centro de Añadir medido mientras se escribe conserva el destino tras perder el foco
+
 ## `tests/interfaz-versiones.test.js` — 3 pruebas
 
 - guardar, comparar y restaurar una versión conserva el respaldo
@@ -513,4 +517,4 @@ No usa `node:test`: es un script con 52 aserciones sobre `index.html` (doctype, 
 
 ---
 
-353 pruebas con `node:test` más la comprobación estructural.
+354 pruebas con `node:test` más la comprobación estructural.

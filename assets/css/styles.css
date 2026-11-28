@@ -510,7 +510,7 @@ body.writing-focus #workspace-export { display: none; }
 @media (pointer: coarse) {
   #thumb-bar { z-index: var(--layer-tools); }
   body:has(#panel-write:not([hidden])) { padding-block-end: calc(var(--thumb-height, 56px) + var(--keyboard-inset, 0px)); }
-  .block-editor:has(#block-content:focus) #block-content {
+  .block-editor #block-content {
     min-block-size: clamp(7rem, calc((100dvh - var(--keyboard-inset, 0px)) * .35), 22rem);
   }
   .block-editor .symbol-sheet { margin: 0; }

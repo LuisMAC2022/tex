@@ -23,7 +23,15 @@
     }
     function revealThumbField() {
       syncThumbViewport();
-      if (coarsePointer.matches && document.activeElement === blockContent) blockContent.scrollIntoView({ block: "nearest" });
+      if (!coarsePointer.matches || document.activeElement !== blockContent) return;
+      blockContent.scrollIntoView({ block: "nearest" });
+      const row = $("#add-block").closest(".button-row");
+      const bottom = thumbBar.getBoundingClientRect().top;
+      const overflow = row.getBoundingClientRect().bottom - bottom;
+      const top = $("#mobile-navigation").getBoundingClientRect().bottom;
+      if (overflow > 0 && blockContent.getBoundingClientRect().top - overflow >= top) {
+        global.scrollBy({ top: Math.ceil(overflow), behavior: "instant" });
+      }
     }
     listen(global.visualViewport, "resize", revealThumbField);
     listen(global.visualViewport, "scroll", syncThumbViewport);

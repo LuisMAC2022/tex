@@ -700,3 +700,20 @@ Autorizadas las dos adaptaciones de expectativas de M2 y M6. Medición en main 7
 ```json
 [{"viewport":[320,568],"anadirTrasFoco":true,"estadoVisibleTrasAnadir":false,"estadoY":783,"pestanasDentro":false,"pestanas":[{"id":"tab-write","right":79,"dentro":true},{"id":"tab-tree","right":159,"dentro":false},{"id":"tab-document","right":238,"dentro":false},{"id":"tab-more","right":317,"dentro":true},{"id":"panel-menu","right":363,"dentro":false}],"pestanasDentroTexto200":{"normal":false,"estrecho195":false},"simbolosVisibles":{"normal":{"botones":0,"filas":0},"reducido":{"botones":0,"filas":0}},"estadoAntesDeJs":{"texto":"Editor listo.","interactiva":true},"focoTrasEditar":"type-chip","inpEstructura30":{"muestras":[176,128,144],"mediana":144}},{"viewport":[390,844],"anadirTrasFoco":false,"estadoVisibleTrasAnadir":false,"estadoY":993,"pestanasDentro":false,"pestanas":[{"id":"tab-write","right":86,"dentro":true},{"id":"tab-tree","right":172,"dentro":false},{"id":"tab-document","right":258,"dentro":false},{"id":"tab-more","right":344,"dentro":true},{"id":"panel-menu","right":390,"dentro":true}],"pestanasDentroTexto200":{"normal":false,"estrecho195":false},"simbolosVisibles":{"normal":{"botones":0,"filas":0},"reducido":{"botones":0,"filas":0}},"estadoAntesDeJs":{"texto":"Editor listo.","interactiva":true},"focoTrasEditar":"type-chip","inpEstructura30":{"muestras":[136,120,168],"mediana":136}},{"viewport":[430,932],"anadirTrasFoco":false,"estadoVisibleTrasAnadir":false,"estadoY":1003,"pestanasDentro":false,"pestanas":[{"id":"tab-write","right":96,"dentro":true},{"id":"tab-tree","right":192,"dentro":true},{"id":"tab-document","right":288,"dentro":false},{"id":"tab-more","right":384,"dentro":true},{"id":"panel-menu","right":430,"dentro":true}],"pestanasDentroTexto200":{"normal":false,"estrecho195":false},"simbolosVisibles":{"normal":{"botones":8,"filas":1},"reducido":{"botones":0,"filas":0}},"estadoAntesDeJs":{"texto":"Editor listo.","interactiva":true},"focoTrasEditar":"type-chip","inpEstructura30":{"muestras":[176,136,104],"mediana":136}}]
 ```
+
+## M1 · Toque en Añadir bloque
+
+Reservé el alto de Contenido durante la escritura y dejé el área de acciones a la vista cuando cabe junto al campo. La prueba toca las coordenadas originales antes y después de blur.
+
+| Medida a 320, 390 y 430 px | Antes | Después |
+|---|---|---|
+| anadirTrasFoco | [true,false,false] | [true,true,true] |
+| estadoVisibleTrasAnadir | [false,false,false] | [false,false,false] |
+| pestanasDentro | [false,false,false] | [false,false,false] |
+| pestanasDentroTexto200 | [[false,false],[false,false],[false,false]] | [[false,false],[false,false],[false,false]] |
+| simbolosVisibles | [[0,0],[0,0],[1,0]] | [[0,0],[0,0],[1,0]] |
+| estadoAntesDeJs | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] |
+| focoTrasEditar | ["type-chip","type-chip","type-chip"] | ["type-chip","type-chip","type-chip"] |
+| inpEstructura30 | [144,136,136] | [128,144,136] |
+
+app.js: 95022 → 95022 bytes. Suite obligatoria ejecutada. Pendientes en dispositivo real: teclado virtual, TalkBack, iOS y zoom del sistema.
