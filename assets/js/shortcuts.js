@@ -26,6 +26,16 @@
     ContextMenu: "Menú", PageUp: "Re Pág", PageDown: "Av Pág", Escape: "Escape", Enter: "Intro",
   };
 
+  function isMacPlatform(nav) {
+    return /Mac/.test(nav.userAgentData?.platform || nav.platform || "");
+  }
+  function unmodified(event) {
+    return !(event.altKey || event.ctrlKey || event.metaKey || event.shiftKey);
+  }
+  function plural(n, uno, varios) {
+    return n === 1 ? uno : varios;
+  }
+
   function keyName(code) {
     return code.replace(/^(Key|Digit)(?=[A-Z0-9]$)/, "");
   }
@@ -43,5 +53,5 @@
     return [...parts, keyName(shortcut.code)].join("+");
   }
 
-  Object.assign(global.TexNotes ??= {}, { SHORTCUTS, matchShortcut, shortcutLabel, ariaKeyshortcuts });
+  Object.assign(global.TexNotes ??= {}, { isMacPlatform, unmodified, plural, SHORTCUTS, matchShortcut, shortcutLabel, ariaKeyshortcuts });
 })(typeof globalThis !== "undefined" ? globalThis : this);

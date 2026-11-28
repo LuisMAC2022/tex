@@ -840,3 +840,23 @@ Anchos en orden: 320, 390 y 430 px. Para los símbolos se indican filas completa
 | estadoAntesDeJs | [["Editor listo.",true],["Editor listo.",true],["Editor listo.",true]] | [["Cargando editor…",false],["Cargando editor…",false],["Cargando editor…",false]] |
 | focoTrasEditar | ["type-chip","type-chip","type-chip"] | ["block-content","block-content","block-content"] |
 | inpEstructura30 | [144,136,136] | [128,88,144] |
+
+## P0-1 · Margen de app.js
+
+En main (149b18b), app.js y el presupuesto de INV-012 medían 94 736 bytes.
+Tras unificar el acceso a TexNotes y las expresiones repetidas, app.js mide
+93 271 bytes. Quedan 1 465 bytes libres para las fases 1 y 2.
+
+Los tres auxiliares tienen pruebas Node en shortcuts.test.js. La búsqueda
+con git grep en todo el repositorio, incluidas las pruebas, encontró solo la
+definición de BLOCK_TYPE_IDS antes de eliminarla. El aviso de localStorage
+lee ahora el límite del almacén.
+
+**Bloqueo de cierre.** Dos ejecuciones de `TEX_UI_TESTS=required npm test` en
+[la rama](https://github.com/LuisMAC2022/tex/actions/runs/46119874755)
+aprobaron 364 de 365 pruebas, con cero omitidas. En ambas falló la comprobación
+de que todas las pestañas caben a 320 px en tests/interfaz-medicion-movil.test.js,
+línea 20. La [suite del commit base](https://github.com/LuisMAC2022/tex/actions/runs/46108508045)
+ya fallaba en la misma línea, al mismo ancho (361 de 362). Se detiene P0-1 aquí:
+corregir la navegación móvil requiere revisar su comportamiento fuera del
+alcance de esta refactorización.
